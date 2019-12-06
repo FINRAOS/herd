@@ -81,6 +81,8 @@ public class HerdErrorInformationExceptionHandler
 
     public static final String POSTGRES_SQL_STATE_CODE_FOREIGN_KEY_VIOLATION = "23503";
 
+    public static final String POSTGRES_SQL_STATE_CODE_UNIQUE_INDEX_OR_PRIMARY_KEY_VIOLATION = "23505";
+
     /**
      * PostgreSQL specific SQL state code for string data truncation errors. http://www.postgresql.org/docs/9.3/static/errcodes-appendix.html
      */
@@ -409,7 +411,11 @@ public class HerdErrorInformationExceptionHandler
             if (rootThrowable instanceof SQLException)
             {
                 SQLException sqlException = (SQLException) rootThrowable;
-                isConstraintViolation = POSTGRES_SQL_STATE_CODE_FOREIGN_KEY_VIOLATION.equals(sqlException.getSQLState());
+                if (POSTGRES_SQL_STATE_CODE_FOREIGN_KEY_VIOLATION.equals(sqlException.getSQLState())
+                    || POSTGRES_SQL_STATE_CODE_UNIQUE_INDEX_OR_PRIMARY_KEY_VIOLATION.equals(sqlException.getSQLState()))
+                {
+                    isConstraintViolation = true;
+                }
             }
         }
         return isConstraintViolation;

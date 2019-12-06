@@ -15,13 +15,19 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.Parameter;
@@ -32,10 +38,18 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTaskTest
 {
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
     @Test
     public void testAddBusinessObjectDataStorageFilesXml() throws Exception
     {
+        // Turn off referential integrity because the storage unit entity is created in separate JUNIT test transaction in the H2 in-memory database.
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        Connection connection = dataSource.getConnection();
+        CallableStatement callableStatement = connection.prepareCall("SET REFERENTIAL_INTEGRITY TO FALSE");
+        callableStatement.execute();
+
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
             businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 
@@ -58,6 +72,12 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
     @Test
     public void testAddBusinessObjectDataStorageFilesJson() throws Exception
     {
+        // Turn off referential integrity because the storage unit entity is created in separate JUNIT test transaction in the H2 in-memory database.
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        Connection connection = dataSource.getConnection();
+        CallableStatement callableStatement = connection.prepareCall("SET REFERENTIAL_INTEGRITY TO FALSE");
+        callableStatement.execute();
+
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
             businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 

@@ -31,7 +31,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 /**
  * This class tests generateBusinessObjectDataDdlCollection functionality within the business object data service.
  */
-public class BusinessObjectDataServiceGenerateBusinessObjectDataDllCollectionTest extends AbstractServiceTest
+public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlCollectionTest extends AbstractServiceTest
 {
     @Test
     public void testGenerateBusinessObjectDataDdlCollection()

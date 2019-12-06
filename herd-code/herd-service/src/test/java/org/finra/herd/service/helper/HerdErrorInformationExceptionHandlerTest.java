@@ -115,6 +115,10 @@ public class HerdErrorInformationExceptionHandlerTest extends AbstractServiceTes
         validateErrorInformation(exceptionHandler.handlePersistenceException(getPersistenceException(new SQLException(MESSAGE,
                 HerdErrorInformationExceptionHandler.POSTGRES_SQL_STATE_CODE_FOREIGN_KEY_VIOLATION, 0)), new MockHttpServletResponse()), HttpStatus.BAD_REQUEST,
                 false);
+
+        validateErrorInformation(exceptionHandler.handlePersistenceException(getPersistenceException(new SQLException(MESSAGE,
+                HerdErrorInformationExceptionHandler.POSTGRES_SQL_STATE_CODE_UNIQUE_INDEX_OR_PRIMARY_KEY_VIOLATION, 0)), new MockHttpServletResponse()),
+            HttpStatus.BAD_REQUEST, false);
     }
 
     @Test
