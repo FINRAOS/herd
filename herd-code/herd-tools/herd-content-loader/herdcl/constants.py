@@ -25,7 +25,10 @@ class Menu(Enum):
 
 class Objects(Enum):
     WORKSHEET = 'Bus Obj Definition'
+    NAMESPACE = 'Bus Obj Def Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
     SME = 'Bus Obj Def SME User ID'
+    SAMPLE = 'Link to Sample Data'
 
 class Columns(Enum):
     WORKSHEET = 'Business Object Attribute'

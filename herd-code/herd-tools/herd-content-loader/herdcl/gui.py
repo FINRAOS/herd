@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import traceback, json
+import traceback
 
 import tkinter as tk
 from tkinter import font, ttk, scrolledtext, filedialog
@@ -222,6 +222,7 @@ class MainUI(tk.Frame):
             'env': self.env_name,
             'action': self.action,
             'excel_file': self.getfile.get(),
+            'sample_dir': self.sample_dir.get(),
             'userName': self.username.get(),
             'userPwd': self.userpwd.get()
         }
@@ -238,16 +239,18 @@ class MainUI(tk.Frame):
             self.display('Processed {} rows'.format(run_summary['total_rows']))
             self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
             if len(run_summary['warnings']) > 0:
+                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
                 self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
-                for e in run_summary['warnings']:
+                for e in warnings:
                     self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
             if run_summary['fail_rows'] == 0:
                 self.display('\n--- RUN COMPLETED ---')
             else:
+                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
                 self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
                 self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), log=LOGGER.error)
-                self.display('Please check rows: {}\n'.format(run_summary['fail_index']), log=LOGGER.error)
-                for e in run_summary['errors']:
+                self.display('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])), log=LOGGER.error)
+                for e in errors:
                     self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.error)
                 self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)
         except Exception:

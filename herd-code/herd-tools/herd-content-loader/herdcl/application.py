@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import argparse, json, traceback
+import argparse, traceback
 
 # Local imports
 try:
@@ -55,16 +55,18 @@ class Application:
             LOGGER.info('Processed {} rows'.format(run_summary['total_rows']))
             LOGGER.info('Number of rows succeeded: {}'.format(run_summary['success_rows']))
             if len(run_summary['warnings']) > 0:
+                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
                 LOGGER.info('\n--- RUN WARNINGS ---')
-                for e in run_summary['warnings']:
+                for e in warnings:
                     LOGGER.warning('Row: {}\nMessage: {}'.format(e['index'], e['message']))
             if run_summary['fail_rows'] == 0:
                 LOGGER.info('\n--- RUN COMPLETED ---')
             else:
+                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
                 LOGGER.error('\n--- RUN FAILURES ---')
                 LOGGER.error('Number of rows failed: {}'.format(run_summary['fail_rows']))
-                LOGGER.error('Please check rows: {}\n'.format(run_summary['fail_index']))
-                for e in run_summary['errors']:
+                LOGGER.error('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])))
+                for e in errors:
                     LOGGER.error('Row: {}\nMessage: {}'.format(e['index'], e['message']))
                 LOGGER.error('\n--- RUN COMPLETED WITH FAILURES ---')
         except Exception:
@@ -89,7 +91,7 @@ def main():
         import gui
         app = gui.MainUI()
         LOGGER.info('Starting App')
-        app.master.title('Herd Content Loader  v.20191112')
+        app.master.title('Herd Content Loader  v.20191203')
         app.mainloop()
 
 

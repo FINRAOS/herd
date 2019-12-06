@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import os, sys, configparser, base64, traceback, pprint
+import os, sys, configparser, base64, traceback, pprint, filecmp
 
 # Third party imports
 import pandas as pd
@@ -27,9 +27,11 @@ from herdsdk.rest import ApiException
 try:
     import logger
     from constants import Menu, Objects, Columns
+    from aws import AwsClient
 except ImportError:
     from herdcl import logger
     from herdcl.constants import Menu, Objects, Columns
+    from herdcl.aws import AwsClient
 
 LOGGER = logger.get_logger(__name__)
 ERROR_CODE = -99
@@ -43,6 +45,7 @@ class Controller:
     # Class variables
     action = None
     excel_file = ''
+    sample_dir = ''
     data_frame = ''
     path = ''
     config = None
@@ -51,7 +54,7 @@ class Controller:
     configuration = herdsdk.Configuration()
 
     # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
-    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value]
+    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -69,14 +72,15 @@ class Controller:
             'warnings': [],
             'errors': []
         }
+        self.sample_files = {}
 
-        # TODO attach methods
         self.acts = {
             str.lower(Menu.OBJECTS.value): self.load_object,
-            str.lower(Menu.COLUMNS.value): self.load_columns
-            # str.lower(Menu.SAMPLES.value): self.get_build_info,
-            # str.lower(Menu.TAGS.value): self.get_build_info,
+            str.lower(Menu.COLUMNS.value): self.load_columns,
+            str.lower(Menu.SAMPLES.value): self.load_samples,
+            str.lower(Menu.TAGS.value): self.load_tags,
             # str.lower(Menu.EXPORT.value): self.get_build_info,
+            'test_api': self.test_api
         }
 
     ############################################################################
@@ -121,6 +125,7 @@ class Controller:
         if config['gui_enabled']:
             self.action = str.lower(config['action'])
             self.excel_file = config['excel_file']
+            self.sample_dir = config['sample_dir']
             self.configuration.host = self.config.get('url', config['env'])
             self.configuration.username = config['userName']
             self.configuration.password = config['userPwd']
@@ -128,6 +133,9 @@ class Controller:
             self.action = str.lower(self.config.get('console', 'action'))
             if self.action in ['objects', 'columns']:
                 self.excel_file = self.config.get('console', 'excelFile')
+            elif self.action == 'samples':
+                self.excel_file = self.config.get('console', 'excelFile')
+                self.sample_dir = self.config.get('console', 'sampleDir')
             env = self.config.get('console', 'env')
             self.configuration.host = self.config.get('url', env)
             self.configuration.username = self.config.get('credentials', 'userName')
@@ -247,6 +255,41 @@ class Controller:
         return self.run_summary
 
     ############################################################################
+    def load_samples(self):
+        """
+        One of the controller actions. Loads business object sample files
+
+        :return: Run Summary dict
+
+        """
+        self.data_frame = self.load_worksheet(Objects.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
+
+        self.check_sample_files()
+
+        self.run_steps = [
+            self.get_bdef_sample_files,
+            self.upload_download_sample_files
+        ]
+
+        group_df = self.data_frame.groupby([Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value])
+        for key, index_array in group_df.groups.items():
+            for step in self.run_steps:
+                step(key, list(index_array.values))
+
+        return self.run_summary
+
+    ############################################################################
+    def load_tags(self):
+        """
+        One of the controller actions. Loads business object sample files
+
+        :return: Run Summary dict
+
+        """
+        return self.run_summary
+
+    ############################################################################
     def reset_run(self):
         self.run_steps = []
         self.tag_types = {
@@ -261,6 +304,7 @@ class Controller:
             'warnings': [],
             'errors': []
         }
+        self.sample_files = {}
 
     ############################################################################
     def update_run_summary_batch_errors(self, index_array, message):
@@ -402,6 +446,10 @@ class Controller:
 
     ############################################################################
     def check_format_schema_columns(self):
+        """
+        Checks Excel worksheet for rows with missing schema or column names
+
+        """
         empty_column_name_filter = self.data_frame[Columns.COLUMN_NAME.value] == ''
         empty_schema_name_filter = self.data_frame[Columns.SCHEMA_NAME.value] == ''
 
@@ -429,45 +477,46 @@ class Controller:
         try:
             LOGGER.info('Getting BDef')
             resp = self.get_business_object_definition(namespace, bdef_name)
-            if resp.descriptive_business_object_format:
-                LOGGER.info('Success')
-                LOGGER.info(resp.descriptive_business_object_format)
-                LOGGER.info('Getting Format')
-                format_resp = self.get_format(namespace, bdef_name,
-                                              resp.descriptive_business_object_format.business_object_format_usage,
-                                              resp.descriptive_business_object_format.business_object_format_file_type,
-                                              resp.descriptive_business_object_format.business_object_format_version)
-                if format_resp.schema and format_resp.schema.columns:
-                    # Get schema columns and bdef columns as dataframes. Merge the two to check if both contain schema name
-                    LOGGER.info('Success')
-                    schema_df = pd.DataFrame(
-                        [{Columns.SCHEMA_NAME.value: str.upper(x.name).strip()} for x in format_resp.schema.columns])
-                    LOGGER.info('Getting BDef Columns')
-                    col_resp = self.post_bdef_column_search(namespace, bdef_name)
-                    if len(col_resp.business_object_definition_columns) > 0:
-                        col_df = pd.DataFrame([{
-                            Columns.SCHEMA_NAME.value: str.upper(x.schema_column_name).strip(),
-                            Columns.COLUMN_NAME.value: x.business_object_definition_column_key.business_object_definition_column_name,
-                            Columns.DESCRIPTION.value: x.description
-                        } for x in col_resp.business_object_definition_columns])
-                        LOGGER.info('Comparing Schema Columns and BDef Columns')
-                        df = pd.merge(schema_df, col_df, on=[Columns.SCHEMA_NAME.value], how='outer', indicator='Found')
-                        df['Found'] = df['Found'].apply(lambda x: x == 'both')
-                        self.format_columns[key] = df.fillna('')
-                    else:
-                        schema_df[Columns.COLUMN_NAME.value] = ''
-                        schema_df[Columns.DESCRIPTION.value] = ''
-                        schema_df['Found'] = False
-                        self.format_columns[key] = schema_df
-                else:
-                    message = 'No Schema Columns found for {}'.format(key)
-                    LOGGER.error(message)
-                    self.update_run_summary_batch_errors(index_array, message)
-            else:
+            if not resp.descriptive_business_object_format:
                 message = 'No Descriptive Format defined for {}'.format(key)
                 LOGGER.error(message)
                 self.update_run_summary_batch_errors(index_array, message)
+                return
 
+            LOGGER.info('Success')
+            LOGGER.info(resp.descriptive_business_object_format)
+            LOGGER.info('Getting Format')
+            format_resp = self.get_format(namespace, bdef_name,
+                                          resp.descriptive_business_object_format.business_object_format_usage,
+                                          resp.descriptive_business_object_format.business_object_format_file_type,
+                                          resp.descriptive_business_object_format.business_object_format_version)
+            if not (format_resp.schema and format_resp.schema.columns):
+                message = 'No Schema Columns found for {}'.format(key)
+                LOGGER.error(message)
+                self.update_run_summary_batch_errors(index_array, message)
+                return
+
+            # Get schema columns and bdef columns as dataframes. Merge the two to check if both contain schema name
+            LOGGER.info('Success')
+            schema_df = pd.DataFrame(
+                [{Columns.SCHEMA_NAME.value: str.upper(x.name).strip()} for x in format_resp.schema.columns])
+            LOGGER.info('Getting BDef Columns')
+            col_resp = self.post_bdef_column_search(namespace, bdef_name)
+            if len(col_resp.business_object_definition_columns) > 0:
+                col_df = pd.DataFrame([{
+                    Columns.SCHEMA_NAME.value: str.upper(x.schema_column_name).strip(),
+                    Columns.COLUMN_NAME.value: x.business_object_definition_column_key.business_object_definition_column_name,
+                    Columns.DESCRIPTION.value: x.description
+                } for x in col_resp.business_object_definition_columns])
+                LOGGER.info('Comparing Schema Columns and BDef Columns')
+                df = pd.merge(schema_df, col_df, on=[Columns.SCHEMA_NAME.value], how='outer', indicator='Found')
+                df['Found'] = df['Found'].apply(lambda x: x == 'both')
+                self.format_columns[key] = df.fillna('')
+            else:
+                schema_df[Columns.COLUMN_NAME.value] = ''
+                schema_df[Columns.DESCRIPTION.value] = ''
+                schema_df['Found'] = False
+                self.format_columns[key] = schema_df
         except ApiException as e:
             LOGGER.error(e)
             self.update_run_summary_batch_errors(index_array, e)
@@ -501,10 +550,18 @@ class Controller:
                     LOGGER.warning('Success')
                 except ApiException as e:
                     LOGGER.error(e)
-                    self.update_run_summary_batch_errors([ERROR_CODE - 2], e)
+                    warning = {
+                        'index': ERROR_CODE,
+                        'message': e
+                    }
+                    self.run_summary['warnings'].append(warning)
                 except Exception:
                     LOGGER.error(traceback.format_exc())
-                    self.update_run_summary_batch_errors([ERROR_CODE - 2], traceback.format_exc())
+                    warning = {
+                        'index': ERROR_CODE,
+                        'message': traceback.format_exc()
+                    }
+                    self.run_summary['warnings'].append(warning)
             empty_schema_list = empty_schema_df[Columns.COLUMN_NAME.value].tolist()
             if len(empty_schema_list) > 0:
                 message = 'Could not find a schema name for the following columns:\n{}'.format(
@@ -574,6 +631,163 @@ class Controller:
                     'message': message
                 }
                 self.run_summary['warnings'].append(warning)
+
+    ############################################################################
+    def check_sample_files(self):
+        """
+        Checks Excel worksheet for rows with no sample file
+
+        """
+        empty_sample_filter = self.data_frame[Objects.SAMPLE.value] == ''
+        empty_df = self.data_frame[empty_sample_filter]
+        good_df = self.data_frame[~empty_sample_filter]
+
+        self.run_summary['success_rows'] += len(empty_df.index.values)
+        self.data_frame = good_df
+
+    ############################################################################
+    def get_bdef_sample_files(self, key, index_array):
+        """
+        Gets list of sample files and uploads new sample files associated with a business object definition
+
+        :param key: Tuple of namespace and bdef name
+        :param index_array: List of int corresponding to row index in Excel worksheet
+
+        """
+        (namespace, bdef_name) = key
+        try:
+            LOGGER.info('Getting BDef')
+            resp = self.get_business_object_definition(namespace, bdef_name)
+            LOGGER.info('Success')
+
+            if resp.sample_data_files:
+                LOGGER.info('Found existing sample files')
+                if key not in self.sample_files:
+                    self.sample_files[key] = {}
+
+                for sample in resp.sample_data_files:
+                    self.sample_files[key][sample.file_name] = sample.directory_path
+            else:
+                LOGGER.info('No files found for bdef: {}'.format(key))
+
+        except ApiException as e:
+            LOGGER.error(e)
+            self.update_run_summary_batch_errors(index_array, e)
+            return
+        except Exception:
+            LOGGER.error(traceback.format_exc())
+            self.update_run_summary_batch_errors(index_array, traceback.format_exc())
+            return
+
+    ############################################################################
+    def upload_download_sample_files(self, key, index_array):
+        """
+        Gets list of sample files and uploads new sample files associated with a business object definition
+
+        :param key: Tuple of namespace and bdef name
+        :param index_array: List of int corresponding to row index in Excel worksheet
+
+        """
+        (namespace, bdef_name) = key
+
+        if key in self.sample_files:
+            sample_files = self.sample_files[key]
+            uploaded_files = []
+
+            for index in index_array:
+                try:
+                    file = self.data_frame.at[index, Objects.SAMPLE.value]
+                    path = self.sample_dir + os.sep + file
+
+                    if not os.path.exists(path):
+                        message = 'File not found. Please double check path: {}'.format(path)
+                        LOGGER.error(message)
+                        self.update_run_summary_batch_errors([index], message)
+                        continue
+
+                    if file in uploaded_files:
+                        LOGGER.info('File already uploaded. Skipping: {}'.format(file))
+                        self.run_summary['success_rows'] += 1
+                        continue
+
+                    if file in sample_files:
+                        LOGGER.info('Matched File: {}\nChecking if contents changed'.format(file))
+
+                        LOGGER.info('Getting download request')
+                        download_resp = self.download_sample_file(namespace, bdef_name, sample_files[file], file)
+                        LOGGER.info('Success')
+
+                        temp_path = self.sample_dir + os.sep + 'temp'
+                        setattr(download_resp, 's3_key_prefix',
+                                download_resp.business_object_definition_sample_data_file_key.directory_path)
+                        LOGGER.info('Downloading File: {}'.format(file))
+                        aws_err = self.run_aws_command('s3_download', download_resp, temp_path, file)
+                        if aws_err:
+                            LOGGER.error(aws_err)
+                            self.update_run_summary_batch_errors([index], aws_err)
+                            continue
+                        LOGGER.info('Success')
+
+                        LOGGER.info('Comparing contents')
+                        content_same = filecmp.cmp(temp_path, path, shallow=False)
+                        os.remove(temp_path)
+                        if content_same:
+                            LOGGER.info('Files are identical. Skipping: {}'.format(file))
+                            uploaded_files.append(file)
+                            self.run_summary['success_rows'] += 1
+                            continue
+                        else:
+                            LOGGER.info('Contents have changed. Updating')
+
+                    LOGGER.info('Getting upload request')
+                    upload_resp = self.upload_sample_file(namespace, bdef_name)
+                    LOGGER.info('Success')
+                    LOGGER.info('Uploading File: {}'.format(file))
+                    aws_err = self.run_aws_command('s3_upload', upload_resp, path, file)
+                    if aws_err:
+                        LOGGER.error(aws_err)
+                        self.update_run_summary_batch_errors([index], aws_err)
+                        continue
+                    LOGGER.info('Success')
+
+                    uploaded_files.append(file)
+                    self.run_summary['success_rows'] += 1
+
+                except ApiException as e:
+                    LOGGER.error(e)
+                    self.update_run_summary_batch_errors([index], e)
+                except Exception:
+                    LOGGER.error(traceback.format_exc())
+                    self.update_run_summary_batch_errors([index], traceback.format_exc())
+
+    ############################################################################
+    def run_aws_command(self, command, resp, path, file):
+        """
+        Runs aws command
+
+        :return: None if command succeeds, error message if fails
+
+        """
+        aws = AwsClient(resp, file)
+
+        try:
+            method = aws.get_method(command)
+        except AttributeError:
+            return 'Command {} not found'.format(command)
+
+        return method(path)
+
+    ############################################################################
+    def test_api(self):
+        """
+        One of the controller actions. Calls Get Build Info. Quick way to check api
+
+        :return: Run Summary dict
+
+        """
+        self.run_summary['total_rows'] = 1
+        self.get_build_info()
+        return self.run_summary
 
     ############################################################################
     def get_build_info(self):
@@ -819,6 +1033,44 @@ class Controller:
             business_object_definition_column_create_request)
         return api_response
 
+    ############################################################################
+    def upload_sample_file(self, namespace, business_object_definition_name):
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.UploadAndDownloadApi(api_client)
+
+        business_object_definition_key = herdsdk.BusinessObjectDefinitionKey(
+            namespace=namespace,
+            business_object_definition_name=business_object_definition_name
+        )
+
+        upload_request = herdsdk.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(
+            business_object_definition_key=business_object_definition_key
+        )
+
+        LOGGER.info('POST /upload/businessObjectDefinitionSampleDataFile/initiation')
+        api_response = api_instance.uploadand_download_initiate_upload_sample_file(upload_request)
+        return api_response
+
+    ############################################################################
+    def download_sample_file(self, namespace, business_object_definition_name, directory_path, file_name):
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.UploadAndDownloadApi(api_client)
+
+        business_object_definition_sample_data_file_key = herdsdk.BusinessObjectDefinitionSampleDataFileKey(
+            namespace=namespace,
+            business_object_definition_name=business_object_definition_name,
+            directory_path=directory_path,
+            file_name=file_name
+        )
+
+        download_request = herdsdk.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+            business_object_definition_sample_data_file_key=business_object_definition_sample_data_file_key
+        )
+
+        LOGGER.info('POST /download/businessObjectDefinitionSampleDataFile/initiation')
+        api_response = api_instance.uploadand_download_initiate_download_single_sample_file(download_request)
+        return api_response
+
 
 ################################################################################
 class ApiClientOverwrite(herdsdk.ApiClient):
@@ -846,8 +1098,9 @@ class ApiClientOverwrite(herdsdk.ApiClient):
         '''
         NOTE: Due to datetime parser issue, converting data
         '''
-        if 'lastUpdatedOn' in data.keys():
-            import time
-            data['lastUpdatedOn'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(data['lastUpdatedOn'] / 1000))
+        for key in ['lastUpdatedOn', 'awsSessionExpirationTime']:
+            if key in data:
+                import time
+                data[key] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(data[key] / 1000))
 
         return self._ApiClient__deserialize(data, response_type)

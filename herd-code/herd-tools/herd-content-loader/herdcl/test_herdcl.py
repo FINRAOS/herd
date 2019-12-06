@@ -31,7 +31,7 @@ try:
     from constants import Objects, Columns
 except ImportError:
     from herdcl import otags
-    from constants import Objects, Columns
+    from herdcl.constants import Objects, Columns
 
 
 def string_generator(string_length=10):
@@ -87,8 +87,9 @@ class TestUtilityMethods(unittest.TestCase):
         config = {
             'gui_enabled': True,
             'env': 'testenv',
-            'action': 'TestAction',
+            'action': 'SaMpLes',
             'excel_file': 'testfile',
+            'sample_dir': 'testdir',
             'userName': 'testuser',
             'userPwd': 'testpwd'
         }
@@ -100,6 +101,8 @@ class TestUtilityMethods(unittest.TestCase):
         self.controller.setup_run(config)
         mock_config.get.assert_called_once()
         self.assertEqual(self.controller.action, str.lower(config['action']))
+        self.assertEqual(self.controller.excel_file, config['excel_file'])
+        self.assertEqual(self.controller.sample_dir, config['sample_dir'])
         self.assertEqual(self.controller.configuration.username, config['userName'])
         self.assertEqual(self.controller.configuration.password, config['userPwd'])
 
@@ -115,16 +118,18 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         # Mock config.get so each call returns a different value
-        test_vars = ['TestAction', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        test_vars = ['SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
 
         # Run scenario and check values
-        self.assertEqual(mock_config.get.call_count, 5)
+        self.assertEqual(mock_config.get.call_count, 7)
         self.assertEqual(self.controller.action, str.lower(test_vars[0]))
-        self.assertEqual(self.controller.configuration.host, test_vars[2])
-        self.assertEqual(self.controller.configuration.username, test_vars[3])
+        self.assertEqual(self.controller.excel_file, test_vars[1])
+        self.assertEqual(self.controller.sample_dir, test_vars[2])
+        self.assertEqual(self.controller.configuration.host, test_vars[4])
+        self.assertEqual(self.controller.configuration.username, test_vars[5])
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
     def test_setup_run_console_missing_config_section(self):
@@ -218,6 +223,8 @@ class TestObjectAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.load_object()
         self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
         self.assertEqual(self.controller.run_summary['fail_rows'], 0)
         self.assertEqual(self.controller.run_summary['fail_index'], [])
@@ -243,6 +250,8 @@ class TestObjectAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.load_object()
         self.assertEqual(self.controller.run_summary['total_rows'], 3)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
@@ -286,9 +295,10 @@ class TestObjectAction(unittest.TestCase):
         self.assertEqual(mock_tag_api.call_count, 2)
         self.assertEqual(self.controller.tag_types['columns'], [code_1])
 
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.business_object_definition_get_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionApi.business_object_definition_update_business_object_definition_descriptive_information')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
     def test_update_bdef_descriptive_info(self, mock_descr_info, mock_bdef):
         """
         Test of updating business object definition descriptive info
@@ -309,9 +319,10 @@ class TestObjectAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         mock_descr_info.assert_called_once()
 
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.business_object_definition_get_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionApi.business_object_definition_update_business_object_definition_descriptive_information')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
     def test_update_bdef_descriptive_info_no_update(self, mock_descr_info, mock_bdef):
         """
         Test of no update to business object definition descriptive info
@@ -618,7 +629,7 @@ class TestObjectAction(unittest.TestCase):
 
 class TestColumnAction(unittest.TestCase):
     """
-    Test Suite for Action Objects
+    Test Suite for Action Column
     """
 
     def setUp(self):
@@ -639,6 +650,7 @@ class TestColumnAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.check_format_schema_columns()
+        self.assertEqual(self.controller.run_summary['fail_rows'], 3)
         self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
@@ -698,6 +710,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef_columns.assert_called_once()
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names))
         self.assertTrue(all(self.controller.format_columns[key]['Found']))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -732,6 +745,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         mock_format.assert_called_once()
         self.assertEqual(mock_bdef_columns.call_count, 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
         self.assertTrue('No Schema Columns found' in self.controller.run_summary['errors'][0]['message'])
 
@@ -758,6 +772,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         self.assertEqual(mock_format.call_count, 0)
         self.assertEqual(mock_bdef_columns.call_count, 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
         self.assertTrue('No Descriptive Format defined' in self.controller.run_summary['errors'][0]['message'])
 
@@ -814,6 +829,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         mock_format.assert_called_once()
         mock_bdef_columns.assert_called_once()
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
         self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
 
@@ -884,6 +900,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef_columns.assert_called_once()
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names) + 1)
         self.assertFalse(all(self.controller.format_columns[key]['Found']))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -934,6 +951,7 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names))
         self.assertTrue(all(x == False for x in self.controller.format_columns[key]['Found']))
         self.assertTrue(all(x == '' for x in self.controller.format_columns[key][Columns.COLUMN_NAME.value]))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -966,6 +984,10 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following columns' in
                         self.controller.run_summary['warnings'][0]['message'])
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -998,6 +1020,10 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following columns' in
                         self.controller.run_summary['warnings'][0]['message'])
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1029,6 +1055,10 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['warnings'][0]['index'], index_array[1] + 2)
         self.assertTrue('Could not find schema column for bdef column name' in
                         self.controller.run_summary['warnings'][0]['message'])
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1060,6 +1090,10 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find column info for the following schema columns' in
                         self.controller.run_summary['warnings'][0]['message'])
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1092,10 +1126,401 @@ class TestColumnAction(unittest.TestCase):
         self.controller.update_bdef_columns(key, index_array)
         self.assertEqual(mock_create_column.call_count, 1)
         self.assertEqual(mock_delete_column.call_count, 1)
-        self.assertEqual(len(self.controller.run_summary['errors']), 2)
-        self.assertEqual(self.controller.run_summary['errors'][0]['index'], otags.ERROR_CODE)
+        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Error during deleting empty schema names' in
-                        str(self.controller.run_summary['errors'][0]['message']))
-        self.assertEqual(self.controller.run_summary['errors'][1]['index'], index_array[1] + 2)
+                        str(self.controller.run_summary['warnings'][0]['message']))
+        self.assertEqual(len(self.controller.run_summary['errors']), 1)
+        self.assertEqual(self.controller.run_summary['errors'][0]['index'], index_array[1] + 2)
         self.assertTrue('Error during creating bdef column names' in
-                        str(self.controller.run_summary['errors'][1]['message']))
+                        str(self.controller.run_summary['errors'][0]['message']))
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 1)
+
+
+class TestSampleAction(unittest.TestCase):
+    """
+    Test Suite for Action Sample
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test.
+        """
+        self.controller = otags.Controller()
+
+    def test_check_sample_files(self):
+        """
+        Test of checking Excel worksheet for empty cells
+
+        """
+        self.controller.data_frame = pd.DataFrame(
+            data=[[string_generator()], [''], ['']],
+            columns=[Objects.SAMPLE.value])
+
+        # Run scenario and check values
+        self.controller.check_sample_files()
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+
+    def test_run_aws_command_no_command_found(self):
+        """
+        Test of getting aws method with no commmand found
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix'
+        )
+
+        return_value = self.controller.run_aws_command('s3_err', resp, 'path', 'file')
+        self.assertTrue('Command s3_err not found' in return_value)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    def test_get_bdef_sample_files(self, mock_bdef):
+        """
+        Test of getting sample files for a given business object definition
+
+        """
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_bdef.return_value = mock.Mock(
+            sample_data_files=[mock.Mock(
+                directory_path=directory_path,
+                file_name=file_name
+            )]
+        )
+
+        key = (string_generator(), string_generator())
+
+        # Run scenario and check values
+        self.controller.get_bdef_sample_files(key, [0])
+        self.assertTrue(key in self.controller.sample_files)
+        self.assertEqual(self.controller.sample_files[key][file_name], directory_path)
+        self.assertEqual(len(self.controller.sample_files[key].keys()), 1)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    def test_get_bdef_sample_files_no_files(self, mock_bdef):
+        """
+        Test of getting sample files for a given business object definition with no files
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            sample_data_files=[]
+        )
+
+        key = (string_generator(), string_generator())
+
+        # Run scenario and check values
+        self.controller.get_bdef_sample_files(key, [0])
+        self.assertFalse(key in self.controller.sample_files)
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+        """
+        Test of uploading and downloading sample files
+
+        """
+        mock_cmp.return_value = False
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = True
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=False)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+        mock_cmp.assert_called_once()
+        mock_remove.assert_called_once()
+        mock_os_exists.assert_called_once()
+        mock_upload.assert_called_once()
+        mock_download.assert_called_once()
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files_no_file_found(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+        """
+        Test of uploading and downloading sample files with no file found
+
+        """
+        mock_cmp.return_value = False
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = False
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=False)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_index'], [i + 2 for i in index_array])
+        self.assertEqual(self.controller.run_summary['fail_rows'], len(index_array))
+
+        mock_os_exists.assert_called_once()
+        self.assertEqual(mock_cmp.call_count, 0)
+        self.assertEqual(mock_remove.call_count, 0)
+        self.assertEqual(mock_upload.call_count, 0)
+        self.assertEqual(mock_download.call_count, 0)
+
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files_skip_upload(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+        """
+        Test of uploading and downloading sample files with file already uploaded
+
+        """
+        mock_cmp.return_value = False
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = True
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name], [file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=False)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+        self.assertEqual(mock_os_exists.call_count, 2)
+        self.assertEqual(mock_cmp.call_count, 1)
+        self.assertEqual(mock_remove.call_count, 1)
+        self.assertEqual(mock_upload.call_count, 1)
+        self.assertEqual(mock_download.call_count, 1)
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files_same_contents(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+        """
+        Test of uploading and downloading sample files with downloaded file being same as uploaded
+
+        """
+        mock_cmp.return_value = True
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = True
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=False)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+        self.assertEqual(mock_os_exists.call_count, 1)
+        self.assertEqual(mock_cmp.call_count, 1)
+        self.assertEqual(mock_remove.call_count, 1)
+        self.assertEqual(mock_upload.call_count, 0)
+        self.assertEqual(mock_download.call_count, 1)
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files_same_contents(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+        """
+        Test of uploading and downloading sample files with downloaded file being same as uploaded
+
+        """
+        mock_cmp.return_value = True
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = True
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=False)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+        self.assertEqual(mock_os_exists.call_count, 1)
+        self.assertEqual(mock_cmp.call_count, 1)
+        self.assertEqual(mock_remove.call_count, 1)
+        self.assertEqual(mock_upload.call_count, 0)
+        self.assertEqual(mock_download.call_count, 1)
+
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_download_single_sample_file')
+    @mock.patch('herdsdk.UploadAndDownloadApi.'
+                'uploadand_download_initiate_upload_sample_file')
+    @mock.patch('os.path.exists')
+    @mock.patch('os.remove')
+    @mock.patch('filecmp.cmp')
+    def test_upload_download_sample_files_aws_error(self, mock_cmp, mock_remove, mock_os_exists, mock_upload,
+                                                        mock_download):
+        """
+        Test of uploading and downloading sample files with aws error
+
+        """
+        mock_cmp.return_value = True
+        mock_remove.return_value = mock.DEFAULT
+        mock_os_exists.return_value = True
+
+        file_name = 'test_file'
+        directory_path = 'path/'
+
+        mock_download.return_value = mock.Mock(
+            business_object_definition_sample_data_file_key=mock.Mock(
+                directory_path=directory_path
+            )
+        )
+        mock_upload.return_value = mock.DEFAULT
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[file_name]],
+            columns=[Objects.SAMPLE.value])
+        key = (string_generator(), string_generator())
+        index_array = self.controller.data_frame.index.tolist()
+
+        self.controller.run_aws_command = mock.Mock(return_value=True)
+        self.controller.sample_files[key] = {
+            file_name: directory_path
+        }
+
+        # Run scenario and check values
+        self.controller.upload_download_sample_files(key, index_array)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_index'], [i + 2 for i in index_array])
+        self.assertEqual(self.controller.run_summary['fail_rows'], len(index_array))
+
+        self.assertEqual(mock_os_exists.call_count, 1)
+        self.assertEqual(mock_cmp.call_count, 0)
+        self.assertEqual(mock_remove.call_count, 0)
+        self.assertEqual(mock_upload.call_count, 0)
+        self.assertEqual(mock_download.call_count, 1)
