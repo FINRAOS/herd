@@ -5,14 +5,14 @@ info:
   title: "herd-external"
 basePath: "/herd-app/rest"
 tags:
-- name: "Namespace"
 - name: "Expected Partition Value"
-- name: "Partition Key Group"
 - name: "Business Object Format"
-- name: "Current User"
-- name: "Business Object Data"
 - name: "Storage"
 - name: "Business Object Definition"
+- name: "Namespace"
+- name: "Partition Key Group"
+- name: "Current User"
+- name: "Business Object Data"
 paths:
   /businessObjectData/availability:
     post:
