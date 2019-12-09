@@ -72,4 +72,11 @@ public interface StorageFileDao extends BaseJpaDao
      * @return the list of storage file paths
      */
     List<String> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix);
+
+    /**
+     * Saves a list of storage file entities.
+     *
+     * @param storageFileEntities the list of storage file entities to save.
+     */
+    void saveStorageFiles(List<StorageFileEntity> storageFileEntities);
 }
