@@ -59,7 +59,7 @@ class MainUI(tk.Frame):
         self.username = tk.StringVar()
         self.userpwd = tk.StringVar()
         self.delete = tk.BooleanVar()
-        self.sample_dir = tk.StringVar(value=self.controller.path)
+        self.sample_dir = tk.StringVar()
         self.getfile = tk.StringVar()
         self.grid(sticky=ALL)
 
@@ -230,8 +230,9 @@ class MainUI(tk.Frame):
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
-            resp = self.controller.get_build_info()
-            LOGGER.info(resp)
+            self.display('Connection Check')
+            self.controller.get_current_user()
+            self.display('Success')
             self.display('Starting Run')
             run_summary = method()
 

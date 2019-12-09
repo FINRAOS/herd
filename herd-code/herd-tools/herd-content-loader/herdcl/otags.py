@@ -786,21 +786,27 @@ class Controller:
 
         """
         self.run_summary['total_rows'] = 1
-        self.get_build_info()
+        self.get_current_user()
         return self.run_summary
 
     ############################################################################
-    def get_build_info(self):
+    def get_current_user(self):
         """
-        Gets the build information for the Data Management deployed code.
+        Gets the current user permissions for DM
 
         :return: response from herdsdk call
 
         """
         # create an instance of the API class
+        api_instance = herdsdk.CurrentUserApi(herdsdk.ApiClient(self.configuration))
+
+        api_response = api_instance.current_user_get_current_user()
+        return api_response
+
+    ############################################################################
+    def get_build_info(self):
         api_instance = herdsdk.ApplicationApi(herdsdk.ApiClient(self.configuration))
 
-        # Gets the build information
         api_response = api_instance.application_get_build_info()
         return api_response
 
@@ -1074,7 +1080,7 @@ class Controller:
 
 ################################################################################
 class ApiClientOverwrite(herdsdk.ApiClient):
-    def deserialize(self, response, response_type):
+    def deserialize(self, response, response_type): # pragma: no cover
         """Deserializes response into an object.
 
         :param response: RESTResponse object to be deserialized.

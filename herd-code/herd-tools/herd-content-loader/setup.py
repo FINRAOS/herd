@@ -30,7 +30,7 @@ from setuptools import setup, find_packages
 # http://pypi.python.org/pypi/setuptools
 setup(
     name="herdcl",
-    version="0.110.1",
+    version="0.110.2",
     description="herd data management",
     maintainer="FINRA",
     maintainer_email="herd@finra.org",

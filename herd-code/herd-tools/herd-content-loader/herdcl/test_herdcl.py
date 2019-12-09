@@ -451,7 +451,7 @@ class TestObjectAction(unittest.TestCase):
 
         mock_get_sme.return_value = mock.Mock(
             business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='user')
+                mock.Mock(user_id='user@something.com')
             ]
         )
 
@@ -637,6 +637,55 @@ class TestColumnAction(unittest.TestCase):
         The setup method that will be called before each test.
         """
         self.controller = otags.Controller()
+
+    def test_load_columns(self):
+        """
+        Test of the main load column action
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['namespace', 'definition']], columns=[Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value])
+        )
+        self.controller.check_format_schema_columns = mock.Mock()
+        self.controller.get_bdef_columns = mock.Mock()
+        self.controller.update_bdef_columns = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_columns()
+        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+
+    def test_load_columns_exception(self):
+        """
+        Test of the main load column action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(
+                data=[['namespace1', 'definition1', '', ''], ['namespace2', 'definition2', '', '']],
+                columns=[
+                    Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value, Columns.SCHEMA_NAME.value,
+                    Columns.COLUMN_NAME.value
+                ]
+                )
+        )
+
+        self.controller.check_format_schema_columns = mock.Mock()
+        self.controller.get_business_object_definition = mock.Mock(
+            side_effect=[rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+        )
+        self.controller.delete_bdef_column = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_columns()
+        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(len(self.controller.run_summary['errors']), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary['errors'][1]['message'])
 
     def test_check_format_schema_columns(self):
         """
@@ -1150,6 +1199,52 @@ class TestSampleAction(unittest.TestCase):
         """
         self.controller = otags.Controller()
 
+    def test_load_samples(self):
+        """
+        Test of the main load sample action
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['namespace', 'definition']], columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value])
+        )
+        self.controller.check_sample_files = mock.Mock()
+        self.controller.get_bdef_sample_files = mock.Mock()
+        self.controller.upload_download_sample_files = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_samples()
+        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+
+    def test_load_samples_exception(self):
+        """
+        Test of the main load sample action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['namespace1', 'definition1'], ['namespace2', 'definition2']],
+                                      columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value]
+                                      )
+        )
+
+        self.controller.check_sample_files = mock.Mock()
+        self.controller.get_business_object_definition = mock.Mock(
+            side_effect=[rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+        )
+        self.controller.upload_download_sample_files = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_samples()
+        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(len(self.controller.run_summary['errors']), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary['errors'][1]['message'])
+
+
     def test_check_sample_files(self):
         """
         Test of checking Excel worksheet for empty cells
@@ -1371,56 +1466,6 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(mock_cmp.call_count, 1)
         self.assertEqual(mock_remove.call_count, 1)
         self.assertEqual(mock_upload.call_count, 1)
-        self.assertEqual(mock_download.call_count, 1)
-
-    @mock.patch('herdsdk.UploadAndDownloadApi.'
-                'uploadand_download_initiate_download_single_sample_file')
-    @mock.patch('herdsdk.UploadAndDownloadApi.'
-                'uploadand_download_initiate_upload_sample_file')
-    @mock.patch('os.path.exists')
-    @mock.patch('os.remove')
-    @mock.patch('filecmp.cmp')
-    def test_upload_download_sample_files_same_contents(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
-        """
-        Test of uploading and downloading sample files with downloaded file being same as uploaded
-
-        """
-        mock_cmp.return_value = True
-        mock_remove.return_value = mock.DEFAULT
-        mock_os_exists.return_value = True
-
-        file_name = 'test_file'
-        directory_path = 'path/'
-
-        mock_download.return_value = mock.Mock(
-            business_object_definition_sample_data_file_key=mock.Mock(
-                directory_path=directory_path
-            )
-        )
-        mock_upload.return_value = mock.DEFAULT
-
-        self.controller.data_frame = pd.DataFrame(
-            data=[[file_name]],
-            columns=[Objects.SAMPLE.value])
-        key = (string_generator(), string_generator())
-        index_array = self.controller.data_frame.index.tolist()
-
-        self.controller.run_aws_command = mock.Mock(return_value=False)
-        self.controller.sample_files[key] = {
-            file_name: directory_path
-        }
-
-        # Run scenario and check values
-        self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
-
-        self.assertEqual(mock_os_exists.call_count, 1)
-        self.assertEqual(mock_cmp.call_count, 1)
-        self.assertEqual(mock_remove.call_count, 1)
-        self.assertEqual(mock_upload.call_count, 0)
         self.assertEqual(mock_download.call_count, 1)
 
     @mock.patch('herdsdk.UploadAndDownloadApi.'

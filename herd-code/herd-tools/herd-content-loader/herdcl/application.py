@@ -47,8 +47,9 @@ class Application:
         try:
             self.controller.setup_run(config)
             method = self.controller.get_action()
-            resp = self.controller.get_build_info()
-            LOGGER.info(resp)
+            LOGGER.info('Connection Check')
+            self.controller.get_current_user()
+            LOGGER.info('Success')
             run_summary = method()
 
             LOGGER.info('\n\n--- RUN SUMMARY ---')
@@ -91,7 +92,7 @@ def main():
         import gui
         app = gui.MainUI()
         LOGGER.info('Starting App')
-        app.master.title('Herd Content Loader  v.20191203')
+        app.master.title('Herd Content Loader  v.20191209')
         app.mainloop()
 
 
