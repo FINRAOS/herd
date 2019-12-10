@@ -315,7 +315,28 @@ class TestObjectAction(unittest.TestCase):
         row = ['namespace', string_generator(), string_generator(), 'bdef_name', string_generator(), string_generator()]
 
         # Run scenario and check values
-        self.controller.update_bdef_descriptive_info(row)
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        mock_descr_info.assert_called_once()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info_no_format(self, mock_descr_info, mock_bdef):
+        """
+        Test of updating business object definition with no descriptive info
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description=string_generator(string_length=10),
+            descriptive_business_object_format=None,
+            display_name=string_generator(string_length=13)
+        )
+        row = ['namespace', string_generator(), string_generator(), 'bdef_name', string_generator(), string_generator()]
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
         mock_bdef.assert_called_once()
         mock_descr_info.assert_called_once()
 
@@ -340,7 +361,7 @@ class TestObjectAction(unittest.TestCase):
         row = ['namespace', 'usage', 'file_type', 'bdef_name', 'logical_name', 'description']
 
         # Run scenario and check values
-        self.controller.update_bdef_descriptive_info(row)
+        self.controller.update_bdef_descriptive_info(0, row)
         mock_bdef.assert_called_once()
         self.assertEqual(mock_descr_info.get.call_count, 0)
 
@@ -369,7 +390,7 @@ class TestObjectAction(unittest.TestCase):
         row = df.iloc[0]
 
         # Run scenario and check values
-        self.controller.update_sme(row)
+        self.controller.update_sme(0, row)
         mock_get_sme.assert_called_once()
         mock_delete_sme.assert_called_once()
         mock_create_sme.assert_called_once()
@@ -399,7 +420,7 @@ class TestObjectAction(unittest.TestCase):
         row = df.iloc[0]
 
         # Run scenario and check values
-        self.controller.update_sme(row)
+        self.controller.update_sme(0, row)
         mock_get_sme.assert_called_once()
         self.assertEqual(mock_delete_sme.call_count, 0)
         mock_create_sme.assert_called_once()
@@ -429,7 +450,7 @@ class TestObjectAction(unittest.TestCase):
         row = df.iloc[0]
 
         # Run scenario and check values
-        self.controller.update_sme(row)
+        self.controller.update_sme(0, row)
         mock_get_sme.assert_called_once()
         mock_delete_sme.assert_called_once()
         self.assertEqual(mock_create_sme.call_count, 0)
@@ -460,7 +481,7 @@ class TestObjectAction(unittest.TestCase):
         row = df.iloc[0]
 
         # Run scenario and check values
-        self.controller.update_sme(row)
+        self.controller.update_sme(0, row)
         mock_get_sme.assert_called_once()
         self.assertEqual(mock_delete_sme.call_count, 0)
         self.assertEqual(mock_create_sme.call_count, 0)
@@ -491,7 +512,7 @@ class TestObjectAction(unittest.TestCase):
         row = df.iloc[0]
 
         # Run scenario and check values
-        self.controller.update_sme(row)
+        self.controller.update_sme(0, row)
         mock_get_sme.assert_called_once()
         mock_delete_sme.assert_called_once()
         self.assertEqual(mock_create_sme.call_count, 6)
@@ -534,7 +555,7 @@ class TestObjectAction(unittest.TestCase):
         self.controller.tag_types[tag_type_code_1] = 'Display Name 1'
 
         # Run scenario and check values
-        self.controller.update_bdef_tags(row)
+        self.controller.update_bdef_tags(0, row)
         mock_get_bdef_tag.assert_called_once()
         mock_delete_tag.assert_called_once()
         mock_create_tag.assert_called_once()
@@ -574,7 +595,7 @@ class TestObjectAction(unittest.TestCase):
         self.controller.tag_types[tag_type_code_2] = 'Display Name 2'
 
         # Run scenario and check values
-        self.controller.update_bdef_tags(row)
+        self.controller.update_bdef_tags(0, row)
         mock_get_bdef_tag.assert_called_once()
         self.assertEqual(mock_delete_tag.call_count, 0)
         self.assertEqual(mock_create_tag.call_count, 2)
@@ -621,7 +642,7 @@ class TestObjectAction(unittest.TestCase):
         self.controller.tag_types[tag_type_code_1] = 'Display Name 1'
 
         # Run scenario and check values
-        self.controller.update_bdef_tags(row)
+        self.controller.update_bdef_tags(0, row)
         mock_get_bdef_tag.assert_called_once()
         mock_delete_tag.assert_called_once()
         self.assertEqual(mock_create_tag.call_count, 0)
@@ -1295,7 +1316,6 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.get_bdef_sample_files(key, [0])
-        self.assertTrue(key in self.controller.sample_files)
         self.assertEqual(self.controller.sample_files[key][file_name], directory_path)
         self.assertEqual(len(self.controller.sample_files[key].keys()), 1)
 
@@ -1314,7 +1334,7 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.get_bdef_sample_files(key, [0])
-        self.assertFalse(key in self.controller.sample_files)
+        self.assertEqual(self.controller.sample_files[key], {})
 
     @mock.patch('herdsdk.UploadAndDownloadApi.'
                 'uploadand_download_initiate_download_single_sample_file')

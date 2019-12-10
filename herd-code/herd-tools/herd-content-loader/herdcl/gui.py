@@ -239,6 +239,11 @@ class MainUI(tk.Frame):
             self.display('\n\n--- RUN SUMMARY ---')
             self.display('Processed {} rows'.format(run_summary['total_rows']))
             self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            if len(run_summary['changes']) > 0:
+                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+                self.display('\n--- RUN CHANGES ---')
+                for e in changes:
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']))
             if len(run_summary['warnings']) > 0:
                 warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
                 self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)

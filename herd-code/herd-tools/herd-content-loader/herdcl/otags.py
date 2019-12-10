@@ -69,6 +69,7 @@ class Controller:
             'success_rows': 0,
             'fail_rows': 0,
             'fail_index': [],
+            'changes': [],
             'warnings': [],
             'errors': []
         }
@@ -212,7 +213,7 @@ class Controller:
             for step in self.run_steps:
                 if row_pass:
                     try:
-                        step(row)
+                        step(index, row)
                     except ApiException as e:
                         LOGGER.error(e)
                         self.update_run_summary_batch_errors([index], e)
@@ -226,8 +227,6 @@ class Controller:
                 self.run_summary['success_rows'] += 1
 
         return self.run_summary
-
-        # json_data = json.dumps(team.__dict__, lambda o: o.__dict__, indent=4)
 
     ############################################################################
     def load_columns(self):
@@ -291,6 +290,10 @@ class Controller:
 
     ############################################################################
     def reset_run(self):
+        """
+        Reset controller variables
+
+        """
         self.run_steps = []
         self.tag_types = {
             'columns': []
@@ -301,6 +304,7 @@ class Controller:
             'success_rows': 0,
             'fail_rows': 0,
             'fail_index': [],
+            'changes': [],
             'warnings': [],
             'errors': []
         }
@@ -309,7 +313,7 @@ class Controller:
     ############################################################################
     def update_run_summary_batch_errors(self, index_array, message):
         """
-        Updates run summary
+        Updates run summary with errors
 
         :param index_array: List of int corresponding to row index in Excel worksheet
         :param message: Error message
@@ -325,10 +329,26 @@ class Controller:
             self.run_summary['errors'].append(error)
 
     ############################################################################
-    def update_bdef_descriptive_info(self, row):
+    def update_run_summary_batch_changes(self, index, message):
+        """
+        Updates run summary with changes
+
+        :param index: Row index in Excel worksheet
+        :param message: Before and after row changes
+
+        """
+        change = {
+            'index': index + 2,
+            'message': message
+        }
+        self.run_summary['changes'].append(change)
+
+    ############################################################################
+    def update_bdef_descriptive_info(self, index, row):
         """
         Updates an existing business object definition descriptive information
 
+        :param index: Row index in Excel worksheet
         :param row: A row inside the Pandas DataFrame
 
         """
@@ -339,10 +359,32 @@ class Controller:
         LOGGER.info(resp)
 
         # See if description, display name, usage, or file type in excel differs from UDC
-        if (resp.description != description or
-                    resp.display_name != logical_name or
-                    resp.descriptive_business_object_format.business_object_format_usage != usage or
-                    resp.descriptive_business_object_format.business_object_format_file_type != file_type):
+        if not resp.descriptive_business_object_format:
+            json = {
+                'description': description,
+                'displayName': logical_name,
+                'formatUsage': usage,
+                'fileType': file_type
+            }
+            LOGGER.info('Adding BDef Descriptive Info')
+            resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
+                                                                           business_object_definition_name=bdef_name,
+                                                                           update_request=json)
+            LOGGER.info('Success')
+            LOGGER.info(resp)
+            message = 'Change in row. Old Descriptive Info:\nNone'.format(json)
+            self.update_run_summary_batch_changes(index, message)
+
+        elif (resp.description != description or
+                      resp.display_name != logical_name or
+                      resp.descriptive_business_object_format.business_object_format_usage != usage or
+                      resp.descriptive_business_object_format.business_object_format_file_type != file_type):
+            old_data = {
+                'description': resp.description,
+                'displayName': resp.display_name,
+                'formatUsage': resp.descriptive_business_object_format.business_object_format_usage,
+                'fileType': resp.descriptive_business_object_format.business_object_format_file_type
+            }
             json = {
                 'description': description,
                 'displayName': logical_name,
@@ -355,12 +397,15 @@ class Controller:
                                                                            update_request=json)
             LOGGER.info('Success')
             LOGGER.info(resp)
+            message = 'Change in row. Old Descriptive Info:\n{}'.format(old_data)
+            self.update_run_summary_batch_changes(index, message)
 
     ############################################################################
-    def update_sme(self, row):
+    def update_sme(self, index, row):
         """
         Updates existing business object definition subject matter experts for a specific business object definition
 
+        :param index: Row index in Excel worksheet
         :param row: A row inside the Pandas DataFrame
 
         """
@@ -389,12 +434,14 @@ class Controller:
                 remove_sme_list.append(user_id)
 
         LOGGER.info('Current expert list: {}'.format(', '.join(current_smes)))
+        row_change = False
 
         for sme in remove_sme_list:
             user_id = '{}{}{}rp.{}.{}sd.{}'.format(sme, chr(64), 'co', 'root', 'na', 'com')
             LOGGER.info('Deleting SME: {}'.format(sme))
             self.delete_subject_matter_expert(namespace, bdef_name, user_id)
             LOGGER.info('SME deleted')
+            row_change = True
 
         if user:
             for user_id in user:
@@ -403,12 +450,18 @@ class Controller:
                 LOGGER.info('Adding SME: {}'.format(user_id))
                 self.create_subject_matter_expert(namespace, bdef_name, user_id)
                 LOGGER.info('SME Added')
+                row_change = True
+
+        if row_change:
+            message = 'Change in row. Old SME list:\n{}'.format(', '.join(current_smes))
+            self.update_run_summary_batch_changes(index, message)
 
     ############################################################################
-    def update_bdef_tags(self, row):
+    def update_bdef_tags(self, index, row):
         """
         Updates business object definition tags
 
+        :param index: Row index in Excel worksheet
         :param row: A row inside the Pandas DataFrame
 
         """
@@ -426,23 +479,32 @@ class Controller:
 
         LOGGER.info('Tags in worksheet: {}'.format(tags_to_add))
         LOGGER.info('Getting Current Bdef Tags')
+        row_change = False
+        old_tags = {}
         resp = self.get_bdef_tags(namespace, bdef_name)
         for bdef_tag in resp.business_object_definition_tag_keys:
             tag_key = bdef_tag.tag_key
             LOGGER.info('Found Tag Key: {}'.format(tag_key))
             tag_type_code, tag_code = tag_key.tag_type_code, tag_key.tag_code
+            old_tags[tag_type_code] = tag_code
             if tag_type_code in tags_to_add and tag_code in tags_to_add[tag_type_code]:
                 tags_to_add[tag_type_code].remove(tag_code)
             else:
                 LOGGER.info('Deleting Tag Key: {}'.format(tag_key))
                 self.delete_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
                 LOGGER.info('Deleted')
+                row_change = True
 
         for tag_type_code, row_entry in tags_to_add.items():
             for tag_code in row_entry:
                 LOGGER.info('Adding {}'.format(tag_code))
                 self.create_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
                 LOGGER.info('Added')
+                row_change = True
+
+        if row_change:
+            message = 'Change in row. Old tags:\n{}'.format(old_tags)
+            self.update_run_summary_batch_changes(index, message)
 
     ############################################################################
     def check_format_schema_columns(self):
@@ -575,6 +637,7 @@ class Controller:
             # Compare excel data to UDC data
             LOGGER.info('Comparing Excel worksheet with UDC data')
             for index in index_array:
+                row_change = False
                 try:
                     xls_schema_name = str.upper(self.data_frame.at[index, Columns.SCHEMA_NAME.value]).strip()
                     xls_column_name = self.data_frame.at[index, Columns.COLUMN_NAME.value]
@@ -582,6 +645,7 @@ class Controller:
 
                     schema_match_filter = self.format_columns[key][Columns.SCHEMA_NAME.value] == xls_schema_name
                     schema_match_df = self.format_columns[key][schema_match_filter]
+                    old_column = {}
                     if len(schema_match_df.index) > 0:
                         row = schema_match_df.iloc[0]
                         i = schema_match_df.index.tolist()[0]
@@ -589,18 +653,24 @@ class Controller:
                         description = row[Columns.DESCRIPTION.value]
 
                         LOGGER.info('Current Column Name: {}\nCurrent Description: {}'.format(column_name, description))
+                        old_column = {
+                            'Column': column_name,
+                            'Description': description
+                        }
                         if not row['Found']:
                             LOGGER.info('Adding bdef column name: {}'.format(xls_column_name))
                             self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
                                                     xls_description)
                             LOGGER.info('Success')
                             self.format_columns[key].at[i, 'Found'] = True
+                            row_change = True
                         elif column_name != xls_column_name or description != xls_description:
                             LOGGER.info('Changing bdef column name: {}'.format(xls_column_name))
                             self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
                             self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
                                                     xls_description)
                             LOGGER.info('Success')
+                            row_change = True
                         else:
                             LOGGER.info('No changes made')
                     else:
@@ -613,6 +683,10 @@ class Controller:
                         self.run_summary['warnings'].append(warning)
 
                     self.run_summary['success_rows'] += 1
+                    if row_change:
+                        message = 'Change in row. Old column:\n{}'.format(old_column)
+                        self.update_run_summary_batch_changes(index, message)
+
                 except ApiException as e:
                     LOGGER.error(e)
                     self.update_run_summary_batch_errors([index], e)
@@ -660,11 +734,11 @@ class Controller:
             resp = self.get_business_object_definition(namespace, bdef_name)
             LOGGER.info('Success')
 
+            if key not in self.sample_files:
+                self.sample_files[key] = {}
+
             if resp.sample_data_files:
                 LOGGER.info('Found existing sample files')
-                if key not in self.sample_files:
-                    self.sample_files[key] = {}
-
                 for sample in resp.sample_data_files:
                     self.sample_files[key][sample.file_name] = sample.directory_path
             else:
@@ -752,6 +826,8 @@ class Controller:
 
                     uploaded_files.append(file)
                     self.run_summary['success_rows'] += 1
+                    message = 'Change in row. Old files: {}'.format(sample_files)
+                    self.update_run_summary_batch_changes(index, message)
 
                 except ApiException as e:
                     LOGGER.error(e)
@@ -966,7 +1042,7 @@ class Controller:
 
     ############################################################################
     def get_format(self, namespace, business_object_definition_name, business_object_format_usage,
-                   business_object_format_file_type, business_object_format_version):
+                   business_object_format_file_type, business_object_format_version=None):
         api_instance = herdsdk.BusinessObjectFormatApi(herdsdk.ApiClient(self.configuration))
 
         LOGGER.info(
@@ -977,12 +1053,20 @@ class Controller:
                 business_object_format_usage,
                 business_object_format_file_type,
                 business_object_format_version))
-        api_response = api_instance.business_object_format_get_business_object_format(
-            namespace,
-            business_object_definition_name,
-            business_object_format_usage,
-            business_object_format_file_type,
-            business_object_format_version=business_object_format_version)
+
+        if business_object_format_version is None:
+            api_response = api_instance.business_object_format_get_business_object_format(
+                namespace,
+                business_object_definition_name,
+                business_object_format_usage,
+                business_object_format_file_type)
+        else:
+            api_response = api_instance.business_object_format_get_business_object_format(
+                namespace,
+                business_object_definition_name,
+                business_object_format_usage,
+                business_object_format_file_type,
+                business_object_format_version=business_object_format_version)
         return api_response
 
     ############################################################################
@@ -1080,7 +1164,7 @@ class Controller:
 
 ################################################################################
 class ApiClientOverwrite(herdsdk.ApiClient):
-    def deserialize(self, response, response_type): # pragma: no cover
+    def deserialize(self, response, response_type):  # pragma: no cover
         """Deserializes response into an object.
 
         :param response: RESTResponse object to be deserialized.

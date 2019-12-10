@@ -55,6 +55,11 @@ class Application:
             LOGGER.info('\n\n--- RUN SUMMARY ---')
             LOGGER.info('Processed {} rows'.format(run_summary['total_rows']))
             LOGGER.info('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            if len(run_summary['changes']) > 0:
+                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+                LOGGER.info('\n--- RUN CHANGES ---')
+                for e in changes:
+                    LOGGER.info('Row: {}\nMessage: {}'.format(e['index'], e['message']))
             if len(run_summary['warnings']) > 0:
                 warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
                 LOGGER.info('\n--- RUN WARNINGS ---')
