@@ -170,31 +170,15 @@ class Controller:
         return pd.read_excel(self.excel_file, sheet_name=sheet).fillna('')
 
     ############################################################################
-    def load_worksheet_tag_types(self):
-        """
-        Gets list of all tag types and compares with Excel worksheet columns
-
-        """
-        LOGGER.info('Getting list of all tag types')
-        resp = self.get_tag_types().tag_type_keys
-        LOGGER.info('Success')
-        LOGGER.info(resp)
-
-        for tag in resp:
-            code = tag.tag_type_code
-            LOGGER.info('Getting display name of tag type code: {}'.format(code))
-            display_name = self.get_tag_type_code(code).display_name.strip()
-            LOGGER.info('Display name found: {}'.format(display_name))
-            self.tag_types[code] = display_name
-            LOGGER.info('Checking if \'{}\' is a column in worksheet'.format(display_name))
-            if display_name in list(self.data_frame):
-                self.tag_types['columns'].append(code)
-                LOGGER.info('Column \'{}\' added'.format(display_name))
-
-    ############################################################################
     def load_object(self):
         """
         One of the controller actions. Loads business object definitions
+
+        Steps involved:
+        1) Get all tag types and compare with worksheet
+        2) Update business object definition descriptive information
+        3) Update subject matter experts
+        4) Update business object definition tags
 
         :return: Run Summary dict
 
@@ -234,6 +218,11 @@ class Controller:
         """
         One of the controller actions. Loads business object columns
 
+        Steps involved:
+        1) Check worksheet schema columns
+        2) Get business object definition columns and compare with business object format schema columns
+        3) Update business object definition columns
+
         :return: Run Summary dict
 
         """
@@ -258,6 +247,10 @@ class Controller:
     def load_lineage(self):
         """
         One of the controller actions. Loads business object format lineage
+
+        Steps involved:
+        1) Check worksheet lineage columns
+        2) Compare worksheet with existing business object format parents
 
         :return: Run Summary dict
 
@@ -285,6 +278,11 @@ class Controller:
     def load_samples(self):
         """
         One of the controller actions. Loads business object sample files
+
+        Steps involved:
+        1) Check sample files listed in worksheet
+        2) Get existing business object definition sample data files
+        3) Download existing and compare. Upload new files
 
         :return: Run Summary dict
 
@@ -314,6 +312,7 @@ class Controller:
         :return: Run Summary dict
 
         """
+        # TODO
         return self.run_summary
 
     ############################################################################
@@ -373,13 +372,14 @@ class Controller:
         :param row: A row inside the Pandas DataFrame
 
         """
+        # Descriptive format information is inside the business object definition
         namespace, usage, file_type, bdef_name, logical_name, description = row[:6]
         LOGGER.info('Getting BDef for {}'.format((namespace, bdef_name)))
         resp = self.get_business_object_definition(namespace, bdef_name)
         LOGGER.info('Success')
         LOGGER.info(resp)
 
-        # See if description, display name, usage, or file type in excel differs from UDC
+        # Check if descriptive format exists
         if not resp.descriptive_business_object_format:
             json = {
                 'description': description,
@@ -396,6 +396,7 @@ class Controller:
             message = 'Change in row. Old Descriptive Info:\nNone'.format(json)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
+        # See if description, display name, usage, or file type in excel differs from UDC
         elif (resp.description != description or
                       resp.display_name != logical_name or
                       resp.descriptive_business_object_format.business_object_format_usage != usage or
@@ -432,6 +433,7 @@ class Controller:
         """
         namespace, _, _, bdef_name = row[:4]
 
+        # Business Object Definition SMEs Get
         LOGGER.info('Getting SME for {}'.format((namespace, bdef_name)))
         resp = self.get_subject_matter_experts(namespace, bdef_name)
         LOGGER.info('Success')
@@ -457,6 +459,7 @@ class Controller:
         LOGGER.info('Current expert list: {}'.format(', '.join(current_smes)))
         row_change = False
 
+        # Remove SMEs
         for sme in remove_sme_list:
             user_id = '{}{}{}rp.{}.{}sd.{}'.format(sme, chr(64), 'co', 'root', 'na', 'com')
             LOGGER.info('Deleting SME: {}'.format(sme))
@@ -464,6 +467,7 @@ class Controller:
             LOGGER.info('SME deleted')
             row_change = True
 
+        # Create SMEs
         if user:
             for user_id in user:
                 if not '@' in user_id:
@@ -473,9 +477,36 @@ class Controller:
                 LOGGER.info('SME Added')
                 row_change = True
 
+        # Add any changes to run summary
         if row_change:
             message = 'Change in row. Old SME list:\n{}'.format(', '.join(current_smes))
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+    ############################################################################
+    def load_worksheet_tag_types(self):
+        """
+        Gets list of all tag types and compares with Excel worksheet columns
+
+        Each tag type key has a tag type code
+        With the tag type code, you can look up tag type display names
+        These match with columns in the worksheet
+
+        """
+        LOGGER.info('Getting list of all tag types')
+        resp = self.get_tag_types().tag_type_keys
+        LOGGER.info('Success')
+        LOGGER.info(resp)
+
+        for tag in resp:
+            code = tag.tag_type_code
+            LOGGER.info('Getting display name of tag type code: {}'.format(code))
+            display_name = self.get_tag_type_code(code).display_name.strip()
+            LOGGER.info('Display name found: {}'.format(display_name))
+            self.tag_types[code] = display_name
+            LOGGER.info('Checking if \'{}\' is a column in worksheet'.format(display_name))
+            if display_name in list(self.data_frame):
+                self.tag_types['columns'].append(code)
+                LOGGER.info('Column \'{}\' added'.format(display_name))
 
     ############################################################################
     def update_bdef_tags(self, index, row):
@@ -488,6 +519,7 @@ class Controller:
         """
         namespace, _, _, bdef_name = row[:4]
 
+        # Check worksheet for tags in each tag type code
         LOGGER.info('Checking worksheet for BDef tags to add')
         tags_to_add = {}
         for code in self.tag_types['columns']:
@@ -498,6 +530,7 @@ class Controller:
                 row_entry = [x.strip() for x in row[display_name].split(',')]
             tags_to_add[code] = row_entry
 
+        # Compare existing tags with tags in worksheet
         LOGGER.info('Tags in worksheet: {}'.format(tags_to_add))
         LOGGER.info('Getting Current Bdef Tags')
         row_change = False
@@ -523,6 +556,7 @@ class Controller:
                 LOGGER.info('Added')
                 row_change = True
 
+        # Add any changes to run summary
         if row_change:
             message = 'Change in row. Old tags:\n{}'.format(old_tags)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
@@ -559,6 +593,7 @@ class Controller:
         LOGGER.info('Getting business definition columns for {}'.format(key))
         (namespace, bdef_name) = key
         try:
+            # Descriptive format information is inside the business object definition
             LOGGER.info('Getting BDef')
             resp = self.get_business_object_definition(namespace, bdef_name)
             if not resp.descriptive_business_object_format:
@@ -567,6 +602,7 @@ class Controller:
                 self.update_run_summary_batch(index_array, message, Summary.ERRORS.value)
                 return
 
+            # Once you have descriptive format you can look up schema columns
             LOGGER.info('Success')
             LOGGER.info(resp.descriptive_business_object_format)
             LOGGER.info('Getting Format')
@@ -580,7 +616,7 @@ class Controller:
                 self.update_run_summary_batch(index_array, message, Summary.ERRORS.value)
                 return
 
-            # Get schema columns and bdef columns as dataframes. Merge the two to check if both contain schema name
+            # Get schema columns and bdef columns as dataframes. Outer merge the two to check if both contain schema name
             LOGGER.info('Success')
             schema_df = pd.DataFrame(
                 [{Columns.SCHEMA_NAME.value: str.upper(x.name).strip()} for x in format_resp.schema.columns])
@@ -596,6 +632,7 @@ class Controller:
                 df = pd.merge(schema_df, col_df, on=[Columns.SCHEMA_NAME.value], how='outer', indicator='Found')
                 df['Found'] = df['Found'].apply(lambda x: x == 'both')
                 self.format_columns[key] = df.fillna('')
+            # Found column used to track schema columns that have no corresponding bdef column name
             else:
                 schema_df[Columns.COLUMN_NAME.value] = ''
                 schema_df[Columns.DESCRIPTION.value] = ''
@@ -621,15 +658,15 @@ class Controller:
             LOGGER.info('Updating business definition columns for {}'.format(key))
             (namespace, bdef_name) = key
 
-            # Delete column with no schema name
-            LOGGER.info('Checking for column names with no schema name')
+            # Delete bdef columns with no schema name
+            LOGGER.info('Checking for bdef column names with no schema name')
             empty_schema_filter = self.format_columns[key][Columns.SCHEMA_NAME.value] == ''
             empty_schema_df = self.format_columns[key][empty_schema_filter]
             self.format_columns[key] = self.format_columns[key][~empty_schema_filter]
             for index, row in empty_schema_df.iterrows():
                 try:
                     LOGGER.warning(
-                        'Schema Name not found. Deleting Column Name: {}'.format(row[Columns.COLUMN_NAME.value]))
+                        'Schema Name not found. Deleting BDef Column Name: {}'.format(row[Columns.COLUMN_NAME.value]))
                     self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
                     LOGGER.warning('Success')
                 except ApiException as e:
@@ -640,7 +677,7 @@ class Controller:
                     self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.WARNINGS.value)
             empty_schema_list = empty_schema_df[Columns.COLUMN_NAME.value].tolist()
             if len(empty_schema_list) > 0:
-                message = 'Could not find a schema name for the following columns:\n{}'.format(
+                message = 'Could not find a schema name for the following bdef columns:\n{}'.format(
                     pprint.pformat(empty_schema_list, width=120, compact=True))
                 self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
 
@@ -653,6 +690,7 @@ class Controller:
                     xls_column_name = self.data_frame.at[index, Columns.COLUMN_NAME.value]
                     xls_description = self.data_frame.at[index, Columns.DESCRIPTION.value]
 
+                    # Check if schema name in worksheet matches existing schema name
                     schema_match_filter = self.format_columns[key][Columns.SCHEMA_NAME.value] == xls_schema_name
                     schema_match_df = self.format_columns[key][schema_match_filter]
                     old_column = {}
@@ -667,6 +705,8 @@ class Controller:
                             'Column': column_name,
                             'Description': description
                         }
+
+                        # Found is False means schema had no existing bdef column name
                         if not row['Found']:
                             LOGGER.info('Adding bdef column name: {}'.format(xls_column_name))
                             self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
@@ -674,6 +714,7 @@ class Controller:
                             LOGGER.info('Success')
                             self.format_columns[key].at[i, 'Found'] = True
                             row_change = True
+                        # Update existing bdef column name
                         elif column_name != xls_column_name or description != xls_description:
                             LOGGER.info('Changing bdef column name: {}'.format(xls_column_name))
                             self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
@@ -700,11 +741,12 @@ class Controller:
                     LOGGER.error(traceback.format_exc())
                     self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
 
+            # Found is False means there are still schema names with no bdef column name
             not_found_filter = self.format_columns[key]['Found'] == False
             not_found_df = self.format_columns[key][not_found_filter]
             not_found_list = not_found_df[Columns.SCHEMA_NAME.value].tolist()
             if len(not_found_list) > 0:
-                message = 'Could not find column info for the following schema columns:\n{}'.format(
+                message = 'Could not find bdef column info for the following schema columns:\n{}'.format(
                     pprint.pformat(not_found_list, width=120, compact=True))
                 self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
 
@@ -763,6 +805,7 @@ class Controller:
         resp = self.get_format(namespace, bdef_name, usage, file_type)
         LOGGER.info('Success')
 
+        # Create list of format parents from response
         format_parents = []
         for parent in resp.business_object_format_parents:
             format_parents.append({
@@ -784,6 +827,7 @@ class Controller:
         # Check if the data is empty, mixed, or completely full
         skip_found = False
         if len(list(empty_df.index.values)) > 0:
+            # Data is completely empty. This will remove any existing parents
             if list(empty_df.index.values) == list(df.index.values):
                 if format_parents:
                     LOGGER.info('Removing all parents')
@@ -800,12 +844,13 @@ class Controller:
             else:
                 skip_found = True
 
+        # There are rows with no parents and rows with parents
         if skip_found:
             message = 'Mix of empty and nonempty rows found. Skipping empty rows: {}'.format(empty_df.index.tolist())
             self.update_run_summary_batch([empty_df.index[0]], message, Summary.WARNINGS.value)
 
+        # Create list of format parents in worksheet
         xls_parent_list = []
-
         filled_df.apply(lambda row: xls_parent_list.append({
             Lineage.NAMESPACE.value: str.upper(row[parent_columns[0]]).strip(),
             Lineage.DEFINITION_NAME.value: str.upper(row[parent_columns[1]]).strip(),
@@ -813,6 +858,7 @@ class Controller:
             Lineage.FILE_TYPE.value: str.upper(row[parent_columns[3]]).strip()
         }), 1)
 
+        # Check if existing format parents differ from worksheet
         if format_parents:
             format_parents, xls_parent_list = [
                 sorted(l, key=lambda x: (x[columns[0]], x[columns[1]], x[columns[2]], x[columns[3]]))
@@ -857,6 +903,7 @@ class Controller:
         """
         (namespace, bdef_name) = key
         try:
+            # List of sample files is inside the business object definition
             LOGGER.info('Getting BDef for {}'.format(key))
             resp = self.get_business_object_definition(namespace, bdef_name)
             LOGGER.info('Success')
@@ -907,6 +954,7 @@ class Controller:
                         self.update_run_summary_batch([index], message, Summary.ERRORS.value)
                         continue
 
+                    # No need to reupload the same file
                     if file in uploaded_files:
                         LOGGER.info('File already uploaded. Skipping: {}'.format(file))
                         self.run_summary['success_rows'] += 1
@@ -930,6 +978,7 @@ class Controller:
                             continue
                         LOGGER.info('Success')
 
+                        # No need to upload a file if the contents haven't changed
                         LOGGER.info('Comparing contents')
                         content_same = filecmp.cmp(temp_path, path, shallow=False)
                         os.remove(temp_path)

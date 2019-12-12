@@ -35,7 +35,10 @@ except ImportError:
 
 
 def string_generator(string_length=10):
-    """Generate a random string of letters, digits and special characters """
+    """
+    Generate a random string of letters, digits and special characters
+
+    """
 
     password_characters = string.ascii_letters + string.digits + string.punctuation.replace(',', '').replace('@', '')
     new_string = ''.join(random.choice(password_characters) for _ in range(string_length))
@@ -46,11 +49,13 @@ def string_generator(string_length=10):
 class TestUtilityMethods(unittest.TestCase):
     """
     Test Suite for Utility Methods
+
     """
 
     def setUp(self):
         """
-        The setup method that will be called before each test.
+        The setup method that will be called before each test
+
         """
         self.controller = otags.Controller()
 
@@ -227,11 +232,13 @@ class TestUtilityMethods(unittest.TestCase):
 class TestObjectAction(unittest.TestCase):
     """
     Test Suite for Action Objects
+
     """
 
     def setUp(self):
         """
-        The setup method that will be called before each test.
+        The setup method that will be called before each test
+
         """
         self.controller = otags.Controller()
 
@@ -680,11 +687,13 @@ class TestObjectAction(unittest.TestCase):
 class TestColumnAction(unittest.TestCase):
     """
     Test Suite for Action Column
+
     """
 
     def setUp(self):
         """
-        The setup method that will be called before each test.
+        The setup method that will be called before each test
+
         """
         self.controller = otags.Controller()
 
@@ -1084,7 +1093,7 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_delete_column.call_count, 3)
         self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
-        self.assertTrue('Could not find a schema name for the following columns' in
+        self.assertTrue('Could not find a schema name for the following bdef columns' in
                         self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
@@ -1120,7 +1129,7 @@ class TestColumnAction(unittest.TestCase):
         mock_delete_column.assert_called_once()
         self.assertTrue(all(x for x in self.controller.format_columns[key]['Found']))
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
-        self.assertTrue('Could not find a schema name for the following columns' in
+        self.assertTrue('Could not find a schema name for the following bdef columns' in
                         self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
@@ -1190,7 +1199,7 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_create_column.call_count, 0)
         self.assertEqual(mock_delete_column.call_count, 0)
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
-        self.assertTrue('Could not find column info for the following schema columns' in
+        self.assertTrue('Could not find bdef column info for the following schema columns' in
                         self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
@@ -1244,11 +1253,13 @@ class TestColumnAction(unittest.TestCase):
 class TestLineageAction(unittest.TestCase):
     """
     Test Suite for Action Lineage
+
     """
 
     def setUp(self):
         """
-        The setup method that will be called before each test.
+        The setup method that will be called before each test
+
         """
         self.controller = otags.Controller()
         self.columns = [Lineage.NAMESPACE.value, Lineage.DEFINITION_NAME.value, Lineage.USAGE.value,
@@ -1482,11 +1493,13 @@ class TestLineageAction(unittest.TestCase):
 class TestSampleAction(unittest.TestCase):
     """
     Test Suite for Action Sample
+
     """
 
     def setUp(self):
         """
-        The setup method that will be called before each test.
+        The setup method that will be called before each test
+
         """
         self.controller = otags.Controller()
 

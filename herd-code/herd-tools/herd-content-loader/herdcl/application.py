@@ -85,6 +85,7 @@ def main():
     """
      The main method. Checks if argument has been passed to determine console mode or gui mode
     """
+    LOGGER.info('Loading Application')
     main_app = Application()
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--console", help="Command Line Mode", action="store_true")
@@ -96,7 +97,7 @@ def main():
         main_app.controller.gui_enabled = True
         import gui
         app = gui.MainUI()
-        LOGGER.info('Starting App')
+        LOGGER.info('Opening GUI')
         app.master.title('Herd Content Loader  v.20191212')
         app.mainloop()
 
