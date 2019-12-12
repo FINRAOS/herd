@@ -1009,6 +1009,7 @@ class Controller:
         # create an instance of the API class
         api_instance = herdsdk.CurrentUserApi(herdsdk.ApiClient(self.configuration))
 
+        LOGGER.info('GET /currentUser')
         api_response = api_instance.current_user_get_current_user()
         return api_response
 
