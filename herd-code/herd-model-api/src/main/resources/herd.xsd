@@ -4566,7 +4566,7 @@
    </xs:complexType>
    <xs:complexType name="partitions">
       <xs:sequence>
-         <xs:element name="partition" type="partition" maxOccurs="unbounded">
+         <xs:element name="partition" type="partition" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>A wrapper for partition information including: partition columns, partitionLocation
                </xs:documentation>
@@ -4587,7 +4587,7 @@
    </xs:complexType>
    <xs:complexType name="partitionColumns">
       <xs:sequence>
-         <xs:element name="partitionColumn" type="partitionColumn" maxOccurs="unbounded">
+         <xs:element name="partitionColumn" type="partitionColumn" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>A wrapper of partition column name and partition column value
                </xs:documentation>

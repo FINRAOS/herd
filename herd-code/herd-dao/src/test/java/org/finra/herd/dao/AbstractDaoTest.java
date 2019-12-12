@@ -568,6 +568,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> LOCAL_FILES_SUBSET = Arrays.asList("Foo2.dat", "FOO3.DAT", "folder/foo2.dat");
 
+    public static final List<String> LOCAL_FILES_2 = Arrays.asList("bar1.dat", "Bar2.dat", "BAR3.DAT", "folder/bar3.dat", "folder/bar2.dat", "folder/bar1.dat");
+
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
