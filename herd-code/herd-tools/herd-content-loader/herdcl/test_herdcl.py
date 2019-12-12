@@ -28,10 +28,10 @@ from herdsdk import rest
 # Local imports
 try:
     import otags
-    from constants import Objects, Columns
+    from constants import *
 except ImportError:
     from herdcl import otags
-    from herdcl.constants import Objects, Columns
+    from herdcl.constants import *
 
 
 def string_generator(string_length=10):
@@ -132,6 +132,20 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.username, test_vars[5])
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
+        # Check other actions
+        actions = ['objects', 'columns', 'lineage', 'samples']
+        self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
+
+        mock_config.reset_mock(side_effect=True)
+        test_vars = ['ObJects', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        mock_config.get.side_effect = test_vars
+        self.controller.config = mock_config
+        for x in range(len(actions) - 1):
+            self.controller.setup_run(config)
+        self.assertEqual(mock_config.get.call_count, 18)
+
     def test_setup_run_console_missing_config_section(self):
         """
         Test of the setup config function for Console app if no config section is found
@@ -195,6 +209,20 @@ class TestUtilityMethods(unittest.TestCase):
         with self.assertRaises(xlrd.biffh.XLRDError):
             self.controller.load_worksheet('Sheet')
 
+    @mock.patch('herdsdk.CurrentUserApi.current_user_get_current_user')
+    def test_run(self, mock_user):
+        """
+        Test of test api
+
+        """
+        self.controller.action = 'test_api'
+        method = self.controller.get_action()
+
+        # Run scenario and check values
+        method()
+        mock_user.assert_called_once()
+        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+
 
 class TestObjectAction(unittest.TestCase):
     """
@@ -228,7 +256,7 @@ class TestObjectAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
         self.assertEqual(self.controller.run_summary['fail_rows'], 0)
         self.assertEqual(self.controller.run_summary['fail_index'], [])
-        self.assertEqual(len(self.controller.run_summary['errors']), 0)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 0)
 
     def test_load_object_exception(self):
         """
@@ -255,9 +283,10 @@ class TestObjectAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertEqual(len(self.controller.run_summary['errors']), 2)
-        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary['errors'][0]['message'])
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][1]['message']))
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1]['message']))
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
@@ -665,7 +694,8 @@ class TestColumnAction(unittest.TestCase):
 
         """
         self.controller.load_worksheet = mock.Mock(
-            return_value=pd.DataFrame(data=[['namespace', 'definition']], columns=[Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value])
+            return_value=pd.DataFrame(data=[['namespace', 'definition']],
+                                      columns=[Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value])
         )
         self.controller.check_format_schema_columns = mock.Mock()
         self.controller.get_bdef_columns = mock.Mock()
@@ -687,7 +717,7 @@ class TestColumnAction(unittest.TestCase):
                     Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value, Columns.SCHEMA_NAME.value,
                     Columns.COLUMN_NAME.value
                 ]
-                )
+            )
         )
 
         self.controller.check_format_schema_columns = mock.Mock()
@@ -704,9 +734,10 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['success_rows'], 0)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertEqual(len(self.controller.run_summary['errors']), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
-        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary['errors'][1]['message'])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
 
     def test_check_format_schema_columns(self):
         """
@@ -817,7 +848,7 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_bdef_columns.call_count, 0)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue('No Schema Columns found' in self.controller.run_summary['errors'][0]['message'])
+        self.assertTrue('No Schema Columns found' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -844,7 +875,8 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_bdef_columns.call_count, 0)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue('No Descriptive Format defined' in self.controller.run_summary['errors'][0]['message'])
+        self.assertTrue(
+            'No Descriptive Format defined' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -901,7 +933,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef_columns.assert_called_once()
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1051,9 +1083,9 @@ class TestColumnAction(unittest.TestCase):
         mock_create_column.assert_called_once()
         self.assertEqual(mock_delete_column.call_count, 3)
         self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
-        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following columns' in
-                        self.controller.run_summary['warnings'][0]['message'])
+                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
@@ -1087,9 +1119,9 @@ class TestColumnAction(unittest.TestCase):
         mock_create_column.assert_called_once()
         mock_delete_column.assert_called_once()
         self.assertTrue(all(x for x in self.controller.format_columns[key]['Found']))
-        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following columns' in
-                        self.controller.run_summary['warnings'][0]['message'])
+                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 2)
@@ -1122,9 +1154,9 @@ class TestColumnAction(unittest.TestCase):
         self.controller.update_bdef_columns(key, index_array)
         self.assertEqual(mock_create_column.call_count, 0)
         self.assertEqual(mock_delete_column.call_count, 0)
-        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], index_array[1] + 2)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], index_array[1] + 2)
         self.assertTrue('Could not find schema column for bdef column name' in
-                        self.controller.run_summary['warnings'][0]['message'])
+                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 2)
@@ -1157,9 +1189,9 @@ class TestColumnAction(unittest.TestCase):
         self.controller.update_bdef_columns(key, index_array)
         self.assertEqual(mock_create_column.call_count, 0)
         self.assertEqual(mock_delete_column.call_count, 0)
-        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find column info for the following schema columns' in
-                        self.controller.run_summary['warnings'][0]['message'])
+                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
@@ -1196,17 +1228,255 @@ class TestColumnAction(unittest.TestCase):
         self.controller.update_bdef_columns(key, index_array)
         self.assertEqual(mock_create_column.call_count, 1)
         self.assertEqual(mock_delete_column.call_count, 1)
-        self.assertEqual(self.controller.run_summary['warnings'][0]['index'], otags.ERROR_CODE)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Error during deleting empty schema names' in
-                        str(self.controller.run_summary['warnings'][0]['message']))
-        self.assertEqual(len(self.controller.run_summary['errors']), 1)
-        self.assertEqual(self.controller.run_summary['errors'][0]['index'], index_array[1] + 2)
+                        str(self.controller.run_summary[Summary.WARNINGS.value][0]['message']))
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 1)
+        self.assertEqual(self.controller.run_summary[Summary.ERRORS.value][0]['index'], index_array[1] + 2)
         self.assertTrue('Error during creating bdef column names' in
-                        str(self.controller.run_summary['errors'][0]['message']))
+                        str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
         self.assertEqual(self.controller.run_summary['fail_rows'], 1)
+
+
+class TestLineageAction(unittest.TestCase):
+    """
+    Test Suite for Action Lineage
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test.
+        """
+        self.controller = otags.Controller()
+        self.columns = [Lineage.NAMESPACE.value, Lineage.DEFINITION_NAME.value, Lineage.USAGE.value,
+                        Lineage.FILE_TYPE.value]
+        self.parent_columns = self.columns + ['Parent ' + x for x in self.columns]
+
+    def test_load_lineage(self):
+        """
+        Test of the main load lineage action
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['namespace', 'definition', 'usage', 'file type']],
+                                      columns=self.columns)
+        )
+        self.controller.check_lineage = mock.Mock()
+        self.controller.update_lineage = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_lineage()
+        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+
+    def test_load_lineage_exception(self):
+        """
+        Test of the main load lineage action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['namespace', 'definition', 'usage', 'file type']],
+                                      columns=self.columns)
+        )
+
+        self.controller.check_lineage = mock.Mock()
+        self.controller.update_lineage = mock.Mock(
+            side_effect=[rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+        )
+
+        # Run scenario and check values
+        self.controller.load_lineage()
+        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 1)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.controller.load_lineage()
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+    def test_check_lineage(self):
+        """
+        Test of checking Excel worksheet for empty cells
+
+        """
+        self.controller.data_frame = pd.DataFrame(data=[
+            ['namespace', 'definition', 'usage', 'file type', string_generator(), string_generator(),
+             string_generator(), string_generator()]],
+            columns=self.parent_columns)
+
+        # Run scenario and check values
+        self.controller.check_lineage()
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 0)
+
+    def test_check_lineage_empty(self):
+        """
+        Test of checking Excel worksheet with empty cells
+
+        """
+        self.controller.data_frame = pd.DataFrame(data=[
+            ['namespace', 'definition', 'usage', 'file type', string_generator(), string_generator(),
+             string_generator(), string_generator()],
+            ['namespace', 'definition', 'usage', '', string_generator(), string_generator(),
+             string_generator(), string_generator()],
+            ['namespace', 'definition', 'usage', 'file type', '', string_generator(),
+             string_generator(), string_generator()],
+            ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        # Run scenario and check values
+        self.controller.check_lineage()
+        self.assertEqual(len(self.controller.data_frame.index), 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage(self, mock_format, mock_update):
+        """
+        Test of updating business object format lineage
+
+        """
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[mock.Mock(
+                namespace=string_generator(),
+                business_object_definition_name=string_generator(),
+                business_object_format_usage=string_generator(),
+                business_object_format_file_type=string_generator()
+            )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(data=[
+            ['namespace', 'definition', 'usage', 'file type', string_generator(), string_generator(),
+             string_generator(), string_generator()]],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage_no_update(self, mock_format, mock_update):
+        """
+        Test of business object format lineage with no update. Mixing order of list of parents and adding empty row
+
+        """
+        namespace = ['namespace_a', 'namespace_b']
+        bdef_name = ['bdef_name_a', 'bdef_name_b']
+        usage = ['usage_a', 'usage_b']
+        file_type = ['file_type_a', 'file_type_b']
+
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[
+                mock.Mock(
+                    namespace=namespace[0],
+                    business_object_definition_name=bdef_name[0],
+                    business_object_format_usage=usage[0],
+                    business_object_format_file_type=file_type[0]
+                ),
+                mock.Mock(
+                    namespace=namespace[1],
+                    business_object_definition_name=bdef_name[1],
+                    business_object_format_usage=usage[1],
+                    business_object_format_file_type=file_type[1]
+                )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[['namespace', 'definition', 'usage', 'file type', namespace[1], bdef_name[1], usage[1], file_type[1]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[0], bdef_name[0], usage[0], file_type[0]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 0)
+        self.assertEqual(len(self.controller.run_summary[Summary.WARNINGS.value]), 1)
+        self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], [3])
+        self.assertTrue(
+            'Skipping empty rows' in self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage_empty(self, mock_format, mock_update):
+        """
+        Test of updating business object format lineage removing all parents
+
+        """
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[mock.Mock(
+                namespace=string_generator(),
+                business_object_definition_name=string_generator(),
+                business_object_format_usage=string_generator(),
+                business_object_format_file_type=string_generator()
+            )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(data=[
+            ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'All parents removed' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage_empty_no_update(self, mock_format, mock_update):
+        """
+        Test of business object format lineage no update
+
+        """
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[]
+        )
+
+        self.controller.data_frame = pd.DataFrame(data=[
+            ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+            ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 0)
 
 
 class TestSampleAction(unittest.TestCase):
@@ -1226,7 +1496,8 @@ class TestSampleAction(unittest.TestCase):
 
         """
         self.controller.load_worksheet = mock.Mock(
-            return_value=pd.DataFrame(data=[['namespace', 'definition']], columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value])
+            return_value=pd.DataFrame(data=[['namespace', 'definition']],
+                                      columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value])
         )
         self.controller.check_sample_files = mock.Mock()
         self.controller.get_bdef_sample_files = mock.Mock()
@@ -1261,10 +1532,10 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary['success_rows'], 0)
         self.assertEqual(self.controller.run_summary['fail_rows'], 2)
         self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertEqual(len(self.controller.run_summary['errors']), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary['errors'][0]['message']))
-        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary['errors'][1]['message'])
-
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
 
     def test_check_sample_files(self):
         """
@@ -1393,7 +1664,8 @@ class TestSampleAction(unittest.TestCase):
     @mock.patch('os.path.exists')
     @mock.patch('os.remove')
     @mock.patch('filecmp.cmp')
-    def test_upload_download_sample_files_no_file_found(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+    def test_upload_download_sample_files_no_file_found(self, mock_cmp, mock_remove, mock_os_exists, mock_upload,
+                                                        mock_download):
         """
         Test of uploading and downloading sample files with no file found
 
@@ -1437,7 +1709,6 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(mock_upload.call_count, 0)
         self.assertEqual(mock_download.call_count, 0)
 
-
     @mock.patch('herdsdk.UploadAndDownloadApi.'
                 'uploadand_download_initiate_download_single_sample_file')
     @mock.patch('herdsdk.UploadAndDownloadApi.'
@@ -1445,7 +1716,8 @@ class TestSampleAction(unittest.TestCase):
     @mock.patch('os.path.exists')
     @mock.patch('os.remove')
     @mock.patch('filecmp.cmp')
-    def test_upload_download_sample_files_skip_upload(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+    def test_upload_download_sample_files_skip_upload(self, mock_cmp, mock_remove, mock_os_exists, mock_upload,
+                                                      mock_download):
         """
         Test of uploading and downloading sample files with file already uploaded
 
@@ -1495,7 +1767,8 @@ class TestSampleAction(unittest.TestCase):
     @mock.patch('os.path.exists')
     @mock.patch('os.remove')
     @mock.patch('filecmp.cmp')
-    def test_upload_download_sample_files_same_contents(self, mock_cmp, mock_remove, mock_os_exists, mock_upload, mock_download):
+    def test_upload_download_sample_files_same_contents(self, mock_cmp, mock_remove, mock_os_exists, mock_upload,
+                                                        mock_download):
         """
         Test of uploading and downloading sample files with downloaded file being same as uploaded
 
@@ -1546,7 +1819,7 @@ class TestSampleAction(unittest.TestCase):
     @mock.patch('os.remove')
     @mock.patch('filecmp.cmp')
     def test_upload_download_sample_files_aws_error(self, mock_cmp, mock_remove, mock_os_exists, mock_upload,
-                                                        mock_download):
+                                                    mock_download):
         """
         Test of uploading and downloading sample files with aws error
 

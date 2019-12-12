@@ -212,10 +212,18 @@ class MainUI(tk.Frame):
             self.line("Enter credentials")
             return
 
-        if self.action in ['Objects', 'Columns']:
+        if self.action in ['Objects', 'Columns', 'Lineage']:
             if not self.getfile.get():
                 self.line("Please select a file first.")
                 return
+        elif self.action == 'Samples':
+            if not self.getfile.get():
+                self.line("Please select a file first.")
+                return
+            if not self.sample_dir.get():
+                self.line("Please select a directory.")
+                return
+
 
         config = {
             'gui_enabled': True,

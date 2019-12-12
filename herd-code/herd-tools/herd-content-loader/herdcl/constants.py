@@ -18,10 +18,16 @@ from enum import Enum
 class Menu(Enum):
     OBJECTS = 'Objects'
     COLUMNS = 'Columns'
+    LINEAGE = 'Lineage'
     SAMPLES = 'Samples'
     TAGS = 'Tags'
     EXPORT = 'Export BDef'
     ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PROD-CT']
+
+class Summary(Enum):
+    CHANGES = 'changes'
+    WARNINGS = 'warnings'
+    ERRORS = 'errors'
 
 class Objects(Enum):
     WORKSHEET = 'Bus Obj Definition'
@@ -38,3 +44,9 @@ class Columns(Enum):
     COLUMN_NAME = 'Business Object Attribute Logical Name'
     DESCRIPTION = 'Business Object Attribute Description'
 
+class Lineage(Enum):
+    WORKSHEET = 'Business Object Lineage'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
+    USAGE = 'Format Usage'
+    FILE_TYPE = 'Format File Type'

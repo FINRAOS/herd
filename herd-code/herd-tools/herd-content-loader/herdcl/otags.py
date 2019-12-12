@@ -26,11 +26,11 @@ from herdsdk.rest import ApiException
 # Local imports
 try:
     import logger
-    from constants import Menu, Objects, Columns
+    from constants import *
     from aws import AwsClient
 except ImportError:
     from herdcl import logger
-    from herdcl.constants import Menu, Objects, Columns
+    from herdcl.constants import *
     from herdcl.aws import AwsClient
 
 LOGGER = logger.get_logger(__name__)
@@ -54,7 +54,7 @@ class Controller:
     configuration = herdsdk.Configuration()
 
     # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
-    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value]
+    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.LINEAGE.value, Menu.SAMPLES.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -69,15 +69,16 @@ class Controller:
             'success_rows': 0,
             'fail_rows': 0,
             'fail_index': [],
-            'changes': [],
-            'warnings': [],
-            'errors': []
+            Summary.CHANGES.value: [],
+            Summary.WARNINGS.value: [],
+            Summary.ERRORS.value: []
         }
         self.sample_files = {}
 
         self.acts = {
             str.lower(Menu.OBJECTS.value): self.load_object,
             str.lower(Menu.COLUMNS.value): self.load_columns,
+            str.lower(Menu.LINEAGE.value): self.load_lineage,
             str.lower(Menu.SAMPLES.value): self.load_samples,
             str.lower(Menu.TAGS.value): self.load_tags,
             # str.lower(Menu.EXPORT.value): self.get_build_info,
@@ -132,7 +133,7 @@ class Controller:
             self.configuration.password = config['userPwd']
         else:
             self.action = str.lower(self.config.get('console', 'action'))
-            if self.action in ['objects', 'columns']:
+            if self.action in ['objects', 'columns', 'lineage']:
                 self.excel_file = self.config.get('console', 'excelFile')
             elif self.action == 'samples':
                 self.excel_file = self.config.get('console', 'excelFile')
@@ -216,11 +217,11 @@ class Controller:
                         step(index, row)
                     except ApiException as e:
                         LOGGER.error(e)
-                        self.update_run_summary_batch_errors([index], e)
+                        self.update_run_summary_batch([index], e, Summary.ERRORS.value)
                         row_pass = False
                     except Exception:
                         LOGGER.error(traceback.format_exc())
-                        self.update_run_summary_batch_errors([index], traceback.format_exc())
+                        self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
                         row_pass = False
 
             if row_pass:
@@ -250,6 +251,33 @@ class Controller:
         for key, index_array in group_df.groups.items():
             for step in self.run_steps:
                 step(key, list(index_array.values))
+
+        return self.run_summary
+
+    ############################################################################
+    def load_lineage(self):
+        """
+        One of the controller actions. Loads business object format lineage
+
+        :return: Run Summary dict
+
+        """
+        self.data_frame = self.load_worksheet(Lineage.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
+
+        self.check_lineage()
+
+        group_df = self.data_frame.groupby(
+            [Lineage.NAMESPACE.value, Lineage.DEFINITION_NAME.value, Lineage.USAGE.value, Lineage.FILE_TYPE.value])
+        for key, index_array in group_df.groups.items():
+            try:
+                self.update_lineage(key, list(index_array.values))
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch(index_array, e, Summary.ERRORS.value)
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch(index_array, traceback.format_exc(), Summary.ERRORS.value)
 
         return self.run_summary
 
@@ -304,44 +332,37 @@ class Controller:
             'success_rows': 0,
             'fail_rows': 0,
             'fail_index': [],
-            'changes': [],
-            'warnings': [],
-            'errors': []
+            Summary.CHANGES.value: [],
+            Summary.WARNINGS.value: [],
+            Summary.ERRORS.value: []
         }
         self.sample_files = {}
 
     ############################################################################
-    def update_run_summary_batch_errors(self, index_array, message):
+    def update_run_summary_batch(self, index_array, message, category):
         """
-        Updates run summary with errors
+        Updates run summary. Category can be changes, warnings, or errors
 
         :param index_array: List of int corresponding to row index in Excel worksheet
         :param message: Error message
+        :param category: Type of message. Changes, warnings, or errors
 
         """
-        self.run_summary['fail_rows'] += len(index_array)
-        self.run_summary['fail_index'].extend([i + 2 for i in index_array])
+        if category == Summary.ERRORS.value:
+            self.run_summary['fail_rows'] += len(index_array)
+            self.run_summary['fail_index'].extend([i + 2 for i in index_array])
         for index in index_array:
-            error = {
-                'index': index + 2,
-                'message': message
-            }
-            self.run_summary['errors'].append(error)
-
-    ############################################################################
-    def update_run_summary_batch_changes(self, index, message):
-        """
-        Updates run summary with changes
-
-        :param index: Row index in Excel worksheet
-        :param message: Before and after row changes
-
-        """
-        change = {
-            'index': index + 2,
-            'message': message
-        }
-        self.run_summary['changes'].append(change)
+            if index < 0:
+                item = {
+                    'index': index,
+                    'message': message
+                }
+            else:
+                item = {
+                    'index': index + 2,
+                    'message': message
+                }
+            self.run_summary[category].append(item)
 
     ############################################################################
     def update_bdef_descriptive_info(self, index, row):
@@ -353,7 +374,7 @@ class Controller:
 
         """
         namespace, usage, file_type, bdef_name, logical_name, description = row[:6]
-        LOGGER.info('Getting BDef')
+        LOGGER.info('Getting BDef for {}'.format((namespace, bdef_name)))
         resp = self.get_business_object_definition(namespace, bdef_name)
         LOGGER.info('Success')
         LOGGER.info(resp)
@@ -373,7 +394,7 @@ class Controller:
             LOGGER.info('Success')
             LOGGER.info(resp)
             message = 'Change in row. Old Descriptive Info:\nNone'.format(json)
-            self.update_run_summary_batch_changes(index, message)
+            self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
         elif (resp.description != description or
                       resp.display_name != logical_name or
@@ -398,7 +419,7 @@ class Controller:
             LOGGER.info('Success')
             LOGGER.info(resp)
             message = 'Change in row. Old Descriptive Info:\n{}'.format(old_data)
-            self.update_run_summary_batch_changes(index, message)
+            self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
     def update_sme(self, index, row):
@@ -411,7 +432,7 @@ class Controller:
         """
         namespace, _, _, bdef_name = row[:4]
 
-        LOGGER.info('Getting SME')
+        LOGGER.info('Getting SME for {}'.format((namespace, bdef_name)))
         resp = self.get_subject_matter_experts(namespace, bdef_name)
         LOGGER.info('Success')
         LOGGER.info(resp)
@@ -454,7 +475,7 @@ class Controller:
 
         if row_change:
             message = 'Change in row. Old SME list:\n{}'.format(', '.join(current_smes))
-            self.update_run_summary_batch_changes(index, message)
+            self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
     def update_bdef_tags(self, index, row):
@@ -504,7 +525,7 @@ class Controller:
 
         if row_change:
             message = 'Change in row. Old tags:\n{}'.format(old_tags)
-            self.update_run_summary_batch_changes(index, message)
+            self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
     def check_format_schema_columns(self):
@@ -512,6 +533,7 @@ class Controller:
         Checks Excel worksheet for rows with missing schema or column names
 
         """
+        LOGGER.info('Checking schema worksheet for empty values')
         empty_column_name_filter = self.data_frame[Columns.COLUMN_NAME.value] == ''
         empty_schema_name_filter = self.data_frame[Columns.SCHEMA_NAME.value] == ''
 
@@ -521,7 +543,7 @@ class Controller:
         if len(empty_df.index.values) > 0:
             message = 'Columns \'{}\' and \'{}\' cannot have blank values'.format(Columns.COLUMN_NAME.value,
                                                                                   Columns.SCHEMA_NAME.value)
-            self.update_run_summary_batch_errors(empty_df.index.values, message)
+            self.update_run_summary_batch(empty_df.index.values, message, Summary.ERRORS.value)
 
         self.data_frame = good_df
 
@@ -542,7 +564,7 @@ class Controller:
             if not resp.descriptive_business_object_format:
                 message = 'No Descriptive Format defined for {}'.format(key)
                 LOGGER.error(message)
-                self.update_run_summary_batch_errors(index_array, message)
+                self.update_run_summary_batch(index_array, message, Summary.ERRORS.value)
                 return
 
             LOGGER.info('Success')
@@ -555,7 +577,7 @@ class Controller:
             if not (format_resp.schema and format_resp.schema.columns):
                 message = 'No Schema Columns found for {}'.format(key)
                 LOGGER.error(message)
-                self.update_run_summary_batch_errors(index_array, message)
+                self.update_run_summary_batch(index_array, message, Summary.ERRORS.value)
                 return
 
             # Get schema columns and bdef columns as dataframes. Merge the two to check if both contain schema name
@@ -581,10 +603,10 @@ class Controller:
                 self.format_columns[key] = schema_df
         except ApiException as e:
             LOGGER.error(e)
-            self.update_run_summary_batch_errors(index_array, e)
+            self.update_run_summary_batch(index_array, e, Summary.ERRORS.value)
         except Exception:
             LOGGER.error(traceback.format_exc())
-            self.update_run_summary_batch_errors(index_array, traceback.format_exc())
+            self.update_run_summary_batch(index_array, traceback.format_exc(), Summary.ERRORS.value)
 
     ############################################################################
     def update_bdef_columns(self, key, index_array):
@@ -612,27 +634,15 @@ class Controller:
                     LOGGER.warning('Success')
                 except ApiException as e:
                     LOGGER.error(e)
-                    warning = {
-                        'index': ERROR_CODE,
-                        'message': e
-                    }
-                    self.run_summary['warnings'].append(warning)
+                    self.update_run_summary_batch([ERROR_CODE], e, Summary.WARNINGS.value)
                 except Exception:
                     LOGGER.error(traceback.format_exc())
-                    warning = {
-                        'index': ERROR_CODE,
-                        'message': traceback.format_exc()
-                    }
-                    self.run_summary['warnings'].append(warning)
+                    self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.WARNINGS.value)
             empty_schema_list = empty_schema_df[Columns.COLUMN_NAME.value].tolist()
             if len(empty_schema_list) > 0:
                 message = 'Could not find a schema name for the following columns:\n{}'.format(
                     pprint.pformat(empty_schema_list, width=120, compact=True))
-                warning = {
-                    'index': ERROR_CODE,
-                    'message': message
-                }
-                self.run_summary['warnings'].append(warning)
+                self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
 
             # Compare excel data to UDC data
             LOGGER.info('Comparing Excel worksheet with UDC data')
@@ -676,23 +686,19 @@ class Controller:
                     else:
                         message = 'Could not find schema column for bdef column name: {}'.format(xls_column_name)
                         LOGGER.warning(message)
-                        warning = {
-                            'index': index + 2,
-                            'message': message
-                        }
-                        self.run_summary['warnings'].append(warning)
+                        self.update_run_summary_batch([index], message, Summary.WARNINGS.value)
 
                     self.run_summary['success_rows'] += 1
                     if row_change:
                         message = 'Change in row. Old column:\n{}'.format(old_column)
-                        self.update_run_summary_batch_changes(index, message)
+                        self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 except ApiException as e:
                     LOGGER.error(e)
-                    self.update_run_summary_batch_errors([index], e)
+                    self.update_run_summary_batch([index], e, Summary.ERRORS.value)
                 except Exception:
                     LOGGER.error(traceback.format_exc())
-                    self.update_run_summary_batch_errors([index], traceback.format_exc())
+                    self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
 
             not_found_filter = self.format_columns[key]['Found'] == False
             not_found_df = self.format_columns[key][not_found_filter]
@@ -700,11 +706,131 @@ class Controller:
             if len(not_found_list) > 0:
                 message = 'Could not find column info for the following schema columns:\n{}'.format(
                     pprint.pformat(not_found_list, width=120, compact=True))
-                warning = {
-                    'index': ERROR_CODE,
-                    'message': message
-                }
-                self.run_summary['warnings'].append(warning)
+                self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
+
+    ############################################################################
+    def check_lineage(self):
+        """
+        Checks Excel worksheet for rows with missing values
+
+        """
+        LOGGER.info('Checking lineage worksheet for empty values')
+        # Find rows with any empty values in format columns
+        columns = [Lineage.NAMESPACE.value, Lineage.DEFINITION_NAME.value, Lineage.USAGE.value, Lineage.FILE_TYPE.value]
+        err_filter = (self.data_frame[columns] == '').any(axis='columns')
+        err_df = self.data_frame[err_filter]
+        other_df = self.data_frame[~err_filter]
+
+        if len(err_df.index.values) > 0:
+            message = 'Row missing values. Double check columns: {}'.format(columns)
+            self.update_run_summary_batch(err_df.index.values, message, Summary.ERRORS.value)
+
+        # Find rows with all empty values in parent columns
+        parent_columns = ['Parent ' + x for x in columns]
+        all_empty_filter = (other_df[parent_columns] == '').all(axis='columns')
+        empty_df = other_df[all_empty_filter]
+        check_df = other_df[~all_empty_filter]
+
+        # Find rows with missing values in parent columns
+        err_filter = (check_df[parent_columns] == '').any(axis='columns')
+        err_df = check_df[err_filter]
+        passed_df = check_df[~err_filter]
+
+        if len(err_df.index.values) > 0:
+            message = 'Row missing values. Double check columns: {}'.format(parent_columns)
+            self.update_run_summary_batch(err_df.index.values, message, Summary.ERRORS.value)
+
+        # Combine good dataframes
+        good_df = pd.concat([empty_df, passed_df])
+        sorted_index = sorted(good_df.index)
+        good_df = good_df.reindex(sorted_index)
+
+        self.data_frame = good_df
+
+    ############################################################################
+    def update_lineage(self, key, index_array):
+        """
+        Updates business object format lineage
+
+        :param key: Tuple of namespace and bdef name
+        :param index_array: List of int corresponding to row index in Excel worksheet
+
+        """
+        (namespace, bdef_name, usage, file_type) = key
+
+        # Get existing format parents
+        LOGGER.info('Getting business object format for {}'.format(key))
+        resp = self.get_format(namespace, bdef_name, usage, file_type)
+        LOGGER.info('Success')
+
+        format_parents = []
+        for parent in resp.business_object_format_parents:
+            format_parents.append({
+                Lineage.NAMESPACE.value: str.upper(parent.namespace).strip(),
+                Lineage.DEFINITION_NAME.value: str.upper(parent.business_object_definition_name).strip(),
+                Lineage.USAGE.value: str.upper(parent.business_object_format_usage).strip(),
+                Lineage.FILE_TYPE.value: str.upper(parent.business_object_format_file_type).strip()
+            })
+
+        columns = [Lineage.NAMESPACE.value, Lineage.DEFINITION_NAME.value, Lineage.USAGE.value, Lineage.FILE_TYPE.value]
+        parent_columns = ['Parent ' + x for x in columns]
+
+        # Find empty rows based on parent columns
+        df = self.data_frame.loc[index_array]
+        empty_filter = (df[parent_columns] == '').all(axis='columns')
+        empty_df = df[empty_filter]
+        filled_df = df[~empty_filter]
+
+        # Check if the data is empty, mixed, or completely full
+        skip_found = False
+        if len(list(empty_df.index.values)) > 0:
+            if list(empty_df.index.values) == list(df.index.values):
+                if format_parents:
+                    LOGGER.info('Removing all parents')
+                    self.update_format_parents(namespace, bdef_name, usage, file_type, [])
+                    LOGGER.info('Success')
+
+                    message = 'Change in rows: {}\nAll parents removed. Old Parents:\n{}'.format(
+                        empty_df.index.tolist(), format_parents)
+                    self.update_run_summary_batch([empty_df.index[0]], message, Summary.CHANGES.value)
+                else:
+                    LOGGER.info('No parent changes made')
+                self.run_summary['success_rows'] += len(df.index)
+                return
+            else:
+                skip_found = True
+
+        if skip_found:
+            message = 'Mix of empty and nonempty rows found. Skipping empty rows: {}'.format(empty_df.index.tolist())
+            self.update_run_summary_batch([empty_df.index[0]], message, Summary.WARNINGS.value)
+
+        xls_parent_list = []
+
+        filled_df.apply(lambda row: xls_parent_list.append({
+            Lineage.NAMESPACE.value: str.upper(row[parent_columns[0]]).strip(),
+            Lineage.DEFINITION_NAME.value: str.upper(row[parent_columns[1]]).strip(),
+            Lineage.USAGE.value: str.upper(row[parent_columns[2]]).strip(),
+            Lineage.FILE_TYPE.value: str.upper(row[parent_columns[3]]).strip()
+        }), 1)
+
+        if format_parents:
+            format_parents, xls_parent_list = [
+                sorted(l, key=lambda x: (x[columns[0]], x[columns[1]], x[columns[2]], x[columns[3]]))
+                for l in (format_parents, xls_parent_list)
+            ]
+            pairs = zip(format_parents, xls_parent_list)
+            if all(x == y for x, y in pairs):
+                LOGGER.info('No parent changes made')
+                self.run_summary['success_rows'] += len(df.index)
+                return
+
+        LOGGER.info('Updating parents')
+        self.update_format_parents(namespace, bdef_name, usage, file_type, xls_parent_list)
+        LOGGER.info('Success')
+        message = 'Change in rows: {}\nUpdated parents. Old Parents:\n{}'.format(filled_df.index.tolist(),
+                                                                                 format_parents)
+        self.update_run_summary_batch([filled_df.index[0]], message, Summary.CHANGES.value)
+        self.run_summary['success_rows'] += len(df.index)
 
     ############################################################################
     def check_sample_files(self):
@@ -712,6 +838,7 @@ class Controller:
         Checks Excel worksheet for rows with no sample file
 
         """
+        LOGGER.info('Checking samples worksheet for empty values')
         empty_sample_filter = self.data_frame[Objects.SAMPLE.value] == ''
         empty_df = self.data_frame[empty_sample_filter]
         good_df = self.data_frame[~empty_sample_filter]
@@ -730,7 +857,7 @@ class Controller:
         """
         (namespace, bdef_name) = key
         try:
-            LOGGER.info('Getting BDef')
+            LOGGER.info('Getting BDef for {}'.format(key))
             resp = self.get_business_object_definition(namespace, bdef_name)
             LOGGER.info('Success')
 
@@ -746,11 +873,11 @@ class Controller:
 
         except ApiException as e:
             LOGGER.error(e)
-            self.update_run_summary_batch_errors(index_array, e)
+            self.update_run_summary_batch(index_array, e, Summary.ERRORS.value)
             return
         except Exception:
             LOGGER.error(traceback.format_exc())
-            self.update_run_summary_batch_errors(index_array, traceback.format_exc())
+            self.update_run_summary_batch(index_array, traceback.format_exc(), Summary.ERRORS.value)
             return
 
     ############################################################################
@@ -765,6 +892,7 @@ class Controller:
         (namespace, bdef_name) = key
 
         if key in self.sample_files:
+            LOGGER.info('Updating Sample Files for {}'.format(key))
             sample_files = self.sample_files[key]
             uploaded_files = []
 
@@ -776,7 +904,7 @@ class Controller:
                     if not os.path.exists(path):
                         message = 'File not found. Please double check path: {}'.format(path)
                         LOGGER.error(message)
-                        self.update_run_summary_batch_errors([index], message)
+                        self.update_run_summary_batch([index], message, Summary.ERRORS.value)
                         continue
 
                     if file in uploaded_files:
@@ -798,7 +926,7 @@ class Controller:
                         aws_err = self.run_aws_command('s3_download', download_resp, temp_path, file)
                         if aws_err:
                             LOGGER.error(aws_err)
-                            self.update_run_summary_batch_errors([index], aws_err)
+                            self.update_run_summary_batch([index], aws_err, Summary.ERRORS.value)
                             continue
                         LOGGER.info('Success')
 
@@ -820,21 +948,21 @@ class Controller:
                     aws_err = self.run_aws_command('s3_upload', upload_resp, path, file)
                     if aws_err:
                         LOGGER.error(aws_err)
-                        self.update_run_summary_batch_errors([index], aws_err)
+                        self.update_run_summary_batch([index], aws_err, Summary.ERRORS.value)
                         continue
                     LOGGER.info('Success')
 
                     uploaded_files.append(file)
                     self.run_summary['success_rows'] += 1
                     message = 'Change in row. Old files: {}'.format(sample_files)
-                    self.update_run_summary_batch_changes(index, message)
+                    self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 except ApiException as e:
                     LOGGER.error(e)
-                    self.update_run_summary_batch_errors([index], e)
+                    self.update_run_summary_batch([index], e, Summary.ERRORS.value)
                 except Exception:
                     LOGGER.error(traceback.format_exc())
-                    self.update_run_summary_batch_errors([index], traceback.format_exc())
+                    self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
 
     ############################################################################
     def run_aws_command(self, command, resp, path, file):
@@ -865,7 +993,12 @@ class Controller:
         self.get_current_user()
         return self.run_summary
 
+    '''
     ############################################################################
+    --- HERDSDK CALLS ---
+    ############################################################################
+    '''
+
     def get_current_user(self):
         """
         Gets the current user permissions for DM
@@ -877,13 +1010,6 @@ class Controller:
         api_instance = herdsdk.CurrentUserApi(herdsdk.ApiClient(self.configuration))
 
         api_response = api_instance.current_user_get_current_user()
-        return api_response
-
-    ############################################################################
-    def get_build_info(self):
-        api_instance = herdsdk.ApplicationApi(herdsdk.ApiClient(self.configuration))
-
-        api_response = api_instance.application_get_build_info()
         return api_response
 
     ############################################################################
@@ -1121,6 +1247,41 @@ class Controller:
         LOGGER.info('POST /businessObjectDefinitionColumns')
         api_response = api_instance.business_object_definition_column_create_business_object_definition_column(
             business_object_definition_column_create_request)
+        return api_response
+
+    ############################################################################
+    def update_format_parents(self, namespace, business_object_definition_name, business_object_format_usage,
+                              business_object_format_file_type,
+                              parent_list):
+        api_instance = herdsdk.BusinessObjectFormatApi(herdsdk.ApiClient(self.configuration))
+
+        business_object_format_parents = []
+        if parent_list:
+            for parent in parent_list:
+                format_key = herdsdk.BusinessObjectFormatKey(
+                    namespace=parent[Lineage.NAMESPACE.value],
+                    business_object_definition_name=parent[Lineage.DEFINITION_NAME.value],
+                    business_object_format_usage=parent[Lineage.USAGE.value],
+                    business_object_format_file_type=parent[Lineage.FILE_TYPE.value]
+                )
+                business_object_format_parents.append(format_key)
+        business_object_format_parents_update_request = herdsdk.BusinessObjectFormatParentsUpdateRequest(
+            business_object_format_parents=business_object_format_parents
+        )
+
+        LOGGER.info(
+            'PUT /businessObjectFormatParents/namespaces/{}/businessObjectDefinitionNames/{}/businessObjectFormatUsages/{}/businessObjectFormatFileTypes/{}'.format(
+                namespace,
+                business_object_definition_name,
+                business_object_format_usage,
+                business_object_format_file_type
+            ))
+        api_response = api_instance.business_object_format_update_business_object_format_parents(
+            namespace,
+            business_object_definition_name,
+            business_object_format_usage,
+            business_object_format_file_type,
+            business_object_format_parents_update_request)
         return api_response
 
     ############################################################################

@@ -97,7 +97,7 @@ def main():
         import gui
         app = gui.MainUI()
         LOGGER.info('Starting App')
-        app.master.title('Herd Content Loader  v.20191209')
+        app.master.title('Herd Content Loader  v.20191212')
         app.mainloop()
 
 
