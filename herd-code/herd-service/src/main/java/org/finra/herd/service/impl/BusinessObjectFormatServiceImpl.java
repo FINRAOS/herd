@@ -559,7 +559,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlCollectionImpl(request);
     }
 
-    @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
+    @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
+        NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT}),
             @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
             permissions = NamespacePermissionEnum.READ)})
     @Override

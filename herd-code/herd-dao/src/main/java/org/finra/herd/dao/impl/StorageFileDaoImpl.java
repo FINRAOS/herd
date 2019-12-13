@@ -36,6 +36,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.sql.DataSource;
 
+import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -162,13 +163,13 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         // Get the columns.
         Path<Integer> storageUnitIdColumn = storageFileEntity.get(StorageFileEntity_.storageUnitId);
         Path<String> storageFilePathColumn = storageFileEntity.get(StorageFileEntity_.path);
-        Path<Integer> storageFileIdColumn = storageFileEntity.get(StorageFileEntity_.id);
 
         // Add the select clause.
         criteria.multiselect(storageUnitIdColumn, storageFilePathColumn);
 
-        // Add the orderBy to the query so we can get consistent pagination results
-        criteria.orderBy(builder.asc(storageFileIdColumn));
+        // Add the orderBy to the query so we can get consistent pagination results.
+        // To force database to use alternate key index in the query execution plan, we order query results by columns from the alternate key index.
+        criteria.orderBy(Lists.newArrayList(builder.asc(storageUnitIdColumn), builder.asc(storageFilePathColumn)));
 
         // Get size of the storage unit list.
         int listSize = CollectionUtils.size(storageUnitIds);
