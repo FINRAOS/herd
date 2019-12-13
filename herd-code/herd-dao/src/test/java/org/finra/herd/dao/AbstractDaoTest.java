@@ -1006,6 +1006,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
+    public static final XMLGregorianCalendar NO_AS_OF_TIME = null;
+
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
 
     public static final String SHORT_DESCRIPTION = "UT_ShortDescription" + RANDOM_SUFFIX;

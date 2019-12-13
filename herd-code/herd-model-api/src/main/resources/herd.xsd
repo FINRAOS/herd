@@ -4454,6 +4454,12 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="asOfTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the date and time when the business object versions were latest valid at that time
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -4474,6 +4480,7 @@
          <xs:element name="tableName" type="xs:string"/>
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
          <xs:element name="ddl" type="xs:string"/>
+         <xs:element name="asOfTime" type="xs:dateTime" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 

@@ -1154,7 +1154,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageEntities, null, null, false);
+                matchedAvailablePartitionFilters, null, null, storageEntities, null, null, false, null);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitEntities =
@@ -1232,7 +1232,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> availableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), partitionFilters,
-                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageEntities, null, null, true);
+                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageEntities, null, null, true, null);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -1296,7 +1296,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> notAvailableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), unmatchedPartitionFilters,
-                request.getBusinessObjectDataVersion(), null, storageEntities, null, null, false);
+                request.getBusinessObjectDataVersion(), null, storageEntities, null, null, false, null);
 
         // Populate the not-available statuses list.
         addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitAvailabilityDtos);

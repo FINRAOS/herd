@@ -17,6 +17,8 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -131,13 +133,13 @@ public interface StorageUnitDao extends BaseJpaDao
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
      * not empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
-     *
+     * @param asOfTime as of the time
      * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
     List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits);
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits, XMLGregorianCalendar asOfTime);
 
     /**
      * Retrieves a list of storage units that belong to the specified storage for the specified business object data.

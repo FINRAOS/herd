@@ -139,6 +139,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH = "classpath:" + ACTIVITI_XML_HERD_TIMER;
 
     // Activiti workflow resources with and without classpath prefix.
+    // Activiti workflow resources with and without classpath prefix.
     public static final String ACTIVITI_XML_HERD_WORKFLOW = "org/finra/herd/service/testHerdWorkflow.bpmn20.xml";
 
     public static final String ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH = "classpath:" + ACTIVITI_XML_HERD_WORKFLOW;
@@ -625,6 +626,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<StorageUnitStatusChangeEvent> NO_STORAGE_UNIT_STATUS_HISTORY = null;
 
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
+
+    public static final XMLGregorianCalendar NO_AS_OF_TIME = null;
 
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 

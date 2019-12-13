@@ -32,6 +32,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -342,7 +344,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     public List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits)
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits, XMLGregorianCalendar asOfTime)
     {
         List<StorageUnitAvailabilityDto> results = new ArrayList<>();
 
@@ -354,7 +356,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
                 getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
                     partitionFilters, businessObjectDataVersion, businessObjectDataStatusEntity, storageEntities, storagePlatformEntity,
                     excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits, i,
-                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST, asOfTime);
 
             // Add the sub-list to the result.
             results.addAll(storageUnitAvailabilityDtosSubset);
@@ -440,14 +442,14 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
-     *
+     * @param asOfTime as of the time
      * @return the list of storage unit availability DTOs sorted by partition values
      */
     private List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits,
-        int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
+        int partitionFilterSubListFromIndex, int partitionFilterSubListSize, XMLGregorianCalendar asOfTime)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -483,6 +485,16 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         {
             mainQueryRestriction = builder.and(mainQueryRestriction,
                 builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
+        }
+
+        // If specified valid as of time, add join and restriction on status history
+        if (asOfTime != null)
+        {
+            Join<BusinessObjectDataEntity, BusinessObjectDataStatusHistoryEntity> businessObjectDataHistoryEntityJoin = businessObjectDataEntityJoin.join(
+                BusinessObjectDataEntity_.historicalStatuses);
+
+            mainQueryRestriction = builder.and(mainQueryRestriction,
+                builder.lessThan(businessObjectDataHistoryEntityJoin.get(BusinessObjectDataEntity_.updatedOn), new Timestamp(asOfTime.toGregorianCalendar().getTimeInMillis())));
         }
 
         // If specified, add restriction on storage.

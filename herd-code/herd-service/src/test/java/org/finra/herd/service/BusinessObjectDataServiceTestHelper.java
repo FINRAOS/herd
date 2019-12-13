@@ -1313,7 +1313,7 @@ public class BusinessObjectDataServiceTestHelper
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
                 AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
-                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl);
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl, AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl responses to the collection response.
         businessObjectDataDdlResponses.add(expectedBusinessObjectDataDdl);
@@ -2018,7 +2018,7 @@ public class BusinessObjectDataServiceTestHelper
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
                 AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
-                AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE);
+                AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
