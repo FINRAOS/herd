@@ -2762,7 +2762,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlWithAsValidTime()
+    public void testGenerateBusinessObjectDataDdlWithAsValidTimeNoValidFound()
     {
         // Prepare test data.
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
@@ -2780,12 +2780,80 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -1);
 
-            
+        BusinessObjectDataDdl resultDdl = null;
+
         request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(cal.getTime()));
-        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        String expectedDdlStr = businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
+            AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.NO_PARTITION_VALUES,
+            AbstractServiceTest.NO_SUBPARTITION_VALUES, false, true, true);
 
         // Validate the results.
-        //businessObjectDataServiceTestHelper
-         //   .validateBusinessObjectDataDdl(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlTwoPartitionLevels(), resultDdl);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlWithAsValidTime()
+    {
+        // Prepare test data.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+            AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.UNSORTED_PARTITION_VALUES,
+            AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+            AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl request with all parameter values in upper case (except for case-sensitive partition values).
+        BusinessObjectDataDdlRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, null);
+        request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toUpperCase());
+        request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toUpperCase());
+        request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toUpperCase());
+        request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toUpperCase());
+        request.setStorageName(request.getStorageName().toUpperCase());
+        request.setCustomDdlName(null);
+        request.setBusinessObjectDataVersion(null);
+
+        BusinessObjectDataDdl resultDdl = null;
+        
+        Calendar cal = Calendar.getInstance();
+        java.util.Date dateTime = cal.getTime();
+        request.setAsOfTime(null);
+        resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        String expectedDdlStr =  businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
+        AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, "ROW FORMAT " + AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
+        BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES,
+        AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
+        
+        businessObjectDataServiceTestHelper
+           .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
+
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+            AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.UNSORTED_PARTITION_VALUES,
+            AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+            AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION+new Integer(99));
+
+        // Validate the results.
+        String expectedDllStrVersion2 = expectedDdlStr.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION+new Integer(99))));
+
+        // NO AS of Time param set, the latest version is version 2
+        request.setAsOfTime(null);
+        BusinessObjectDataDdl resultDdl2 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl2);
+        // Version 1 should be returned
+        request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime));
+        BusinessObjectDataDdl resultDdl3 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl3);
+
     }
 }

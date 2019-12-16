@@ -261,6 +261,26 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
     }
 
+
+    /**
+     * Creates relative database entities required for the unit tests.
+     */
+
+    public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
+        int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
+        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue,
+        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName,
+        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
+    {
+        createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFormatFileType, partitionKey,
+            partitionKeyGroupName, partitionColumnPosition, partitionValues,
+            subPartitionValues, schemaDelimiter, schemaCollectionItemsDelimiter,
+            schemaMapKeysDelimiter, schemaEscapeCharacter,
+            schemaCustomRowFormat, schemaNullValue, schemaColumns,
+            partitionColumns, replaceUnderscoresWithHyphens, customDdlName, generateStorageFileEntities,
+            allowDuplicateBusinessObjectData, null);
+    }
+
     /**
      * Creates relative database entities required for the unit tests.
      */
@@ -268,8 +288,13 @@ public class BusinessObjectDataServiceTestHelper
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue,
         List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName,
-        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
+        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
     {
+        // Use default data version
+        if  (businessObjectVersion == null)
+        {
+            businessObjectVersion = AbstractServiceTest.DATA_VERSION;
+        }
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
             new BusinessObjectFormatKey(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
@@ -318,7 +343,7 @@ public class BusinessObjectDataServiceTestHelper
             {
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
-                        businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, partitionValue, subPartitionValues, AbstractServiceTest.DATA_VERSION,
+                        businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, partitionValue, subPartitionValues, businessObjectVersion,
                         AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
             }
             else
@@ -329,7 +354,7 @@ public class BusinessObjectDataServiceTestHelper
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                         businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, testSubPartitionValues,
-                        AbstractServiceTest.DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                        businessObjectVersion, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
             }
 
             // Get the expected S3 key prefix.
