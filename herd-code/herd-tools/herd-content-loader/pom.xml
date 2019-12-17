@@ -32,7 +32,7 @@
 
    <properties>
       <!-- NOTE: Overwrites parent herdpython.version -->
-      <!--<herdpython.version>0.110.5</herdpython.version>-->
+      <herdpython.version>0.111.1</herdpython.version>
    </properties>
 
    <build>
