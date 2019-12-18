@@ -50,3 +50,12 @@ class Lineage(Enum):
     DEFINITION_NAME = 'Bus Obj Def Name'
     USAGE = 'Format Usage'
     FILE_TYPE = 'Format File Type'
+
+class TagTypes(Enum):
+    WORKSHEET = 'Tag Type'
+    NAME = 'Tag Type Name'
+    CODE = 'Tag Type Code'
+    DESCRIPTION = 'Tag Type Description'
+
+class Tags(Enum):
+    WORKSHEET = 'Tag'

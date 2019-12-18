@@ -127,8 +127,8 @@ class MainUI(tk.Frame):
 
         self.textPad = tk.scrolledtext.ScrolledText(self, inactiveselectbackground="grey")
         self.textPad.grid(row=2, column=0, columnspan=4, sticky=ALL)
-        self.textPad.tag_configure("search", background="green")
-        self.textPad.tag_configure("error", foreground="red")
+        self.textPad.tag_configure("black", background="black", foreground="white")
+        self.textPad.tag_configure("red", foreground="red")
         self.textPad.bind_class("Text", "<Control-a>", lambda event: event.widget.tag_add("sel", "1.0", "end"))
 
     ############################################################################
@@ -156,12 +156,14 @@ class MainUI(tk.Frame):
         else:
             output = str(output)
 
-        if "ERROR" in output:
-            self.textPad.insert(tk.END, output, "error")
+        if "SUMMARY" in output:
+            self.textPad.insert(tk.END, output, "black")
+        elif "FAILURE" in output:
+            self.textPad.insert(tk.END, output, "red")
         else:
             self.textPad.insert(tk.END, output)
         self.textPad.see(tk.END)
-        self.textPad.update()
+        self.after(250, self.textPad.update())
 
     ############################################################################
     def select_env(self, *args):
@@ -223,7 +225,6 @@ class MainUI(tk.Frame):
             if not self.sample_dir.get():
                 self.line("Please select a directory.")
                 return
-
 
         config = {
             'gui_enabled': True,
