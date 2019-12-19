@@ -38,7 +38,7 @@ setup(
     url="https://github.com/FINRAOS/herd",
     keywords=["herd", "dm"],
     install_requires=[
-        "herdsdk", "numpy >= 1.17.0", "pandas >= 0.24.0", "boto3 >= 1.9.50", "xlrd >= 1.1.0"
+        "herdsdk", "numpy >= 1.17.0", "pandas >= 0.24.0", "boto3 >= 1.9.50", "xlrd >= 1.1.0", "xlsxwriter >= 1.1.0"
     ],
     packages=find_packages(),
     include_package_data=True,
