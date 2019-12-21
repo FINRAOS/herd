@@ -687,6 +687,11 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 1_000),
 
     /**
+     * The pagination size for the query that returns raw business object data search results. The default is 100000 raw results.
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_QUERY_PAGINATION_SIZE("business.object.data.search.query.pagination.size", 100000),
+
+    /**
      * The maximum number of nested tags allowed
      */
     MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10),

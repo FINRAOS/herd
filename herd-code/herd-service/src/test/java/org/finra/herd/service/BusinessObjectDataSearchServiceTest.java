@@ -287,11 +287,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         int pageNum = 0;
         for (BusinessObjectDataEntity expectedBusinessObjectDataEntity : expectedBusinessObjectDataEntities)
         {
-            // Increment the page number.
-            pageNum += 1;
-
             // Get the relative page with page size set to a single response.
-            BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(pageNum, 1, request);
+            BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(++pageNum, 1, request);
 
             // Validate the search results.
             assertNotNull(result);
@@ -378,6 +375,73 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
         assertEquals(Long.valueOf(CollectionUtils.size(expectedBusinessObjectDataEntities)), result.getTotalRecordCount());
         assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataLatestValidFilterRawSearchResultsGreaterThanSearchQueryPaginationSize() throws Exception
+    {
+        // Create test data.
+        List<BusinessObjectDataEntity> expectedBusinessObjectDataEntities =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchWithLatestValidFilterTesting();
+        assertEquals(3, CollectionUtils.size(expectedBusinessObjectDataEntities));
+
+        // Create a simple search request with the latest valid filter.
+        BusinessObjectDataSearchRequest request = businessObjectDataServiceTestHelper.createSimpleBusinessObjectDataSearchRequest(NAMESPACE, BDEF_NAME);
+        request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setFilterOnLatestValidVersion(FILTER_ON_LATEST_VALID_VERSION);
+
+        // Override configuration for business object data search query pagination size to be small enough to require multiple calls to the database to get all
+        // raw business object data search results.
+        int maxBusinessObjectDataSearchQueryPaginationSize = 2;
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_QUERY_PAGINATION_SIZE.getKey(), maxBusinessObjectDataSearchQueryPaginationSize);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Get the first page with page size set to 2.
+            BusinessObjectDataSearchResultPagingInfoDto result = businessObjectDataService.searchBusinessObjectData(1, 2, request);
+
+            // Validate the search results.
+            assertNotNull(result);
+            assertNotNull(result.getBusinessObjectDataSearchResult());
+            assertEquals(2, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+            assertEquals(Long.valueOf(expectedBusinessObjectDataEntities.get(0).getId()),
+                Long.valueOf(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().get(0).getId()));
+            assertEquals(Long.valueOf(expectedBusinessObjectDataEntities.get(1).getId()),
+                Long.valueOf(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().get(1).getId()));
+
+            // Validate the paging information.
+            assertEquals(Long.valueOf(1), result.getPageNum());
+            assertEquals(Long.valueOf(2), result.getPageSize());
+            assertEquals(Long.valueOf(2), result.getPageCount());
+            assertEquals(Long.valueOf(2), result.getTotalRecordsOnPage());
+            assertEquals(Long.valueOf(3), result.getTotalRecordCount());
+            assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+
+            // Get the second page with page size set to 2.
+            result = businessObjectDataService.searchBusinessObjectData(2, 2, request);
+
+            // Validate the search results.
+            assertNotNull(result);
+            assertNotNull(result.getBusinessObjectDataSearchResult());
+            assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+            assertEquals(Long.valueOf(expectedBusinessObjectDataEntities.get(2).getId()),
+                Long.valueOf(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().get(0).getId()));
+
+            // Validate the paging information.
+            assertEquals(Long.valueOf(2), result.getPageNum());
+            assertEquals(Long.valueOf(2), result.getPageSize());
+            assertEquals(Long.valueOf(2), result.getPageCount());
+            assertEquals(Long.valueOf(1), result.getTotalRecordsOnPage());
+            assertEquals(Long.valueOf(3), result.getTotalRecordCount());
+            assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test

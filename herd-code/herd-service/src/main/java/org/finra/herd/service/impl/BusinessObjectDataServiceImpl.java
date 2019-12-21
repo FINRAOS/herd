@@ -566,6 +566,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // this value or an HTTP status of 400 (Bad Request) error would be returned.
         int maxResultsPerPage = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
 
+        // Get the maximum number of results that can be returned by the search query when selecting raw data to filter in latest valid versions.
+        final int rawSearchPageSize = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_QUERY_PAGINATION_SIZE, Integer.class);
+
         // Validate the page number and page size
         // Set the defaults if pageNum and pageSize are null
         // Page number must be greater than 0
@@ -660,14 +663,13 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             // Use linked hash map to filter entries and to preserve the original order of the entries returned by the database while doing it.
             Map<List<String>, BusinessObjectData> latestVersions = new LinkedHashMap<>();
 
-            // Keep fetching in business object data search results using maximum allowed search result size.
+            // Keep fetching in business object data raw search results using business object data search query pagination size configured in the system.
             boolean keepProcessing = true;
-            int rawSearchPageNum = 1;
-            int rawSearchPageSize = businessObjectDataSearchMaxResultCount;
+            int rawSearchPageNum = 0;
             while (keepProcessing)
             {
                 List<BusinessObjectData> rawSearchBusinessObjectDataList =
-                    businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, rawSearchPageNum, rawSearchPageSize);
+                    businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, ++rawSearchPageNum, rawSearchPageSize);
 
                 // Process the list of business object data search results to select the latest versions.
                 for (BusinessObjectData businessObjectData : rawSearchBusinessObjectDataList)
