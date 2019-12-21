@@ -49,6 +49,8 @@ import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
@@ -61,6 +63,7 @@ import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.MessageHeader;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -460,6 +463,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_USAGE_CODE_4 = "UT_Usage_4" + RANDOM_SUFFIX;
+
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -832,6 +837,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_USER_CREDENTIAL_NAME = null;
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
+
+    public static final   List<Attribute> NULL_AS_ATTRIBUTES = null;
+
+    public static final List<BusinessObjectDataKey> NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN = null;
+
+    public static final List<BusinessObjectDataKey> NULL_AS_BUSINESS_OBJECT_DATA_PARENTS = null;
+
+    public static final List<BusinessObjectDataStatusChangeEvent> NULL_AS_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
+
+    public static final List<StorageUnit> NULL_AS_STORAGE_UNITS = null;
+
+    public static final List<String> NULL_AS_SUBPARTITION_VALUES = null;
 
     public static final String OOZIE_WORKFLOW_LOCATION = "UT_Oozie_workflow_2" + RANDOM_SUFFIX;
 

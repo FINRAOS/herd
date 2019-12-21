@@ -19,6 +19,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -634,9 +635,74 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 String.format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
         }
 
-        // If total record count is zero, we return an empty result list. Otherwise, execute the search.
-        List<BusinessObjectData> businessObjectDataList =
-            totalRecordCount == 0 ? new ArrayList<>() : businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, pageNum, pageSize);
+        // Get the search results.
+        // We only apply restriction on business object data status here. For performance reasons,
+        // selection of actual latest valid versions does not take place on the database end.
+        List<BusinessObjectData> businessObjectDataList;
+        // If total record count is zero, we return an empty result list.
+        if (totalRecordCount == 0)
+        {
+            businessObjectDataList = new ArrayList<>();
+        }
+        // Otherwise, is latest valid filter is not enabled, execute the search without any special filtering on our side.
+        else if (BooleanUtils.isNotTrue(businessObjectDataSearchKey.isFilterOnLatestValidVersion()))
+        {
+            businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, pageNum, pageSize);
+        }
+        // Execute search with filtering on the latest valid version for each set of partition values.
+        // Please note that VALID status filtering is already done in the main search query.
+        else
+        {
+            // Compute the number of records that we need to get before we can return the search results.
+            // Please note that page numbers are one-based.
+            Integer maxLatestValidVersionsRequired = pageNum * pageSize;
+
+            // Use linked hash map to filter entries and to preserve the original order of the entries returned by the database while doing it.
+            Map<List<String>, BusinessObjectData> latestVersions = new LinkedHashMap<>();
+
+            // Keep fetching in business object data search results using maximum allowed search result size.
+            boolean keepProcessing = true;
+            int rawSearchPageNum = 1;
+            int rawSearchPageSize = businessObjectDataSearchMaxResultCount;
+            while (keepProcessing)
+            {
+                List<BusinessObjectData> rawSearchBusinessObjectDataList =
+                    businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, rawSearchPageNum, rawSearchPageSize);
+
+                // Process the list of business object data search results to select the latest versions.
+                for (BusinessObjectData businessObjectData : rawSearchBusinessObjectDataList)
+                {
+                    // Retrieve business object data key and a list of partition values for this business object data.
+                    List<String> alternateKeyValues = getBusinessObjectDataVersionLessAlternateKeyValues(businessObjectData);
+
+                    // If hash map already contains this set of version-less alternate key values, that means that we already got the latest valid version
+                    // filtered in. This is because of the order by used in the search query, where both business object format and business object data
+                    // versions are specified to be in descending order and also business object format usage sorted in upper case.
+                    if (!latestVersions.containsKey(alternateKeyValues))
+                    {
+                        // Insert this latest version into the hash map.
+                        latestVersions.put(alternateKeyValues, businessObjectData);
+
+                        // Check if we got enough latest valid versions.
+                        if (latestVersions.size() == maxLatestValidVersionsRequired)
+                        {
+                            keepProcessing = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Determine if we need to keep processing.
+                if (keepProcessing)
+                {
+                    keepProcessing = (rawSearchBusinessObjectDataList.size() == rawSearchPageSize);
+                }
+            }
+
+            // Get the correct subset of search results to be returned in the response.
+            businessObjectDataList = new ArrayList<>(latestVersions.values());
+            businessObjectDataList = businessObjectDataList.subList((pageNum - 1) * pageSize, businessObjectDataList.size());
+        }
 
         // Get the page count.
         Integer pageCount = totalRecordCount / pageSize + (totalRecordCount % pageSize > 0 ? 1 : 0);
@@ -1005,8 +1071,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             // Create and initialize a business object data partitions object instance.
             BusinessObjectDataPartitions businessObjectDataPartitions = createBusinessObjectDataPartitions(request);
             businessObjectDataPartitions.setPartitions(businessObjectDataPartitionsHelper
-                .generatePartitions(request, businessObjectFormatEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
-                    cachedS3BucketNames));
+                .generatePartitions(request, businessObjectFormatEntity, storageNames, requestedStorageEntities, cachedStorageEntities, cachedS3BucketNames));
 
             return (T) businessObjectDataPartitions;
         }
@@ -1498,6 +1563,32 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         businessObjectDataStatus.setReason(reason);
 
         return businessObjectDataStatus;
+    }
+
+    /**
+     * Returns all parts of business object data alternate key without business object format and business object data versions as a list of strings. Please
+     * note that business object format usage is returned in all uppercase, since it is not a database lookup value.
+     *
+     * @param businessObjectData the business object data
+     *
+     * @return the list of business object data alternate key values without business object format and business object data versions
+     */
+    private List<String> getBusinessObjectDataVersionLessAlternateKeyValues(BusinessObjectData businessObjectData)
+    {
+        List<String> alternateKeyValues = new ArrayList<>();
+
+        alternateKeyValues.add(businessObjectData.getNamespace());
+        alternateKeyValues.add(businessObjectData.getBusinessObjectDefinitionName());
+        alternateKeyValues.add(businessObjectData.getBusinessObjectFormatUsage().toUpperCase());
+        alternateKeyValues.add(businessObjectData.getBusinessObjectFormatFileType());
+        alternateKeyValues.add(businessObjectData.getPartitionValue());
+
+        if (CollectionUtils.isNotEmpty(businessObjectData.getSubPartitionValues()))
+        {
+            alternateKeyValues.addAll(businessObjectData.getSubPartitionValues());
+        }
+
+        return alternateKeyValues;
     }
 
     /**
