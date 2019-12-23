@@ -489,37 +489,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests case where subnet spans multiple regions, and one of the region has a cheaper price. The on-demand prices are identified by region, therefore this
-     * test case tests that the correct on-demand price is selected.
-     * <p/>
-     * Test case reference ClusterSpotPriceAlgorithm 14
-     */
-//    @Test
-//    public void testBestPriceMultipleRegions()
-//    {
-//        String subnetId = SUBNET_1 + "," + SUBNET_5;
-//
-//        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
-//        masterInstanceDefinition.setInstanceCount(1);
-//        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
-//
-//        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-//        coreInstanceDefinition.setInstanceCount(1);
-//        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
-//
-//        InstanceDefinition taskInstanceDefinition = null;
-//
-//        EmrClusterDefinition emrClusterDefinition =
-//            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
-//
-//        assertBestPriceCriteriaRemoved(emrClusterDefinition);
-//        assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-//        assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-//
-//        assertEquals("selected subnet", SUBNET_5, emrClusterDefinition.getSubnetId());
-//    }
-
-    /**
      * Tests case where instance type was not found in the spot list because AWS does not have a spot price for the given instance type in the given AZ. But
      * there is another AZ available for that does have a all spot prices available.
      */
