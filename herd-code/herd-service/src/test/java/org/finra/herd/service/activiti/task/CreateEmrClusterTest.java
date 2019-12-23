@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +43,6 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 public class CreateEmrClusterTest extends AbstractServiceTest
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateEmrClusterTest.class);
-
-    @Before
-    public void createDatabaseEntities()
-    {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-    }
 
     private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride) throws Exception
     {

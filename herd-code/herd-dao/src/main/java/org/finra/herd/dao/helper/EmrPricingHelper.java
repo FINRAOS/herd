@@ -41,7 +41,6 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.Ec2Dao;
-import org.finra.herd.dao.Ec2OnDemandPricingDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
@@ -52,7 +51,6 @@ import org.finra.herd.model.dto.Ec2PriceDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.dto.EmrClusterPriceDto;
 import org.finra.herd.model.dto.EmrVpcPricingState;
-import org.finra.herd.model.jpa.Ec2OnDemandPricingEntity;
 
 /**
  * Encapsulates logic for calculating the best price for EMR cluster.
@@ -73,9 +71,6 @@ public class EmrPricingHelper extends AwsHelper
 
     @Autowired
     private JsonHelper jsonHelper;
-
-    @Autowired
-    private Ec2OnDemandPricingDao ec2OnDemandPricingDao;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -153,21 +148,15 @@ public class EmrPricingHelper extends AwsHelper
         for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets, awsParamsDto))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
-            // This method also validates that the given instance types are real instance types supported by AWS.
-            Map<String, BigDecimal> instanceTypeOnDemandPrices = getInstanceTypeOnDemandPrices(availabilityZone, requestedInstanceTypes);
-
-            // Create a mapping of instance types to prices for more efficient, in-memory lookup
             // When AWS does not return any spot price history for an instance type in an availability zone, the algorithm will not use that availability zone
             // when selecting the lowest price.
             Map<String, BigDecimal> instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes, awsParamsDto);
 
             emrVpcPricingState.getSpotPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeSpotPrices);
-            emrVpcPricingState.getOnDemandPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeOnDemandPrices);
 
             // Get and compare master price
             BigDecimal masterSpotPrice = instanceTypeSpotPrices.get(masterInstanceType);
-            BigDecimal masterOnDemandPrice = instanceTypeOnDemandPrices.get(masterInstanceType);
-            Ec2PriceDto masterPrice = getBestInstancePrice(masterSpotPrice, masterOnDemandPrice, masterInstanceDefinition);
+            Ec2PriceDto masterPrice = getBestInstancePrice(masterSpotPrice, masterInstanceDefinition);
 
             // Get and compare core price
             Ec2PriceDto corePrice = null;
@@ -175,8 +164,7 @@ public class EmrPricingHelper extends AwsHelper
             {
                 String coreInstanceType = coreInstanceDefinition.getInstanceType();
                 BigDecimal coreSpotPrice = instanceTypeSpotPrices.get(coreInstanceType);
-                BigDecimal coreOnDemandPrice = instanceTypeOnDemandPrices.get(coreInstanceType);
-                corePrice = getBestInstancePrice(coreSpotPrice, coreOnDemandPrice, coreInstanceDefinition);
+                corePrice = getBestInstancePrice(coreSpotPrice, coreInstanceDefinition);
             }
 
             // Get and compare task price
@@ -185,8 +173,7 @@ public class EmrPricingHelper extends AwsHelper
             {
                 String taskInstanceType = taskInstanceDefinition.getInstanceType();
                 BigDecimal taskSpotPrice = instanceTypeSpotPrices.get(taskInstanceType);
-                BigDecimal taskOnDemandPrice = instanceTypeOnDemandPrices.get(taskInstanceType);
-                taskPrice = getBestInstancePrice(taskSpotPrice, taskOnDemandPrice, taskInstanceDefinition);
+                taskPrice = getBestInstancePrice(taskSpotPrice, taskInstanceDefinition);
             }
 
             // If prices were found
@@ -214,11 +201,14 @@ public class EmrPricingHelper extends AwsHelper
         // Find the best prices from the result list
         EmrClusterPriceDto bestEmrClusterPrice = getEmrClusterPriceWithLowestCoreInstancePrice(emrClusterPrices);
 
-        // Find the best subnet among the best AZ's
-        Subnet bestEmrClusterSubnet = getBestSubnetForAvailabilityZone(bestEmrClusterPrice.getAvailabilityZone(), subnets);
+        if (bestEmrClusterPrice != null)
+        {
+            // Find the best subnet among the best AZ's
+            Subnet bestEmrClusterSubnet = getBestSubnetForAvailabilityZone(bestEmrClusterPrice.getAvailabilityZone(), subnets);
 
-        // Update the definition with the new calculated values
-        updateInstanceDefinitionsWithBestPrice(emrClusterDefinition, bestEmrClusterSubnet, bestEmrClusterPrice);
+            // Update the definition with the new calculated values
+            updateInstanceDefinitionsWithBestPrice(emrClusterDefinition, bestEmrClusterSubnet, bestEmrClusterPrice);
+        }
     }
 
     /**
@@ -396,15 +386,18 @@ public class EmrPricingHelper extends AwsHelper
         for (final EmrClusterPriceDto emrClusterPriceDto : emrClusterPrices)
         {
             final BigDecimal coreInstancePrice = getEmrClusterCoreInstancePrice(emrClusterPriceDto);
-            if (emrClusterPriceMapKeyedByCoreInstancePrice.containsKey(coreInstancePrice))
+            if (coreInstancePrice != null)
             {
-                emrClusterPriceMapKeyedByCoreInstancePrice.get(coreInstancePrice).add(emrClusterPriceDto);
-            }
-            else
-            {
-                List<EmrClusterPriceDto> emrClusterPriceList = new ArrayList<>();
-                emrClusterPriceList.add(emrClusterPriceDto);
-                emrClusterPriceMapKeyedByCoreInstancePrice.put(coreInstancePrice, emrClusterPriceList);
+                if (emrClusterPriceMapKeyedByCoreInstancePrice.containsKey(coreInstancePrice))
+                {
+                    emrClusterPriceMapKeyedByCoreInstancePrice.get(coreInstancePrice).add(emrClusterPriceDto);
+                }
+                else
+                {
+                    List<EmrClusterPriceDto> emrClusterPriceList = new ArrayList<>();
+                    emrClusterPriceList.add(emrClusterPriceDto);
+                    emrClusterPriceMapKeyedByCoreInstancePrice.put(coreInstancePrice, emrClusterPriceList);
+                }
             }
         }
 
@@ -510,15 +503,14 @@ public class EmrPricingHelper extends AwsHelper
      * price matched the given criteria. If neither spotBidPrice or maxSearchPrice is set, returns the pricing as the on-demand price.
      *
      * @param spotPrice the current spot price for the instance type
-     * @param onDemandPrice the current on-demand price for the instance type
      * @param instanceDefinition the instance definition containing search criteria
      *
      * @return the new {@link Ec2PriceDto} with the pricing information
      */
-    private Ec2PriceDto getBestInstancePrice(BigDecimal spotPrice, BigDecimal onDemandPrice, InstanceDefinition instanceDefinition)
+    private Ec2PriceDto getBestInstancePrice(BigDecimal spotPrice, InstanceDefinition instanceDefinition)
     {
-        LOGGER.debug("Starting... instanceType=\"{}\" instanceCount={} instanceSpotPrice={} instanceOnDemandPrice={}", instanceDefinition.getInstanceType(),
-            instanceDefinition.getInstanceCount(), spotPrice, onDemandPrice);
+        LOGGER.debug("Starting... instanceType=\"{}\" instanceCount={} instanceSpotPrice={}", instanceDefinition.getInstanceType(),
+            instanceDefinition.getInstanceCount(), spotPrice);
 
         BigDecimal spotBidPrice = instanceDefinition.getInstanceSpotPrice();
         BigDecimal maxSearchPrice = instanceDefinition.getInstanceMaxSearchPrice();
@@ -538,13 +530,12 @@ public class EmrPricingHelper extends AwsHelper
         {
             bestPrice = setBestPriceToSpotPricing(spotPrice, maxSearchPrice, instanceDefinition.getInstanceCount());
         }
-        // spotBidPrice and maxSearchPrice are not specified. User explicitly wants to use on-demand
         else
         {
             bestPrice = new Ec2PriceDto();
             bestPrice.setSpotPricing(false);
             bestPrice.setInstanceCount(instanceDefinition.getInstanceCount());
-            bestPrice.setInstancePrice(onDemandPrice);
+            bestPrice.setInstancePrice(BigDecimal.ZERO);
         }
 
         LOGGER.debug("End. instanceBestPrice={}", jsonHelper.objectToJson(bestPrice));
@@ -616,36 +607,6 @@ public class EmrPricingHelper extends AwsHelper
         instanceDefinition.setInstanceMaxSearchPrice(masterInstanceDefinition.getInstanceMaxSearchPrice());
         instanceDefinition.setInstanceOnDemandThreshold(masterInstanceDefinition.getInstanceOnDemandThreshold());
         return instanceDefinition;
-    }
-
-    /**
-     * Returns a mapping of instance types to on-demand prices for the given AZ and instance types. The on-demand prices are retrieved from database
-     * configurations. The on-demand prices are looked up by the AZ's region name. This method also validates that the given instance types are real instance
-     * types supported by AWS.
-     *
-     * @param availabilityZone the availability zone of the on-demand instances
-     * @param instanceTypes the sizes of the on-demand instances
-     *
-     * @return the map of instance type to on-demand price
-     * @throws ObjectNotFoundException when any of the instance type was not found in the given region
-     */
-    private Map<String, BigDecimal> getInstanceTypeOnDemandPrices(AvailabilityZone availabilityZone, Set<String> instanceTypes)
-    {
-        Map<String, BigDecimal> instanceTypeOnDemandPrices = new HashMap<>();
-        for (String instanceType : instanceTypes)
-        {
-            Ec2OnDemandPricingEntity onDemandPrice = ec2OnDemandPricingDao.getEc2OnDemandPricing(availabilityZone.getRegionName(), instanceType);
-
-            if (onDemandPrice == null)
-            {
-                throw new ObjectNotFoundException(
-                    "On-demand price for region '" + availabilityZone.getRegionName() + "' and instance type '" + instanceType + "' not found.");
-            }
-
-            instanceTypeOnDemandPrices.put(instanceType, onDemandPrice.getHourlyPrice());
-        }
-
-        return instanceTypeOnDemandPrices;
     }
 
     /**

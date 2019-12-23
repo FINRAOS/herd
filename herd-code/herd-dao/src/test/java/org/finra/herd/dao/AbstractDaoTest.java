@@ -1352,12 +1352,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected Ec2Dao ec2Dao;
 
     @Autowired
-    protected Ec2OnDemandPricingDao ec2OnDemandPricingDao;
-
-    @Autowired
-    protected Ec2OnDemandPricingDaoTestHelper ec2OnDemandPricingDaoTestHelper;
-
-    @Autowired
     protected EmrClusterDefinitionDao emrClusterDefinitionDao;
 
     @Autowired
