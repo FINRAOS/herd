@@ -748,9 +748,6 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testSignalJobWithCheckEmrClusterTask() throws Exception
     {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-
         // Create a list of parameters for the job.
         List<Parameter> parameters = new ArrayList<>();
         Parameter parameter = new Parameter("clusterName", EMR_CLUSTER_NAME);

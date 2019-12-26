@@ -41,9 +41,6 @@ public class AddEmrMasterSecurityGroupTest extends HerdActivitiServiceTaskTest
         // Create a pipe-separated list of security group IDs.
         final String securityGroupIds = EC2_SECURITY_GROUP_1 + "|" + EC2_SECURITY_GROUP_2;
 
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-
         // Create the namespace entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
