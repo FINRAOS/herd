@@ -19,7 +19,7 @@
     "dist"
   ],
   "peerDependencies": {
-    "request": "2.60.0",
+    "request": "2.88.0",
     "angular": "1.4.3",
     "@types/angular": "1.6.36",
     "@types/jquery": "3.2.16",
@@ -28,7 +28,7 @@
     "@types/node": "8.0.47"
   },
   "devDependencies": {
-    "request": "2.60.0",
+    "request": "2.88.0",
     "angular": "1.4.3",
     "typescript": ">=2.0.0 <2.8",
     "rollup": "0.50.0",
