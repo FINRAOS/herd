@@ -28,7 +28,6 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
@@ -43,13 +42,6 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 public class CheckEmrClusterTest extends AbstractServiceTest
 {
     public static final String taskName = "checkClusterServiceTask";
-
-    @Before
-    public void createDatabaseEntities()
-    {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-    }
 
     /**
      * This method tests the check EMR cluster activiti task with cluster Id and step Id specified

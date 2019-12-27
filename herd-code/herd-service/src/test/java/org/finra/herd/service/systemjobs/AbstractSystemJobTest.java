@@ -46,7 +46,7 @@ public class AbstractSystemJobTest extends AbstractServiceTest
         Map<String, AbstractSystemJob> systemJobs = applicationContext.getBeansOfType(AbstractSystemJob.class);
 
         // Validate that we located the expected number of system job.
-        assertEquals(8, CollectionUtils.size(systemJobs));
+        assertEquals(7, CollectionUtils.size(systemJobs));
 
         // Validate cron expression configured in the system for each system job.
         for (Map.Entry<String, AbstractSystemJob> entry : systemJobs.entrySet())
