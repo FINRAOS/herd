@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -2012,6 +2013,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         // Create multiple business object formats with multiple business object format versions having multiple VALID business object data versions.
         // Please note that the latest version flag is not enabled anywhere in the test data set, since it is not used by business object data search logic
         // when applying latest valid filter.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = new ArrayList<>();
         for (String businessObjectFormatUsage : Arrays.asList(FORMAT_USAGE_CODE_2, FORMAT_USAGE_CODE))
         {
             for (String fileType : Arrays.asList(FORMAT_FILE_TYPE_CODE_2, FORMAT_FILE_TYPE_CODE))
@@ -2020,14 +2022,36 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 {
                     for (Integer businessObjectDataVersion : Arrays.asList(SECOND_DATA_VERSION, THIRD_DATA_VERSION, INITIAL_DATA_VERSION))
                     {
-                        businessObjectDataDaoTestHelper
+                        businessObjectDataEntities.add(businessObjectDataDaoTestHelper
                             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
                                 NO_LATEST_VERSION_FLAG_SET, PARTITION_VALUE, SUBPARTITION_VALUES, businessObjectDataVersion, NO_LATEST_VERSION_FLAG_SET,
-                                BusinessObjectDataStatusEntity.VALID);
+                                Objects.equals(businessObjectDataVersion, SECOND_DATA_VERSION) ? BusinessObjectDataStatusEntity.INVALID :
+                                    BusinessObjectDataStatusEntity.VALID));
                     }
                 }
             }
         }
+
+        // Please note that DAO layer only filters in VALID version - the actual latest valid versions are filtered in by the service layer.
+        // Also, the order of search results is important, business object format and business object data versions are in DESC order.
+        // Order by on business object format usage is done using all upper case values, since usage is not a lookup value.
+        // For reference, here is all VALID test data created above in the expected search order:
+        //     0 = [id=20, UT_Usage_196539, UT_FileType_196539, FormatVersion=1, version=2]
+        //     1 = [id=21, UT_Usage_196539, UT_FileType_196539, FormatVersion=1, version=0]
+        //     2 = [id=23, UT_Usage_196539, UT_FileType_196539, FormatVersion=0, version=2]
+        //     3 = [id=24, UT_Usage_196539, UT_FileType_196539, FormatVersion=0, version=0]
+        //     4 = [id=14, UT_Usage_196539, UT_FileType_296539, FormatVersion=1, version=2]
+        //     5 = [id=15, UT_Usage_196539, UT_FileType_296539, FormatVersion=1, version=0]
+        //     6 = [id=17, UT_Usage_196539, UT_FileType_296539, FormatVersion=0, version=2]
+        //     7 = [id=18, UT_Usage_196539, UT_FileType_296539, FormatVersion=0, version=0]
+        //     8 = [id=8,  UT_Usage_296539, UT_FileType_196539, FormatVersion=1, version=2]
+        //     9 = [id=9,  UT_Usage_296539, UT_FileType_196539, FormatVersion=1, version=0]
+        //    10 = [id=11, UT_Usage_296539, UT_FileType_196539, FormatVersion=0, version=2]
+        //    11 = [id=12, UT_Usage_296539, UT_FileType_196539, FormatVersion=0, version=0]
+        //    12 = [id=2,  UT_Usage_296539, UT_FileType_296539, FormatVersion=1, version=2]
+        //    13 = [id=3,  UT_Usage_296539, UT_FileType_296539, FormatVersion=1, version=0]
+        //    14 = [id=5,  UT_Usage_296539, UT_FileType_296539, FormatVersion=0, version=2]
+        //    15 = [id=6,  UT_Usage_296539, UT_FileType_296539, FormatVersion=0, version=0]
 
         // Create an extra business object definition and file type entities - they are required for unit test coverage.
         assertNotNull(
@@ -2039,75 +2063,96 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-        assertEquals(1, CollectionUtils.size(result));
-        assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
-        assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(0).getVersion());
+        assertEquals(2, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
 
         // Search for latest business object data with all business object format alternate key elements specified except for business object format usage.
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-        assertEquals(2, CollectionUtils.size(result));
-        assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
-        assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(0).getVersion());
-        assertEquals(FORMAT_USAGE_CODE_2, result.get(1).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(1).getBusinessObjectFormatFileType());
-        assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(1).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(1).getVersion());
+        assertEquals(4, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(10).getId()), Long.valueOf(result.get(2).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(11).getId()), Long.valueOf(result.get(3).getId()));
 
         // Search for latest business object data with all business object format alternate key elements specified except for file type.
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-        assertEquals(2, CollectionUtils.size(result));
-        assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
-        assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(0).getVersion());
-        assertEquals(FORMAT_USAGE_CODE, result.get(1).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE_2, result.get(1).getBusinessObjectFormatFileType());
-        assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(1).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(1).getVersion());
+        assertEquals(4, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(16).getId()), Long.valueOf(result.get(2).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(17).getId()), Long.valueOf(result.get(3).getId()));
 
         // Search for latest business object data with all business object format alternate key elements specified except for business object format version.
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
             DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-        assertEquals(1, CollectionUtils.size(result));
-        assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
-        assertEquals(SECOND_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(0).getVersion());
+        assertEquals(4, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(20).getId()), Long.valueOf(result.get(1).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(2).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(3).getId()));
 
         // Search for latest business object data with all optional business object format alternate key elements missing.
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-        assertEquals(4, CollectionUtils.size(result));
-        assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
-        assertEquals(SECOND_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(0).getVersion());
-        assertEquals(FORMAT_USAGE_CODE, result.get(1).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE_2, result.get(1).getBusinessObjectFormatFileType());
-        assertEquals(SECOND_FORMAT_VERSION.longValue(), result.get(1).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(1).getVersion());
-        assertEquals(FORMAT_USAGE_CODE_2, result.get(2).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE, result.get(2).getBusinessObjectFormatFileType());
-        assertEquals(SECOND_FORMAT_VERSION.longValue(), result.get(2).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(2).getVersion());
-        assertEquals(FORMAT_USAGE_CODE_2, result.get(3).getBusinessObjectFormatUsage());
-        assertEquals(FORMAT_FILE_TYPE_CODE_2, result.get(3).getBusinessObjectFormatFileType());
-        assertEquals(SECOND_FORMAT_VERSION.longValue(), result.get(3).getBusinessObjectFormatVersion());
-        assertEquals(THIRD_DATA_VERSION.longValue(), result.get(3).getVersion());
+        assertEquals(16, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(20).getId()), Long.valueOf(result.get(1).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(2).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(3).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(13).getId()), Long.valueOf(result.get(4).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(14).getId()), Long.valueOf(result.get(5).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(16).getId()), Long.valueOf(result.get(6).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(17).getId()), Long.valueOf(result.get(7).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(7).getId()), Long.valueOf(result.get(8).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(8).getId()), Long.valueOf(result.get(9).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(10).getId()), Long.valueOf(result.get(10).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(11).getId()), Long.valueOf(result.get(11).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(1).getId()), Long.valueOf(result.get(12).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(2).getId()), Long.valueOf(result.get(13).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(4).getId()), Long.valueOf(result.get(14).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(5).getId()), Long.valueOf(result.get(15).getId()));
+
+        // Search for business object data without any filters and with alternate key elements missing.
+        result = businessObjectDataDao.searchBusinessObjectData(
+            new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
+                NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
+                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(24, CollectionUtils.size(result));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(18).getId()), Long.valueOf(result.get(1).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(20).getId()), Long.valueOf(result.get(2).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(3).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(21).getId()), Long.valueOf(result.get(4).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(5).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(13).getId()), Long.valueOf(result.get(6).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(12).getId()), Long.valueOf(result.get(7).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(14).getId()), Long.valueOf(result.get(8).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(16).getId()), Long.valueOf(result.get(9).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(15).getId()), Long.valueOf(result.get(10).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(17).getId()), Long.valueOf(result.get(11).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(7).getId()), Long.valueOf(result.get(12).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(6).getId()), Long.valueOf(result.get(13).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(8).getId()), Long.valueOf(result.get(14).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(10).getId()), Long.valueOf(result.get(15).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(9).getId()), Long.valueOf(result.get(16).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(11).getId()), Long.valueOf(result.get(17).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(1).getId()), Long.valueOf(result.get(18).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(0).getId()), Long.valueOf(result.get(19).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(2).getId()), Long.valueOf(result.get(20).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(4).getId()), Long.valueOf(result.get(21).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(3).getId()), Long.valueOf(result.get(22).getId()));
+        assertEquals(Long.valueOf(businessObjectDataEntities.get(5).getId()), Long.valueOf(result.get(23).getId()));
 
         // Try to search for latest business object data by specifying invalid namespace.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
@@ -2194,7 +2239,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_LATEST_VERSION_FLAG_SET, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
-                BusinessObjectDataStatusEntity.VALID);
+                BusinessObjectDataStatusEntity.INVALID);
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_LATEST_VERSION_FLAG_SET, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
@@ -2214,13 +2259,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
+        // Please note that DAO layer only filters in VALID version - the actual latest valid versions are filtered in by the service layer.
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that latest valid business object data is selected from the initial business object format version.
         result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(SECOND_DATA_VERSION.longValue(), result.get(0).getVersion());
+        assertEquals(INITIAL_DATA_VERSION.longValue(), result.get(0).getVersion());
     }
 
     @Test
@@ -2236,7 +2282,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_LATEST_VERSION_FLAG_SET, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
-                BusinessObjectDataStatusEntity.VALID);
+                BusinessObjectDataStatusEntity.INVALID);
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_LATEST_VERSION_FLAG_SET, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
@@ -2251,13 +2297,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(3, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
+        // Please note that DAO layer only filters in VALID version - the actual latest valid versions are filtered in by the service layer.
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that latest valid business object data is selected from the initial business object format version.
         result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
-        assertEquals(SECOND_DATA_VERSION.longValue(), result.get(0).getVersion());
+        assertEquals(INITIAL_DATA_VERSION.longValue(), result.get(0).getVersion());
     }
 
     @Test
