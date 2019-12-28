@@ -59,3 +59,9 @@ class TagTypes(Enum):
 
 class Tags(Enum):
     WORKSHEET = 'Tag'
+    NAME = 'Tag Name'
+    TAG = 'Tag Type'
+    TAGTYPE = 'Tag Type Code'
+    DESCRIPTION = 'Tag Desc Text'
+    PARENT = 'Parent Tag Name'
+    MULTIPLIER = 'Importance'

@@ -214,7 +214,7 @@ class MainUI(tk.Frame):
             self.line("Enter credentials")
             return
 
-        if self.action in ['Objects', 'Columns', 'Lineage']:
+        if self.action in ['Objects', 'Columns', 'Lineage', 'Tags']:
             if not self.getfile.get():
                 self.line("Please select a file first.")
                 return

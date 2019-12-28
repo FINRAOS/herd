@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import os, sys, configparser, base64, traceback, pprint, filecmp
+import os, sys, configparser, base64, traceback, pprint, filecmp, json
 
 # Third party imports
 import pandas as pd
@@ -54,7 +54,7 @@ class Controller:
     configuration = herdsdk.Configuration()
 
     # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
-    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.LINEAGE.value, Menu.SAMPLES.value]
+    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.LINEAGE.value, Menu.SAMPLES.value, Menu.TAGS.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -74,6 +74,8 @@ class Controller:
             Summary.ERRORS.value: []
         }
         self.sample_files = {}
+        self.delete_tag_children = {}
+        self.tag_list = {}
 
         self.acts = {
             str.lower(Menu.OBJECTS.value): self.load_object,
@@ -312,6 +314,7 @@ class Controller:
         :return: Run Summary dict
 
         """
+        # Tag Types
         self.data_frame = self.load_worksheet(TagTypes.WORKSHEET.value)
         self.run_summary['total_rows'] = len(self.data_frame.index)
 
@@ -324,6 +327,20 @@ class Controller:
         ]
 
         run_fail = False
+        for step in self.run_steps:
+            if not run_fail:
+                run_fail = step()
+
+        # Tags
+        self.data_frame = self.load_worksheet(Tags.WORKSHEET.value)
+        self.run_summary['total_rows'] += len(self.data_frame.index)
+
+        self.check_tags()
+
+        self.run_steps = [
+            self.update_tag_list,
+            self.delete_tag_list
+        ]
         for step in self.run_steps:
             if not run_fail:
                 run_fail = step()
@@ -351,6 +368,8 @@ class Controller:
             Summary.ERRORS.value: []
         }
         self.sample_files = {}
+        self.delete_tag_children = {}
+        self.tag_list = {}
 
     ############################################################################
     def update_run_summary_batch(self, index_array, message, category):
@@ -408,7 +427,7 @@ class Controller:
                                                                            update_request=json)
             LOGGER.info('Success')
             LOGGER.info(resp)
-            message = 'Change in row. Old Descriptive Info:\nNone'.format(json)
+            message = 'Change in row. Old Descriptive Info:\nNone'
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
         # See if description, display name, usage, or file type in excel differs from UDC
@@ -1084,7 +1103,7 @@ class Controller:
                 code_resp = self.get_tag_type_code(code)
                 if code not in self.tag_types:
                     self.tag_types[code] = {
-                        'name': code_resp.display_name.strip(),
+                        'name': code_resp.display_name,
                         'description': code_resp.description,
                         'order': code_resp.tag_type_order
                     }
@@ -1106,21 +1125,37 @@ class Controller:
 
         """
         run_fail = False
+
+        # Create list of tag types and tags to remove
+        remove_tags = []
         remove_tag_types = list(self.tag_types.keys())
         remove_tag_types.remove('columns')
         LOGGER.info('Comparing Excel worksheet with UDC data')
         for index, row in self.data_frame.iterrows():
             try:
                 xls_order = index + 1
-                xls_code = row[TagTypes.CODE.value]
+                xls_code = str.upper(row[TagTypes.CODE.value]).strip()
                 xls_name = row[TagTypes.NAME.value]
                 xls_description = row[TagTypes.DESCRIPTION.value]
 
+                # Found excel tag type
                 if xls_code in self.tag_types:
+                    # Get list of all tags
+                    if xls_code not in self.tag_list:
+                        self.tag_list[xls_code] = []
+                    self.get_tag_type_children(tag_type_code=xls_code, tag_code=None)
+
+                    for tag in self.tag_list[xls_code]:
+                        item = (xls_code, tag)
+                        remove_tags.append(item)
+
+                    # Take out excel tag types found in Herd
                     remove_tag_types.remove(xls_code)
+
+                    # Make updates if there are differences
                     if (xls_name != self.tag_types[xls_code]['name'] or
-                                xls_description != self.tag_types[xls_code]['description'] or
-                                xls_order != self.tag_types[xls_code]['order']):
+                                xls_description != self.tag_types[xls_code]['description']):
+                        # xls_order != self.tag_types[xls_code]['order']):
                         LOGGER.info('Updating {}'.format(xls_code))
                         # self.update_tag_type(xls_code, xls_name, xls_order, xls_description)
                         LOGGER.info('Success')
@@ -1129,12 +1164,13 @@ class Controller:
                         self.update_run_summary_batch([index], message, Summary.CHANGES.value)
                     else:
                         LOGGER.info('No change made to {}'.format(xls_code))
+                # Add new tag type
                 else:
                     LOGGER.info('Tag Type Code not found. Adding {}'.format(xls_code))
                     # self.create_tag_type(xls_code, xls_name, xls_order, xls_description)
                     LOGGER.info('Success')
 
-                    message = 'Change in row. Old Tag Type Code:\nNone'.format()
+                    message = 'Change in row. Old Tag Type Code:\nNone'
                     self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 self.run_summary['success_rows'] += 1
@@ -1148,7 +1184,23 @@ class Controller:
                 run_fail = True
 
         self.tag_types['remove'] = remove_tag_types
+        self.tag_list['remove'] = remove_tags
         return run_fail
+
+    ############################################################################
+    def get_tag_type_children(self, tag_type_code, tag_code):
+        """
+        Recursive function. Finds all children of parent tag type code
+
+        :param tag_type_code: Tag type reference code
+        :param tag_code: Tag reference code
+
+        """
+        resp = self.get_associated_tags(tag_type_code, tag_code)
+        for child in resp.tag_children:
+            self.tag_list[tag_type_code].append(child.tag_key.tag_code)
+            if child.has_children:
+                self.get_tag_type_children(child.tag_key.tag_type_code, child.tag_key.tag_code)
 
     ############################################################################
     def delete_tag_type_code_list(self):
@@ -1162,8 +1214,15 @@ class Controller:
             try:
                 LOGGER.info('Deleting tag types not found in Excel')
                 for code in self.tag_types['remove']:
-                    LOGGER.info(code)
-                    # self.delete_tag_type(code)
+                    LOGGER.info('Deleting children of Tag Type Code: {}'.format(code))
+                    self.delete_tag_type_children(tag_type_code=code, tag_code=None, level=0)
+                    LOGGER.info('Deleting Tag Type Code: {}'.format(code))
+                    # self.delete_tag_type(tag_type_code)
+                    LOGGER.info('Success')
+                message = 'Tag Type Codes not found in Excel and Children deleted:\n{}'.format(
+                    json.dumps(self.delete_tag_children, indent=1))
+                LOGGER.info(message)
+                self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
             except ApiException as e:
                 LOGGER.error(e)
                 self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
@@ -1174,11 +1233,226 @@ class Controller:
                 return True
 
     ############################################################################
-    def delete_tag_type_children(self):
+    def delete_tag_type_children(self, tag_type_code, tag_code, level):
         """
-        Recursive function. Finds and deletes children
+        Recursive function. Finds and deletes children of parent tag type code
+
+        :param tag_type_code: Tag type reference code
+        :param tag_code: Tag reference code
+        :param level: Child level
 
         """
+        resp = self.get_associated_tags(tag_type_code, tag_code)
+        for child in resp.tag_children:
+            if level == 0:
+                if tag_type_code not in self.delete_tag_children:
+                    self.delete_tag_children[tag_type_code] = []
+                self.delete_tag_children[tag_type_code].append(child.tag_key.tag_code)
+            else:
+                if tag_code not in self.delete_tag_children:
+                    self.delete_tag_children[tag_code] = []
+                self.delete_tag_children[tag_code].append(child.tag_key.tag_code)
+
+            LOGGER.info('Checking for children in {}'.format(child.tag_key.tag_code))
+            if child.has_children:
+                LOGGER.info('Child found in {}'.format(child.tag_key.tag_code))
+                new_level = level + 1
+                self.delete_tag_type_children(child.tag_key.tag_type_code, child.tag_key.tag_code, new_level)
+                LOGGER.info('Finished deleting all children found in {}'.format(child.tag_key.tag_code))
+
+            LOGGER.info('Deleting {}'.format(child.tag_key.tag_code))
+            # self.delete_tags(child.tag_key.tag_type_code, child.tag_key.tag_code)
+            LOGGER.info('Success')
+
+    ############################################################################
+    def check_tags(self):
+        """
+        Checks Excel worksheet for rows with no tags
+
+        """
+        LOGGER.info('Checking schema worksheet for empty values')
+        empty_name_filter = self.data_frame[Tags.NAME.value] == ''
+        empty_type_filter = self.data_frame[Tags.TAGTYPE.value] == ''
+        empty_code_filter = self.data_frame[Tags.TAG.value] == ''
+
+        empty_df = self.data_frame[empty_name_filter | empty_type_filter | empty_code_filter]
+        good_df = self.data_frame[~empty_name_filter & ~empty_type_filter & ~empty_code_filter]
+
+        if len(empty_df.index.values) > 0:
+            message = 'Columns \'{}\' and \'{}\' and \'{}\' cannot have blank values'.format(Tags.NAME.value,
+                                                                                             Tags.TAGTYPE.value,
+                                                                                             Tags.TAG.value)
+            self.update_run_summary_batch(empty_df.index.values, message, Summary.ERRORS.value)
+
+        self.data_frame = good_df
+
+    ############################################################################
+    def update_tag_list(self):
+        """
+        Compare tags with excel worksheet and update
+
+        :return: None if success, True if fail
+
+        """
+        run_fail = False
+
+        LOGGER.info('Comparing Excel worksheet with UDC data')
+        for index, row in self.data_frame.iterrows():
+            try:
+                xls_name = row[Tags.NAME.value]
+                xls_tag = str.upper(row[Tags.TAG.value]).strip()
+                xls_tag_type = str.upper(row[Tags.TAGTYPE.value]).strip()
+                xls_description = row[Tags.DESCRIPTION.value]
+                xls_parent = row[Tags.PARENT.value]
+                xls_multiplier = row[Tags.MULTIPLIER.value]
+
+                xls_description, xls_parent, xls_multiplier = self.get_tag_optional_fields(xls_description,
+                                                                                           xls_parent,
+                                                                                           xls_multiplier,
+                                                                                           index)
+                # Found excel tag
+                if xls_tag in self.tag_list[xls_tag_type]:
+                    item = (xls_tag_type, xls_tag)
+                    if item in self.tag_list['remove']:
+                        self.tag_list['remove'].remove(item)
+
+                    LOGGER.info('Getting tag info for: {}'.format(xls_tag))
+                    resp = self.get_tags(xls_tag_type, xls_tag)
+                    LOGGER.info('Success')
+                    LOGGER.info(resp)
+
+                    parent_key = resp.parent_tag_key
+                    if parent_key:
+                        parent = {
+                            'tag_type_code': parent_key.tag_type_code,
+                            'tag_code': parent_key.tag_code
+                        }
+                    else:
+                        parent = None
+
+                    # Update if differences
+                    if (resp.display_name != xls_name or
+                                resp.tag_key.tag_type_code != xls_tag_type or
+                                resp.tag_key.tag_code != xls_tag or
+                                resp.description != xls_description or
+                                parent != xls_parent or
+                                resp.search_score_multiplier != xls_multiplier):
+                        LOGGER.info('Updating Tag: {}'.format(xls_tag))
+                        # self.update_tags(
+                        #     tag_type_code=xls_tag_type,
+                        #     tag_code=xls_tag,
+                        #     display_name=xls_name,
+                        #     multiplier=xls_multiplier,
+                        #     description=xls_description,
+                        #     parent_tag=xls_parent
+                        # )
+                        LOGGER.info('Success')
+
+                        tag = {
+                            'name': resp.display_name,
+                            'tag_type_code': resp.tag_key.tag_type_code,
+                            'tag_code': resp.tag_key.tag_code,
+                            'description': resp.description,
+                            'parent': parent,
+                            'multiplier': resp.search_score_multiplier
+                        }
+                        message = 'Change in row. Old Tag:\n{}'.format(tag)
+                        self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+                # Did not find existing tag, adding new tag
+                else:
+                    LOGGER.info('Creating new tag: {}'.format(xls_tag))
+                    # self.create_tags(
+                    #     tag_type_code=xls_tag_type,
+                    #     tag_code=xls_tag,
+                    #     display_name=xls_name,
+                    #     multiplier=xls_multiplier,
+                    #     description=xls_description,
+                    #     parent_tag=xls_parent
+                    # )
+                    LOGGER.info('Success')
+                    message = 'Change in row. Old Tag:\nNone'
+                    self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+                self.run_summary['success_rows'] += 1
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+                run_fail = True
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+                run_fail = True
+
+        return run_fail
+
+    ############################################################################
+    def delete_tag_list(self):
+        """
+        Delete tags not found in excel worksheet
+
+        :return: None if success, True if fail
+
+        """
+        self.delete_tag_children = {}
+        if len(self.tag_list['remove']) > 0:
+            try:
+                LOGGER.info('Deleting tags not found in Excel')
+                for item in self.tag_list['remove']:
+                    tag_type, tag = item
+                    LOGGER.info('Deleting tag: {}'.format(tag))
+                    # self.delete_tags(tag_type, tag)
+                    LOGGER.info('Success')
+
+                    if tag_type not in self.delete_tag_children:
+                        self.delete_tag_children[tag_type] = []
+
+                    self.delete_tag_children[tag_type].append(tag)
+
+                message = 'Tags not found in Excel and deleted:\n{}'.format(
+                    json.dumps(self.delete_tag_children, indent=1))
+                LOGGER.info(message)
+                self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+
+    ############################################################################
+    def get_tag_optional_fields(self, description, parent, multiplier, index):
+        """
+        Checks the optional tag fields for NULL or blank values
+
+        :return: description, parent (as dict if exists), sme, multiplier
+
+        """
+        if description == '':
+            description = None
+
+        if multiplier == '':
+            multiplier = None
+
+        if parent == 'NULL' or parent == '':
+            parent = None
+        else:
+            match_index = self.data_frame.index[self.data_frame[Tags.NAME.value] == parent].tolist()
+
+            if len(match_index) > 0:
+                row = self.data_frame.loc[match_index[0]]
+                parent = {
+                    'tag_type_code': row[Tags.TAGTYPE.value],
+                    'tag_code': row[Tags.TAG.value]
+                }
+            else:
+                parent = None
+                message = 'Parent {} not found in Column {}. Please double check spelling'.format(parent,
+                                                                                                  Tags.NAME.value)
+                LOGGER.warning(message)
+                self.update_run_summary_batch([index], message, Summary.WARNINGS.value)
+
+        return description, parent, multiplier
 
     ############################################################################
     def test_api(self):
@@ -1562,6 +1836,97 @@ class Controller:
         api_response = api_instance.tag_type_delete_tag_type(tag_type_code)
         return api_response
 
+    ############################################################################
+    def get_associated_tags(self, tag_type_code, tag_code=None):
+        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+
+        if tag_code:
+            LOGGER.info('GET /tags/tagTypes/{}?tagCode={}'.format(tag_type_code, tag_code))
+            api_response = api_instance.tag_get_tags(tag_type_code, tag_code=tag_code)
+        else:
+            LOGGER.info('GET /tags/tagTypes/{}'.format(tag_type_code))
+            api_response = api_instance.tag_get_tags(tag_type_code)
+
+        return api_response
+
+    ############################################################################
+    def get_tags(self, tag_type_code, tag_code):
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.TagApi(api_client)
+
+        LOGGER.info('GET /tags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
+        api_response = api_instance.tag_get_tag(tag_type_code, tag_code)
+        return api_response
+
+    ############################################################################
+    def delete_tags(self, tag_type_code, tag_code):
+        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info('DELETE /tags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
+        api_response = api_instance.tag_delete_tag(tag_type_code, tag_code)
+        return api_response
+
+    ############################################################################
+    def create_tags(self, tag_type_code, tag_code, display_name, multiplier=None, description=None, parent_tag=None):
+        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+
+        tag_key = herdsdk.TagKey(
+            tag_type_code=tag_type_code,
+            tag_code=tag_code
+        )
+
+        if parent_tag:
+            parent_tag_key = herdsdk.TagKey(
+                tag_type_code=parent_tag['tag_type_code'],
+                tag_code=parent_tag['tag_code']
+            )
+        else:
+            parent_tag_key = None
+
+        tag_create_request = herdsdk.TagCreateRequest(
+            tag_key=tag_key,
+            display_name=display_name,
+            search_score_multiplier=multiplier,
+            description=description,
+            parent_tag_key=parent_tag_key
+        )
+
+        LOGGER.info('POST /tags')
+        api_response = api_instance.tag_create_tag(tag_create_request)
+        return api_response
+
+    ############################################################################
+    def update_tags(self, tag_type_code, tag_code, display_name, multiplier=None, description=None, parent_tag=None):
+        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+
+        if parent_tag:
+            parent_tag_key = herdsdk.TagKey(
+                tag_type_code=parent_tag['tag_type_code'],
+                tag_code=parent_tag['tag_code']
+            )
+        else:
+            parent_tag_key = None
+
+        tag_update_request = herdsdk.TagUpdateRequest(
+            display_name=display_name,
+            search_score_multiplier=multiplier,
+            description=description,
+            parent_tag_key=parent_tag_key
+        )
+
+        LOGGER.info('PUT /tags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
+        api_response = api_instance.tag_update_tag(tag_type_code, tag_code, tag_update_request)
+        return api_response
+
+    ############################################################################
+    def get_bdef_tags_by_tag(self, tag_type_code, tag_code):
+        api_instance = herdsdk.BusinessObjectDefinitionTagApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info('GET /businessObjectDefinitionTags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
+        api_response = api_instance.business_object_definition_tag_get_business_object_definition_tags_by_tag(
+            tag_type_code, tag_code)
+        return api_response
+
 
 ################################################################################
 class ApiClientOverwrite(herdsdk.ApiClient):
@@ -1589,7 +1954,7 @@ class ApiClientOverwrite(herdsdk.ApiClient):
         '''
         NOTE: Due to datetime parser issue, converting data
         '''
-        for key in ['lastUpdatedOn', 'awsSessionExpirationTime']:
+        for key in ['lastUpdatedOn', 'awsSessionExpirationTime', 'updatedTime']:
             if key in data:
                 import time
                 data[key] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(data[key] / 1000))
