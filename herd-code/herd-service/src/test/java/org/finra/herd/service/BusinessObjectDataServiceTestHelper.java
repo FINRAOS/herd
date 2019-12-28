@@ -266,9 +266,9 @@ public class BusinessObjectDataServiceTestHelper
      */
     public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
-        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue,
-        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName,
-        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
+        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
+        String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens,
+        String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
     {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -427,8 +427,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         if (partitionValue != null)
         {
@@ -482,8 +482,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create an S3 storage entity.
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(AbstractServiceTest.STORAGE_NAME, StoragePlatformEntity.S3, Arrays
@@ -583,6 +583,157 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE_2, AbstractServiceTest.FORMAT_VERSION_2, AbstractServiceTest.PARTITION_VALUE,
                 AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                 BusinessObjectDataStatusEntity.VALID);
+    }
+
+    /**
+     * Creates database entities for business object data search with latest valid filter testing and return entities that match the expected search result.
+     */
+    public List<BusinessObjectDataEntity> createDatabaseEntitiesForBusinessObjectDataSearchWithLatestValidFilterTesting()
+    {
+        // Create result list.
+        List<BusinessObjectDataEntity> expectedBusinessObjectDataEntities = new ArrayList<>();
+
+        // Get a list of partition columns.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        partitionColumns.get(0).setName(AbstractServiceTest.PARTITION_KEY);
+
+        // Get a list of regular columns.
+        List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_2,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
+                AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                partitionColumns.get(0).getName(), AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
+                AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // id = 1
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_2,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.INITIAL_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // id = 2
+        expectedBusinessObjectDataEntities.add(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_2,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.SECOND_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID));
+
+        // id = 3
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_2,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.THIRD_DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME,
+            AbstractServiceTest.FORMAT_USAGE_CODE_3.toLowerCase(), AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION,
+            AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA_URL,
+            AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), AbstractServiceTest.NO_PARTITION_KEY_GROUP,
+            AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // id = 4
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_3,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.INITIAL_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // id = 5
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_3,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.SECOND_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        // id = 6
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_3,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.THIRD_DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME,
+            AbstractServiceTest.FORMAT_USAGE_CODE_3.toUpperCase(), AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION,
+            AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA_URL,
+            AbstractServiceTest.LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), AbstractServiceTest.NO_PARTITION_KEY_GROUP,
+            AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // id = 7
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_3,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.INITIAL_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        // id = 8
+        expectedBusinessObjectDataEntities.add(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_3,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.SECOND_DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID));
+
+        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME,
+            AbstractServiceTest.FORMAT_USAGE_CODE_4.toUpperCase(), AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION,
+            AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA_URL,
+            AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), AbstractServiceTest.NO_PARTITION_KEY_GROUP,
+            AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // id = 9
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_4,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.INITIAL_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // id = 10
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_4,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.SECOND_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        // id = 11
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_4,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.INITIAL_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.THIRD_DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME,
+            AbstractServiceTest.FORMAT_USAGE_CODE_4.toLowerCase(), AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION,
+            AbstractServiceTest.FORMAT_DESCRIPTION, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.NO_FORMAT_DOCUMENT_SCHEMA_URL,
+            AbstractServiceTest.LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), AbstractServiceTest.NO_PARTITION_KEY_GROUP,
+            AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // id = 12
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_4,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.INITIAL_DATA_VERSION, AbstractServiceTest.NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+
+        // id = 13
+        expectedBusinessObjectDataEntities.add(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_4,
+                AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.SECOND_FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                AbstractServiceTest.NO_SUBPARTITION_VALUES, AbstractServiceTest.SECOND_DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID));
+
+        // Return the expected results list.
+        return expectedBusinessObjectDataEntities;
     }
 
     /**
@@ -2141,7 +2292,8 @@ public class BusinessObjectDataServiceTestHelper
      * @return the newly created business object data partitions request
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public BusinessObjectDataPartitionsRequest getTestBusinessObjectDataPartitionsRequest(String startPartitionValue, String endPartitionValue, List<String> partitionValues)
+    public BusinessObjectDataPartitionsRequest getTestBusinessObjectDataPartitionsRequest(String startPartitionValue, String endPartitionValue,
+        List<String> partitionValues)
     {
         BusinessObjectDataPartitionsRequest request = new BusinessObjectDataPartitionsRequest();
 

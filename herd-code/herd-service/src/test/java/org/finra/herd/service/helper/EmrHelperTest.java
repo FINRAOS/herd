@@ -89,9 +89,6 @@ public class EmrHelperTest extends AbstractServiceTest
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
-        // Create EC2 on-demand pricing entities.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         EmrCluster emrCluster = emrService.createCluster(request);
 

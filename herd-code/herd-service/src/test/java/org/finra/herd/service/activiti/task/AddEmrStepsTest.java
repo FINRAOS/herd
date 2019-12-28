@@ -26,7 +26,6 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.Job;
@@ -36,12 +35,6 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 public class AddEmrStepsTest extends AbstractServiceTest
 {
-    @Before
-    public void createDatabaseEntities()
-    {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-    }
 
     @Test
     public void testAddShellStep() throws Exception
