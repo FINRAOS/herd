@@ -2784,6 +2784,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
 
         request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(cal.getTime()));
         resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        assertEquals(resultDdl.getAsOfTime(), request.getAsOfTime());
 
         String expectedDdlStr = businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
             AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
@@ -2832,6 +2833,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         
         businessObjectDataServiceTestHelper
            .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
+        assertEquals(resultDdl.getAsOfTime(), request.getAsOfTime());
 
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
             AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.UNSORTED_PARTITION_VALUES,
@@ -2847,11 +2849,15 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // NO AS of Time param set, the latest version is version 2
         request.setAsOfTime(null);
         BusinessObjectDataDdl resultDdl2 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        assertEquals(resultDdl2.getAsOfTime(), request.getAsOfTime());
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl2);
         // Version 1 should be returned
         request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime));
         BusinessObjectDataDdl resultDdl3 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        assertEquals(resultDdl3.getAsOfTime(), request.getAsOfTime());
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl3);
 

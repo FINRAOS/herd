@@ -1017,6 +1017,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
                 .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
                     cachedS3BucketNames));
+            businessObjectDataDdl.setAsOfTime(request.getAsOfTime());
 
             return (T) businessObjectDataDdl;
         }
