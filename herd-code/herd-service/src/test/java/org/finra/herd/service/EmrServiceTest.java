@@ -47,7 +47,6 @@ import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsResult;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -109,13 +108,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Autowired
     @Qualifier(value = "emrServiceImpl")
     private EmrService emrServiceImpl;
-
-    @Before
-    public void createDatabaseEntities()
-    {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-    }
 
     /**
      * This method tests the happy path scenario for adding security groups

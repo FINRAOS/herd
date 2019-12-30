@@ -42,7 +42,6 @@ import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -89,13 +88,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Autowired
     private EmrPricingHelper emrPricingHelper;
 
-    @Before
-    public void createDatabaseEntities()
-    {
-        // Create EC2 on-demand pricing entities required for testing.
-        ec2OnDemandPricingDaoTestHelper.createEc2OnDemandPricingEntities();
-    }
-
     /**
      * Tests algorithmic case when the max search price is lower than on-demand price and spot price is not available. The update method should throw an error
      * indicating that no subnets satisfied the given criteria.
@@ -133,14 +125,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             {{
                 put(AVAILABILITY_ZONE_1, new HashMap<>());
             }});
-            expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
-            {{
-                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
-                {{
-                    put(INSTANCE_TYPE_4, ON_DEMAND);
-                }});
-            }});
-
             assertEquals(String.format(
                 "There were no subnets which satisfied your best price search criteria. If you explicitly opted to use spot EC2 instances, please confirm " +
                     "that your instance types support spot pricing. Otherwise, try setting the max price or the on-demand threshold to a higher value.%n%s",
@@ -277,13 +261,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             expectedEmrVpcPricingState.setSpotPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
             {{
                 put(AVAILABILITY_ZONE_1, new HashMap<>());
-            }});
-            expectedEmrVpcPricingState.setOnDemandPricesPerAvailabilityZone(new HashMap<String, Map<String, BigDecimal>>()
-            {{
-                put(AVAILABILITY_ZONE_1, new HashMap<String, BigDecimal>()
-                {{
-                    put(INSTANCE_TYPE_4, ON_DEMAND);
-                }});
             }});
 
             assertEquals(String.format(
@@ -512,37 +489,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests case where subnet spans multiple regions, and one of the region has a cheaper price. The on-demand prices are identified by region, therefore this
-     * test case tests that the correct on-demand price is selected.
-     * <p/>
-     * Test case reference ClusterSpotPriceAlgorithm 14
-     */
-    @Test
-    public void testBestPriceMultipleRegions()
-    {
-        String subnetId = SUBNET_1 + "," + SUBNET_5;
-
-        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
-        masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
-
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_1);
-
-        InstanceDefinition taskInstanceDefinition = null;
-
-        EmrClusterDefinition emrClusterDefinition =
-            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
-
-        assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-        assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-
-        assertEquals("selected subnet", SUBNET_5, emrClusterDefinition.getSubnetId());
-    }
-
-    /**
      * Tests case where instance type was not found in the spot list because AWS does not have a spot price for the given instance type in the given AZ. But
      * there is another AZ available for that does have a all spot prices available.
      */
@@ -565,36 +511,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
-    }
-
-    /**
-     * Tests case where spot price is found but no on-demand price was found for the specified subnet's region and instance type. This is a case where the
-     * on-demand configuration table was not properly configured or the user specified invalid instance type.
-     */
-    @Test
-    public void testBestPriceOnDemandNotFound()
-    {
-        String subnetId = SUBNET_5;
-
-        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
-        masterInstanceDefinition.setInstanceCount(1);
-        masterInstanceDefinition.setInstanceType(INVALID_VALUE);
-
-        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
-        coreInstanceDefinition.setInstanceCount(1);
-        coreInstanceDefinition.setInstanceType(INSTANCE_TYPE_2);
-
-        InstanceDefinition taskInstanceDefinition = null;
-
-        try
-        {
-            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
-            fail("expected ObjectNotFoundException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception", ObjectNotFoundException.class, e.getClass());
-        }
     }
 
     /**

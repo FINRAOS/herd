@@ -196,17 +196,6 @@ public enum ConfigurationValue
     JMS_PUBLISHING_JOB_CRON_EXPRESSION("jms.publishing.job.cron.expression", "0 0/5 * * * ?"),
 
     /**
-     * The cron expression to schedule "ec2OnDemandPricingUpdate" system job. Default is to disable the job by scheduling it to run way in the future.
-     */
-    EC2_ON_DEMAND_PRICING_UPDATE_JOB_CRON_EXPRESSION("ec2.on.demand.pricing.update.job.cron.expression", "59 59 23 31 12 ? 2099"),
-
-    /**
-     * The URL of the Amazon EC2 pricing list in JSON format. Default is set to the URL specified by Amazon.
-     */
-    EC2_ON_DEMAND_PRICING_UPDATE_JOB_EC2_PRICING_LIST_URL("ec2.on.demand.pricing.update.job.ec2.pricing.list.url",
-        "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json"),
-
-    /**
      * The cron expression to schedule "relationalTableSchemaUpdate" system job.  Default is to run this system job every night at 8 AM.
      */
     RELATIONAL_TABLE_SCHEMA_UPDATE_JOB_CRON_EXPRESSION("relational.table.schema.update.job.cron.expression", "0 0 8 * * ?"),
@@ -685,6 +674,11 @@ public enum ConfigurationValue
      * The maximum number of records returned in business object data search page
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 1_000),
+
+    /**
+     * The pagination size for the query that returns raw business object data search results. The default is 100000 raw results.
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_QUERY_PAGINATION_SIZE("business.object.data.search.query.pagination.size", 100000),
 
     /**
      * The maximum number of nested tags allowed
