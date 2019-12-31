@@ -365,11 +365,25 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
 
         // Test getting a page that does not exist.
+        // This is a case when number of records to be skipped due to specified page number and page size is equal to the total record count.
         result = businessObjectDataService.searchBusinessObjectData(4, 1, request);
         assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
 
         // Validate the paging information.
         assertEquals(Long.valueOf(4), result.getPageNum());
+        assertEquals(Long.valueOf(1), result.getPageSize());
+        assertEquals(Long.valueOf(CollectionUtils.size(expectedBusinessObjectDataEntities)), result.getPageCount());
+        assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
+        assertEquals(Long.valueOf(CollectionUtils.size(expectedBusinessObjectDataEntities)), result.getTotalRecordCount());
+        assertEquals(Long.valueOf(DEFAULT_PAGE_SIZE), result.getMaxResultsPerPage());
+
+        // Test getting a page that does not exist.
+        // This is a case when number of records to be skipped due to specified page number and page size is greater than the total record count.
+        result = businessObjectDataService.searchBusinessObjectData(5, 1, request);
+        assertEquals(0, result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().size());
+
+        // Validate the paging information.
+        assertEquals(Long.valueOf(5), result.getPageNum());
         assertEquals(Long.valueOf(1), result.getPageSize());
         assertEquals(Long.valueOf(CollectionUtils.size(expectedBusinessObjectDataEntities)), result.getPageCount());
         assertEquals(Long.valueOf(0), result.getTotalRecordsOnPage());
