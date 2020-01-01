@@ -381,9 +381,6 @@ class Controller:
         :param category: Type of message. Changes, warnings, or errors
 
         """
-        if category == Summary.ERRORS.value:
-            self.run_summary['fail_rows'] += len(index_array)
-            self.run_summary['fail_index'].extend([i + 2 for i in index_array])
         for index in index_array:
             if index < 0:
                 item = {
@@ -395,6 +392,9 @@ class Controller:
                     'index': index + 2,
                     'message': message
                 }
+                if category == Summary.ERRORS.value:
+                    self.run_summary['fail_rows'] += 1
+                    self.run_summary['fail_index'].append(index + 2)
             self.run_summary[category].append(item)
 
     ############################################################################
@@ -410,8 +410,8 @@ class Controller:
         namespace, usage, file_type, bdef_name, logical_name, description = row[:6]
         LOGGER.info('Getting BDef for {}'.format((namespace, bdef_name)))
         resp = self.get_business_object_definition(namespace, bdef_name)
+        LOGGER.debug(resp)
         LOGGER.info('Success')
-        LOGGER.info(resp)
 
         # Check if descriptive format exists
         if not resp.descriptive_business_object_format:
@@ -425,9 +425,10 @@ class Controller:
             resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
                                                                            business_object_definition_name=bdef_name,
                                                                            update_request=json)
+            LOGGER.debug(resp)
             LOGGER.info('Success')
-            LOGGER.info(resp)
             message = 'Change in row. Old Descriptive Info:\nNone'
+            LOGGER.info(message)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
         # See if description, display name, usage, or file type in excel differs from UDC
@@ -451,9 +452,10 @@ class Controller:
             resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
                                                                            business_object_definition_name=bdef_name,
                                                                            update_request=json)
+            LOGGER.debug(resp)
             LOGGER.info('Success')
-            LOGGER.info(resp)
             message = 'Change in row. Old Descriptive Info:\n{}'.format(old_data)
+            LOGGER.info(message)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
@@ -470,8 +472,8 @@ class Controller:
         # Business Object Definition SMEs Get
         LOGGER.info('Getting SME for {}'.format((namespace, bdef_name)))
         resp = self.get_subject_matter_experts(namespace, bdef_name)
+        LOGGER.debug(resp)
         LOGGER.info('Success')
-        LOGGER.info(resp)
 
         user = row[Objects.SME.value]
         if user:
@@ -490,14 +492,14 @@ class Controller:
             else:
                 remove_sme_list.append(user_id)
 
-        LOGGER.info('Current expert list: {}'.format(', '.join(current_smes)))
         row_change = False
 
         # Remove SMEs
         for sme in remove_sme_list:
             user_id = '{}{}{}rp.{}.{}sd.{}'.format(sme, chr(64), 'co', 'root', 'na', 'com')
             LOGGER.info('Deleting SME: {}'.format(sme))
-            self.delete_subject_matter_expert(namespace, bdef_name, user_id)
+            resp = self.delete_subject_matter_expert(namespace, bdef_name, user_id)
+            LOGGER.debug(resp)
             LOGGER.info('SME deleted')
             row_change = True
 
@@ -507,13 +509,15 @@ class Controller:
                 if not '@' in user_id:
                     user_id = '{}{}{}rp.{}.{}sd.{}'.format(user_id, chr(64), 'co', 'root', 'na', 'com')
                 LOGGER.info('Adding SME: {}'.format(user_id))
-                self.create_subject_matter_expert(namespace, bdef_name, user_id)
+                resp = self.create_subject_matter_expert(namespace, bdef_name, user_id)
+                LOGGER.debug(resp)
                 LOGGER.info('SME Added')
                 row_change = True
 
         # Add any changes to run summary
         if row_change:
             message = 'Change in row. Old SME list:\n{}'.format(', '.join(current_smes))
+            LOGGER.info(message)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
@@ -528,8 +532,8 @@ class Controller:
         """
         LOGGER.info('Getting list of all tag types')
         resp = self.get_tag_types().tag_type_keys
+        LOGGER.debug(resp)
         LOGGER.info('Success')
-        LOGGER.info(resp)
 
         for tag in resp:
             code = tag.tag_type_code
@@ -570,6 +574,7 @@ class Controller:
         row_change = False
         old_tags = {}
         resp = self.get_bdef_tags(namespace, bdef_name)
+        LOGGER.debug(resp)
         for bdef_tag in resp.business_object_definition_tag_keys:
             tag_key = bdef_tag.tag_key
             LOGGER.info('Found Tag Key: {}'.format(tag_key))
@@ -579,20 +584,23 @@ class Controller:
                 tags_to_add[tag_type_code].remove(tag_code)
             else:
                 LOGGER.info('Deleting Tag Key: {}'.format(tag_key))
-                self.delete_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                resp = self.delete_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                LOGGER.debug(resp)
                 LOGGER.info('Deleted')
                 row_change = True
 
         for tag_type_code, row_entry in tags_to_add.items():
             for tag_code in row_entry:
                 LOGGER.info('Adding {}'.format(tag_code))
-                self.create_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                resp = self.create_bdef_tags(namespace, bdef_name, tag_type_code, tag_code)
+                LOGGER.debug(resp)
                 LOGGER.info('Added')
                 row_change = True
 
         # Add any changes to run summary
         if row_change:
             message = 'Change in row. Old tags:\n{}'.format(old_tags)
+            LOGGER.info(message)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
     ############################################################################
@@ -630,6 +638,7 @@ class Controller:
             # Descriptive format information is inside the business object definition
             LOGGER.info('Getting BDef')
             resp = self.get_business_object_definition(namespace, bdef_name)
+            LOGGER.debug(resp)
             if not resp.descriptive_business_object_format:
                 message = 'No Descriptive Format defined for {}'.format(key)
                 LOGGER.error(message)
@@ -644,6 +653,7 @@ class Controller:
                                           resp.descriptive_business_object_format.business_object_format_usage,
                                           resp.descriptive_business_object_format.business_object_format_file_type,
                                           resp.descriptive_business_object_format.business_object_format_version)
+            LOGGER.debug(format_resp)
             if not (format_resp.schema and format_resp.schema.columns):
                 message = 'No Schema Columns found for {}'.format(key)
                 LOGGER.error(message)
@@ -656,6 +666,7 @@ class Controller:
                 [{Columns.SCHEMA_NAME.value: str.upper(x.name).strip()} for x in format_resp.schema.columns])
             LOGGER.info('Getting BDef Columns')
             col_resp = self.post_bdef_column_search(namespace, bdef_name)
+            LOGGER.debug(col_resp)
             if len(col_resp.business_object_definition_columns) > 0:
                 col_df = pd.DataFrame([{
                     Columns.SCHEMA_NAME.value: str.upper(x.schema_column_name).strip(),
@@ -743,8 +754,9 @@ class Controller:
                         # Found is False means schema had no existing bdef column name
                         if not row['Found']:
                             LOGGER.info('Adding bdef column name: {}'.format(xls_column_name))
-                            self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
+                            resp = self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
                                                     xls_description)
+                            LOGGER.debug(resp)
                             LOGGER.info('Success')
                             self.format_columns[key].at[i, 'Found'] = True
                             row_change = True
@@ -752,8 +764,9 @@ class Controller:
                         elif column_name != xls_column_name or description != xls_description:
                             LOGGER.info('Changing bdef column name: {}'.format(xls_column_name))
                             self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
-                            self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
+                            resp = self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
                                                     xls_description)
+                            LOGGER.debug(resp)
                             LOGGER.info('Success')
                             row_change = True
                         else:
@@ -766,6 +779,7 @@ class Controller:
                     self.run_summary['success_rows'] += 1
                     if row_change:
                         message = 'Change in row. Old column:\n{}'.format(old_column)
+                        LOGGER.info(message)
                         self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 except ApiException as e:
@@ -837,6 +851,7 @@ class Controller:
         # Get existing format parents
         LOGGER.info('Getting business object format for {}'.format(key))
         resp = self.get_format(namespace, bdef_name, usage, file_type)
+        LOGGER.debug(resp)
         LOGGER.info('Success')
 
         # Create list of format parents from response
@@ -865,11 +880,13 @@ class Controller:
             if list(empty_df.index.values) == list(df.index.values):
                 if format_parents:
                     LOGGER.info('Removing all parents')
-                    self.update_format_parents(namespace, bdef_name, usage, file_type, [])
+                    resp = self.update_format_parents(namespace, bdef_name, usage, file_type, [])
+                    LOGGER.debug(resp)
                     LOGGER.info('Success')
 
                     message = 'Change in rows: {}\nAll parents removed. Old Parents:\n{}'.format(
                         empty_df.index.tolist(), format_parents)
+                    LOGGER.info(message)
                     self.update_run_summary_batch([empty_df.index[0]], message, Summary.CHANGES.value)
                 else:
                     LOGGER.info('No parent changes made')
@@ -905,10 +922,12 @@ class Controller:
                 return
 
         LOGGER.info('Updating parents')
-        self.update_format_parents(namespace, bdef_name, usage, file_type, xls_parent_list)
+        resp = self.update_format_parents(namespace, bdef_name, usage, file_type, xls_parent_list)
+        LOGGER.debug(resp)
         LOGGER.info('Success')
         message = 'Change in rows: {}\nUpdated parents. Old Parents:\n{}'.format(filled_df.index.tolist(),
                                                                                  format_parents)
+        LOGGER.info(message)
         self.update_run_summary_batch([filled_df.index[0]], message, Summary.CHANGES.value)
         self.run_summary['success_rows'] += len(df.index)
 
@@ -940,6 +959,7 @@ class Controller:
             # List of sample files is inside the business object definition
             LOGGER.info('Getting BDef for {}'.format(key))
             resp = self.get_business_object_definition(namespace, bdef_name)
+            LOGGER.debug(resp)
             LOGGER.info('Success')
 
             if key not in self.sample_files:
@@ -999,6 +1019,7 @@ class Controller:
 
                         LOGGER.info('Getting download request')
                         download_resp = self.download_sample_file(namespace, bdef_name, sample_files[file], file)
+                        LOGGER.debug(download_resp)
                         LOGGER.info('Success')
 
                         temp_path = self.sample_dir + os.sep + 'temp'
@@ -1026,6 +1047,7 @@ class Controller:
 
                     LOGGER.info('Getting upload request')
                     upload_resp = self.upload_sample_file(namespace, bdef_name)
+                    LOGGER.debug(upload_resp)
                     LOGGER.info('Success')
                     LOGGER.info('Uploading File: {}'.format(file))
                     aws_err = self.run_aws_command('s3_upload', upload_resp, path, file)
@@ -1038,6 +1060,7 @@ class Controller:
                     uploaded_files.append(file)
                     self.run_summary['success_rows'] += 1
                     message = 'Change in row. Old files: {}'.format(sample_files)
+                    LOGGER.info(message)
                     self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 except ApiException as e:
@@ -1095,12 +1118,14 @@ class Controller:
         try:
             LOGGER.info('Getting list of all tag types')
             resp = self.get_tag_types().tag_type_keys
+            LOGGER.debug(resp)
             LOGGER.info('Success')
 
             for tag in resp:
                 code = str.upper(tag.tag_type_code).strip()
                 LOGGER.info('Getting info of tag type code: {}'.format(code))
                 code_resp = self.get_tag_type_code(code)
+                LOGGER.debug(code_resp)
                 if code not in self.tag_types:
                     self.tag_types[code] = {
                         'name': code_resp.display_name,
@@ -1155,23 +1180,30 @@ class Controller:
                     # Make updates if there are differences
                     if (xls_name != self.tag_types[xls_code]['name'] or
                                 xls_description != self.tag_types[xls_code]['description']):
-                        # xls_order != self.tag_types[xls_code]['order']):
+                        # TODO Check order
+                        xls_order = self.tag_types[xls_code]['order']
                         LOGGER.info('Updating {}'.format(xls_code))
-                        # self.update_tag_type(xls_code, xls_name, xls_order, xls_description)
+                        resp = self.update_tag_type(xls_code, xls_name, xls_order, xls_description)
+                        LOGGER.debug(resp)
                         LOGGER.info('Success')
 
                         message = 'Change in row. Old Tag Type Code:\n{}'.format(self.tag_types[xls_code])
+                        LOGGER.info(message)
                         self.update_run_summary_batch([index], message, Summary.CHANGES.value)
                     else:
                         LOGGER.info('No change made to {}'.format(xls_code))
                 # Add new tag type
                 else:
                     LOGGER.info('Tag Type Code not found. Adding {}'.format(xls_code))
-                    # self.create_tag_type(xls_code, xls_name, xls_order, xls_description)
+                    resp = self.create_tag_type(xls_code, xls_name, xls_order, xls_description)
+                    LOGGER.debug(resp)
                     LOGGER.info('Success')
 
                     message = 'Change in row. Old Tag Type Code:\nNone'
+                    LOGGER.info(message)
                     self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+                    self.tag_list[xls_code] = []
 
                 self.run_summary['success_rows'] += 1
             except ApiException as e:
@@ -1197,6 +1229,7 @@ class Controller:
 
         """
         resp = self.get_associated_tags(tag_type_code, tag_code)
+        LOGGER.debug(resp)
         for child in resp.tag_children:
             self.tag_list[tag_type_code].append(child.tag_key.tag_code)
             if child.has_children:
@@ -1210,27 +1243,38 @@ class Controller:
         :return: None if success, True if fail
 
         """
+        run_fail = False
+
         if len(self.tag_types['remove']) > 0:
-            try:
-                LOGGER.info('Deleting tag types not found in Excel')
-                for code in self.tag_types['remove']:
+            LOGGER.info('Deleting tag types not found in Excel')
+            for code in self.tag_types['remove']:
+                try:
+                    if code not in self.delete_tag_children:
+                        self.delete_tag_children[code] = []
                     LOGGER.info('Deleting children of Tag Type Code: {}'.format(code))
                     self.delete_tag_type_children(tag_type_code=code, tag_code=None, level=0)
                     LOGGER.info('Deleting Tag Type Code: {}'.format(code))
-                    # self.delete_tag_type(tag_type_code)
+                    resp = self.delete_tag_type(code)
+                    LOGGER.debug(resp)
                     LOGGER.info('Success')
-                message = 'Tag Type Codes not found in Excel and Children deleted:\n{}'.format(
-                    json.dumps(self.delete_tag_children, indent=1))
-                LOGGER.info(message)
-                self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
-            except ApiException as e:
-                LOGGER.error(e)
-                self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
-                return True
-            except Exception:
-                LOGGER.error(traceback.format_exc())
-                self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
-                return True
+                except ApiException as e:
+                    LOGGER.error(e)
+                    self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+                    self.delete_tag_children[code].append('Error while deleting')
+                    run_fail = True
+                except Exception:
+                    LOGGER.error(traceback.format_exc())
+                    self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+                    self.delete_tag_children[code].append('Error while deleting')
+                    run_fail = True
+
+            tag_children = self.delete_tag_children
+            message = 'Tag Type Codes not found in Excel and Children deleted:\n{}'.format(
+                json.dumps(tag_children, indent=1))
+            LOGGER.info(message)
+            self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
+
+        return run_fail
 
     ############################################################################
     def delete_tag_type_children(self, tag_type_code, tag_code, level):
@@ -1243,10 +1287,9 @@ class Controller:
 
         """
         resp = self.get_associated_tags(tag_type_code, tag_code)
+        LOGGER.debug(resp)
         for child in resp.tag_children:
             if level == 0:
-                if tag_type_code not in self.delete_tag_children:
-                    self.delete_tag_children[tag_type_code] = []
                 self.delete_tag_children[tag_type_code].append(child.tag_key.tag_code)
             else:
                 if tag_code not in self.delete_tag_children:
@@ -1261,7 +1304,8 @@ class Controller:
                 LOGGER.info('Finished deleting all children found in {}'.format(child.tag_key.tag_code))
 
             LOGGER.info('Deleting {}'.format(child.tag_key.tag_code))
-            # self.delete_tags(child.tag_key.tag_type_code, child.tag_key.tag_code)
+            resp = self.delete_tags(child.tag_key.tag_type_code, child.tag_key.tag_code)
+            LOGGER.debug(resp)
             LOGGER.info('Success')
 
     ############################################################################
@@ -1304,12 +1348,10 @@ class Controller:
                 xls_tag_type = str.upper(row[Tags.TAGTYPE.value]).strip()
                 xls_description = row[Tags.DESCRIPTION.value]
                 xls_parent = row[Tags.PARENT.value]
-                xls_multiplier = row[Tags.MULTIPLIER.value]
 
-                xls_description, xls_parent, xls_multiplier = self.get_tag_optional_fields(xls_description,
-                                                                                           xls_parent,
-                                                                                           xls_multiplier,
-                                                                                           index)
+                xls_description, xls_parent = self.get_tag_optional_fields(xls_description,
+                                                                           xls_parent,
+                                                                           index)
                 # Found excel tag
                 if xls_tag in self.tag_list[xls_tag_type]:
                     item = (xls_tag_type, xls_tag)
@@ -1318,8 +1360,8 @@ class Controller:
 
                     LOGGER.info('Getting tag info for: {}'.format(xls_tag))
                     resp = self.get_tags(xls_tag_type, xls_tag)
+                    LOGGER.debug(resp)
                     LOGGER.info('Success')
-                    LOGGER.info(resp)
 
                     parent_key = resp.parent_tag_key
                     if parent_key:
@@ -1335,17 +1377,19 @@ class Controller:
                                 resp.tag_key.tag_type_code != xls_tag_type or
                                 resp.tag_key.tag_code != xls_tag or
                                 resp.description != xls_description or
-                                parent != xls_parent or
-                                resp.search_score_multiplier != xls_multiplier):
+                                parent != xls_parent):
+                        # TODO Multiplier
+                        xls_multiplier = resp.search_score_multiplier
                         LOGGER.info('Updating Tag: {}'.format(xls_tag))
-                        # self.update_tags(
-                        #     tag_type_code=xls_tag_type,
-                        #     tag_code=xls_tag,
-                        #     display_name=xls_name,
-                        #     multiplier=xls_multiplier,
-                        #     description=xls_description,
-                        #     parent_tag=xls_parent
-                        # )
+                        update_resp = self.update_tags(
+                            tag_type_code=xls_tag_type,
+                            tag_code=xls_tag,
+                            display_name=xls_name,
+                            multiplier=xls_multiplier,
+                            description=xls_description,
+                            parent_tag=xls_parent
+                        )
+                        LOGGER.debug(update_resp)
                         LOGGER.info('Success')
 
                         tag = {
@@ -1357,21 +1401,26 @@ class Controller:
                             'multiplier': resp.search_score_multiplier
                         }
                         message = 'Change in row. Old Tag:\n{}'.format(tag)
+                        LOGGER.info(message)
                         self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+                    else:
+                        LOGGER.info('No change made to {}'.format(xls_tag))
 
                 # Did not find existing tag, adding new tag
                 else:
                     LOGGER.info('Creating new tag: {}'.format(xls_tag))
-                    # self.create_tags(
-                    #     tag_type_code=xls_tag_type,
-                    #     tag_code=xls_tag,
-                    #     display_name=xls_name,
-                    #     multiplier=xls_multiplier,
-                    #     description=xls_description,
-                    #     parent_tag=xls_parent
-                    # )
+                    create_resp = self.create_tags(
+                        tag_type_code=xls_tag_type,
+                        tag_code=xls_tag,
+                        display_name=xls_name,
+                        description=xls_description,
+                        parent_tag=xls_parent
+                    )
+                    LOGGER.debug(create_resp)
                     LOGGER.info('Success')
                     message = 'Change in row. Old Tag:\nNone'
+                    LOGGER.info(message)
                     self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
                 self.run_summary['success_rows'] += 1
@@ -1396,12 +1445,13 @@ class Controller:
         """
         self.delete_tag_children = {}
         if len(self.tag_list['remove']) > 0:
-            try:
-                LOGGER.info('Deleting tags not found in Excel')
-                for item in self.tag_list['remove']:
+            LOGGER.info('Deleting tags not found in Excel')
+            for item in self.tag_list['remove']:
+                try:
                     tag_type, tag = item
                     LOGGER.info('Deleting tag: {}'.format(tag))
-                    # self.delete_tags(tag_type, tag)
+                    resp = self.delete_tags(tag_type, tag)
+                    LOGGER.debug(resp)
                     LOGGER.info('Success')
 
                     if tag_type not in self.delete_tag_children:
@@ -1409,30 +1459,29 @@ class Controller:
 
                     self.delete_tag_children[tag_type].append(tag)
 
-                message = 'Tags not found in Excel and deleted:\n{}'.format(
-                    json.dumps(self.delete_tag_children, indent=1))
-                LOGGER.info(message)
-                self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
-            except ApiException as e:
-                LOGGER.error(e)
-                self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
-            except Exception:
-                LOGGER.error(traceback.format_exc())
-                self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+                except ApiException as e:
+                    LOGGER.error(e)
+                    self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+                except Exception:
+                    LOGGER.error(traceback.format_exc())
+                    self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+
+            message = 'Tags not found in Excel and deleted:\n{}'.format(
+                json.dumps(self.delete_tag_children, indent=1))
+            LOGGER.info(message)
+            self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
+
 
     ############################################################################
-    def get_tag_optional_fields(self, description, parent, multiplier, index):
+    def get_tag_optional_fields(self, description, parent, index):
         """
         Checks the optional tag fields for NULL or blank values
 
-        :return: description, parent (as dict if exists), sme, multiplier
+        :return: description, parent (as dict if exists)
 
         """
         if description == '':
             description = None
-
-        if multiplier == '':
-            multiplier = None
 
         if parent == 'NULL' or parent == '':
             parent = None
@@ -1452,7 +1501,7 @@ class Controller:
                 LOGGER.warning(message)
                 self.update_run_summary_batch([index], message, Summary.WARNINGS.value)
 
-        return description, parent, multiplier
+        return description, parent
 
     ############################################################################
     def test_api(self):
@@ -1860,7 +1909,8 @@ class Controller:
 
     ############################################################################
     def delete_tags(self, tag_type_code, tag_code):
-        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.TagApi(api_client)
 
         LOGGER.info('DELETE /tags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
         api_response = api_instance.tag_delete_tag(tag_type_code, tag_code)
@@ -1868,7 +1918,8 @@ class Controller:
 
     ############################################################################
     def create_tags(self, tag_type_code, tag_code, display_name, multiplier=None, description=None, parent_tag=None):
-        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.TagApi(api_client)
 
         tag_key = herdsdk.TagKey(
             tag_type_code=tag_type_code,
@@ -1897,7 +1948,8 @@ class Controller:
 
     ############################################################################
     def update_tags(self, tag_type_code, tag_code, display_name, multiplier=None, description=None, parent_tag=None):
-        api_instance = herdsdk.TagApi(herdsdk.ApiClient(self.configuration))
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.TagApi(api_client)
 
         if parent_tag:
             parent_tag_key = herdsdk.TagKey(

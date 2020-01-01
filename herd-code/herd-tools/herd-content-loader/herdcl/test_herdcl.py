@@ -138,18 +138,19 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
         # Check other actions
-        actions = ['objects', 'columns', 'lineage', 'samples']
+        actions = ['objects', 'columns', 'lineage', 'samples', 'tags']
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
         test_vars = ['ObJects', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
                      'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+                     'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'TaGs', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         for x in range(len(actions) - 1):
             self.controller.setup_run(config)
-        self.assertEqual(mock_config.get.call_count, 18)
+        self.assertEqual(mock_config.get.call_count, len(test_vars))
 
     def test_setup_run_console_missing_config_section(self):
         """
@@ -1875,3 +1876,571 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(mock_remove.call_count, 0)
         self.assertEqual(mock_upload.call_count, 0)
         self.assertEqual(mock_download.call_count, 1)
+
+
+class TestTagAction(unittest.TestCase):
+    """
+    Test Suite for Action Sample
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    def test_load_tags(self):
+        """
+        Test of the main load tag action
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            side_effect=[pd.DataFrame(data=[[string_generator(), string_generator()]],
+                                      columns=[TagTypes.NAME.value, TagTypes.CODE.value]),
+                         pd.DataFrame(data=[[string_generator(), string_generator(), string_generator()]],
+                                      columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value])]
+        )
+        self.controller.get_tag_type_code_list = mock.Mock(return_value=False)
+        self.controller.update_tag_type_code_list = mock.Mock(return_value=False)
+        self.controller.delete_tag_type_code_list = mock.Mock(return_value=False)
+        self.controller.update_tag_list = mock.Mock(return_value=False)
+        self.controller.delete_tag_list = mock.Mock(return_value=False)
+
+        # Run scenario and check values
+        self.controller.load_tags()
+        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+
+    def test_load_tags_exception(self):
+        """
+        Test of the main load tag action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            side_effect=[pd.DataFrame(data=[[string_generator(), string_generator()]],
+                                      columns=[TagTypes.NAME.value, TagTypes.CODE.value]),
+                         pd.DataFrame(data=[[string_generator(), string_generator(), string_generator(), '', ''],
+                                            [string_generator(), string_generator(), string_generator(), '', '']],
+                                      columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value,
+                                               Tags.DESCRIPTION.value, Tags.PARENT.value])]
+        )
+        self.controller.get_tag_type_code_list = mock.Mock(return_value=False)
+        self.controller.update_tag_type_code_list = mock.Mock(return_value=False)
+        self.controller.delete_tag_type_code_list = mock.Mock(return_value=False)
+
+        self.controller.get_tag_optional_fields = mock.Mock(
+            side_effect=[rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+        )
+
+        self.controller.delete_tag_list = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.load_tags()
+        self.assertEqual(self.controller.run_summary['total_rows'], 3)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+        self.assertEqual(self.controller.delete_tag_list.call_count, 0)
+
+    def test_check_tag_types(self):
+        """
+        Test of checking Excel worksheet for empty cells
+
+        """
+        self.controller.data_frame = pd.DataFrame(
+            data=[[string_generator(), string_generator()], [string_generator(), ''], ['', string_generator()],
+                  ['', '']],
+            columns=[TagTypes.NAME.value, TagTypes.CODE.value])
+
+        # Run scenario and check values
+        self.controller.check_tag_types()
+        self.assertEqual(self.controller.run_summary['fail_rows'], 3)
+        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    def test_get_tag_type_code_list(self, mock_tag_types, mock_tag_type):
+        """
+        Test of the getting tag type code list
+
+        """
+        mock_tag_types.return_value = mock.Mock(
+            tag_type_keys=[mock.Mock(tag_type_code=string_generator())]
+        )
+
+        mock_tag_type.return_value = mock.Mock(
+            display_name=string_generator(),
+            description=string_generator(),
+            tag_type_order=0
+        )
+
+        # Run scenario and check values
+        run_fail = self.controller.get_tag_type_code_list()
+        self.assertEqual(mock_tag_types.call_count, 1)
+        self.assertEqual(mock_tag_type.call_count, 1)
+        self.assertEqual(run_fail, None)
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    def test_get_tag_type_code_list_with_error(self, mock_tag_types, mock_tag_type):
+        """
+        Test of the getting tag type code list with exception thrown
+
+        """
+        mock_tag_types.return_value = mock.Mock(
+            tag_type_keys=[mock.Mock(tag_type_code=string_generator())]
+        )
+
+        mock_tag_type.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        run_fail = self.controller.get_tag_type_code_list()
+        self.assertTrue(run_fail)
+        run_fail = self.controller.get_tag_type_code_list()
+        self.assertTrue(run_fail)
+        self.assertEqual(mock_tag_types.call_count, 2)
+        self.assertEqual(mock_tag_type.call_count, 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_update_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_update_tag_type_code_list(self, mock_tags, mock_update):
+        """
+        Test of the updating tag type code list
+
+        """
+
+        tag_type_code = str.upper(string_generator()).strip()
+        tag_code_1 = string_generator()
+        tag_code_2 = string_generator()
+        name = string_generator()
+        description = string_generator()
+
+        self.controller.tag_types = {
+            tag_type_code: {
+                'name': name,
+                'description': description,
+                'order': 1
+            },
+            'CODE': {
+                'name': 'name',
+                'description': 'description',
+                'order': 2
+            },
+            'columns': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name, tag_type_code, description + 'A'], ['name2', 'CODE', 'description']],
+            columns=[TagTypes.NAME.value, TagTypes.CODE.value, TagTypes.DESCRIPTION.value])
+
+        mock_tags.side_effect = [mock.Mock(
+            tag_children=[mock.Mock(
+                has_children=False,
+                tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=tag_code_1)
+            )]
+        ), mock.Mock(
+            tag_children=[mock.Mock(
+                has_children=False,
+                tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=tag_code_2)
+            )]
+        )]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_type_code_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_update.call_count, 2)
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+
+        self.assertEqual(self.controller.tag_types['remove'], [])
+        remove_tags = [(tag_type_code, tag_code_1), ('CODE', tag_code_2)]
+        self.assertEqual(self.controller.tag_list['remove'], remove_tags)
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_update_tag_type_code_list_new_code(self, mock_tags, mock_create):
+        """
+        Test of the updating tag type code list with new code
+
+        """
+
+        tag_type_code = str.upper(string_generator()).strip()
+        name = string_generator()
+        description = string_generator()
+
+        self.controller.tag_types = {
+            'columns': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(data=[[name, tag_type_code, description]],
+                                                  columns=[TagTypes.NAME.value, TagTypes.CODE.value,
+                                                           TagTypes.DESCRIPTION.value])
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_type_code_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 0)
+        self.assertEqual(mock_create.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertTrue(
+            'Change in row. Old Tag Type Code:\nNone' in self.controller.run_summary[Summary.CHANGES.value][0][
+                'message'])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_update_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_update_tag_type_code_list_no_update(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag type code list no update
+
+        """
+
+        tag_type_code = str.upper(string_generator()).strip()
+        name = string_generator()
+        description = string_generator()
+
+        self.controller.tag_types = {
+            tag_type_code: {
+                'name': name,
+                'description': description,
+                'order': 1
+            },
+            'columns': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(data=[[name, tag_type_code, description]],
+                                                  columns=[TagTypes.NAME.value, TagTypes.CODE.value,
+                                                           TagTypes.DESCRIPTION.value])
+
+        mock_tags.side_effect = [
+            mock.Mock(tag_children=[
+                mock.Mock(
+                    has_children=True,
+                    tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=string_generator())
+                )]
+            ), mock.Mock(tag_children=[
+                mock.Mock(
+                    has_children=False,
+                    tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=string_generator())
+                )]
+            )]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_type_code_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(mock_create.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_update_tag_type_code_list_error(self, mock_tags, mock_create):
+        """
+        Test of the updating tag type code list with exception thrown
+
+        """
+
+        tag_type_code = str.upper(string_generator()).strip()
+        name = string_generator()
+        description = string_generator()
+
+        self.controller.tag_types = {
+            'columns': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name, tag_type_code, description], ['name', 'CODE', 'description']],
+            columns=[TagTypes.NAME.value, TagTypes.CODE.value, TagTypes.DESCRIPTION.value])
+
+        mock_create.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_type_code_list()
+        self.assertTrue(run_fail)
+        self.assertEqual(mock_tags.call_count, 0)
+        self.assertEqual(mock_create.call_count, 2)
+        self.assertEqual(self.controller.run_summary['success_rows'], 0)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+    @mock.patch('herdsdk.TagApi.tag_delete_tag')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_delete_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_delete_tag_type_code_list(self, mock_tags, mock_delete_tag_type, mock_delete_tag):
+        """
+        Test of the deleting tag type code list
+
+        """
+        tag_type_code = string_generator()
+        tag = string_generator()
+        child = 'child'
+        self.controller.tag_types['remove'] = [tag_type_code]
+
+        mock_tags.side_effect = [
+            mock.Mock(tag_children=[
+                mock.Mock(
+                    has_children=True,
+                    tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=tag)
+                )]
+            ), mock.Mock(tag_children=[
+                mock.Mock(
+                    has_children=False,
+                    tag_key=mock.Mock(tag_type_code=tag_type_code, tag_code=child)
+                )]
+            )]
+
+        # Run scenario and check values
+        run_fail = self.controller.delete_tag_type_code_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_delete_tag_type.call_count, 1)
+        self.assertEqual(mock_delete_tag.call_count, 2)
+        self.assertTrue('Tag Type Codes not found in Excel and Children deleted' in
+                        self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+        deleted = {
+            tag_type_code: [tag],
+            tag: [child]
+        }
+        self.assertEqual(self.controller.delete_tag_children, deleted)
+
+    @mock.patch('herdsdk.TagApi.tag_delete_tag')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_delete_tag_type')
+    @mock.patch('herdsdk.TagApi.tag_get_tags')
+    def test_delete_tag_type_code_list_error(self, mock_tags, mock_delete_tag_type, mock_delete_tag):
+        """
+        Test of the deleting tag type code list with exception thrown
+
+        """
+        self.controller.tag_types['remove'] = [string_generator(), string_generator()]
+
+        mock_tags.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        run_fail = self.controller.delete_tag_type_code_list()
+        self.assertTrue(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_delete_tag_type.call_count, 0)
+        self.assertEqual(mock_delete_tag.call_count, 0)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+    def test_check_tags(self):
+        """
+        Test of checking Excel worksheet for empty cells
+
+        """
+        self.controller.data_frame = pd.DataFrame(
+            data=[[string_generator(), string_generator(), string_generator()],
+                  [string_generator(), string_generator(), ''],
+                  [string_generator(), '', string_generator()],
+                  ['', string_generator(), string_generator()],
+                  ['', '', '']],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value])
+
+        # Run scenario and check values
+        self.controller.check_tags()
+        self.assertEqual(self.controller.run_summary['fail_rows'], 4)
+        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5, 6])
+
+    @mock.patch('herdsdk.TagApi.tag_create_tag')
+    @mock.patch('herdsdk.TagApi.tag_update_tag')
+    @mock.patch('herdsdk.TagApi.tag_get_tag')
+    def test_update_tag_list(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag list
+
+        """
+        name_1 = 'name 1'
+        name_2 = 'name 2'
+        name_3 = 'name 3'
+        tag_type = str.upper(string_generator()).strip()
+        parent_tag = str.upper(string_generator()).strip()
+        child_tag = str.upper(string_generator()).strip()
+
+        self.controller.tag_list = {
+            tag_type: [parent_tag, child_tag],
+            'remove': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name_1, tag_type, parent_tag, 'description', ''], [name_2 + 'A', tag_type, child_tag, '', name_1],
+                  [name_3, tag_type, child_tag, '', 'parent missing']],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value, Tags.DESCRIPTION.value, Tags.PARENT.value])
+
+        mock_tags.side_effect = [
+            mock.Mock(
+                display_name=name_1,
+                description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                parent_tag_key=None,
+                search_score_multiplier=1.0
+            ),
+            mock.Mock(
+                display_name=name_2,
+                description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
+                parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                search_score_multiplier=1.0
+            ),
+            mock.Mock(
+                display_name=name_3,
+                description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
+                parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                search_score_multiplier=1.0
+            )
+        ]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 3)
+        self.assertEqual(mock_update.call_count, 3)
+        self.assertEqual(mock_create.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], 3)
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 3)
+        self.assertTrue('Change in row. Old Tag' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+        self.assertEqual(len(self.controller.run_summary[Summary.WARNINGS.value]), 1)
+        self.assertTrue(
+            'Please double check spelling' in self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
+
+    @mock.patch('herdsdk.TagApi.tag_create_tag')
+    @mock.patch('herdsdk.TagApi.tag_update_tag')
+    @mock.patch('herdsdk.TagApi.tag_get_tag')
+    def test_update_tag_list_new_tag(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag list
+
+        """
+        name_1 = 'name'
+        name_2 = 'name 2'
+        tag_type = str.upper(string_generator()).strip()
+        parent_tag = str.upper(string_generator()).strip()
+        child_tag = str.upper(string_generator()).strip()
+
+        self.controller.tag_list = {
+            tag_type: [],
+            'remove': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name_1, tag_type, parent_tag, '', ''], [name_2, tag_type, child_tag, '', name_1]],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value, Tags.DESCRIPTION.value, Tags.PARENT.value])
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 0)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(mock_create.call_count, 2)
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 2)
+        self.assertTrue(
+            'Change in row. Old Tag:\nNone' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.TagApi.tag_create_tag')
+    @mock.patch('herdsdk.TagApi.tag_update_tag')
+    @mock.patch('herdsdk.TagApi.tag_get_tag')
+    def test_update_tag_list_no_update(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag list with no update
+
+        """
+        name_1 = 'name'
+        name_2 = 'name 2'
+        tag_type = str.upper(string_generator()).strip()
+        parent_tag = str.upper(string_generator()).strip()
+        child_tag = str.upper(string_generator()).strip()
+
+        self.controller.tag_list = {
+            tag_type: [parent_tag, child_tag],
+            'remove': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name_1, tag_type, parent_tag, '', ''], [name_2, tag_type, child_tag, '', name_1]],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value, Tags.DESCRIPTION.value, Tags.PARENT.value])
+
+        mock_tags.side_effect = [
+            mock.Mock(
+                display_name=name_1,
+                description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                parent_tag_key=None,
+                search_score_multiplier=None
+            ),
+            mock.Mock(
+                display_name=name_2,
+                description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
+                parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                search_score_multiplier=None
+            )
+        ]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(mock_create.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+
+    @mock.patch('herdsdk.TagApi.tag_delete_tag')
+    def test_delete_tag_list(self, mock_delete):
+        """
+        Test of the deleting tag type code list
+
+        """
+        tag_type_code = string_generator()
+        tag_1 = string_generator()
+        tag_2 = string_generator()
+        self.controller.tag_list['remove'] = [(tag_type_code, tag_1), (tag_type_code, tag_2)]
+
+        # Run scenario and check values
+        self.controller.delete_tag_list()
+        self.assertEqual(mock_delete.call_count, 2)
+        self.assertTrue('Tags not found in Excel and deleted' in
+                        self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+        deleted = {
+            tag_type_code: [tag_1, tag_2]
+        }
+        self.assertEqual(self.controller.delete_tag_children, deleted)
+
+    @mock.patch('herdsdk.TagApi.tag_delete_tag')
+    def test_delete_tag_list_error(self, mock_delete):
+        """
+        Test of the deleting tag type code list with exception thrown
+
+        """
+        tag_type_code = string_generator()
+        tag_1 = string_generator()
+        tag_2 = string_generator()
+        self.controller.tag_list['remove'] = [(tag_type_code, tag_1), (tag_type_code, tag_2)]
+
+        mock_delete.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        self.controller.delete_tag_list()
+        self.assertEqual(mock_delete.call_count, 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
