@@ -626,8 +626,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
-    public static final XMLGregorianCalendar NO_AS_OF_TIME = null;
-
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
