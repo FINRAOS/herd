@@ -32,8 +32,8 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 public interface StorageUnitDao extends BaseJpaDao
 {
     /**
-     * Retrieves a list of storage units that belong to storage of the specified storage platform type and to business object format of the specified file type.
-     * Only storage units that belong to the latest versions of the relative business object format and business object data are selected.
+     * Retrieves a list of storage units that belong to storage of the specified storage platform type and to business object format of the specified file
+     * type. Only storage units that belong to the latest versions of the relative business object format and business object data are selected.
      *
      * @param storagePlatform the storage platform
      * @param businessObjectFormatFileType the business object format file type
@@ -44,8 +44,8 @@ public interface StorageUnitDao extends BaseJpaDao
 
     /**
      * Retrieves a list of storage units that belong to S3 storage, and has a final destroy on timestamp < current time, has a DISABLED status, and associated
-     * BData has a DELETED status. The returned list is ordered by the "finalDestroyOn" timestamp of the S3 storage units, starting with an S3 storage unit that
-     * is final destroy on the longest.
+     * BData has a DELETED status. The returned list is ordered by the "finalDestroyOn" timestamp of the S3 storage units, starting with an S3 storage unit
+     * that is final destroy on the longest.
      *
      * @param maxResult the maximum number of results to retrieve
      *
@@ -64,8 +64,8 @@ public interface StorageUnitDao extends BaseJpaDao
     List<StorageUnitEntity> getS3StorageUnitsToExpire(int maxResult);
 
     /**
-     * Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state. The returned list is ordered by the
-     * "updated on" timestamp of the S3 storage units, starting with an S3 storage unit that has the RESTORING status the longest.
+     * Retrieves a list of storage units that belong to S3 storage and have the relative S3 storage unit in RESTORING state. The returned list is ordered by
+     * the "updated on" timestamp of the S3 storage units, starting with an S3 storage unit that has the RESTORING status the longest.
      *
      * @param maxResult the maximum number of results to retrieve
      *
@@ -118,28 +118,30 @@ public interface StorageUnitDao extends BaseJpaDao
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage (case-insensitive)
      * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
-     * format version for each partition value will be used
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest
+     * available format version for each partition value will be used
      * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
      * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
      * values for the relative partitions not to be used for selection passed as nulls.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
      * the specified business object data status is returned.
-     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
-     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
-     * values will be used regardless of the status
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version
+     * is specified. When business object data version and business object data status both are not specified, the latest data version for each set of
+     * partition values will be used regardless of the status
      * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
      * not empty or the storage platform entity is specified
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
-     * @param asOfTime as of the time
+     * @param asOfTime specifies the date and time when the business object status was effective at that time
+     *
      * @return the list of storage unit availability DTOs sorted by partition values and storage names
      */
     List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits, XMLGregorianCalendar asOfTime);
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits,
+        XMLGregorianCalendar asOfTime);
 
     /**
      * Retrieves a list of storage units that belong to the specified storage for the specified business object data.
