@@ -104,7 +104,7 @@ class TestUtilityMethods(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.setup_run(config)
-        mock_config.get.assert_called_once()
+        self.assertEqual(mock_config.get.call_count, 2)
         self.assertEqual(self.controller.action, str.lower(config['action']))
         self.assertEqual(self.controller.excel_file, config['excel_file'])
         self.assertEqual(self.controller.sample_dir, config['sample_dir'])
@@ -123,18 +123,19 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         # Mock config.get so each call returns a different value
-        test_vars = ['SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
 
         # Run scenario and check values
-        self.assertEqual(mock_config.get.call_count, 7)
-        self.assertEqual(self.controller.action, str.lower(test_vars[0]))
-        self.assertEqual(self.controller.excel_file, test_vars[1])
-        self.assertEqual(self.controller.sample_dir, test_vars[2])
-        self.assertEqual(self.controller.configuration.host, test_vars[4])
-        self.assertEqual(self.controller.configuration.username, test_vars[5])
+        self.assertEqual(mock_config.get.call_count, len(test_vars))
+        self.assertEqual(self.controller.domain, test_vars[0])
+        self.assertEqual(self.controller.action, str.lower(test_vars[1]))
+        self.assertEqual(self.controller.excel_file, test_vars[2])
+        self.assertEqual(self.controller.sample_dir, test_vars[3])
+        self.assertEqual(self.controller.configuration.host, test_vars[5])
+        self.assertEqual(self.controller.configuration.username, test_vars[6])
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
         # Check other actions
@@ -142,10 +143,10 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
-        test_vars = ['ObJects', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'TaGs', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        test_vars = ['testdomain', 'ObJects', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'testdomain', 'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         for x in range(len(actions) - 1):
@@ -179,7 +180,7 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         self.controller.config = configparser.ConfigParser()
-        self.controller.config.add_section('console')
+        self.controller.config.add_section('url')
 
         # Run scenario and check values
         with self.assertRaises(configparser.NoOptionError):
@@ -1912,27 +1913,24 @@ class TestTagAction(unittest.TestCase):
         self.controller.load_tags()
         self.assertEqual(self.controller.run_summary['total_rows'], 2)
 
-    def test_load_tags_exception(self):
+    @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
+    def test_load_tags_fail(self, mock_create):
         """
-        Test of the main load tag action with exceptions
+        Test of the main load tag action with run fail in update_tag_type_code_list step
 
         """
         self.controller.load_worksheet = mock.Mock(
-            side_effect=[pd.DataFrame(data=[[string_generator(), string_generator()]],
-                                      columns=[TagTypes.NAME.value, TagTypes.CODE.value]),
-                         pd.DataFrame(data=[[string_generator(), string_generator(), string_generator(), '', ''],
-                                            [string_generator(), string_generator(), string_generator(), '', '']],
+            side_effect=[pd.DataFrame(data=[[string_generator(), string_generator(), string_generator()],
+                                            [string_generator(), string_generator(), string_generator()]],
+                                      columns=[TagTypes.NAME.value, TagTypes.CODE.value, TagTypes.DESCRIPTION.value]),
+                         pd.DataFrame(data=[[string_generator(), string_generator(), string_generator(), '', '']],
                                       columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value,
                                                Tags.DESCRIPTION.value, Tags.PARENT.value])]
         )
         self.controller.get_tag_type_code_list = mock.Mock(return_value=False)
-        self.controller.update_tag_type_code_list = mock.Mock(return_value=False)
-        self.controller.delete_tag_type_code_list = mock.Mock(return_value=False)
-
-        self.controller.get_tag_optional_fields = mock.Mock(
-            side_effect=[rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
-        )
-
+        mock_create.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+        self.controller.delete_tag_type_code_list = mock.Mock()
+        self.controller.update_tag_list = mock.Mock()
         self.controller.delete_tag_list = mock.Mock()
 
         # Run scenario and check values
@@ -1944,6 +1942,8 @@ class TestTagAction(unittest.TestCase):
         self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
             'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+        self.assertEqual(self.controller.delete_tag_type_code_list.call_count, 0)
+        self.assertEqual(self.controller.update_tag_list.call_count, 0)
         self.assertEqual(self.controller.delete_tag_list.call_count, 0)
 
     def test_check_tag_types(self):

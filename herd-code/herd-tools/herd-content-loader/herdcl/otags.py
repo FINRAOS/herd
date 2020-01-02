@@ -49,6 +49,7 @@ class Controller:
     data_frame = ''
     path = ''
     config = None
+    domain = ''
 
     # Configure HTTP basic authorization: basicAuthentication
     configuration = herdsdk.Configuration()
@@ -126,6 +127,7 @@ class Controller:
         :type config: ConfigParser
 
         """
+        self.domain = self.config.get('url', 'domain')
         if config['gui_enabled']:
             self.action = str.lower(config['action'])
             self.excel_file = config['excel_file']
@@ -496,7 +498,7 @@ class Controller:
 
         # Remove SMEs
         for sme in remove_sme_list:
-            user_id = '{}{}{}rp.{}.{}sd.{}'.format(sme, chr(64), 'co', 'root', 'na', 'com')
+            user_id = sme + self.domain
             LOGGER.info('Deleting SME: {}'.format(sme))
             resp = self.delete_subject_matter_expert(namespace, bdef_name, user_id)
             LOGGER.debug(resp)
@@ -507,7 +509,7 @@ class Controller:
         if user:
             for user_id in user:
                 if not '@' in user_id:
-                    user_id = '{}{}{}rp.{}.{}sd.{}'.format(user_id, chr(64), 'co', 'root', 'na', 'com')
+                    user_id = user_id + self.domain
                 LOGGER.info('Adding SME: {}'.format(user_id))
                 resp = self.create_subject_matter_expert(namespace, bdef_name, user_id)
                 LOGGER.debug(resp)
