@@ -487,7 +487,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
                     SchemaColumn schemaColumn = new SchemaColumn();
                     schemaColumn.setName(columns.getString("COLUMN_NAME"));
                     schemaColumn.setType(columns.getString("TYPE_NAME"));
-                    schemaColumn.setSize(columns.getString("COLUMN_SIZE"));
+                    schemaColumn.setSize(columns.getString("COLUMN_SIZE") + "," + columns.getString("DECIMAL_DIGITS"));
                     schemaColumn.setRequired(columns.getInt("NULLABLE") == 0);
                     schemaColumn.setDefaultValue(columns.getString("COLUMN_DEF"));
                     schemaColumns.add(schemaColumn);
