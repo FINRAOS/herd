@@ -812,7 +812,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       case Some(x) =>
         if (x equalsIgnoreCase "\\\\") delimiter = Option("\\")
         else if (x equalsIgnoreCase "\\") delimiter = Option("\\")
-        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").toInt.toChar.toString)
+        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").replace("\\", "").toInt.toChar.toString)
         else delimiter = Option(x)
       case None => delimiter = None
     }
