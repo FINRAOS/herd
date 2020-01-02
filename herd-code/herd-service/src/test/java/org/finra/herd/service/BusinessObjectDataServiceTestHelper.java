@@ -482,7 +482,7 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @return the list of created storage unit entities
      */
-    public List<StorageUnitEntity> createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(List<List<String>> partitions)
+    public List<StorageUnitEntity>  createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(List<List<String>> partitions)
     {
         // Create a list of storage unit entities to be returned.
         List<StorageUnitEntity> result = new ArrayList<>();

@@ -2762,7 +2762,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlWithAsValidTimeNoValidFound()
+    public void testGenerateBusinessObjectDataDdlWithAsOfTimeNoValidDataFound()
     {
         // Prepare test data.
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
@@ -2797,7 +2797,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlWithAsValidTime()
+    public void testGenerateBusinessObjectDataDdlWithAsOfTime()
     {
         // Prepare test data.
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
@@ -2820,7 +2820,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         request.setBusinessObjectDataVersion(null);
 
         BusinessObjectDataDdl resultDdl = null;
-        
+
         Calendar cal = Calendar.getInstance();
         java.util.Date dateTime = cal.getTime();
         request.setAsOfTime(null);
@@ -2830,7 +2830,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, "ROW FORMAT " + AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
         BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES,
         AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
-        
+
         businessObjectDataServiceTestHelper
            .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
         assertEquals(resultDdl.getAsOfTime(), request.getAsOfTime());
@@ -2860,6 +2860,40 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(resultDdl3.getAsOfTime(), request.getAsOfTime());
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl3);
+    }
 
+    @Test
+    public void testGenerateBusinessObjectDataDdlWithAsOfTimeNoValidStorageUnitFound()
+    {
+        // Prepare database entities required for testing.
+        StorageUnitEntity storageUnitEntity = businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE);
+
+        // Update the storage unit status to ARCHIVED.
+        storageUnitEntity.setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ARCHIVED));
+
+        try
+        {
+            BusinessObjectDataDdlRequest ddlRequest = new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+                INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, NO_INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
+                AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_AS_OF_TIME);
+
+            Calendar cal = Calendar.getInstance();
+            java.util.Date dateTime = cal.getTime();
+            ddlRequest.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime));
+            businessObjectDataService.generateBusinessObjectDataDdl(ddlRequest);
+
+            fail("Suppose to throw an ObjectNotFoundException when business object data has a non-available storage unit status.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+                    "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, partitionValue: \"%s\", " +
+                    "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, ",,,", null, STORAGE_NAME), e.getMessage());
+        }
     }
 }
