@@ -751,6 +751,40 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   }
 
+  test("delimiter, escape, and null value characters when set to null in the schema should return as null in parse options")
+  {
+    val businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    val partitionColumn = new SchemaColumn
+
+    partitionColumn.setName(partitionKey)
+    partitionColumn.setType("DATE")
+    partitionColumn.setRequired(true)
+
+    s.addPartitionsItem(partitionColumn)
+    s.setDelimiter(null)
+    s.setEscapeCharacter(null)
+    s.setNullValue(null)
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+
+    val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
+
+    print(s"parse options: ${parseOutput.toString()}")
+
+    assertEquals(Some(null), parseOutput.get("nullValue"))
+    assertEquals(Some(null), parseOutput.get("escape"))
+    assertEquals(Some(null), parseOutput.get("delimiter"))
+  }
+
   test("findNamespace searches for the given table in the list of given namespaces")
   {
     var businessObjectDefinitionKey1 = new BusinessObjectDefinitionKey

@@ -20,6 +20,7 @@ import java.util
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 import scala.xml._
@@ -30,8 +31,6 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
@@ -39,7 +38,7 @@ import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
 
 import org.finra.herd.sdk.api._
-import org.finra.herd.sdk.invoker.{ApiException}
+import org.finra.herd.sdk.invoker.ApiException
 import org.finra.herd.sdk.model._
 
 /** Used to contain a partition's name and value pair
@@ -787,44 +786,55 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
    * Returns the parse options
+   * todo: this is a quick fix, use unescape utils to elegantly handle this
    *
    * @param businessObjectFormat the business object format instance
    * @return Map of parse options
    */
   private def parseParseOptions(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat, csvBug: Boolean): Map[String, String] = {
-    var nullValue = businessObjectFormat.getSchema.getNullValue
-    var delimiter = businessObjectFormat.getSchema.getDelimiter
-    var escapeCharacter = businessObjectFormat.getSchema.getEscapeCharacter
 
-    // ugly but gets the job done, having text that needs to recognise octal and unicode
-    if (nullValue.equalsIgnoreCase("\\\\")) nullValue = "\\"
-    if (delimiter.equalsIgnoreCase("\\\\")) delimiter = "\\"
-    if (escapeCharacter.equalsIgnoreCase("\\\\")) escapeCharacter = "\\"
+    val actualNullValue: Option[String] = Option(businessObjectFormat.getSchema.getNullValue)
+    val actualDelimiter: Option[String] = Option(businessObjectFormat.getSchema.getDelimiter)
+    val actualEscapeCharacter: Option[String] = Option(businessObjectFormat.getSchema.getEscapeCharacter)
 
-    if (delimiter.equalsIgnoreCase("\\")) {
-      delimiter = "\\"
-    } else if (delimiter.contains("\\")) {
-      delimiter = delimiter.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString
+    var nullValue = None: Option[String]
+    var delimiter = None: Option[String]
+    var escapeCharacter = None: Option[String]
+
+    actualNullValue match
+    {
+      case Some(x) => if (x equalsIgnoreCase "\\\\") nullValue = Option("\\") else nullValue = Option(x)
+      case None => nullValue = None
     }
 
-    if (escapeCharacter.equalsIgnoreCase("\\")) {
-      escapeCharacter = "\\"
-    } else if (escapeCharacter.contains("\\")) {
-      escapeCharacter = escapeCharacter.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString
+    actualDelimiter match
+    {
+      case Some(x) =>
+        if (x equalsIgnoreCase "\\\\") delimiter = Option("\\")
+        else if (x equalsIgnoreCase "\\") delimiter = Option("\\")
+        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").toInt.toChar.toString)
+        else delimiter = Option(x)
+      case None => delimiter = None
+    }
+
+    actualEscapeCharacter match
+    {
+      case Some(x) =>
+        if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
+        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString)
+        else escapeCharacter = Option(x)
+      case None => escapeCharacter = None
     }
 
     var parseOptions = scala.collection.mutable.Map(
-      "delimiter" -> delimiter,
+      "delimiter" -> delimiter.orNull,
       "mode" -> "PERMISSIVE",
-      "escape" -> escapeCharacter,
-      "nullValue" -> nullValue
+      "escape" -> escapeCharacter.orNull,
+      "nullValue" -> nullValue.orNull
     )
 
-    if (csvBug == false) {
-      parseOptions += (
-        "nullValue" -> nullValue,
-        "dateFormat" -> dateFormat
-        )
+    if (!csvBug) {
+      parseOptions += "dateFormat" -> dateFormat
     }
 
     parseOptions.toMap
