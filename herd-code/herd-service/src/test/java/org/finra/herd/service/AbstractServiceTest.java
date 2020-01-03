@@ -97,6 +97,7 @@ import org.finra.herd.service.helper.MessageTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
+import org.finra.herd.service.helper.RelationalTableRegistrationHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.S3PropertiesLocationHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
@@ -1060,6 +1061,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected PartitionKeyGroupServiceTestHelper partitionKeyGroupServiceTestHelper;
+
+    @Autowired
+    protected RelationalTableRegistrationHelper relationalTableRegistrationHelper;
 
     @Autowired
     protected RelationalTableRegistrationHelperService relationalTableRegistrationHelperService;
