@@ -188,8 +188,9 @@ public class BusinessObjectDataDdlPartitionsHelper
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.
-        boolean isPartitioned = !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY) || partitionFilters.size() != 1 ||
-            !partitionFilters.get(0).get(0).equalsIgnoreCase(NO_PARTITIONING_PARTITION_VALUE);
+        boolean isPartitioned =
+            !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY) || partitionFilters.size() != 1 ||
+                !partitionFilters.get(0).get(0).equalsIgnoreCase(NO_PARTITIONING_PARTITION_VALUE);
 
         // Generate the create table Hive 13 DDL.
         BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest = getGenerateDdlRequestWrapperInstance();
@@ -303,7 +304,8 @@ public class BusinessObjectDataDdlPartitionsHelper
             .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
                 businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true, generateDdlRequest.getAsOfTime());
+                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true,
+                generateDdlRequest.getAsOfTime());
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
@@ -480,8 +482,8 @@ public class BusinessObjectDataDdlPartitionsHelper
                 {
                     int businessObjectDataRegisteredPartitions = 1 + CollectionUtils.size(businessObjectDataKey.getSubPartitionValues());
                     Assert.isTrue(businessObjectFormatForSchema.getSchema().getPartitions().size() == businessObjectDataRegisteredPartitions, String.format(
-                        "Number of primary and sub-partition values (%d) specified for the business object data is not equal to the number of partition columns"
-                            + " (%d) defined in the schema of the business object format selected for DDL/Partitions generation. " +
+                        "Number of primary and sub-partition values (%d) specified for the business object data is not equal to the number of partition " +
+                            "columns (%d) defined in the schema of the business object format selected for DDL/Partitions generation. " +
                             "Business object data: {%s},  business object format: {%s}", businessObjectDataRegisteredPartitions,
                         businessObjectFormatForSchema.getSchema().getPartitions().size(),
                         businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectFormatHelper
@@ -661,8 +663,8 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage (case-insensitive)
      * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
-     * format version for each partition value will be used
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest
+     * available format version for each partition value will be used
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
@@ -854,9 +856,9 @@ public class BusinessObjectDataDdlPartitionsHelper
     }
 
     /**
-     * Gets a list of Hive partitions. For single level partitioning, no auto-discovery of sub-partitions (sub-directories) is needed - the business object data
-     * will be represented by a single Hive partition instance. For multiple level partitioning, this method performs an auto-discovery of all sub-partitions
-     * (sub-directories) and creates a Hive partition object instance for each partition.
+     * Gets a list of Hive partitions. For single level partitioning, no auto-discovery of sub-partitions (sub-directories) is needed - the business object
+     * data will be represented by a single Hive partition instance. For multiple level partitioning, this method performs an auto-discovery of all
+     * sub-partitions (sub-directories) and creates a Hive partition object instance for each partition.
      *
      * @param businessObjectDataKey the business object data key
      * @param autoDiscoverableSubPartitionColumns the auto-discoverable sub-partition columns
