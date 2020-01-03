@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -209,6 +211,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
         generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
         generateDdlRequest.tableName = request.getTableName();
+        generateDdlRequest.asOfTime = request.getAsOfTime();
 
         // getOutputFormat == null, means it's used in generatePartitions request since getOutputFormat must not be null for generateDDL request
         if (request.getOutputFormat() == null)
@@ -300,7 +303,7 @@ public class BusinessObjectDataDdlPartitionsHelper
             .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
                 businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true);
+                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true, generateDdlRequest.getAsOfTime());
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, the method fails on business object data instances registered with multiple storage.
@@ -678,7 +681,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageEntities, s3StoragePlatformEntity, null, false);
+                matchedAvailablePartitionFilters, null, null, storageEntities, s3StoragePlatformEntity, null, false, null);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitAvailabilityDtos =
@@ -1037,6 +1040,8 @@ public class BusinessObjectDataDdlPartitionsHelper
 
         private String tableName;
 
+        private XMLGregorianCalendar asOfTime;
+
         public Boolean getGeneratePartitionsRequest()
         {
             return isGeneratePartitionsRequest;
@@ -1225,6 +1230,16 @@ public class BusinessObjectDataDdlPartitionsHelper
         public void setTableName(String tableName)
         {
             this.tableName = tableName;
+        }
+
+        public XMLGregorianCalendar getAsOfTime()
+        {
+            return asOfTime;
+        }
+
+        public void setAsOfTime(XMLGregorianCalendar asOfTime)
+        {
+            this.asOfTime = asOfTime;
         }
     }
 

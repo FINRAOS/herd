@@ -32,6 +32,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -342,7 +344,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
     public List<StorageUnitAvailabilityDto> getStorageUnitsByPartitionFilters(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits)
+        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits,
+        XMLGregorianCalendar asOfTime)
     {
         List<StorageUnitAvailabilityDto> results = new ArrayList<>();
 
@@ -354,7 +357,8 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
                 getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
                     partitionFilters, businessObjectDataVersion, businessObjectDataStatusEntity, storageEntities, storagePlatformEntity,
                     excludedStoragePlatformEntity, selectOnlyAvailableStorageUnits, i,
-                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST,
+                    asOfTime);
 
             // Add the sub-list to the result.
             results.addAll(storageUnitAvailabilityDtosSubset);
@@ -423,16 +427,16 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage (case-insensitive)
      * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
-     * format version for each partition value will be used
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest
+     * available format version for each partition value will be used
      * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
      * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
      * values for the relative partitions not to be used for selection passed as nulls
      * @param businessObjectDataVersion the optional business object data version. If a business object data version isn't specified, the latest data version
      * based on the specified business object data status is returned
-     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
-     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
-     * values will be used regardless of the status
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version
+     * is specified. When business object data version and business object data status both are not specified, the latest data version for each set of
+     * partition values will be used regardless of the status
      * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
@@ -440,6 +444,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
      * @param selectOnlyAvailableStorageUnits specifies if only available storage units will be selected or any storage units regardless of their status
+     * @param asOfTime specifies the date and time when the business object status was effective at that time
      *
      * @return the list of storage unit availability DTOs sorted by partition values
      */
@@ -447,7 +452,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<List<String>> partitionFilters,
         Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<StorageEntity> storageEntities,
         StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, boolean selectOnlyAvailableStorageUnits,
-        int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
+        int partitionFilterSubListFromIndex, int partitionFilterSubListSize, XMLGregorianCalendar asOfTime)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -483,6 +488,17 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         {
             mainQueryRestriction = builder.and(mainQueryRestriction,
                 builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
+        }
+
+        // If specified valid as of time, add join and restriction on status history
+        if (asOfTime != null)
+        {
+            Join<BusinessObjectDataEntity, BusinessObjectDataStatusHistoryEntity> businessObjectDataHistoryEntityJoin =
+                businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.historicalStatuses);
+
+            mainQueryRestriction = builder.and(mainQueryRestriction, builder
+                .lessThan(businessObjectDataHistoryEntityJoin.get(BusinessObjectDataEntity_.updatedOn),
+                    new Timestamp(asOfTime.toGregorianCalendar().getTimeInMillis())));
         }
 
         // If specified, add restriction on storage.
