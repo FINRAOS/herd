@@ -488,7 +488,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
                     schemaColumn.setName(columns.getString("COLUMN_NAME"));
                     schemaColumn.setType(columns.getString("TYPE_NAME"));
                     // If this is a numeric column then include the decimal digits as part of the size.
-                    if (columns.getString("TYPE_NAME").equalsIgnoreCase("NUMERIC"))
+                    if (columns.getString("TYPE_NAME").equalsIgnoreCase("NUMERIC")
+                        && StringUtils.isNotEmpty(columns.getString("DECIMAL_DIGITS")))
                     {
                         schemaColumn.setSize(columns.getString("COLUMN_SIZE") + "," + columns.getString("DECIMAL_DIGITS"));
                     }
