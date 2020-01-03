@@ -21,7 +21,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -81,6 +80,7 @@ import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.RelationalTableRegistrationHelper;
 import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
@@ -143,6 +143,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Autowired
+    private RelationalTableRegistrationHelper relationalTableRegistrationHelper;
 
     @Autowired
     private SearchIndexUpdateHelper searchIndexUpdateHelper;
@@ -463,9 +466,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         driverManagerDataSource.setPassword(password);
         driverManagerDataSource.setDriverClassName(JdbcServiceImpl.DRIVER_POSTGRES);
 
-        // Create an empty result list.
-        List<SchemaColumn> schemaColumns = new ArrayList<>();
-
         // Connect to the database and retrieve the relational table columns.
         try (Connection connection = driverManagerDataSource.getConnection())
         {
@@ -482,25 +482,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             // Retrieve the relational table columns.
             try (ResultSet columns = databaseMetaData.getColumns(null, relationalSchemaName, relationalTableName, null))
             {
-                while (columns.next())
-                {
-                    SchemaColumn schemaColumn = new SchemaColumn();
-                    schemaColumn.setName(columns.getString("COLUMN_NAME"));
-                    schemaColumn.setType(columns.getString("TYPE_NAME"));
-                    // If this is a numeric column then include the decimal digits as part of the size.
-                    if (columns.getString("TYPE_NAME").equalsIgnoreCase("NUMERIC")
-                        && StringUtils.isNotEmpty(columns.getString("DECIMAL_DIGITS")))
-                    {
-                        schemaColumn.setSize(columns.getString("COLUMN_SIZE") + "," + columns.getString("DECIMAL_DIGITS"));
-                    }
-                    else
-                    {
-                        schemaColumn.setSize(columns.getString("COLUMN_SIZE"));
-                    }
-                    schemaColumn.setRequired(columns.getInt("NULLABLE") == 0);
-                    schemaColumn.setDefaultValue(columns.getString("COLUMN_DEF"));
-                    schemaColumns.add(schemaColumn);
-                }
+                return relationalTableRegistrationHelper.getSchemaColumns(columns);
             }
         }
         catch (SQLException e)
@@ -509,8 +491,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
                     "at jdbc.url=\"%s\" using jdbc.username=\"%s\". Reason: %s", relationalTableName, relationalSchemaName, driverManagerDataSource.getUrl(),
                 driverManagerDataSource.getUsername(), e.getMessage()), e);
         }
-
-        return schemaColumns;
     }
 
     /**
