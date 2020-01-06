@@ -153,6 +153,23 @@ trait HerdApi {
                                        partitionKey: String, partitionValues: Seq[String],
                                        dataVersion: Integer): BusinessObjectDataDdl
 
+  /** Retrieves the list of partition locations for a given business object data (or a range of partition values).
+   *
+   * @param namespace          The namespace
+   * @param businessObjectName The business object definition name
+   * @param formatUsage        The business object format usage (e.g. PRC).
+   * @param formatFileType     The business object format file type (e.g. GZ).
+   * @param formatVersion      The version of the business object format (e.g. 0).
+   * @param partitionKey       The business object format partition key.
+   * @param partitionValues    The list of partition values that the data is associated with (e.g. a specific trade date such as 20140401).
+   * @param dataVersion        The version of the business object data (e.g. 0).
+   * @return The business object data DDL
+   */
+  def getBusinessObjectDataPartitions(namespace: String, businessObjectName: String,
+                                      formatUsage: String, formatFileType: String, formatVersion: Integer,
+                                      partitionKey: String, partitionValues: Seq[String],
+                                      dataVersion: Integer): BusinessObjectDataPartitions
+
    /** Retrieves the business object data availability
     *
     * @param namespace           The namespace
@@ -549,6 +566,33 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
 
       log.debug("businessObjectDataDdl=" + businessObjectDataDdl)
       businessObjectDataDdl
+    }
+  }
+
+  override def getBusinessObjectDataPartitions(namespace: String, businessObjectName: String,
+                                               formatUsage: String, formatFileType: String,
+                                               formatVersion: Integer, partitionKey: String, partitionValues: Seq[String],
+                                               dataVersion: Integer): BusinessObjectDataPartitions = {
+    val api = getBusinessObjectDataApi(apiClient)
+    val businessObjectDataPartitionsRequest = new BusinessObjectDataPartitionsRequest
+    businessObjectDataPartitionsRequest.setNamespace(namespace)
+    businessObjectDataPartitionsRequest.setBusinessObjectDefinitionName(businessObjectName)
+    businessObjectDataPartitionsRequest.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectDataPartitionsRequest.setBusinessObjectFormatFileType(formatFileType)
+    businessObjectDataPartitionsRequest.setBusinessObjectFormatVersion(formatVersion)
+
+    val partitionValueFilter = new PartitionValueFilter()
+    partitionValueFilter.setPartitionKey(partitionKey)
+    partitionValueFilter.setPartitionValues(partitionValues.asJava)
+    businessObjectDataPartitionsRequest.setPartitionValueFilters(List.fill(1)(partitionValueFilter).asJava)
+    businessObjectDataPartitionsRequest.setBusinessObjectDataVersion(dataVersion)
+
+    withRetry {
+      log.debug("businessObjectDataPartitionsRequest=" + businessObjectDataPartitionsRequest)
+      val businessObjectDataPartitions = api.businessObjectDataGenerateBusinessObjectDataPartitions(businessObjectDataPartitionsRequest)
+
+      log.debug("businessObjectDataPartitions=" + businessObjectDataPartitions)
+      businessObjectDataPartitions
     }
   }
 

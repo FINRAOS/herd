@@ -29,6 +29,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
 
+import org.finra.herd.sdk.model
 import org.finra.herd.sdk.model._
 
 @RunWith(classOf[JUnitRunner])
@@ -140,16 +141,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   }
 
   test("getNamespaces should return a list of namespaces") {
-
-    var businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys
-    businessObjectDefinitionKeys.setBusinessObjectDefinitionKeys(new util.ArrayList[BusinessObjectDefinitionKey])
-
-    var businessObjectDefinitionKey = new BusinessObjectDefinitionKey
-    businessObjectDefinitionKey.setNamespace("testNamespace1")
-    businessObjectDefinitionKeys.addBusinessObjectDefinitionKeysItem(businessObjectDefinitionKey)
-
-    businessObjectDefinitionKey.setNamespace("testNamespace2")
-    businessObjectDefinitionKeys.addBusinessObjectDefinitionKeysItem(businessObjectDefinitionKey)
 
     var namespaceKeys = new NamespaceKeys
     namespaceKeys.setNamespaceKeys(new util.ArrayList[NamespaceKey]())
@@ -998,6 +989,48 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     assertEquals("No FileSystem for scheme: s3", thrown.getMessage)
 
+  }
+
+  /**
+   * simple test to validate that partition locations are extracted from generate partitions response, formatted and returned
+   */
+  test("query path from generate partitions returns list of formatted s3 prefixes") {
+
+    // define a new generate partitions response for mocking purposes
+    val businessObjectDataPartitions = new BusinessObjectDataPartitions
+
+    // define first partition
+    val partitionAlpha = new model.Partition
+
+    val partitionColumnOneAlpha = new PartitionColumn
+    partitionColumnOneAlpha.setPartitionColumnName("month")
+    partitionColumnOneAlpha.setPartitionColumnValue("january")
+
+    partitionAlpha.setPartitionColumns(util.Arrays.asList(partitionColumnOneAlpha))
+    partitionAlpha.setPartitionLocation("bucketName/namespace/provider/usage/fileType/objectName/frmt-v0/data-v0/month=january")
+
+    // define second partition
+    val partitionBeta = new model.Partition
+
+    val partitionColumnOneBeta = new PartitionColumn
+    partitionColumnOneBeta.setPartitionColumnName("month")
+    partitionColumnOneBeta.setPartitionColumnValue("february")
+
+    partitionBeta.setPartitionColumns(util.Arrays.asList(partitionColumnOneBeta))
+    partitionBeta.setPartitionLocation("bucketName/namespace/provider/usage/fileType/objectName/frmt-v0/data-v0/month=february")
+
+    businessObjectDataPartitions.setPartitions(util.Arrays.asList(partitionAlpha, partitionBeta))
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectDataPartitions(namespace, objectName, formatUsage, formatType, formatVersion, "month", Seq("january", "february")
+      , dataVersion)).thenReturn(businessObjectDataPartitions)
+
+    val s3KeyPrefixInformation = dataCatalog.queryPathFromGeneratePartitions(namespace, objectName, formatUsage, formatType,
+      "month", Array("january", "february"), formatVersion, dataVersion)
+
+    // assert that the returned s3 prefix information was extracted and formatted from the generate partitions response
+    assertEquals(List("s3n://bucketName/namespace/provider/usage/fileType/objectName/frmt-v0/data-v0/month=january",
+      "s3n://bucketName/namespace/provider/usage/fileType/objectName/frmt-v0/data-v0/month=february"), s3KeyPrefixInformation)
   }
 
   test("stop spark")

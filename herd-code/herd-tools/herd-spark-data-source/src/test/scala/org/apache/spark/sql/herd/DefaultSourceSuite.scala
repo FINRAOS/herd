@@ -223,6 +223,16 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
 
     namespaceKeys
   }
+
+  // todo: add implementation
+  override def getBusinessObjectDataPartitions(namespace: String, businessObjectName: String,
+                                               formatUsage: String, formatFileType: String,
+                                               formatVersion: Integer, partitionKey: String,
+                                               partitionValues: Seq[String], dataVersion: Integer): BusinessObjectDataPartitions = {
+
+    val businessObjectDataPartitions = new BusinessObjectDataPartitions
+    businessObjectDataPartitions
+  }
 }
 
 class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
