@@ -181,7 +181,9 @@ class MainUI(tk.Frame):
 
     ############################################################################
     def select_file(self, *args):
-
+        """
+        Gets excel file when user clicks on Excel File form
+        """
         self.fileName = tk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ('all files', '.*')])
         if not self.fileName:
             return
@@ -189,7 +191,9 @@ class MainUI(tk.Frame):
 
     ############################################################################
     def select_dir(self, *args):
-
+        """
+        Gets sample file directory when user clicks on Samples Directory form
+        """
         directory = tk.filedialog.askdirectory(initialdir=self.sample_dir.get())
         if not directory:
             return
@@ -197,6 +201,9 @@ class MainUI(tk.Frame):
 
     ############################################################################
     def display(self, resp, log=None):
+        """
+        Displays message to both logger and GUI textPad
+        """
         if log:
             log(resp)
         else:
