@@ -19,10 +19,9 @@ import java.io.File
 import java.util
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import scala.util.matching.Regex
 import scala.xml._
 
 import com.amazonaws.ClientConfiguration
@@ -540,44 +539,25 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
    * @return list of S3 key prefixes
    */
-  def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
-                               partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
+  def queryPathFromGeneratePartitions(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
+                                      partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
 
-    val businessObjectDataDdl = herdApiWrapper.getHerdApi.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+    val businessObjectDataPartitions = herdApiWrapper.getHerdApi().getBusinessObjectDataPartitions(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    val ddl = businessObjectDataDdl.getDdl
-    logger.debug(s"ddl: $ddl")
+    // get partitions information from generate partitions response
+    val generatedPartitions = businessObjectDataPartitions.getPartitions
 
-    // Parse the DDL, and grab the partition values and their S3 prefixes
-    var s3KeyPrefixes = new ArrayBuffer[String]()
-    if (partitionKey.equalsIgnoreCase("partition")) {
-      // not partitioned
-      val s3KeyPrefixPattern = new Regex("LOCATION '(s3.+?)';")
-      s3KeyPrefixPattern.findAllIn(ddl).matchData.
-        foreach(m => {
-          s3KeyPrefixes += m.group(1)
-        })
-    } else {
-      val s3KeyPrefixPattern = new Regex("PARTITION \\((.+?)\\) LOCATION '(s3.+?)';")
-      s3KeyPrefixPattern.findAllIn(ddl).matchData.
-        foreach(m => {
-          val partitionValues = m.group(1).replace("`", "").replace("'", "").replaceAll("\\s", "").split(",").toList
-          var partitionValueList = new ArrayBuffer[String]()
-          for (e <- partitionValues) {
-            partitionValueList += e.substring(e.indexOf("=") + 1)
-          }
-
-          // Only add the S3 key Prefixes when the partition values match
-          if (partitionValueList.mkString(",").startsWith(partitionValuesInOrder.mkString(","))) {
-            s3KeyPrefixes += m.group(2)
-          }
-        })
+    // Parse the response, grab the partition values and their S3 prefixes
+    val s3KeyPrefixes = new ListBuffer[String]()
+    for (partition <- generatedPartitions.asScala) {
+      logger.debug(s"partition location: ${partition.getPartitionLocation}")
+      s3KeyPrefixes.append(partition.getPartitionLocation)
     }
 
-    s3KeyPrefixes.toList
+    // return all s3 prefixes
+    s3KeyPrefixes.map("s3n://" + _).toList
   }
-
   /**
    * Get available namespaces
    *
@@ -941,7 +921,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       List(x -> partitionsMap(x.toLowerCase))
     }.map(_._2)
 
-    queryPathFromGenerateDdl(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesInOrder, schemaVersion, dataVersion)
+    queryPathFromGeneratePartitions(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesInOrder, schemaVersion, dataVersion)
   }
 
   /**

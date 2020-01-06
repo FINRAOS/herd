@@ -92,6 +92,7 @@
                <artifactId>*</artifactId>
             </exclusion>
          </exclusions>
+         <version>${project.parent.version}</version>
       </dependency>
 
       <dependency>
