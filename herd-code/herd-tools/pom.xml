@@ -73,9 +73,6 @@
             <module>herd-downloader</module>
             <module>herd-retention-expiration-exporter</module>
             <module>herd-retention-expiration-destroyer</module>
-            <module>herd-spark-data-source</module>
-            <module>herd-spark-data-catalog</module>
-            <module>herd-spark-2.2-data-source</module>
             <module>herd-pandas</module>
             <module>herd-access-validator</module>
             <module>herd-content-loader</module>
