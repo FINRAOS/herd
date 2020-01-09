@@ -18,6 +18,7 @@ package org.finra.herd.dao.impl;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -48,6 +50,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -483,22 +486,29 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
             mainQueryRestriction = builder
                 .and(mainQueryRestriction, builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
         }
-        // Otherwise, add restriction on business object data status, if specified.
-        else if (businessObjectDataStatusEntity != null)
+        // Otherwise, add restriction on business object data status, if specified and as of time is null.
+        else if (businessObjectDataStatusEntity != null && asOfTime == null)
         {
+
             mainQueryRestriction = builder.and(mainQueryRestriction,
                 builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.statusCode), businessObjectDataStatusEntity.getCode()));
         }
 
-        // If specified valid as of time, add join and restriction on status history
+        Path<Timestamp> businessObjectDataStatusCreatedTime = null;
+        Path<String> businessObjectDataHistoryStatusColumn = null;
+        // If specified as of time, add join and restriction on status history
         if (asOfTime != null)
         {
             Join<BusinessObjectDataEntity, BusinessObjectDataStatusHistoryEntity> businessObjectDataHistoryEntityJoin =
                 businessObjectDataEntityJoin.join(BusinessObjectDataEntity_.historicalStatuses);
 
             mainQueryRestriction = builder.and(mainQueryRestriction, builder
-                .lessThan(businessObjectDataHistoryEntityJoin.get(BusinessObjectDataEntity_.updatedOn),
+                .lessThan(businessObjectDataHistoryEntityJoin.get(BusinessObjectDataStatusHistoryEntity_.createdOn),
                     new Timestamp(asOfTime.toGregorianCalendar().getTimeInMillis())));
+
+            businessObjectDataStatusCreatedTime = businessObjectDataHistoryEntityJoin.get(BusinessObjectDataStatusHistoryEntity_.createdOn);
+            businessObjectDataHistoryStatusColumn =
+                businessObjectDataHistoryEntityJoin.get(BusinessObjectDataStatusHistoryEntity_.status).get(BusinessObjectDataStatusEntity_.code);
         }
 
         // If specified, add restriction on storage.
@@ -535,11 +545,24 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         Path<String> storageUnitStatusColumn = storageUnitEntityRoot.get(StorageUnitEntity_.statusCode);
         Path<Boolean> storageUnitAvailableColumn = storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.available);
 
+
         // Add the clauses for the query.
-        criteria.multiselect(storageUnitIdColumn, businessObjectFormatUsageColumn, businessObjectFormatVersionColumn, primaryPartitionValueColumn,
-            subPartitionValue1Column, subPartitionValue2Column, subPartitionValue3Column, subPartitionValue4Column, businessObjectDataVersionColumn,
-            storageNameColumn, storageUnitDirectoryPathColumn, businessObjectDataStatusColumn, storageUnitStatusColumn, storageUnitAvailableColumn)
-            .where(mainQueryRestriction).orderBy(orderBy);
+        if (asOfTime == null)
+        {
+            criteria.multiselect(storageUnitIdColumn, businessObjectFormatUsageColumn, businessObjectFormatVersionColumn, primaryPartitionValueColumn,
+                subPartitionValue1Column, subPartitionValue2Column, subPartitionValue3Column, subPartitionValue4Column, businessObjectDataVersionColumn,
+                storageNameColumn, storageUnitDirectoryPathColumn, businessObjectDataStatusColumn, storageUnitStatusColumn, storageUnitAvailableColumn)
+                .where(mainQueryRestriction).orderBy(orderBy);
+
+        }
+        else
+        {
+            criteria.multiselect(storageUnitIdColumn, businessObjectFormatUsageColumn, businessObjectFormatVersionColumn, primaryPartitionValueColumn,
+                subPartitionValue1Column, subPartitionValue2Column, subPartitionValue3Column, subPartitionValue4Column, businessObjectDataVersionColumn,
+                storageNameColumn, storageUnitDirectoryPathColumn, businessObjectDataStatusColumn, storageUnitStatusColumn, storageUnitAvailableColumn,
+                businessObjectDataStatusCreatedTime, businessObjectDataHistoryStatusColumn).where(mainQueryRestriction).orderBy(orderBy);
+
+        }
 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
@@ -548,16 +571,36 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos = new ArrayList<>();
         for (Tuple tuple : tuples)
         {
-            storageUnitAvailabilityDtos.add(new StorageUnitAvailabilityDto(tuple.get(storageUnitIdColumn),
+            String businessObjectDataStatusHistoryStatus = null;
+            XMLGregorianCalendar businessObjectDataStatusHistoryCreatedTime = null;
+
+            if (asOfTime != null)
+            {
+                businessObjectDataStatusHistoryStatus = tuple.get(businessObjectDataHistoryStatusColumn);
+                businessObjectDataStatusHistoryCreatedTime = HerdDateUtils.getXMLGregorianCalendarValue(tuple.get(businessObjectDataStatusCreatedTime));
+            }
+
+            StorageUnitAvailabilityDto storageUnitAvailabilityDto = new StorageUnitAvailabilityDto(tuple.get(storageUnitIdColumn),
                 new BusinessObjectDataKey(businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
                     tuple.get(businessObjectFormatUsageColumn), fileTypeEntity.getCode(), tuple.get(businessObjectFormatVersionColumn),
                     tuple.get(primaryPartitionValueColumn), getSubPartitionValuesFromRawSubPartitionValues(Arrays
                     .asList(tuple.get(subPartitionValue1Column), tuple.get(subPartitionValue2Column), tuple.get(subPartitionValue3Column),
                         tuple.get(subPartitionValue4Column))), tuple.get(businessObjectDataVersionColumn)), tuple.get(storageNameColumn),
                 tuple.get(storageUnitDirectoryPathColumn), tuple.get(businessObjectDataStatusColumn), tuple.get(storageUnitStatusColumn),
-                tuple.get(storageUnitAvailableColumn)));
+                tuple.get(storageUnitAvailableColumn), businessObjectDataStatusHistoryStatus, businessObjectDataStatusHistoryCreatedTime);
+
+            storageUnitAvailabilityDtos.add(storageUnitAvailabilityDto);
         }
 
+        if (asOfTime != null)
+        {
+            String filteredStatusCode = null;
+            if (businessObjectDataVersion == null && businessObjectDataStatusEntity != null)
+            {
+                filteredStatusCode = businessObjectDataStatusEntity.getCode();
+            }
+            storageUnitAvailabilityDtos = createStorageUnitAvailabilityDtosWithStatusHistory(storageUnitAvailabilityDtos, filteredStatusCode);
+        }
         // If at least one of the business object format and business object data versions was not specified,
         // filter in only latest version for each set of partition values.
         if (businessObjectFormatVersion == null || businessObjectDataVersion == null)
@@ -665,5 +708,47 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         }
 
         return subPartitionValues;
+    }
+
+    /**
+     * create storage unit availability dtos based on business object status history
+     *
+     * @param storageUnitAvailabilityDtosWithStatusHistory
+     * @param statusCode status code filter
+     *
+     * @return a list of storage unit availability dtos
+     */
+    private List<StorageUnitAvailabilityDto> createStorageUnitAvailabilityDtosWithStatusHistory(
+        List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtosWithStatusHistory, String statusCode)
+    {
+        Map<BusinessObjectDataKey, StorageUnitAvailabilityDto> storageUnitAvailabilityDtoMap = new LinkedHashMap<>();
+
+        for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtosWithStatusHistory)
+        {
+            BusinessObjectDataKey businessObjectDataKey = storageUnitAvailabilityDto.getBusinessObjectDataKey();
+            storageUnitAvailabilityDto.setBusinessObjectDataStatus(storageUnitAvailabilityDto.getBusinessObjectDataStatusHistoryStatus());
+            // add to the collection if it does not appear in the a map
+            if (!storageUnitAvailabilityDtoMap.containsKey(businessObjectDataKey))
+            {
+                storageUnitAvailabilityDtoMap.put(businessObjectDataKey, storageUnitAvailabilityDto);
+            }
+            else
+            {
+                StorageUnitAvailabilityDto insertedStorageUnitAvailabilityDto = storageUnitAvailabilityDtoMap.get(businessObjectDataKey);
+                // inserted one is previous to storageUnitAvailabilityDto's status history crated time, so need to update
+                if (insertedStorageUnitAvailabilityDto.getBusinessObjectDataStatusHistoryCreatedTime()
+                    .compare(storageUnitAvailabilityDto.getBusinessObjectDataStatusHistoryCreatedTime()) < 0)
+                {
+                    storageUnitAvailabilityDtoMap.put(businessObjectDataKey, storageUnitAvailabilityDto);
+                }
+            }
+        }
+        Collection<StorageUnitAvailabilityDto> list = storageUnitAvailabilityDtoMap.values();
+        if (statusCode != null)
+        {
+            list.removeIf(n -> !n.getBusinessObjectDataStatus().equalsIgnoreCase(statusCode));
+        }
+
+        return new ArrayList<>(list);
     }
 }

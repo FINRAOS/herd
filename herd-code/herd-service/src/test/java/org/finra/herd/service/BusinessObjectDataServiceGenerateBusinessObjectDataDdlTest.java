@@ -2800,17 +2800,18 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlWithAsOfTime()
     {
         // Prepare test data.
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
-            AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.UNSORTED_PARTITION_VALUES,
-            AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
-            AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.UNSORTED_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
+                AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl request with all parameter values in upper case (except for case-sensitive partition values).
-        BusinessObjectDataDdlRequest request =
-            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, null);
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, null);
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toUpperCase());
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toUpperCase());
         request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toUpperCase());
@@ -2826,40 +2827,41 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         request.setAsOfTime(null);
         resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
 
-        String expectedDdlStr =  businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-        AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, "ROW FORMAT " + AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
-        BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES,
-        AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
+        String expectedDdlStr = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, "ROW FORMAT " + AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
 
-        businessObjectDataServiceTestHelper
-           .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
         assertEquals(resultDdl.getAsOfTime(), request.getAsOfTime());
 
-        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
-            AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.UNSORTED_PARTITION_VALUES,
-            AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
-            AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
-            AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION+new Integer(99));
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.UNSORTED_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
+                AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + new Integer(99));
 
         // Validate the results.
-        String expectedDllStrVersion2 = expectedDdlStr.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION+new Integer(99))));
+        String expectedDllStrVersion2 =
+            expectedDdlStr.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION + new Integer(99))));
 
         // NO AS of Time param set, the latest version is version 2
         request.setAsOfTime(null);
         BusinessObjectDataDdl resultDdl2 = businessObjectDataService.generateBusinessObjectDataDdl(request);
 
         assertEquals(resultDdl2.getAsOfTime(), request.getAsOfTime());
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl2);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl2);
         // Version 1 should be returned
         request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime));
         BusinessObjectDataDdl resultDdl3 = businessObjectDataService.generateBusinessObjectDataDdl(request);
 
         assertEquals(resultDdl3.getAsOfTime(), request.getAsOfTime());
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl3);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl3);
     }
 
     @Test
@@ -2873,13 +2875,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
 
         try
         {
-            BusinessObjectDataDdlRequest ddlRequest = new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
-                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-                INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, NO_INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
-                AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_AS_OF_TIME);
+            BusinessObjectDataDdlRequest ddlRequest =
+                new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                    new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
+                        NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
+                    NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+                    INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, NO_INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
+                    NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
+                    AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_AS_OF_TIME);
 
             Calendar cal = Calendar.getInstance();
             java.util.Date dateTime = cal.getTime();
@@ -2895,5 +2898,102 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                     "subpartitionValues: \"%s\", businessObjectDataVersion: %d} is not available in \"%s\" storage(s).", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, PARTITION_VALUE, ",,,", null, STORAGE_NAME), e.getMessage());
         }
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlWithAsOfTimeWithMultipleStatusHistoryEntries()
+    {
+        // Prepare test data.
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.UNSORTED_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
+                AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl request with all parameter values in upper case (except for case-sensitive partition values).
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, null);
+        request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toUpperCase());
+        request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toUpperCase());
+        request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toUpperCase());
+        request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toUpperCase());
+        request.setStorageName(request.getStorageName().toUpperCase());
+        request.setCustomDdlName(null);
+        request.setBusinessObjectDataVersion(null);
+
+        BusinessObjectDataDdl resultDdl = null;
+
+        String expectedDdlStr = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, "ROW FORMAT " + AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
+
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.UNSORTED_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
+                AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + new Integer(99));
+
+        Calendar cal = Calendar.getInstance();
+        java.util.Date dateTime = cal.getTime();
+        request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime));
+        for (String partitionValue : UNSORTED_PARTITION_VALUES)
+        {
+            BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+            businessObjectDataKey.setNamespace(AbstractServiceTest.NAMESPACE);
+            businessObjectDataKey.setBusinessObjectFormatFileType(FileTypeEntity.TXT_FILE_TYPE);
+            businessObjectDataKey.setBusinessObjectDefinitionName(AbstractServiceTest.BDEF_NAME);
+            businessObjectDataKey.setBusinessObjectFormatUsage(AbstractServiceTest.FORMAT_USAGE_CODE);
+            businessObjectDataKey.setPartitionValue(partitionValue);
+            businessObjectDataKey.setSubPartitionValues(AbstractServiceTest.SUBPARTITION_VALUES);
+            businessObjectDataKey.setBusinessObjectDataVersion(AbstractServiceTest.DATA_VERSION + new Integer(99));
+
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
+
+            businessObjectDataEntity =
+                businessObjectDataDaoTestHelper.updateBusinessObjectDataEntityStatus(businessObjectDataEntity, BusinessObjectDataStatusEntity.INVALID);
+        }
+        // create dateTime2, which is before version 3 is created and version 2 last status history status is INVALID
+        java.util.Date dateTime2 = Calendar.getInstance().getTime();
+
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
+                AbstractServiceTest.PARTITION_KEY_GROUP, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                AbstractServiceTest.UNSORTED_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
+                AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + new Integer(199));
+
+        String expectedDllStrVersion2 =
+            expectedDdlStr.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION + new Integer(99))));
+
+        BusinessObjectDataDdl resultDdl2 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        // Validate the results.
+        assertEquals(resultDdl2.getAsOfTime(), request.getAsOfTime());
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl2);
+
+        request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime2));
+        resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        // Validate the results.
+        assertEquals(resultDdl.getAsOfTime(), request.getAsOfTime());
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdlStr, resultDdl);
+
+        // Request data version 2 specifically
+        request.setBusinessObjectDataVersion(AbstractServiceTest.DATA_VERSION + new Integer(99));
+        request.setAsOfTime(HerdDateUtils.getXMLGregorianCalendarValue(dateTime2));
+        BusinessObjectDataDdl resultDdl3 = businessObjectDataService.generateBusinessObjectDataDdl(request);
+        // Validate the results.
+        assertEquals(resultDdl3.getAsOfTime(), request.getAsOfTime());
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl3);
     }
 }
