@@ -19,7 +19,7 @@ import argparse, traceback
 # Local imports
 try:
     import logger, otags
-except ImportError:
+except ModuleNotFoundError:
     from herdcl import logger, otags
 
 LOGGER = logger.get_logger(__name__)
