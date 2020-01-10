@@ -29,7 +29,7 @@ from herdsdk import rest
 try:
     import otags
     from constants import *
-except ModuleNotFoundError:
+except ImportError:
     from herdcl import otags
     from herdcl.constants import *
 

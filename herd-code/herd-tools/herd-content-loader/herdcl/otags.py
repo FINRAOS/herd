@@ -28,7 +28,7 @@ try:
     import logger
     from constants import *
     from aws import AwsClient
-except ModuleNotFoundError:
+except ImportError:
     from herdcl import logger
     from herdcl.constants import *
     from herdcl.aws import AwsClient

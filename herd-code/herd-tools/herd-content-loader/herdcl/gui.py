@@ -22,7 +22,7 @@ from tkinter import font, ttk, scrolledtext, filedialog
 # Local imports
 try:
     import logger, otags
-except ModuleNotFoundError:
+except ImportError:
     from herdcl import logger, otags
 
 LOGGER = logger.get_logger(__name__)
