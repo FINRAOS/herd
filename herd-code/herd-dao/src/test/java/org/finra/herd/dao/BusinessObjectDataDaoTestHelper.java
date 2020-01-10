@@ -310,4 +310,32 @@ public class BusinessObjectDataDaoTestHelper
             new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK).format(System.currentTimeMillis()), AbstractDaoTest.SUBPARTITION_VALUES,
             AbstractDaoTest.INITIAL_DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
     }
+
+    /**
+     * Updates business object status code
+     *
+     * @param businessObjectDataEntity business object data entity
+     * @param businessObjectDataStatusCode business object status code
+     *
+     * @return updated business object data entity
+     */
+    public BusinessObjectDataEntity updateBusinessObjectDataEntityStatus(BusinessObjectDataEntity businessObjectDataEntity,
+        String businessObjectDataStatusCode)
+    {
+        // Create a business object data status entity if it does not exist.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatusCode);
+        if (businessObjectDataStatusEntity == null)
+        {
+            businessObjectDataStatusEntity = businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(businessObjectDataStatusCode);
+        }
+
+        BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity = new BusinessObjectDataStatusHistoryEntity();
+        businessObjectDataStatusHistoryEntity.setBusinessObjectData(businessObjectDataEntity);
+        businessObjectDataStatusHistoryEntity.setStatus(businessObjectDataStatusEntity);
+
+        businessObjectDataEntity.getHistoricalStatuses().add(businessObjectDataStatusHistoryEntity);
+        businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+        return businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+    }
 }
