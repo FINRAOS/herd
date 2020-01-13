@@ -638,12 +638,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 String.format("Result limit of %d exceeded. Modify filters to further limit results.", businessObjectDataSearchMaxResultCount));
         }
 
+        // Compute the number of records that we would need to skip due to page number and page size specified in the request.
+        // Please note that page numbers are one-based.
+        Integer numberOfRecordsToSkip = (pageNum - 1) * pageSize;
+
         // Get the search results.
         // We only apply restriction on business object data status here. For performance reasons,
         // selection of actual latest valid versions does not take place on the database end.
         List<BusinessObjectData> businessObjectDataList;
-        // If total record count is zero, we return an empty result list.
-        if (totalRecordCount == 0)
+        // If total record count is not greater than the number of records that we would have to skip
+        // due to page number and page size specified in the request, then return an empty result list.
+        if (totalRecordCount <= numberOfRecordsToSkip)
         {
             businessObjectDataList = new ArrayList<>();
         }
@@ -703,7 +708,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
             // Get the correct subset of search results to be returned in the response.
             businessObjectDataList = new ArrayList<>(latestVersions.values());
-            businessObjectDataList = businessObjectDataList.subList((pageNum - 1) * pageSize, businessObjectDataList.size());
+            businessObjectDataList = businessObjectDataList.subList(numberOfRecordsToSkip, businessObjectDataList.size());
         }
 
         // Get the page count.
@@ -1084,6 +1089,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
                 .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities, cachedStorageEntities,
                     cachedS3BucketNames));
+            businessObjectDataDdl.setAsOfTime(request.getAsOfTime());
 
             return (T) businessObjectDataDdl;
         }
@@ -1221,7 +1227,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // We want to select any existing storage units regardless of their status, so we pass "false" for selectOnlyAvailableStorageUnits parameter.
         List<StorageUnitAvailabilityDto> matchedNotAvailableStorageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
-                matchedAvailablePartitionFilters, null, null, storageEntities, null, null, false);
+                matchedAvailablePartitionFilters, null, null, storageEntities, null, null, false, null);
 
         // Exclude all storage units with business object data having "DELETED" status.
         matchedNotAvailableStorageUnitEntities =
@@ -1299,7 +1305,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> availableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), partitionFilters,
-                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageEntities, null, null, true);
+                request.getBusinessObjectDataVersion(), validBusinessObjectDataStatusEntity, storageEntities, null, null, true, null);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -1363,7 +1369,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         List<StorageUnitAvailabilityDto> notAvailableStorageUnitAvailabilityDtos = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectFormatEntity.getBusinessObjectDefinition(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
                 businessObjectFormatEntity.getFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), unmatchedPartitionFilters,
-                request.getBusinessObjectDataVersion(), null, storageEntities, null, null, false);
+                request.getBusinessObjectDataVersion(), null, storageEntities, null, null, false, null);
 
         // Populate the not-available statuses list.
         addNotAvailableBusinessObjectDataStatuses(notAvailableStatuses, notAvailableStorageUnitAvailabilityDtos);
