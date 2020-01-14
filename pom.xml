@@ -993,6 +993,10 @@
                <groupId>org.codehaus.mojo</groupId>
                <artifactId>flatten-maven-plugin</artifactId>
                <version>${flatten.maven.version}</version>
+               <configuration>
+                  <updatePomFile>true</updatePomFile>
+                  <flattenMode>resolveCiFriendliesOnly</flattenMode>
+               </configuration>
                <executions>
                   <execution>
                      <id>flatten</id>
