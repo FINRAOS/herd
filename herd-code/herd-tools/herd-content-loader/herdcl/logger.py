@@ -14,7 +14,9 @@
   limitations under the License.
 """
 # Standard library imports
-import logging, logging.handlers
+import logging
+from logging import StreamHandler
+from logging.handlers import RotatingFileHandler
 import sys
 
 
@@ -25,18 +27,13 @@ def get_logger(name):
     :param name: name of module calling method
     :return: the logger
     """
+    log_handler = RotatingFileHandler('debug.log', mode='a', maxBytes=250 * 1024, backupCount=1)
+    stream_handler = StreamHandler(sys.stdout)
 
-    log_format = logging.Formatter("%(asctime)s - %(module)s - Line %(lineno)d - %(levelname)s \n%(message)s",
-                                   "%Y-%m-%d %H:%M:%S")
-
-    log_handler = logging.handlers.RotatingFileHandler('debug.log', mode='a', maxBytes=50 * 1024, backupCount=1)
-    log_handler.setFormatter(log_format)
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(log_format)
+    logging.basicConfig(format="%(asctime)s - %(module)s - Line %(lineno)d - %(levelname)s \n%(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S",
+                        handlers=[log_handler, stream_handler])
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    logger.addHandler(log_handler)
-    logger.addHandler(stream_handler)
     return logger
