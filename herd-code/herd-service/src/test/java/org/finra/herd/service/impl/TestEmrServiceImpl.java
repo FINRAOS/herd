@@ -76,7 +76,7 @@ public class TestEmrServiceImpl extends EmrServiceImpl
     public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, String accountId,
         Boolean retrieveInstanceFleets) throws Exception
     {
-        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, null, retrieveInstanceFleets);
+        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, accountId, retrieveInstanceFleets);
     }
 
     /**
@@ -88,6 +88,6 @@ public class TestEmrServiceImpl extends EmrServiceImpl
     public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId) throws Exception
     {
-        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId, null);
+        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId, accountId);
     }
 }

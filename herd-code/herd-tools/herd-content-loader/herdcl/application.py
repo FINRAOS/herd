@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import argparse, base64, json
+import argparse, traceback
 
 # Local imports
 try:
@@ -24,41 +24,68 @@ except ImportError:
 
 LOGGER = logger.get_logger(__name__)
 
+
 ################################################################################
 class Application:
     """
      The application class. Main class
     """
+
     def __init__(self):
-        self.gui_enabled = False
         self.controller = otags.Controller()
-        self.path, self.config = self.controller.load_config()
-        self.env = self.config.get('console', 'env')
-        self.action = self.config.get('console', 'action')
+        self.controller.load_config()
 
     ############################################################################
     def run(self):
         """
         Runs program by loading credentials and making call to controller
         """
-        creds = {
-            'url': self.config.get('url', self.env),
-            'userName': self.config.get('credentials', 'userName'),
-            'userPwd': base64.b64decode(self.config.get('credentials', 'userPwd')).decode('utf-8')
+        config = {
+            'gui_enabled': False
         }
-        self.controller.setup_config(creds)
 
-        LOGGER.info("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
-        resp = self.controller.run_action(str.lower(self.action))
-        LOGGER.info(json.dumps(resp, indent=4))
+        try:
+            self.controller.setup_run(config)
+            method = self.controller.get_action()
+            LOGGER.info('Connection Check')
+            self.controller.get_current_user()
+            LOGGER.info('Success')
+            run_summary = method()
 
-        LOGGER.info("\n-- RUN COMPLETED ---")
+            LOGGER.info('\n\n--- RUN SUMMARY ---')
+            LOGGER.info('Processed {} rows'.format(run_summary['total_rows']))
+            LOGGER.info('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            if len(run_summary['changes']) > 0:
+                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+                LOGGER.info('\n--- RUN CHANGES ---')
+                for e in changes:
+                    LOGGER.info('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+            if len(run_summary['warnings']) > 0:
+                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
+                LOGGER.info('\n--- RUN WARNINGS ---')
+                for e in warnings:
+                    LOGGER.warning('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+            if run_summary['fail_rows'] == 0:
+                LOGGER.info('\n--- RUN COMPLETED ---')
+            else:
+                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
+                LOGGER.error('\n--- RUN FAILURES ---')
+                LOGGER.error('Number of rows failed: {}'.format(run_summary['fail_rows']))
+                LOGGER.error('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])))
+                for e in errors:
+                    LOGGER.error('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+                LOGGER.error('\n--- RUN COMPLETED WITH FAILURES ---')
+        except Exception:
+            LOGGER.error(traceback.print_exc())
+            LOGGER.error('\n--- RUN COMPLETED WITH FAILURES ---')
+
 
 ############################################################################
 def main():
     """
      The main method. Checks if argument has been passed to determine console mode or gui mode
     """
+    LOGGER.info('Loading Application')
     main_app = Application()
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--console", help="Command Line Mode", action="store_true")
@@ -67,11 +94,11 @@ def main():
         LOGGER.info('Command Line Mode')
         main_app.run()
     else:
-        main_app.gui_enabled = True
+        main_app.controller.gui_enabled = True
         import gui
         app = gui.MainUI()
-        LOGGER.info('Starting App')
-        app.master.title('Herd Content Loader  v.20191112')
+        LOGGER.info('Opening GUI')
+        app.master.title('Herd Content Loader  v.20200101')
         app.mainloop()
 
 

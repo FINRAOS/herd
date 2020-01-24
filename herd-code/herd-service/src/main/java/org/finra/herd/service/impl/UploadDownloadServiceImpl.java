@@ -651,7 +651,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private Credentials getExternalDownloaderCredentials(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            getStorageDownloadSessionDuration(storageEntity),
+            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class),
             createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
     }
 
@@ -667,7 +667,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            getStorageDownloadSessionDuration(storageEntity), createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
+            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class),
+            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
     }
 
     /**
@@ -682,7 +683,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private Credentials getDownloaderCredentials(StorageEntity storageEntity, String sessionName, AwsPolicyBuilder awsPolicyBuilder)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            getStorageDownloadSessionDuration(storageEntity), awsPolicyBuilder.build());
+            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class), awsPolicyBuilder.build());
     }
 
     /**
@@ -710,20 +711,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     {
         return storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), storageEntity, true);
-    }
-
-    /**
-     * Gets the storage's download session duration in seconds. Defaults to the configured default value if not defined.
-     *
-     * @param storageEntity The storage entity
-     *
-     * @return Download session duration in seconds
-     */
-    private Integer getStorageDownloadSessionDuration(StorageEntity storageEntity)
-    {
-        return storageHelper
-            .getStorageAttributeIntegerValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_SESSION_DURATION_SECS),
-                storageEntity, configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class));
     }
 
     /**
