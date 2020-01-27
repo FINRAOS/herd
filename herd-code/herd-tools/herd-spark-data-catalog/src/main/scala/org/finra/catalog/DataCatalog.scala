@@ -19,9 +19,9 @@ import java.io.File
 import java.util
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import scala.util.matching.Regex
 import scala.xml._
 
 import com.amazonaws.ClientConfiguration
@@ -30,8 +30,6 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
@@ -39,7 +37,7 @@ import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
 
 import org.finra.herd.sdk.api._
-import org.finra.herd.sdk.invoker.{ApiException}
+import org.finra.herd.sdk.invoker.ApiException
 import org.finra.herd.sdk.model._
 
 /** Used to contain a partition's name and value pair
@@ -541,44 +539,25 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
    * @return list of S3 key prefixes
    */
-  def queryPathFromGenerateDdl(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
-                               partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
+  def queryPathFromGeneratePartitions(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
+                                      partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
 
-    val businessObjectDataDdl = herdApiWrapper.getHerdApi.getBusinessObjectDataGenerateDdl(namespace, objectName, usage, fileFormat,
+    val businessObjectDataPartitions = herdApiWrapper.getHerdApi().getBusinessObjectDataPartitions(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
 
-    val ddl = businessObjectDataDdl.getDdl
-    logger.debug(s"ddl: $ddl")
+    // get partitions information from generate partitions response
+    val generatedPartitions = businessObjectDataPartitions.getPartitions
 
-    // Parse the DDL, and grab the partition values and their S3 prefixes
-    var s3KeyPrefixes = new ArrayBuffer[String]()
-    if (partitionKey.equalsIgnoreCase("partition")) {
-      // not partitioned
-      val s3KeyPrefixPattern = new Regex("LOCATION '(s3.+?)';")
-      s3KeyPrefixPattern.findAllIn(ddl).matchData.
-        foreach(m => {
-          s3KeyPrefixes += m.group(1)
-        })
-    } else {
-      val s3KeyPrefixPattern = new Regex("PARTITION \\((.+?)\\) LOCATION '(s3.+?)';")
-      s3KeyPrefixPattern.findAllIn(ddl).matchData.
-        foreach(m => {
-          val partitionValues = m.group(1).replace("`", "").replace("'", "").replaceAll("\\s", "").split(",").toList
-          var partitionValueList = new ArrayBuffer[String]()
-          for (e <- partitionValues) {
-            partitionValueList += e.substring(e.indexOf("=") + 1)
-          }
-
-          // Only add the S3 key Prefixes when the partition values match
-          if (partitionValueList.mkString(",").startsWith(partitionValuesInOrder.mkString(","))) {
-            s3KeyPrefixes += m.group(2)
-          }
-        })
+    // Parse the response, grab the partition values and their S3 prefixes
+    val s3KeyPrefixes = new ListBuffer[String]()
+    for (partition <- generatedPartitions.asScala) {
+      logger.debug(s"partition location: ${partition.getPartitionLocation}")
+      s3KeyPrefixes.append(partition.getPartitionLocation)
     }
 
-    s3KeyPrefixes.toList
+    // return all s3 prefixes
+    s3KeyPrefixes.map("s3n://" + _).toList
   }
-
   /**
    * Get available namespaces
    *
@@ -787,44 +766,55 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
    * Returns the parse options
+   * todo: this is a quick fix, use unescape utils to elegantly handle this
    *
    * @param businessObjectFormat the business object format instance
    * @return Map of parse options
    */
   private def parseParseOptions(businessObjectFormat : org.finra.herd.sdk.model.BusinessObjectFormat, csvBug: Boolean): Map[String, String] = {
-    var nullValue = businessObjectFormat.getSchema.getNullValue
-    var delimiter = businessObjectFormat.getSchema.getDelimiter
-    var escapeCharacter = businessObjectFormat.getSchema.getEscapeCharacter
 
-    // ugly but gets the job done, having text that needs to recognise octal and unicode
-    if (nullValue.equalsIgnoreCase("\\\\")) nullValue = "\\"
-    if (delimiter.equalsIgnoreCase("\\\\")) delimiter = "\\"
-    if (escapeCharacter.equalsIgnoreCase("\\\\")) escapeCharacter = "\\"
+    val actualNullValue: Option[String] = Option(businessObjectFormat.getSchema.getNullValue)
+    val actualDelimiter: Option[String] = Option(businessObjectFormat.getSchema.getDelimiter)
+    val actualEscapeCharacter: Option[String] = Option(businessObjectFormat.getSchema.getEscapeCharacter)
 
-    if (delimiter.equalsIgnoreCase("\\")) {
-      delimiter = "\\"
-    } else if (delimiter.contains("\\")) {
-      delimiter = delimiter.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString
+    var nullValue = None: Option[String]
+    var delimiter = None: Option[String]
+    var escapeCharacter = None: Option[String]
+
+    actualNullValue match
+    {
+      case Some(x) => if (x equalsIgnoreCase "\\\\") nullValue = Option("\\") else nullValue = Option(x)
+      case None => nullValue = None
     }
 
-    if (escapeCharacter.equalsIgnoreCase("\\")) {
-      escapeCharacter = "\\"
-    } else if (escapeCharacter.contains("\\")) {
-      escapeCharacter = escapeCharacter.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString
+    actualDelimiter match
+    {
+      case Some(x) =>
+        if (x equalsIgnoreCase "\\\\") delimiter = Option("\\")
+        else if (x equalsIgnoreCase "\\") delimiter = Option("\\")
+        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").replace("\\", "").toInt.toChar.toString)
+        else delimiter = Option(x)
+      case None => delimiter = None
+    }
+
+    actualEscapeCharacter match
+    {
+      case Some(x) =>
+        if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
+        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString)
+        else escapeCharacter = Option(x)
+      case None => escapeCharacter = None
     }
 
     var parseOptions = scala.collection.mutable.Map(
-      "delimiter" -> delimiter,
+      "delimiter" -> delimiter.orNull,
       "mode" -> "PERMISSIVE",
-      "escape" -> escapeCharacter,
-      "nullValue" -> nullValue
+      "escape" -> escapeCharacter.orNull,
+      "nullValue" -> nullValue.orNull
     )
 
-    if (csvBug == false) {
-      parseOptions += (
-        "nullValue" -> nullValue,
-        "dateFormat" -> dateFormat
-        )
+    if (!csvBug) {
+      parseOptions += "dateFormat" -> dateFormat
     }
 
     parseOptions.toMap
@@ -931,7 +921,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       List(x -> partitionsMap(x.toLowerCase))
     }.map(_._2)
 
-    queryPathFromGenerateDdl(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesInOrder, schemaVersion, dataVersion)
+    queryPathFromGeneratePartitions(namespace, objectName, usage, fileFormat, allPartitionKeys(0), partitionValuesInOrder, schemaVersion, dataVersion)
   }
 
   /**
