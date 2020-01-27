@@ -14,7 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
-import traceback, json
+import traceback
 
 import tkinter as tk
 from tkinter import font, ttk, scrolledtext, filedialog
@@ -39,9 +39,9 @@ class MainUI(tk.Frame):
     fileName = ""
     env = None
     textPad = None
-    wb = None
     gui_enabled = True
     controller = otags.Controller()
+    controller.load_config()
 
     def __init__(self, master=None):
         """
@@ -59,11 +59,12 @@ class MainUI(tk.Frame):
         self.username = tk.StringVar()
         self.userpwd = tk.StringVar()
         self.delete = tk.BooleanVar()
+        self.sample_dir = tk.StringVar()
+        self.getfile = tk.StringVar()
         self.grid(sticky=ALL)
 
         self.env_name = self.controller.envs[0]
         self.action = self.controller.actions[0]
-        self.path, self.config = self.controller.load_config()
         self.create_widgets()
 
     ############################################################################
@@ -89,6 +90,12 @@ class MainUI(tk.Frame):
         userpwd_entry = tk.ttk.Entry(user_frame, width=22, show="*", textvariable=self.userpwd)
         userpwd_entry.grid(row=0, column=1, pady=5, padx=5, sticky=ALL)
 
+        sample_frame = tk.ttk.Labelframe(self, text='Samples Directory')
+        sample_frame.grid(row=0, column=2, sticky=ALL)
+        sample_entry = tk.ttk.Entry(sample_frame, width=42, textvariable=self.sample_dir)
+        sample_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
+        sample_entry.bind("<Button-1>", self.select_dir)
+
         ######## row 1
 
         env = tk.ttk.Labelframe(self, text='Environment')
@@ -105,18 +112,23 @@ class MainUI(tk.Frame):
         self.names.grid(row=0, pady=5, padx=5, sticky=ALL)
         names.grid(row=1, column=1, sticky=ALL)
 
+        files = tk.ttk.Labelframe(self, text='Excel File')
+        get_file_entry = tk.ttk.Entry(files, width=42, textvariable=self.getfile)
+        get_file_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
+        files.grid(row=1, column=2, sticky=ALL)
+        get_file_entry.bind("<Button-1>", self.select_file)
+
         runs = tk.ttk.Labelframe(self, text='Go')
         lb = tk.ttk.Button(runs, text="Run", command=self.run)
         lb.grid(row=0, pady=5, padx=5, sticky=ALL)
-        runs.grid(row=1, column=3)  # , sticky=S)
+        runs.grid(row=1, column=3)
 
         ######## row 2
 
-        self.textPad = tk.scrolledtext.ScrolledText(self,
-                                                    inactiveselectbackground="grey")
+        self.textPad = tk.scrolledtext.ScrolledText(self, inactiveselectbackground="grey")
         self.textPad.grid(row=2, column=0, columnspan=4, sticky=ALL)
-        self.textPad.tag_configure("search", background="green")
-        self.textPad.tag_configure("error", foreground="red")
+        self.textPad.tag_configure("black", background="black", foreground="white")
+        self.textPad.tag_configure("red", foreground="red")
         self.textPad.bind_class("Text", "<Control-a>", lambda event: event.widget.tag_add("sel", "1.0", "end"))
 
     ############################################################################
@@ -144,12 +156,14 @@ class MainUI(tk.Frame):
         else:
             output = str(output)
 
-        if "ERROR" in output:
-            self.textPad.insert(tk.END, output, "error")
+        if "SUMMARY" in output:
+            self.textPad.insert(tk.END, output, "black")
+        elif "FAILURE" in output:
+            self.textPad.insert(tk.END, output, "red")
         else:
             self.textPad.insert(tk.END, output)
         self.textPad.see(tk.END)
-        self.textPad.update()
+        self.after(250, self.textPad.update())
 
     ############################################################################
     def select_env(self, *args):
@@ -166,34 +180,101 @@ class MainUI(tk.Frame):
         self.action = str(self.names.get())
 
     ############################################################################
+    def select_file(self, *args):
+        """
+        Gets excel file when user clicks on Excel File form
+        """
+        self.fileName = tk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ('all files', '.*')])
+        if not self.fileName:
+            return
+        self.getfile.set(str(self.fileName))
+
+    ############################################################################
+    def select_dir(self, *args):
+        """
+        Gets sample file directory when user clicks on Samples Directory form
+        """
+        directory = tk.filedialog.askdirectory(initialdir=self.sample_dir.get())
+        if not directory:
+            return
+        self.sample_dir.set(directory)
+
+    ############################################################################
+    def display(self, resp, log=None):
+        """
+        Displays message to both logger and GUI textPad
+        """
+        if log:
+            log(resp)
+        else:
+            LOGGER.info(resp)
+        self.line(resp)
+
+    ############################################################################
     def run(self):
         """
         Runs program when user clicks Run button
         """
         self.textPad.delete('1.0', tk.END)
 
-        if not self.username.get():
+        if not (self.username.get() and self.userpwd.get()):
             self.line("Enter credentials")
             return
 
-        creds = {
-            'url': self.config.get('url', self.env_name),
+        if self.action in ['Objects', 'Columns', 'Lineage', 'Tags']:
+            if not self.getfile.get():
+                self.line("Please select a file first.")
+                return
+        elif self.action == 'Samples':
+            if not self.getfile.get():
+                self.line("Please select a file first.")
+                return
+            if not self.sample_dir.get():
+                self.line("Please select a directory.")
+                return
+
+        config = {
+            'gui_enabled': True,
+            'env': self.env_name,
+            'action': self.action,
+            'excel_file': self.getfile.get(),
+            'sample_dir': self.sample_dir.get(),
             'userName': self.username.get(),
             'userPwd': self.userpwd.get()
         }
-        self.controller.setup_config(creds)
 
         try:
-            self.display("Running {}".format(self.controller.acts[str.lower(self.action)].__name__))
-            resp = self.controller.run_action(str.lower(self.action))
-            self.display(json.dumps(resp, indent=4))
+            self.controller.setup_run(config)
+            method = self.controller.get_action()
+            self.display('Connection Check')
+            self.controller.get_current_user()
+            self.display('Success')
+            self.display('Starting Run')
+            run_summary = method()
+
+            self.display('\n\n--- RUN SUMMARY ---')
+            self.display('Processed {} rows'.format(run_summary['total_rows']))
+            self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
+            if len(run_summary['changes']) > 0:
+                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+                self.display('\n--- RUN CHANGES ---')
+                for e in changes:
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+            if len(run_summary['warnings']) > 0:
+                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
+                self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
+                for e in warnings:
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
+            if run_summary['fail_rows'] == 0:
+                self.display('\n--- RUN COMPLETED ---')
+            else:
+                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
+                self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
+                self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), log=LOGGER.error)
+                self.display('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])), log=LOGGER.error)
+                for e in errors:
+                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.error)
+                self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)
         except Exception:
-            LOGGER.error(traceback.format_exc())
-
-        # TODO Run Summary
-        self.display("\n-- RUN COMPLETED ---")
-
-    ############################################################################
-    def display(self, resp):
-        LOGGER.info(resp)
-        self.line(resp)
+            self.display(traceback.print_exc(), log=LOGGER.error)
+            self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)

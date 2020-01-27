@@ -223,6 +223,8 @@ public class StorageUnitServiceImpl implements StorageUnitService
         ConfigurationValue sessionDurationConfigurationValue;
         S3Actions[] s3Actions;
         KmsActions[] kmsActions;
+        Integer durationSeconds;
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName.trim());
 
         if (isUpload)
         {
@@ -231,21 +233,20 @@ public class StorageUnitServiceImpl implements StorageUnitService
             sessionDurationConfigurationValue = ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS;
             s3Actions = new S3Actions[] {S3Actions.PutObject};
             kmsActions = new KmsActions[] {KmsActions.GENERATE_DATA_KEY, KmsActions.DECRYPT};
+            durationSeconds = storageHelper
+                .getStorageAttributeIntegerValueByName(configurationHelper.getProperty(sessionDurationConfigurationValue), storageEntity,
+                    configurationHelper.getProperty(defaultSessionDurationConfigurationValue, Integer.class));
         }
         else
         {
             roleArnConfigurationValue = ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN;
             defaultSessionDurationConfigurationValue = ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS;
-            sessionDurationConfigurationValue = ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_SESSION_DURATION_SECS;
+            durationSeconds = configurationHelper.getProperty(defaultSessionDurationConfigurationValue, Integer.class);
             s3Actions = new S3Actions[] {S3Actions.GetObject};
             kmsActions = new KmsActions[] {KmsActions.DECRYPT};
         }
 
-        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName.trim());
         String roleArn = storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(roleArnConfigurationValue), storageEntity, true);
-        Integer durationSeconds = storageHelper
-            .getStorageAttributeIntegerValueByName(configurationHelper.getProperty(sessionDurationConfigurationValue), storageEntity,
-                configurationHelper.getProperty(defaultSessionDurationConfigurationValue, Integer.class));
         String bucketName = storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
 
