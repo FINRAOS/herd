@@ -130,8 +130,8 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             }
             catch (Exception ex)
             {
-                LOGGER.error("Got exception" + ex.getClass().getCanonicalName());
-                LOGGER.error("Got exception" + ex.getStackTrace());
+                LOGGER.error("Got exception" + ex.getClass().getName());
+                LOGGER.error("Got exception1",  ex);
                 applicationUserNoRoles = null;
             }
 
