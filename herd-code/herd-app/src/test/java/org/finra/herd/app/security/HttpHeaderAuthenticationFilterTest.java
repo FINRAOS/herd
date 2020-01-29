@@ -16,18 +16,26 @@
 package org.finra.herd.app.security;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.hibernate.exception.JDBCConnectionException;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockFilterConfig;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.app.AbstractAppTest;
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
@@ -674,6 +682,45 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
             restorePropertySourceInEnvironment();
         }
     }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterWithDatabaseConnectionError() throws Exception
+    {
+        setupTestFunctions("testRole");
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
+        boolean getIllegalStateException = false;
+        ApplicationUserBuilder applicationUserBuilder =
+            (ApplicationUserBuilder) ReflectionTestUtils.getField(httpHeaderAuthenticationFilter, "applicationUserBuilder");
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+
+            ApplicationUserBuilder mockApplicationUserBuilder = Mockito.mock(ApplicationUserBuilder.class);
+
+            Mockito.when(mockApplicationUserBuilder.buildNoRoles(any(HttpServletRequest.class))).thenThrow(JDBCConnectionException.class);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            ReflectionTestUtils.setField(httpHeaderAuthenticationFilter, "applicationUserBuilder", mockApplicationUserBuilder);
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            fail("Should throw exception before");
+        }
+        catch (IllegalStateException ex)
+        {
+            getIllegalStateException = true;
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+        // reset application user builder
+        ReflectionTestUtils.setField(httpHeaderAuthenticationFilter, "applicationUserBuilder", applicationUserBuilder);
+        Assert.assertTrue(getIllegalStateException);
+    }
+
 
     private void setupTestFunctions(String roleId)
     {

@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.hibernate.exception.JDBCConnectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,12 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             try
             {
                 applicationUserNoRoles = applicationUserBuilder.buildNoRoles(servletRequest);
+            }
+            catch (JDBCConnectionException jdbcConnectionException)
+            {
+                // database connection is not available
+                invalidateUser(servletRequest, false);
+                throw new IllegalStateException("No Database Connection Available", jdbcConnectionException);
             }
             catch (Exception ex)
             {
