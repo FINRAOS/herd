@@ -93,7 +93,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     val url = parameters.get("url")
       .orElse(sparkSession.conf.getOption("spark.herd.url"))
       .getOrElse(sys.error("Must specify either `url` option or `spark.herd.url` in config"))
-
+    val storagePathPrefix = parameters.get("storagePathPrefix")
+      .orElse(sparkSession.conf.getOption("spark.herd.default.storagePathPrefix"))
+      .getOrElse("s3a")
     val user = parameters.get("username")
       .orElse(sparkSession.conf.getOption("spark.herd.username"))
     val pwd = parameters.get("password")
@@ -334,7 +336,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       formatUsage,
       formatFileType,
       fmt.getPartitionKey,
-      partitionSchema.getOrElse(new StructType)
+      partitionSchema.getOrElse(new StructType),
+      params.storagePathPrefix
     )
 
     val useHerdOrcFormat = sparkSession.version < "2.3.0"
