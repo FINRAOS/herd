@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.hibernate.exception.JDBCConnectionException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -699,7 +699,7 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
 
             ApplicationUserBuilder mockApplicationUserBuilder = Mockito.mock(ApplicationUserBuilder.class);
 
-            Mockito.when(mockApplicationUserBuilder.buildNoRoles(any(HttpServletRequest.class))).thenThrow(JDBCConnectionException.class);
+            Mockito.when(mockApplicationUserBuilder.buildNoRoles(any(HttpServletRequest.class))).thenThrow(PersistenceException.class);
             // Invalidate user session if exists.
             invalidateApplicationUser(request);
 

@@ -18,6 +18,7 @@ package org.finra.herd.app.security;
 import java.io.IOException;
 import java.util.Date;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -27,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.hibernate.exception.JDBCConnectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,16 +122,15 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             {
                 applicationUserNoRoles = applicationUserBuilder.buildNoRoles(servletRequest);
             }
-            catch (JDBCConnectionException jdbcConnectionException)
+            catch (PersistenceException persistenceException)
             {
                 // database connection is not available
                 invalidateUser(servletRequest, false);
-                throw new IllegalStateException("No Database Connection Available", jdbcConnectionException);
+                throw new IllegalStateException("No database connection available.", persistenceException);
             }
             catch (Exception ex)
             {
-                LOGGER.error("Got exception" + ex.getClass().getName());
-                LOGGER.error("Got exception1",  ex);
+                LOGGER.error("Ignore the exception",  ex);
                 applicationUserNoRoles = null;
             }
 
