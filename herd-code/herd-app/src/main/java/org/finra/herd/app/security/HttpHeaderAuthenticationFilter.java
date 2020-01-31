@@ -26,6 +26,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.bind.JAXBException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
@@ -44,8 +45,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.GenericFilterBean;
 
+import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 
 /**
  * A Spring pre-authentication filter that works with Http headers.
@@ -56,6 +60,12 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
 
     @Autowired
     private SecurityHelper securityHelper;
+    
+    @Autowired
+    private HerdErrorInformationExceptionHandler herdErrorInformationExceptionHandler;
+
+    @Autowired
+    private XmlHelper xmlHelper;
 
     /**
      * An authentication trust resolver.
@@ -117,7 +127,7 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
         if (securityHelper.isSecurityEnabled(servletRequest))
         {
             // Build an application user from the current HTTP headers.
-            ApplicationUser applicationUserNoRoles;
+            ApplicationUser applicationUserNoRoles = null;
             try
             {
                 applicationUserNoRoles = applicationUserBuilder.buildNoRoles(servletRequest);
@@ -125,12 +135,20 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             catch (PersistenceException persistenceException)
             {
                 // database connection is not available
-                invalidateUser(servletRequest, false);
-                throw new IllegalStateException("No database connection available.", persistenceException);
+                ErrorInformation errorInformation = herdErrorInformationExceptionHandler.handlePersistenceException(persistenceException, servletResponse);
+                try
+                {
+                    servletResponse.getWriter().write(xmlHelper.objectToXml(errorInformation));
+                }
+                catch (JAXBException jaxbException)
+                {
+                    // no need to do anything here
+                }
+                
+                return;
             }
             catch (Exception ex)
             {
-                LOGGER.error("Ignore the exception",  ex);
                 applicationUserNoRoles = null;
             }
 
