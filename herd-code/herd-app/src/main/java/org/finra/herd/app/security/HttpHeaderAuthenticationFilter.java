@@ -15,6 +15,8 @@
 */
 package org.finra.herd.app.security;
 
+import static org.finra.herd.app.security.HttpHeaderApplicationUserBuilder.HTTP_HEADER_USER_ID;
+
 import java.io.IOException;
 import java.util.Date;
 
@@ -136,7 +138,8 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             {
                 // database connection is not available
                 ErrorInformation errorInformation = herdErrorInformationExceptionHandler.handlePersistenceException(persistenceException, servletResponse);
-                String  errorInformationString = "<errorInformation></errorInformation>";
+                String userId = servletRequest.getHeader(HTTP_HEADER_USER_ID);
+                String errorInformationString = "<errorInformation></errorInformation>";
                 try
                 {
                     errorInformationString = xmlHelper.objectToXml(errorInformation);
@@ -147,7 +150,7 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
                     // no need to do anything here
                 }
 
-                LOGGER.error(errorInformationString, persistenceException);
+                LOGGER.error(String.format("userId=%s %s", userId, errorInformationString), persistenceException);
                 return;
             }
             catch (Exception ex)
