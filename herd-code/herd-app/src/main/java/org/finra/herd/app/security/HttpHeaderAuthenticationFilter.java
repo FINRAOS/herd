@@ -136,15 +136,18 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             {
                 // database connection is not available
                 ErrorInformation errorInformation = herdErrorInformationExceptionHandler.handlePersistenceException(persistenceException, servletResponse);
+                String  errorInformationString = "<errorInformation></errorInformation>";
                 try
                 {
-                    servletResponse.getWriter().write(xmlHelper.objectToXml(errorInformation));
+                    errorInformationString = xmlHelper.objectToXml(errorInformation);
+                    servletResponse.getWriter().write(errorInformationString);
                 }
                 catch (JAXBException jaxbException)
                 {
                     // no need to do anything here
                 }
-                
+
+                LOGGER.error(errorInformationString, persistenceException);
                 return;
             }
             catch (Exception ex)
