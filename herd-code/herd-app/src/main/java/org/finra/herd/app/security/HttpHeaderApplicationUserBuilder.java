@@ -152,7 +152,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         }
         catch (PersistenceException persistenceException)
         {
-            LOGGER.error(String.format("Error building application user %s", applicationUser.getUserId()), persistenceException);
+            LOGGER.error("Error building application user userId={}", applicationUser.getUserId(), persistenceException);
             throw persistenceException;
         }
         LOGGER.debug("Application user created successfully: " + applicationUser);
