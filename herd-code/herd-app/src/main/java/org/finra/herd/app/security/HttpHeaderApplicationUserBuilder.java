@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -135,18 +136,27 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         // Build the user in pieces.
         ApplicationUser applicationUser = createNewApplicationUser();
 
-        buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
-        buildFirstName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_FIRST_NAME));
-        buildLastName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_LAST_NAME));
-        buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
-        buildSessionId(applicationUser, headerMap, HTTP_HEADER_SESSION_ID);
-        buildSessionInitTime(applicationUser, headerMap, headerNames.get(HTTP_HEADER_SESSION_INIT_TIME));
-        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
-
-        if (includeRoles)
+        try
         {
-            buildRoles(applicationUser, headerMap, headerNames.get(HTTP_HEADER_ROLES));
+            buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
+            buildFirstName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_FIRST_NAME));
+            buildLastName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_LAST_NAME));
+            buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
+            buildSessionId(applicationUser, headerMap, HTTP_HEADER_SESSION_ID);
+            buildSessionInitTime(applicationUser, headerMap, headerNames.get(HTTP_HEADER_SESSION_INIT_TIME));
+            userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+
+            if (includeRoles)
+            {
+                buildRoles(applicationUser, headerMap, headerNames.get(HTTP_HEADER_ROLES));
+            }
         }
+        catch (PersistenceException persistenceException)
+        {
+            LOGGER.error(String.format("Error building application user %s", applicationUser.getUserId()), persistenceException);
+            throw persistenceException;
+        }
+
 
         LOGGER.debug("Application user created successfully: " + applicationUser);
 
