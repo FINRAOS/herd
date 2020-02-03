@@ -135,7 +135,6 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         Map<String, String> headerNames = getHeaderNames();
         // Build the user in pieces.
         ApplicationUser applicationUser = createNewApplicationUser();
-
         try
         {
             buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
@@ -156,8 +155,6 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
             LOGGER.error(String.format("Error building application user %s", applicationUser.getUserId()), persistenceException);
             throw persistenceException;
         }
-
-
         LOGGER.debug("Application user created successfully: " + applicationUser);
 
         return applicationUser;
