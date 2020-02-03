@@ -421,6 +421,26 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     result should contain theSameElementsAs(EXPECTED_ROWS)
   }
 
+  test("load from mounted storage platform") {
+    val parts = Map(
+      ("2020-01-30", "2020-01-29") -> "businessObjectDataDdl.json"
+    )
+    val params = Map(
+      "url" -> "http://localhost",
+      "username" -> "testUsername",
+      "password" -> "testPassword",
+      "namespace" -> namespace,
+      "businessObjectName" -> businessObjectDefinitionName,
+      "businessObjectFormatFileType" -> "CSV, orc, PARQUET",
+      "storagePathPrefix" -> "mnt"
+    )
+    val df = getDataFrame(new BaseHerdApi("test-case-4", parts), params)
+
+    val result = df.collect()
+
+    result should contain theSameElementsAs(EXPECTED_ROWS)
+  }
+
   test("load ORC files") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
