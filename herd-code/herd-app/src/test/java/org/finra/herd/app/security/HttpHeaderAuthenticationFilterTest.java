@@ -15,21 +15,30 @@
 */
 package org.finra.herd.app.security;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.PersistenceException;
+import javax.servlet.http.HttpServletRequest;
+
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockFilterConfig;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.app.AbstractAppTest;
+import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SecurityFunctionEntity;
@@ -674,6 +683,44 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
             restorePropertySourceInEnvironment();
         }
     }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterWithDatabaseConnectionError() throws Exception
+    {
+        setupTestFunctions("testRole");
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
+        ApplicationUserBuilder applicationUserBuilder =
+            (ApplicationUserBuilder) ReflectionTestUtils.getField(httpHeaderAuthenticationFilter, "applicationUserBuilder");
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+
+            ApplicationUserBuilder mockApplicationUserBuilder = Mockito.mock(ApplicationUserBuilder.class);
+            Mockito.when(mockApplicationUserBuilder.buildNoRoles(any(HttpServletRequest.class))).thenThrow(PersistenceException.class);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            ReflectionTestUtils.setField(httpHeaderAuthenticationFilter, "applicationUserBuilder", mockApplicationUserBuilder);
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+            httpHeaderAuthenticationFilter.doFilter(request, mockHttpServletResponse, new MockFilterChain());
+            assertEquals(500, mockHttpServletResponse.getStatus());
+            ErrorInformation errorInformation = new ErrorInformation();
+            errorInformation.setStatusCode(500);
+            errorInformation.setStatusDescription("Internal Server Error");
+            errorInformation.setMessage("javax.persistence.PersistenceException");
+            errorInformation.setMessageDetails(new ArrayList<>());
+            assertEquals(xmlHelper.objectToXml(errorInformation), mockHttpServletResponse.getContentAsString());
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+        // reset application user builder
+        ReflectionTestUtils.setField(httpHeaderAuthenticationFilter, "applicationUserBuilder", applicationUserBuilder);
+    }
+
 
     private void setupTestFunctions(String roleId)
     {
