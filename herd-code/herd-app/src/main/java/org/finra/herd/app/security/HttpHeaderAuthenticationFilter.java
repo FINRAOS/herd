@@ -18,6 +18,7 @@ package org.finra.herd.app.security;
 import java.io.IOException;
 import java.util.Date;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -25,6 +26,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.bind.JAXBException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
@@ -43,8 +45,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.GenericFilterBean;
 
+import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 
 /**
  * A Spring pre-authentication filter that works with Http headers.
@@ -55,6 +60,12 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
 
     @Autowired
     private SecurityHelper securityHelper;
+    
+    @Autowired
+    private HerdErrorInformationExceptionHandler herdErrorInformationExceptionHandler;
+
+    @Autowired
+    private XmlHelper xmlHelper;
 
     /**
      * An authentication trust resolver.
@@ -116,10 +127,28 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
         if (securityHelper.isSecurityEnabled(servletRequest))
         {
             // Build an application user from the current HTTP headers.
-            ApplicationUser applicationUserNoRoles;
+            ApplicationUser applicationUserNoRoles = null;
             try
             {
                 applicationUserNoRoles = applicationUserBuilder.buildNoRoles(servletRequest);
+            }
+            catch (PersistenceException persistenceException)
+            {
+                // database connection is not available
+                ErrorInformation errorInformation = herdErrorInformationExceptionHandler.handlePersistenceException(persistenceException, servletResponse);
+                String  errorInformationString = "<errorInformation></errorInformation>";
+                try
+                {
+                    errorInformationString = xmlHelper.objectToXml(errorInformation);
+                    servletResponse.getWriter().write(errorInformationString);
+                }
+                catch (JAXBException jaxbException)
+                {
+                    // no need to do anything here
+                }
+
+                LOGGER.error(errorInformationString, persistenceException);
+                return;
             }
             catch (Exception ex)
             {
