@@ -103,11 +103,6 @@ public enum ConfigurationValue
     S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN("s3.attribute.name.download.role.arn", "download.role.arn"),
 
     /**
-     * The storage attribute name which specifies the download session duration in seconds.
-     */
-    S3_ATTRIBUTE_NAME_DOWNLOAD_SESSION_DURATION_SECS("s3.attribute.name.download.session.duration.secs", "download.session.duration.secs"),
-
-    /**
      * The storage attribute name which specifies the KMS key ID to use to encrypt/decrypt objects in the bucket.
      */
     S3_ATTRIBUTE_NAME_KMS_KEY_ID("s3.attribute.name.kms.key.id", "kms.key.id"),

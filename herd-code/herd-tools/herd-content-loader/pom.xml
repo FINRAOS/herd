@@ -22,13 +22,18 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-tools</artifactId>
-      <version>0.113.0-SNAPSHOT</version>
+      <version>${revision}</version>
    </parent>
 
    <name>herd content loader</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-content-loader</artifactId>
+
+   <properties>
+      <!-- NOTE: Overwrites parent herdpython.version -->
+      <!--<herdpython.version>0.111.2</herdpython.version>-->
+   </properties>
 
    <build>
       <plugins>
