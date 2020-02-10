@@ -31,8 +31,8 @@
    <artifactId>herd-content-loader</artifactId>
 
    <properties>
-      <!-- NOTE: Overwrites parent herdpython.version -->
-      <!--<herdpython.version>0.111.2</herdpython.version>-->
+      <!-- NOTE: Overwrites parent herd.python.version -->
+      <!--<herd.python.version>0.113.2</herd.python.version>-->
    </properties>
 
    <build>
@@ -74,7 +74,7 @@
             <configuration>
                <file>${project.build.directory}/resources/setup.py</file>
                <token>@@Version@@</token>
-               <value>${herdpython.version}</value>
+               <value>${herd.python.version}</value>
             </configuration>
          </plugin>
          <plugin>
