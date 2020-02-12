@@ -797,7 +797,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       case None => delimiter = None
     }
 
-    escapeCharacter = actualEscapeCharacter
+    actualEscapeCharacter match
+    {
+      case Some(x) =>
+        if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
+        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString)
+        else escapeCharacter = Option(x)
+      case None => escapeCharacter = None
+    }
 
     var parseOptions = scala.collection.mutable.Map(
       "delimiter" -> delimiter.orNull,
