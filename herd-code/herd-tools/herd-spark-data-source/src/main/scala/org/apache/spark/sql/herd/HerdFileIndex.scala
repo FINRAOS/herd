@@ -239,6 +239,9 @@ private object HerdFileIndexBase extends Logging {
           if (storagePathPrefix.equalsIgnoreCase("mnt")) {
             s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/mnt/")
           }
+          else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
+            s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+          }
           else {
             s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
           }
@@ -267,6 +270,9 @@ private object HerdFileIndexBase extends Logging {
               // Replace s3n with s3a since Hadoop has much better support on s3a
               if (storagePathPrefix.equalsIgnoreCase("mnt")) {
                 partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "/mnt/")
+              }
+              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
+                s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
               }
               else {
                 partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
