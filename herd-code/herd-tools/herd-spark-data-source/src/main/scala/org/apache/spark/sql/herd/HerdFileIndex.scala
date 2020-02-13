@@ -267,13 +267,15 @@ private object HerdFileIndexBase extends Logging {
           while (index < partitionValueTuples.length && !done) {
             var partitionValueTuple = partitionValueTuples(index)
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
-              // Replace s3n with s3a since Hadoop has much better support on s3a
+              //Replace s3n with databricks mount point mnt
               if (storagePathPrefix.equalsIgnoreCase("mnt")) {
                 partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "/mnt/")
               }
+              // Replace s3n with user specific mount point
               else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
                 s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
               }
+              // Replace s3n with s3a since Hadoop has much better support on s3a
               else {
                 partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
               }
