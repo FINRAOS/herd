@@ -1501,7 +1501,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def loadDataFrame(namespace: String,
                     objName: String,
                     usage: String = "PRC",
-                    fileFormat: String = "PARQUET"): DataFrame = {
+                    fileFormat: String = "PARQUET",
+                    storagePathPrefix: String = "s3a"): DataFrame = {
 
     spark.read.format("herd")
       .option("url", baseRestUrl)
@@ -1511,6 +1512,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("businessObjectName", objName)
       .option("businessObjectFormatUsage", usage)
       .option("businessObjectFormatFileType", fileFormat)
+      .option("storagePathPrefix", storagePathPrefix)
       .load()
 
   }
