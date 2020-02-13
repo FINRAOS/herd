@@ -267,7 +267,7 @@ private object HerdFileIndexBase extends Logging {
           while (index < partitionValueTuples.length && !done) {
             var partitionValueTuple = partitionValueTuples(index)
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
-              //Replace s3n with databricks mount point mnt
+              // Replace s3n with databricks mount point mnt
               if (storagePathPrefix.equalsIgnoreCase("mnt")) {
                 partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "/mnt/")
               }
