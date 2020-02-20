@@ -18,6 +18,7 @@ package org.finra.herd.service.config;
 import java.lang.reflect.ReflectPermission;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.PropertyPermission;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngineManager;
@@ -58,10 +59,10 @@ public class SecuredScriptingEngines extends ScriptingEngines
             {
                 return SecuredScriptingEngines.super.evaluate(script, language, bindings);
             }
-        }, Arrays
-            .asList(new RuntimePermission("accessDeclaredMembers"),
-                // Grants the permission to serialize/deserialize xml data type inside scripting engine
-                new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"),
-                new ReflectPermission("suppressAccessChecks")));
+        }, Arrays.asList(new RuntimePermission("accessDeclaredMembers"),
+            // Grants the permission to serialize/deserialize xml data type inside scripting engine
+            new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"),
+            new ReflectPermission("suppressAccessChecks"),
+            new PropertyPermission("socksProxyHost", "read")));
     }
 }

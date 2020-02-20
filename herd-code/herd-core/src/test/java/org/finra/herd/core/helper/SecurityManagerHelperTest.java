@@ -26,8 +26,6 @@ import java.util.PropertyPermission;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.finra.herd.core.helper.SecurityManagerHelper;
-
 /**
  * Test for {@link org.finra.herd.core.helper.SecurityManagerHelper}.
  * The tests in this class do not have meaningful assertions unless the security manager is enabled on the JVM with {@link AllPermission} for the execution of
@@ -128,12 +126,22 @@ public class SecurityManagerHelperTest
                 return null;
             }
         }, Arrays.<Permission> asList(new PropertyPermission("test", "read")));
+
+        testDoPrivileged(null, new PrivilegedAction<Void>()
+        {
+            @Override
+            public Void run()
+            {
+                System.getProperty("socksProxyHost");
+                return null;
+            }
+        }, Arrays.<Permission> asList(new PropertyPermission("socksProxyHost", "read")));
     }
 
     /**
      * Asserts what the thrown exception is when {@link SecurityManagerHelper#doPrivileged(PrivilegedAction)} is called. If expectedExceptionType is null, no
      * exceptions are expected to be thrown.
-     * 
+     *
      * @param expectedExceptionType the expected thrown exception, or null
      * @param privilegedAction the action to execute
      */
@@ -164,7 +172,7 @@ public class SecurityManagerHelperTest
     /**
      * Asserts what the thrown exception is when {@link SecurityManagerHelper#doPrivileged(PrivilegedAction, Collection)} is called. If expectedExceptionType
      * is null, no exceptions are expected to be thrown.
-     * 
+     *
      * @param expectedExceptionType the expected thrown exception, or null
      * @param privilegedAction the action to execute
      */
