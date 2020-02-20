@@ -102,6 +102,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      */
     @NamespacePermission(fields = "#businessObjectDataStorageFilesCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDataStorageFilesCreateResponse createBusinessObjectDataStorageFiles(
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
     {
@@ -134,7 +135,6 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      *
      * @return BusinessObjectDataStorageFilesDto
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected BusinessObjectDataStorageFilesDto createBusinessObjectDataStorageFilesDto(
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
     {
