@@ -1347,8 +1347,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                     usage: String,
                                     fileFormat: String,
                                     formatVersion: Integer = null,
-                                    partitionKey: String = "partition",
-                                    partitionValue: String = "none",
+                                    partitionKey: String,
+                                    partitionValue: String,
                                     provider: String,
                                     storageUnit: String): (Integer, Integer, String) = {
 
@@ -1406,8 +1406,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def completeRegisterBusinessObjectPath(nameSpace: String,
                                          objectName: String,
                                          formatVersion: Integer,
-                                         partitionKey: String = "partition",
-                                         partitionValue: String = "none",
+                                         partitionKey: String,
+                                         partitionValue: String,
                                          dataVersion: Integer,
                                          status: ObjectStatus.Value = ObjectStatus.VALID,
                                          usage: String,
@@ -1433,8 +1433,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   private def getBusinessObjectPath(nameSpace: String,
                             objectName: String,
                             formatVersion: Integer = null,
-                            partitionKey: String = "partition",
-                            partitionValue: String = "none",
+                            partitionKey: String,
+                            partitionValue: String,
                             dataVersion: Integer = null,
                             usage: String,
                             fileFormat: String): String = {
