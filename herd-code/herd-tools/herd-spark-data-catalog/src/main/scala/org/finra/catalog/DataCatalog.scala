@@ -246,7 +246,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param credComponent Component for credential lookup
    * @return the password
    */
-  private def getPassword(spark: SparkSession,
+  def getPassword(spark: SparkSession,
                   credName: String,
                   credAGS: String,
                   credSDLC: String,
@@ -1513,7 +1513,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     objName: String,
                     usage: String,
                     fileFormat: String,
-                    storagePathPrefix: String): DataFrame = {
+                    storagePathPrefix: String = "s3a"): DataFrame = {
 
     spark.read.format("herd")
       .option("url", baseRestUrl)
