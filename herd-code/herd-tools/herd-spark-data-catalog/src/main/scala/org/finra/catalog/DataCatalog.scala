@@ -800,8 +800,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     actualEscapeCharacter match
     {
       case Some(x) =>
-        if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
-        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", "").toInt.toChar.toString)
+        if (x equalsIgnoreCase "\\\\") escapeCharacter = Option("\\")
+        else if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
+        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", ""))
         else escapeCharacter = Option(x)
       case None => escapeCharacter = None
     }
@@ -1501,7 +1502,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def loadDataFrame(namespace: String,
                     objName: String,
                     usage: String = "PRC",
-                    fileFormat: String = "PARQUET"): DataFrame = {
+                    fileFormat: String = "PARQUET",
+                    storagePathPrefix: String = "s3a"): DataFrame = {
 
     spark.read.format("herd")
       .option("url", baseRestUrl)
@@ -1511,6 +1513,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("businessObjectName", objName)
       .option("businessObjectFormatUsage", usage)
       .option("businessObjectFormatFileType", fileFormat)
+      .option("storagePathPrefix", storagePathPrefix)
       .load()
 
   }
