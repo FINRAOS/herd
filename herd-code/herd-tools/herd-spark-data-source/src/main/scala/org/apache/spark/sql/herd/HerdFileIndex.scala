@@ -55,7 +55,8 @@ private[sql] abstract class HerdFileIndexBase(
                                              formatUsage: String,
                                              formatFileType: String,
                                              partitionKey: String,
-                                             herdPartitionSchema: StructType) extends FileIndex with Logging {
+                                             herdPartitionSchema: StructType,
+                                             storagePathPrefix: String) extends FileIndex with Logging {
 
   import HerdFileIndexBase._
 
@@ -111,7 +112,7 @@ private[sql] abstract class HerdFileIndexBase(
   protected def bulkListLeafFiles(paths: Seq[Path], formatFileType: String): Seq[(Path, Array[FileStatus])] = {
     val localApiFactory = api
     val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
-      listS3KeyPrefixes(localApiFactory(), paths.map(_.toString))
+      listS3KeyPrefixes(localApiFactory(), paths.map(_.toString), storagePathPrefix)
         .map {
           case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(hadoopConf, s3KeyPrefixes, formatFileType).toArray)
         }
@@ -126,7 +127,7 @@ private[sql] abstract class HerdFileIndexBase(
 
       sparkSession.sparkContext
         .parallelize(paths.map(_.toString), numParallelism)
-        .mapPartitions { pathStrings => listS3KeyPrefixes(localApiFactory(), pathStrings.toList).iterator }
+        .mapPartitions { pathStrings => listS3KeyPrefixes(localApiFactory(), pathStrings.toList, storagePathPrefix).iterator }
         .map {
           case (path, s3KeyPrefixes) => (path, getAllFilesUnderS3KeyPrefixes(serializableConfiguration.value, s3KeyPrefixes, formatFileType).toArray)
         }
@@ -182,7 +183,7 @@ private object HerdFileIndexBase extends Logging {
    * @param paths List of herd paths
    * @return list of s3 key prefixes
    */
-  def listS3KeyPrefixes(api: HerdApi, paths: Seq[String]): Seq[(String, Seq[String])] = {
+  def listS3KeyPrefixes(api: HerdApi, paths: Seq[String], storagePathPrefix: String): Seq[(String, Seq[String])] = {
     if (paths.isEmpty) {
       return Seq.empty
     }
@@ -201,7 +202,7 @@ private object HerdFileIndexBase extends Logging {
       partitionValues.distinct,
       parts("dataVersion").get.toInt
     )) match {
-      case Success(objectDataDdl) => getS3KeyPrefixes(objectDataDdl.getDdl(), paths)
+      case Success(objectDataDdl) => getS3KeyPrefixes(objectDataDdl.getDdl(), paths, storagePathPrefix)
       case Failure(error) =>
         log.error(s"Could not fetch object data DDL request for $partitionValues", error)
         Seq.empty
@@ -215,7 +216,7 @@ private object HerdFileIndexBase extends Logging {
    * @param paths           The list of herd paths
    * @return list of s3 key prefixes
    */
-  private def getS3KeyPrefixes(businessDataDdl: String, paths: Seq[String]): Seq[(String, Seq[String])] = {
+  private def getS3KeyPrefixes(businessDataDdl: String, paths: Seq[String], storagePathPrefix: String): Seq[(String, Seq[String])] = {
     val partitionKey = parsePartitionPath(paths(0))("partitionKey").get
     val partitionValueTuples = paths.map(path => {
       val parts = parsePartitionPath(path)
@@ -235,7 +236,15 @@ private object HerdFileIndexBase extends Logging {
       s3KeyPrefixPattern.findAllIn(businessDataDdl).matchData.
         foreach(m => {
           // Replace s3n with s3a since Hadoop has much better support on s3a
-          s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
+          if (storagePathPrefix.equalsIgnoreCase("mnt")) {
+            s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/mnt/")
+          }
+          else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
+            s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+          }
+          else {
+            s3KeyPrefixes += m.group(1).replaceAll("s3n://", "s3a://")
+          }
         })
 
       return List((paths(0), s3KeyPrefixes))
@@ -258,8 +267,18 @@ private object HerdFileIndexBase extends Logging {
           while (index < partitionValueTuples.length && !done) {
             var partitionValueTuple = partitionValueTuples(index)
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
+              // Replace s3n with databricks mount point mnt
+              if (storagePathPrefix.equalsIgnoreCase("mnt")) {
+                partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "/mnt/")
+              }
+              // Replace s3n with user specific mount point
+              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
+                s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+              }
               // Replace s3n with s3a since Hadoop has much better support on s3a
-              partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
+              else {
+                partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
+              }
               done = true
             }
             index += 1

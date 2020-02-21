@@ -31,7 +31,8 @@ private[sql] class HerdFileIndex(
                                   formatUsage: String,
                                   formatFileType: String,
                                   partitionKey: String,
-                                  herdPartitionSchema: StructType)
+                                  herdPartitionSchema: StructType,
+                                  storagePathPrefix: String)
   extends HerdFileIndexBase(
     sparkSession,
     api,
@@ -41,7 +42,8 @@ private[sql] class HerdFileIndex(
     formatUsage,
     formatFileType,
     partitionKey,
-    herdPartitionSchema) {
+    herdPartitionSchema,
+    storagePathPrefix) {
 
   override def listFiles(
                           filters: Seq[Expression],
