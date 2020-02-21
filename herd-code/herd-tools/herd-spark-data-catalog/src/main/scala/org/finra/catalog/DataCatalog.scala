@@ -1403,7 +1403,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param dataVersion    Data version
    * @param status         Status
    */
-  def completeRegisterBusinessObjectPath(nameSpace: String,
+  private def completeRegisterBusinessObjectPath(nameSpace: String,
                                          objectName: String,
                                          formatVersion: Integer,
                                          partitionKey: String = "partition",
@@ -1430,7 +1430,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param dataVersion    Data version.  Use null to get the latest data version
    * @return Path to the object
    */
-  def getBusinessObjectPath(nameSpace: String,
+  private def getBusinessObjectPath(nameSpace: String,
                             objectName: String,
                             formatVersion: Integer = null,
                             partitionKey: String = "partition",
@@ -1486,10 +1486,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValue Partition value
    * @return A new format version
    */
-  def registerNewFormat(nameSpace: String,
+  private def registerNewFormat(nameSpace: String,
                         objectName: String,
-                        partitionKey: String = "partition",
-                        partitionValue: String = "none",
+                        partitionKey: String,
+                        partitionValue: String,
                         usage: String,
                         fileFormat: String): Int = {
 
