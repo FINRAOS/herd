@@ -622,6 +622,13 @@ public class JobServiceImpl implements JobService
             {
                 populateActivitiXml(job, processInstance.getProcessDefinitionId());
             }
+
+            // Get the job definition key.
+            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processInstance.getProcessDefinitionKey());
+
+            // Set the namespace and job name on the job
+            job.setNamespace(jobDefinitionKey.getNamespace());
+            job.setJobName(jobDefinitionKey.getJobName());
         }
         else
         {
@@ -638,6 +645,14 @@ public class JobServiceImpl implements JobService
             {
                 populateActivitiXml(job, historicProcessInstance.getProcessDefinitionId());
             }
+
+            // Get the job definition key.
+            JobDefinitionAlternateKeyDto jobDefinitionKey =
+                jobDefinitionHelper.getJobDefinitionKey(activitiService.getProcessDefinitionById(historicProcessInstance.getProcessDefinitionId()).getKey());
+
+            // Set the namespace and job name on the job
+            job.setNamespace(jobDefinitionKey.getNamespace());
+            job.setJobName(jobDefinitionKey.getJobName());
         }
 
         if (historicProcessInstance != null)
