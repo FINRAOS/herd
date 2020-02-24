@@ -831,7 +831,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for current
    * @return Spark schema (structFields)
    */
-  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer): StructType = {
+  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null): StructType = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
     parsePartitions(businessObjectFormat)
   }
