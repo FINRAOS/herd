@@ -992,7 +992,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion version of schema, <0 for latest
    * @return
    */
-  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): DataFrame = {
+  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null): DataFrame = {
 
     // need the first partition (the partitionKey)
     val parts = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion)
