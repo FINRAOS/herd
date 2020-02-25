@@ -555,7 +555,6 @@ public class JobServiceImpl implements JobService
         /*
          * Check permissions against namespace of the job.
          * Cannot be done through the annotation because the namespace is not part of the request.
-         * TODO refactor this so it gets namespace from JobDefinitionEntity instead of parsing process definition key.
          */
         if (checkNamespacePermissions)
         {
@@ -576,6 +575,7 @@ public class JobServiceImpl implements JobService
 
         Job job = new Job();
         job.setId(jobIdLocal);
+        JobDefinitionAlternateKeyDto jobDefinitionKey;
 
         if (processInstance == null && historicProcessInstance == null)
         {
@@ -624,11 +624,7 @@ public class JobServiceImpl implements JobService
             }
 
             // Get the job definition key.
-            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processInstance.getProcessDefinitionKey());
-
-            // Set the namespace and job name on the job
-            job.setNamespace(jobDefinitionKey.getNamespace());
-            job.setJobName(jobDefinitionKey.getJobName());
+            jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processInstance.getProcessDefinitionKey());
         }
         else
         {
@@ -647,13 +643,13 @@ public class JobServiceImpl implements JobService
             }
 
             // Get the job definition key.
-            JobDefinitionAlternateKeyDto jobDefinitionKey =
+            jobDefinitionKey =
                 jobDefinitionHelper.getJobDefinitionKey(activitiService.getProcessDefinitionById(historicProcessInstance.getProcessDefinitionId()).getKey());
-
-            // Set the namespace and job name on the job
-            job.setNamespace(jobDefinitionKey.getNamespace());
-            job.setJobName(jobDefinitionKey.getJobName());
         }
+
+        // Set the namespace and job name on the job
+        job.setNamespace(jobDefinitionKey.getNamespace());
+        job.setJobName(jobDefinitionKey.getJobName());
 
         if (historicProcessInstance != null)
         {
