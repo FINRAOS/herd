@@ -258,6 +258,8 @@ public class JobServiceTest extends AbstractServiceTest
         assertEquals(activitiXml, jobGet.getActivitiJobXml());
         assertTrue(jobGet.getCompletedWorkflowSteps().size() > 0);
         assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+        assertEquals(job.getNamespace(), jobGet.getNamespace());
+        assertEquals(job.getJobName(), jobGet.getJobName());
 
         // Running job with non verbose
         jobGet = jobService.getJob(job.getId(), false);
@@ -265,6 +267,8 @@ public class JobServiceTest extends AbstractServiceTest
         assertNull(jobGet.getActivitiJobXml());
         assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
         assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+        assertEquals(job.getNamespace(), jobGet.getNamespace());
+        assertEquals(job.getJobName(), jobGet.getJobName());
 
         // Query the pending task and complete it
         List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
@@ -282,6 +286,8 @@ public class JobServiceTest extends AbstractServiceTest
         assertEquals(activitiXml, jobGet.getActivitiJobXml());
         assertTrue(jobGet.getCompletedWorkflowSteps().size() > 0);
         assertNull(jobGet.getCurrentWorkflowStep());
+        assertEquals(job.getNamespace(), jobGet.getNamespace());
+        assertEquals(job.getJobName(), jobGet.getJobName());
 
         // Completed job with non verbose
         jobGet = jobService.getJob(job.getId(), false);
@@ -291,6 +297,8 @@ public class JobServiceTest extends AbstractServiceTest
         assertNull(jobGet.getActivitiJobXml());
         assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
         assertNull(jobGet.getCurrentWorkflowStep());
+        assertEquals(job.getNamespace(), jobGet.getNamespace());
+        assertEquals(job.getJobName(), jobGet.getJobName());
     }
 
     @Test
@@ -1429,8 +1437,8 @@ public class JobServiceTest extends AbstractServiceTest
 
         // Assert delete job response
         assertEquals(job.getId(), deleteJobResponse.getId());
-        assertNull(deleteJobResponse.getNamespace());
-        assertNull(deleteJobResponse.getJobName());
+        assertEquals(job.getJobName(), deleteJobResponse.getJobName());
+        assertEquals(job.getNamespace(), deleteJobResponse.getNamespace());
         assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
         assertEquals(jobDeleteRequest.getDeleteReason(), deleteJobResponse.getDeleteReason());
 
