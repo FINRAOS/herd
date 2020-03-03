@@ -175,22 +175,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password)
   }
 
-//  /**
-//   * Auxiliary constructor using credstash
-//   *
-//   * @param spark    spark context
-//   * @param host     DM host https://host.name.com:port
-//   * @param username credential name (e.g. username for DM)
-//   */
-//  def this(spark: SparkSession,
-//           host: String,
-//           username: String
-//          ) {
-//    // core constructor
-//    this(spark, host, username, "DATABRICKS", "PRODY", null)
-//  }
-
-
   /**
    * Auxiliary constructor using username/password
    *
@@ -214,7 +198,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param otherDF DataFrame
    * @return DataFrame
    */
-  private def unionUnionSchema(dataFrame: DataFrame, otherDF: DataFrame): DataFrame = {
+ def unionUnionSchema(dataFrame: DataFrame, otherDF: DataFrame): DataFrame = {
     val dataFrameCols = dataFrame.columns.toList
     val otherDFCols = otherDF.columns.toList
     val allCols = (dataFrameCols ++ otherDFCols).distinct
@@ -364,7 +348,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param ns namespace
    * @return list of names
    */
-  def getAllObjectsInNamespace(ns: String): List[String] = {
+  def dmAllObjectsInNamespace(ns: String): List[String] = {
 
    val businessObjectDefinitionKeys = herdApiWrapper.getHerdApi.getBusinessObjectsByNamespace(ns).getBusinessObjectDefinitionKeys
    (for (obj <- businessObjectDefinitionKeys.asScala) yield obj.getBusinessObjectDefinitionName).toList
@@ -377,7 +361,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
 
   def dmWipeNamespace(ns: String): Unit = {
-    val toDelete = getAllObjectsInNamespace(ns)
+    val toDelete = dmAllObjectsInNamespace(ns)
     for (name <- toDelete) {
       dmDeleteFormat(ns, name, 0)
       dmDeleteObjectDefinition(ns, name)
@@ -519,7 +503,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
    * @return XML response from DM REST call
    */
-  private def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
+  def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
                 schemaVersion: Integer, dataVersion: Integer): String = {
    val businessObjectData = herdApiWrapper.getHerdApi.getBusinessObjectData(namespace, objectName,
      usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
@@ -582,7 +566,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param namespace specific namespace, if empty searches all namespaces
    * @return DataFrame of BusinessObjectDefinition objects
    */
-  private def getBusinessObjectDefinitions(namespace: String = ""): DataFrame = {
+  def getBusinessObjectDefinitions(namespace: String = ""): DataFrame = {
 
     val businessObjectDefinitionKeys = herdApiWrapper.getHerdApi.getBusinessObjectsByNamespace(namespace).getBusinessObjectDefinitionKeys
 
@@ -614,7 +598,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param businessObjectDefinitionName name of the object definition
    * @return DataFrame of business object formats
    */
-  private def getBusinessObjectFormats(namespace: String, businessObjectDefinitionName: String, latestVersion: Boolean = true): DataFrame = {
+  def getBusinessObjectFormats(namespace: String, businessObjectDefinitionName: String, latestVersion: Boolean = true): DataFrame = {
 
     val businessObjectFormatKeys = herdApiWrapper.getHerdApi.getBusinessObjectFormats(namespace, businessObjectDefinitionName, latestVersion)
       .getBusinessObjectFormatKeys
@@ -912,7 +896,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of paths for the data
    */
 
-  private def getPaths(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer,
+  def getPaths(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer,
                dataVersion: Integer): List[String] = {
     // make  partitions in order
     val allPartitionKeys = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion).fieldNames
@@ -1125,7 +1109,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return Spark DataFrame of data
    *
    */
-  private def getDataFrame(availableData: DataFrame): DataFrame = {
+  def getDataFrame(availableData: DataFrame): DataFrame = {
 
     val formatVersionCol = "FormatVersion"
     val dataVersionCol = "DataVersion"
@@ -1194,7 +1178,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param keyPartValues list of key partition values
    * @return
    */
-  private def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Int): DataFrame = {
+  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Int = null): DataFrame = {
     val pp = getPartitions(namespace, objectName, usage, fileFormat, formatVersion)
 
     if (pp.length > 1) {
@@ -1342,13 +1326,13 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValue A partition value
    * @return a tuple (formatVersion, dataVersion, path), where the path is location of data to be stored
    */
-  private def preRegisterBusinessObjectPath(nameSpace: String,
+  def preRegisterBusinessObjectPath(nameSpace: String,
                                     objectName: String,
                                     usage: String,
                                     fileFormat: String,
                                     formatVersion: Integer = null,
-                                    partitionKey: String,
-                                    partitionValue: String,
+                                    partitionKey: String = "partition",
+                                    partitionValue: String = "none",
                                     provider: String,
                                     storageUnit: String): (Integer, Integer, String) = {
 
@@ -1403,7 +1387,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param dataVersion    Data version
    * @param status         Status
    */
-  private def completeRegisterBusinessObjectPath(nameSpace: String,
+  def completeRegisterBusinessObjectPath(nameSpace: String,
                                          objectName: String,
                                          formatVersion: Integer,
                                          partitionKey: String,
@@ -1430,14 +1414,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param dataVersion    Data version.  Use null to get the latest data version
    * @return Path to the object
    */
-  private def getBusinessObjectPath(nameSpace: String,
+  def getBusinessObjectPath(nameSpace: String,
                             objectName: String,
                             formatVersion: Integer = null,
-                            partitionKey: String,
-                            partitionValue: String,
-                            dataVersion: Integer = null,
-                            usage: String,
-                            fileFormat: String): String = {
+                            partitionKey: String = "partition",
+                            partitionValue: String = "none",
+                            dataVersion: Integer = null): String = {
 
     val dataVersionToUse: Integer = dataVersion
 
@@ -1486,10 +1468,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValue Partition value
    * @return A new format version
    */
-  private def registerNewFormat(nameSpace: String,
+  def registerNewFormat(nameSpace: String,
                         objectName: String,
-                        partitionKey: String,
-                        partitionValue: String,
+                        partitionKey: String = "partition",
+                        partitionValue: String = "none",
                         usage: String,
                         fileFormat: String): Int = {
 
@@ -1511,8 +1493,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def loadDataFrame(namespace: String,
                     objName: String,
-                    usage: String,
-                    fileFormat: String,
+                    usage: String = "PRC",
+                    fileFormat: String = "PARQUET",
                     storagePathPrefix: String = "s3a"): DataFrame = {
 
     spark.read.format("herd")
@@ -1542,11 +1524,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
-                    partitionKey: String ,
-                    partitionValue: String,
-                    partitionKeyGroup: String,
-                    usage: String,
-                    fileFormat: String,
+                    partitionKey: String = "partition" ,
+                    partitionValue: String  = "none",
+                    partitionKeyGroup: String = "TRADE_DT",
+                    usage: String = "PRC",
+                    fileFormat: String = "PARQUET",
                     delimiter: String = null,
                     escapeChar: String = null,
                     nullValue: String = null): Unit = {
