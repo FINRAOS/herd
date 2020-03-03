@@ -230,7 +230,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param credComponent Component for credential lookup
    * @return the password
    */
-  def getPassword(spark: SparkSession,
+  private def getPassword(spark: SparkSession,
                   credName: String,
                   credAGS: String,
                   credSDLC: String,
