@@ -555,7 +555,6 @@ public class JobServiceImpl implements JobService
         /*
          * Check permissions against namespace of the job.
          * Cannot be done through the annotation because the namespace is not part of the request.
-         * TODO refactor this so it gets namespace from JobDefinitionEntity instead of parsing process definition key.
          */
         if (checkNamespacePermissions)
         {
@@ -576,6 +575,7 @@ public class JobServiceImpl implements JobService
 
         Job job = new Job();
         job.setId(jobIdLocal);
+        JobDefinitionAlternateKeyDto jobDefinitionKey;
 
         if (processInstance == null && historicProcessInstance == null)
         {
@@ -622,6 +622,9 @@ public class JobServiceImpl implements JobService
             {
                 populateActivitiXml(job, processInstance.getProcessDefinitionId());
             }
+
+            // Get the job definition key.
+            jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processInstance.getProcessDefinitionKey());
         }
         else
         {
@@ -638,7 +641,15 @@ public class JobServiceImpl implements JobService
             {
                 populateActivitiXml(job, historicProcessInstance.getProcessDefinitionId());
             }
+
+            // Get the job definition key.
+            jobDefinitionKey =
+                jobDefinitionHelper.getJobDefinitionKey(activitiService.getProcessDefinitionById(historicProcessInstance.getProcessDefinitionId()).getKey());
         }
+
+        // Set the namespace and job name on the job
+        job.setNamespace(jobDefinitionKey.getNamespace());
+        job.setJobName(jobDefinitionKey.getJobName());
 
         if (historicProcessInstance != null)
         {
