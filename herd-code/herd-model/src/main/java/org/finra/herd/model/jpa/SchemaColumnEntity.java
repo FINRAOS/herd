@@ -43,7 +43,7 @@ public class SchemaColumnEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @JsonBackReference(value="businessObjectFormat-schemaColumns")
     @ManyToOne
@@ -90,12 +90,12 @@ public class SchemaColumnEntity extends AuditableEntity
     @JoinColumn(name = "bus_objct_dfntn_clmn_id", referencedColumnName = "bus_objct_dfntn_clmn_id")
     private BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumn;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }
