@@ -95,7 +95,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
@@ -124,7 +124,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
@@ -155,7 +155,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
@@ -185,7 +185,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
@@ -215,7 +215,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Delete from the search index
@@ -242,7 +242,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagEntityList.add(tagEntity1);
         tagEntityList.add(tagEntity2);
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Unknown modification type

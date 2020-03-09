@@ -210,17 +210,17 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     }
 
     @Override
-    public List<Integer> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    public List<Long> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 
         // The criteria root is the business object format.
         Root<BusinessObjectFormatEntity> businessObjectFormatEntityRoot = criteria.from(BusinessObjectFormatEntity.class);
 
         // Create path.
-        Expression<Integer> businessObjectFormatIdColumn = businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.id);
+        Expression<Long> businessObjectFormatIdColumn = businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.id);
 
         // Create standard restrictions.
         Predicate predicate =

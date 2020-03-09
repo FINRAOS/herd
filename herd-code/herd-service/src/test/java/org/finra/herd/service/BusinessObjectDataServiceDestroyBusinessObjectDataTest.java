@@ -132,7 +132,7 @@ public class BusinessObjectDataServiceDestroyBusinessObjectDataTest extends Abst
 
             // Validate the result.
             assertNotNull(result);
-            assertEquals(storageUnitEntity.getBusinessObjectData().getId(), Integer.valueOf(result.getId()));
+            assertEquals(storageUnitEntity.getBusinessObjectData().getId(), Long.valueOf(result.getId()));
 
             // Validate the status of the storage unit entity.
             assertEquals(StorageUnitStatusEntity.DISABLED, storageUnitEntity.getStatus().getCode());

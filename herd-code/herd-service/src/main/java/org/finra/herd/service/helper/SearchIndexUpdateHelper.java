@@ -67,7 +67,7 @@ public class SearchIndexUpdateHelper
      */
     public void modifyBusinessObjectDefinitionInSearchIndex(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String modificationType)
     {
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
         processMessage(
             jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, modificationType)));
@@ -81,7 +81,7 @@ public class SearchIndexUpdateHelper
      */
     public void modifyBusinessObjectDefinitionsInSearchIndex(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList, String modificationType)
     {
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
         processMessage(
             jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, modificationType)));
@@ -95,7 +95,7 @@ public class SearchIndexUpdateHelper
      */
     public void modifyTagInSearchIndex(TagEntity tagEntity, String modificationType)
     {
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
         processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, modificationType)));
     }
@@ -108,7 +108,7 @@ public class SearchIndexUpdateHelper
      */
     public void modifyTagsInSearchIndex(List<TagEntity> tagEntityList, String modificationType)
     {
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
         processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, modificationType)));
     }

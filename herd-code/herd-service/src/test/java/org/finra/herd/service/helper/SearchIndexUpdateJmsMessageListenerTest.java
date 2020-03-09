@@ -81,7 +81,7 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testProcessMessageBusinessObjectDefinition() throws Exception
     {
-        List<Integer> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         SearchIndexUpdateDto searchIndexUpdateDto
             = new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, ids, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
@@ -101,7 +101,7 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testProcessMessageTag() throws Exception
     {
-        List<Integer> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, ids, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "PAYLOAD")).thenReturn(searchIndexUpdateDto);
@@ -120,7 +120,7 @@ public class SearchIndexUpdateJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testProcessMessageOriginalMessageFormat() throws Exception
     {
-        List<Integer> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto();
         searchIndexUpdateDto.setBusinessObjectDefinitionIds(ids);
         searchIndexUpdateDto.setModificationType(SEARCH_INDEX_UPDATE_TYPE_UPDATE);

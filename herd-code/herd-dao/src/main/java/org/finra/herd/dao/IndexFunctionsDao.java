@@ -109,7 +109,7 @@ public interface IndexFunctionsDao extends BaseJpaDao
      * @param documentType
      * @param ids
      */
-    public void deleteIndexDocuments(String indexName, String documentType, List<Integer> ids);
+    public void deleteIndexDocuments(String indexName, String documentType, List<Long> ids);
 
     /**
      * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.

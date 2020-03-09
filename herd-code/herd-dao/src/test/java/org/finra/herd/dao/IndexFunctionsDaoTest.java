@@ -312,8 +312,8 @@ public class IndexFunctionsDaoTest
         when(jestResultAliases.isSucceeded()).thenReturn(true);
         when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
         // Call the method under test
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
-        businessObjectDefinitionIds.add(1);
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(1L);
         indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods
@@ -336,8 +336,8 @@ public class IndexFunctionsDaoTest
         when(jestResultAliases.isSucceeded()).thenReturn(true);
         when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
         // Call the method under test
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
-        businessObjectDefinitionIds.add(1);
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(1L);
         indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods

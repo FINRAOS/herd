@@ -324,7 +324,7 @@ public class TagServiceImpl implements TagService, SearchableService
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         String modificationType = searchIndexUpdateDto.getModificationType();
-        List<Integer> ids = searchIndexUpdateDto.getTagIds();
+        List<Long> ids = searchIndexUpdateDto.getTagIds();
 
         LOGGER.info("Updating the search index document representation(s) of the tag(s)." + " tagIds=[{}], searchIndexUpdateType=\"{}\"",
             ids.stream().map(String::valueOf).collect(Collectors.joining(", ")), modificationType);

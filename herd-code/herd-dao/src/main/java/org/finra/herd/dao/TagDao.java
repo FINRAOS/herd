@@ -67,7 +67,7 @@ public interface TagDao extends BaseJpaDao
      *
      * @return the list of tag entities.
      */
-    public List<TagEntity> getTagsByIds(List<Integer> ids);
+    public List<TagEntity> getTagsByIds(List<Long> ids);
 
     /**
      * Gets a list of tag child objects with children flags, whose parent tag code is the specified tag code.

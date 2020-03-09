@@ -94,7 +94,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
-    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Long> ids)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -104,7 +104,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Expression<Long> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
         Predicate queryRestriction = expression.in(ids);
 
         criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
@@ -243,18 +243,18 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 
         // The criteria root is the business object definition.
         Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
 
         // Get the columns.
-        Path<Integer> idColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Path<Long> idColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
 
         criteria.select(idColumn);
 
-        List<Integer> allBusinessObjectDefinitionIdsList = entityManager.createQuery(criteria).getResultList();
-        List<Integer> percentageOfBusinessObjectDefinitionIdsList = new ArrayList<>();
+        List<Long> allBusinessObjectDefinitionIdsList = entityManager.createQuery(criteria).getResultList();
+        List<Long> percentageOfBusinessObjectDefinitionIdsList = new ArrayList<>();
 
         /*
         * Gets a percentage of all business object definition entities.

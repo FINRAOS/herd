@@ -42,7 +42,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertEntity extends Auditable
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @JsonBackReference(value="businessObjectDefinition-subjectMatterExperts")
     @ManyToOne
@@ -55,12 +55,12 @@ public class BusinessObjectDefinitionSubjectMatterExpertEntity extends Auditable
     @Column(name = "user_id")
     private String userId;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

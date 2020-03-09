@@ -71,7 +71,7 @@ public class SecurityUserWrapperTest extends AbstractAppTest
                 businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
             // Validate the newly created entity.
-            assertEquals(Integer.valueOf(businessObjectDefinition.getId()), businessObjectDefinitionEntity.getId());
+            assertEquals(Long.valueOf(businessObjectDefinition.getId()), businessObjectDefinitionEntity.getId());
             String expectedUsername = TrustedApplicationUserBuilder.TRUSTED_USER_ID;
             assertEquals(expectedUsername, businessObjectDefinitionEntity.getCreatedBy());
             assertEquals(expectedUsername, businessObjectDefinitionEntity.getUpdatedBy());
