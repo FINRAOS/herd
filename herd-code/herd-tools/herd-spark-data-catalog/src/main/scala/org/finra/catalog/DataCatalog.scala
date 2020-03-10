@@ -176,22 +176,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
-   * Auxiliary constructor using credstash
-   *
-   * @param spark    spark context
-   * @param host     DM host https://host.name.com:port
-   * @param username credential name (e.g. username for DM)
-   */
-  def this(spark: SparkSession,
-           host: String,
-           username: String
-          ) {
-    // core constructor
-    this(spark, host, username, "DATABRICKS", "PRODY", null)
-  }
-
-
-  /**
    * Auxiliary constructor using username/password
    *
    * @param spark    spark session
@@ -277,7 +261,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param obj object name
    * @return list of (object name, partition value) tuples
    */
-  def dmSearchRequest(ns: String, obj: String): util.List[BusinessObjectData] = {
+  private[catalog] def dmSearchRequest(ns: String, obj: String): util.List[BusinessObjectData] = {
     val businessObjectDataSearchKey = new BusinessObjectDataSearchKey()
     businessObjectDataSearchKey.setNamespace(ns)
     businessObjectDataSearchKey.setBusinessObjectDefinitionName(obj)
@@ -296,7 +280,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param obj object name
    * @return list of (object name, partition value) tuples
    */
-  def dmSearch(ns: String, obj: String): List[(String, String)] = {
+  private[catalog] def dmSearch(ns: String, obj: String): List[(String, String)] = {
     val businessObjectDataElements = dmSearchRequest(ns, obj)
 
     (for (businessObjectData <- businessObjectDataElements.asScala)
@@ -404,7 +388,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param columnType Name from DM for the column type
    * @return DataType of the string value
    */
-  def getStructType(columnType: String, columnSize: String): DataType = {
+  private[catalog] def getStructType(columnType: String, columnSize: String): DataType = {
     val dbType = columnType match {
       case "STRING" => StringType
       case "DATE" => DateType
@@ -431,7 +415,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schema schema to convert into all StringTypes
    * @return a schema of all string types
    */
-  def convertToAllStringTypes(schema: StructType): StructType = {
+  private[catalog] def convertToAllStringTypes(schema: StructType): StructType = {
     val allStringSchema = schema.map { f =>
       StructField(f.name, StringType, f.nullable, f.metadata)
     }
@@ -449,7 +433,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return data frame with schema of targetSchema
    *
    */
-  def convertToSchema(df: DataFrame, targetSchema: StructType, nullValue: String): DataFrame = {
+  private[catalog] def convertToSchema(df: DataFrame, targetSchema: StructType, nullValue: String): DataFrame = {
     logger.debug("Source Schema:")
     logger.debug(df.schema.treeString)
     logger.debug("Dest Schema:")
@@ -489,7 +473,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param path        full path to read, can be parent directory
    * @return
    */
-  def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String): DataFrame = {
+  private[catalog] def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String): DataFrame = {
 
     val df =
     {
@@ -539,7 +523,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param partitionValuesInOrder value of list of partition (has to be in order) ++ adding List(Partition) -> redefine Partition to Maps
    * @return list of S3 key prefixes
    */
-  def queryPathFromGeneratePartitions(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
+  private[catalog] def queryPathFromGeneratePartitions(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
                                       partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
 
     val businessObjectDataPartitions = herdApiWrapper.getHerdApi().getBusinessObjectDataPartitions(namespace, objectName, usage, fileFormat,
@@ -602,7 +586,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return business object format instance
    *
    */
-  def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer):
+  private[catalog] def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer):
     org.finra.herd.sdk.model.BusinessObjectFormat = {
     return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
   }
@@ -756,7 +740,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for latest
    * @return Map of parse options
    */
-  def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null, csvBug: Boolean = false):
+  private[catalog] def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null, csvBug: Boolean = false):
   Map[String, String] = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
@@ -883,7 +867,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param givenPartitions   partitions as given from caller
    * @return partitions are good
    */
-  def checkPartitions(definedPartitions: StructType, givenPartitions: List[Partition]): Boolean = {
+  private[catalog] def checkPartitions(definedPartitions: StructType, givenPartitions: List[Partition]): Boolean = {
     // check: do partition keys match with what was given?
     if (definedPartitions.length != givenPartitions.length) {
       logger.error("Partitions do not match (definedPartitions.length != givenPartitions.length)")
@@ -1224,7 +1208,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param namespaces the namespace
    * @return namespace
    */
-  def findNamespace(objectName: String, namespaces: List[String]): String = {
+  private[catalog] def findNamespace(objectName: String, namespaces: List[String]): String = {
 
     var namespace: String = null
 
@@ -1255,11 +1239,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param namespaces    ordered list of namespaces to search
    * @param fileFormats   ordered list of preferred file formats
    */
-  def findDataFrame(
+  private[catalog] def findDataFrame(
                      objectName: String,
                      keyPartValues: List[String],
-                     namespaces: List[String] = "HUB" :: "ETLMGMT" :: Nil,
-                     fileFormats: List[String] = "ORC" :: "BZ" :: "TXT" :: "CSV" :: Nil): DataFrame = {
+                     namespaces: List[String],
+                     fileFormats: List[String]): DataFrame = {
 
     val namespace: String = findNamespace(objectName, namespaces)
     var fileFormat: String = null
