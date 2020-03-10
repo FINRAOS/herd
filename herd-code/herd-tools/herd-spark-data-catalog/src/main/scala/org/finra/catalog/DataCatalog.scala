@@ -815,7 +815,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for current
    * @return Spark schema (structFields)
    */
-  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer): StructType = {
+  def getPartitions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null): StructType = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
     parsePartitions(businessObjectFormat)
   }
@@ -976,7 +976,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion version of schema, <0 for latest
    * @return
    */
-  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Int): DataFrame = {
+  def getDataAvailability(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null): DataFrame = {
 
     // need the first partition (the partitionKey)
     val parts = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion)
@@ -1178,7 +1178,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param keyPartValues list of key partition values
    * @return
    */
-  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Int): DataFrame = {
+  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Integer): DataFrame = {
     val pp = getPartitions(namespace, objectName, usage, fileFormat, formatVersion)
 
     if (pp.length > 1) {
