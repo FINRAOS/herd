@@ -504,7 +504,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return XML response from DM REST call
    */
   def queryPath(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String, partitionValuesInOrder: Array[String],
-                schemaVersion: Integer, dataVersion: Integer): String = {
+                schemaVersion: Integer = null, dataVersion: Integer = null): String = {
    val businessObjectData = herdApiWrapper.getHerdApi.getBusinessObjectData(namespace, objectName,
      usage, fileFormat, schemaVersion, partitionKey, partitionValuesInOrder(0),
           partitionValuesInOrder.drop(1), dataVersion)
@@ -524,7 +524,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of S3 key prefixes
    */
   private def queryPathFromGeneratePartitions(namespace: String, objectName: String, usage: String, fileFormat: String, partitionKey: String,
-                                      partitionValuesInOrder: Array[String], schemaVersion: Integer, dataVersion: Integer): List[String] = {
+                                      partitionValuesInOrder: Array[String], schemaVersion: Integer = null, dataVersion: Integer = null): List[String] = {
 
     val businessObjectDataPartitions = herdApiWrapper.getHerdApi().getBusinessObjectDataPartitions(namespace, objectName, usage, fileFormat,
       schemaVersion, partitionKey, partitionValuesInOrder, dataVersion)
@@ -586,7 +586,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return business object format instance
    *
    */
-  private def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer):
+  private def callBusinessObjectFormatQuery(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null):
     org.finra.herd.sdk.model.BusinessObjectFormat = {
     return herdApiWrapper.getHerdApi.getBusinessObjectFormat(namespace, objectName, usage, fileFormat, schemaVersion)
   }
@@ -896,8 +896,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return list of paths for the data
    */
 
-  def getPaths(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer,
-               dataVersion: Integer): List[String] = {
+  def getPaths(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer = null,
+               dataVersion: Integer = null): List[String] = {
     // make  partitions in order
     val allPartitionKeys = getPartitions(namespace, objectName, usage, fileFormat, schemaVersion).fieldNames
     val partitionsMap = partitionValues.filter(p => p.v != null).flatMap(x => List(x.n.toLowerCase -> x.v.toLowerCase)).toMap
@@ -1178,7 +1178,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param keyPartValues list of key partition values
    * @return
    */
-  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Int = null): DataFrame = {
+  def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, keyPartValues: List[String], formatVersion: Integer = null): DataFrame = {
     val pp = getPartitions(namespace, objectName, usage, fileFormat, formatVersion)
 
     if (pp.length > 1) {
@@ -1385,10 +1385,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def completeRegisterBusinessObjectPath(nameSpace: String,
                                          objectName: String,
-                                         formatVersion: Integer,
-                                         partitionKey: String,
-                                         partitionValue: String,
-                                         dataVersion: Integer,
+                                         formatVersion: Integer = null,
+                                         partitionKey: String = "partition",
+                                         partitionValue: String = "none",
+                                         dataVersion: Integer = null,
                                          status: ObjectStatus.Value = ObjectStatus.VALID): Unit = {
 
       herdApiWrapper.getHerdApi.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
