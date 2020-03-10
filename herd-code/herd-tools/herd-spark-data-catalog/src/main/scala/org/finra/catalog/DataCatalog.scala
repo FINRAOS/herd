@@ -740,8 +740,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param schemaVersion schema version, <0 for latest
    * @return Map of parse options
    */
-  private[catalog] def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String, schemaVersion: Integer = null, csvBug: Boolean = false):
-  Map[String, String] = {
+  private[catalog] def getParseOptions(namespace: String, objectName: String, usage: String, fileFormat: String,
+                                       schemaVersion: Integer = null, csvBug: Boolean = false): Map[String, String] = {
     val businessObjectFormat = callBusinessObjectFormatQuery(namespace, objectName, usage, fileFormat, schemaVersion)
 
 
