@@ -94,9 +94,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   var username = ""
   var password = ""
 
-//  val usage = "PRC"
-//  val fileFormat = "UNKNOWN"
-//  val storageUnit = "S3_DATABRICKS"
+  val usage = "PRC"
+  val fileFormat = "UNKNOWN"
+  val storageUnit = "S3_DATABRICKS"
   val ds: DefaultSource.type = DefaultSource
 
   // used for logging
@@ -1328,19 +1328,15 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   def preRegisterBusinessObjectPath(nameSpace: String,
                                     objectName: String,
-                                    usage: String,
-                                    fileFormat: String,
                                     formatVersion: Integer = null,
                                     partitionKey: String = "partition",
-                                    partitionValue: String = "none",
-                                    provider: String,
-                                    storageUnit: String): (Integer, Integer, String) = {
+                                    partitionValue: String = "none"): (Integer, Integer, String) = {
 
     Try(herdApiWrapper.getHerdApi.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
       case Failure(ex: ApiException) if ex.getCode == 404 =>
         logger.info(s"Business object not found, registering it")
-        herdApiWrapper.getHerdApi.registerBusinessObject(nameSpace, objectName, provider) // @todo: Should the Data Provider be a parameter?
+        herdApiWrapper.getHerdApi.registerBusinessObject(nameSpace, objectName, "FINRA") // @todo: Should the Data Provider be a parameter?
         herdApiWrapper.getHerdApi.registerBusinessObjectFormat(nameSpace, objectName, usage, fileFormat, partitionKey, None)
       case Failure(ex) => throw ex
     }
@@ -1393,9 +1389,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                                          partitionKey: String,
                                          partitionValue: String,
                                          dataVersion: Integer,
-                                         status: ObjectStatus.Value = ObjectStatus.VALID,
-                                         usage: String,
-                                         fileFormat: String): Unit = {
+                                         status: ObjectStatus.Value = ObjectStatus.VALID): Unit = {
 
       herdApiWrapper.getHerdApi.updateBusinessObjectData(nameSpace, objectName, usage, fileFormat, formatVersion,
       partitionKey, partitionValue, Nil, dataVersion, status)
@@ -1471,9 +1465,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def registerNewFormat(nameSpace: String,
                         objectName: String,
                         partitionKey: String = "partition",
-                        partitionValue: String = "none",
-                        usage: String,
-                        fileFormat: String): Int = {
+                        partitionValue: String = "none"): Int = {
 
     Try(herdApiWrapper.getHerdApi.getBusinessObjectByName(nameSpace, objectName)) match {
       case Success(_) => Unit
@@ -1524,7 +1516,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
-                    partitionKey: String = "partition" ,
+                    partitionKey: String = "partition",
                     partitionValue: String  = "none",
                     partitionKeyGroup: String = "TRADE_DT",
                     usage: String = "PRC",
