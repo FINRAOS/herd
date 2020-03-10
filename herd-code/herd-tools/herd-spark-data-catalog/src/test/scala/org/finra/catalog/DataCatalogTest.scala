@@ -36,10 +36,10 @@ import org.finra.herd.sdk.model._
 class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach {
 
   private val spark: SparkSession = SparkSession
-    .builder()
-    .appName("catalog-test")
-    .master("local[*]")
-    .getOrCreate()
+  .builder()
+  .appName("catalog-test")
+  .master("local[*]")
+  .getOrCreate()
 
   private val namespace = "testNamespace"
   private val objectName = "testObject"
@@ -509,8 +509,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
   test("getStructType should return the Spark SQL Structure type")
   {
-    val dataCatalog = new DataCatalog(spark, "test.com")
-    assertEquals(org.apache.spark.sql.types.StringType, dataCatalog.getStructType("String", "10"))
+      val dataCatalog = new DataCatalog(spark, "test.com")
+      assertEquals(org.apache.spark.sql.types.StringType, dataCatalog.getStructType("String", "10"))
 
   }
 
@@ -541,7 +541,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       (namespace, objectName, formatUsage, partitionKey, "0", "0", "object2", "2019-02-01"),
       (namespace, objectName, formatUsage, null, "0", "0", "object3", "2019-03-01"),
       (namespace, objectName, formatUsage, null, "0", "0", "object4", "2019-04-01")
-    ).toDF("Namespace", "ObjectName", "Usage", "partitionKey", "FormatVersion", "DataVersion", "Reason", "date")
+       ).toDF("Namespace", "ObjectName", "Usage", "partitionKey", "FormatVersion", "DataVersion", "Reason", "date")
 
     assertEquals(0, expectedDF.except(outputDF).count)
   }
@@ -847,8 +847,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   {
     when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
     when(mockHerdApi.
-      updateBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
-        partitionKey, partitonValue, Nil, dataVersion, ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
+    updateBusinessObjectData(namespace, objectName, "PRC", "UNKNOWN", formatVersion,
+      partitionKey, partitonValue, Nil, dataVersion, ObjectStatus.VALID)).thenThrow(new IllegalStateException("method was called"))
 
     val thrown = intercept[Throwable]{
       dataCatalog.completeRegisterBusinessObjectPath(namespace, objectName, formatVersion, partitionKey, partitonValue, dataVersion)
@@ -992,8 +992,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   }
 
   /**
-    * simple test to validate that partition locations are extracted from generate partitions response, formatted and returned
-    */
+   * simple test to validate that partition locations are extracted from generate partitions response, formatted and returned
+   */
   test("query path from generate partitions returns list of formatted s3 prefixes") {
 
     // define a new generate partitions response for mocking purposes
@@ -1039,3 +1039,4 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   }
 
 }
+
