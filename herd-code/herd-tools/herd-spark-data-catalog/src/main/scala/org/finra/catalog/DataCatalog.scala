@@ -15,78 +15,78 @@
 */
 package org.finra.catalog
 
-  import java.io.File
-  import java.util
+import java.io.File
+import java.util
 
-  import scala.collection.JavaConverters._
-  import scala.collection.mutable.ListBuffer
-  import scala.language.postfixOps
-  import scala.util.{Failure, Success, Try}
-  import scala.xml._
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
+import scala.util.{Failure, Success, Try}
+import scala.xml._
 
-  import com.amazonaws.ClientConfiguration
-  import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-  import com.amazonaws.regions.Regions
-  import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-  import com.amazonaws.services.kms.AWSKMSClient
-  import com.fasterxml.jackson.dataformat.xml.XmlMapper
-  import org.apache.spark.sql._
-  import org.apache.spark.sql.functions._
-  import org.apache.spark.sql.herd._
-  import org.apache.spark.sql.types._
-  import org.slf4j.LoggerFactory
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.kms.AWSKMSClient
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.herd._
+import org.apache.spark.sql.types._
+import org.slf4j.LoggerFactory
 
-  import org.finra.herd.sdk.api._
-  import org.finra.herd.sdk.invoker.ApiException
-  import org.finra.herd.sdk.model._
+import org.finra.herd.sdk.api._
+import org.finra.herd.sdk.invoker.ApiException
+import org.finra.herd.sdk.model._
 
-  /**
-    * Used to contain a partition's name and value pair
-    *
-    * @param n name of the partition
-    * @param v value for the partition name
-    */
-  case class Partition(n: String, v: String)
+/**
+  * Used to contain a partition's name and value pair
+  *
+  * @param n name of the partition
+  * @param v value for the partition name
+  */
+case class Partition(n: String, v: String)
 
-  /**
-    * Business Object Definition
-    *
-    * Defines the schema of the DataFrame for business object definitions.
-    *
-    * @param namespace      namespace of the definition
-    * @param definitionName name of the business object
-    */
-  case class BusinessObjectDefinition(namespace: String, definitionName: String)
+/**
+  * Business Object Definition
+  *
+  * Defines the schema of the DataFrame for business object definitions.
+  *
+  * @param namespace      namespace of the definition
+  * @param definitionName name of the business object
+  */
+case class BusinessObjectDefinition(namespace: String, definitionName: String)
 
-  /**
-    * Business Object Format
-    *
-    * Defines schema of DataFrame for business object formats
-    *
-    */
-  case class BusinessObjectFormat(namespace: String, definitionName: String, formatUsage: String, formatFileType: String, formatVersion: Integer)
+/**
+  * Business Object Format
+  *
+  * Defines schema of DataFrame for business object formats
+  *
+  */
+case class BusinessObjectFormat(namespace: String, definitionName: String, formatUsage: String, formatFileType: String, formatVersion: Integer)
 
-  /**
-    * Class to create DataFrames of data registered with Herd
-    * Goal of the object is to provide a facility to create Spark DataFrames of any businessObject
-    * registered with Herd
-    *
-    * Browse for available objects
-    * get necessary parameters to query for a specific businessObject
-    * get the businessObject as a Spark DataFrame
-    *
-    * @todo get parsing details from the format, do not hard code
-    *
-    * - get a data frame given object identifiers
-    * - be optimal on what file format is used (select format for user if possible)
-    * - if format contains schema (ORC, parquet) no need to ask for schema from Herd
-    * @todo add way to browse available partitions
-    * @todo handle multiple levels of partitions (today only does one)
-    * @todo use parsing parameters as given by businessObjectFormats call to Herd
-    * @param spark the spark session
-    *
-    */
-  // noinspection SimplifyBoolean
+/**
+  * Class to create DataFrames of data registered with Herd
+  * Goal of the object is to provide a facility to create Spark DataFrames of any businessObject
+  * registered with Herd
+  *
+  * Browse for available objects
+  * get necessary parameters to query for a specific businessObject
+  * get the businessObject as a Spark DataFrame
+  *
+  * @todo get parsing details from the format, do not hard code
+  *
+  * - get a data frame given object identifiers
+  * - be optimal on what file format is used (select format for user if possible)
+  * - if format contains schema (ORC, parquet) no need to ask for schema from Herd
+  * @todo add way to browse available partitions
+  * @todo handle multiple levels of partitions (today only does one)
+  * @todo use parsing parameters as given by businessObjectFormats call to Herd
+  * @param spark the spark session
+  *
+  */
+// noinspection SimplifyBoolean
 
   class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
