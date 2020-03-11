@@ -930,7 +930,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         String modificationType = searchIndexUpdateDto.getModificationType();
-        List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
+        List<Long> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
 
         LOGGER.info("Updating the search index document representation(s) of the business object definition(s)." +
                 " businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", ids.stream().map(String::valueOf).collect(Collectors.joining(", ")),

@@ -1403,7 +1403,7 @@ public class JobServiceTest extends AbstractServiceTest
 
         // Create the job definition.
         JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
-        Integer jobDefinitionId = jobDefinition.getId();
+        Long jobDefinitionId = jobDefinition.getId();
         JobDefinitionEntity jobDefinitionEntity = herdDao.findById(JobDefinitionEntity.class, jobDefinitionId);
 
         jobDefinitionEntity.setS3ObjectKey(null);

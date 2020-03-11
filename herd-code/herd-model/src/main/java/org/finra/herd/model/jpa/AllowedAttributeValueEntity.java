@@ -42,7 +42,7 @@ public class AllowedAttributeValueEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The attribute value list id column.
@@ -58,12 +58,12 @@ public class AllowedAttributeValueEntity extends AuditableEntity
     @Column(name = "alwd_atrbt_value_tx", nullable = false)
     private String allowedAttributeValue;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

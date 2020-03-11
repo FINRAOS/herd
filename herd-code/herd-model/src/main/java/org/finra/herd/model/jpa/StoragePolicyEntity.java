@@ -47,7 +47,7 @@ public class StoragePolicyEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
@@ -129,12 +129,12 @@ public class StoragePolicyEntity extends AuditableEntity
     @Type(type = "yes_no")
     private Boolean latestVersion;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

@@ -126,7 +126,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
 
-    public static final int ATTRIBUTE_VALUE_LIST_ID = 1009;
+    public static final Long ATTRIBUTE_VALUE_LIST_ID = 1009L;
 
     public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_List_Name_1_" + RANDOM_SUFFIX;
 
@@ -471,7 +471,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
-    public static final Integer GLOBAL_ATTRIBUTE_DEFINITON_ID = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Long GLOBAL_ATTRIBUTE_DEFINITON_ID = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
 

@@ -136,7 +136,7 @@ public class TagDaoTest extends AbstractDaoTest
             tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3),
             tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4));
 
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
 
         tagEntities.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 

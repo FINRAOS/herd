@@ -42,7 +42,7 @@ public class BusinessObjectDefinitionSampleDataFileEntity extends AuditableEntit
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @JsonBackReference(value="businessObjectDefinition-sampleDataFiles")
     @ManyToOne
@@ -74,12 +74,12 @@ public class BusinessObjectDefinitionSampleDataFileEntity extends AuditableEntit
     @JoinColumn(name = "strge_cd", referencedColumnName = "strge_cd", nullable = false)
     private StorageEntity storage;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

@@ -713,7 +713,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @param expectedSchema the expected business object format schema
      * @param actualBusinessObjectFormat the BusinessObjectFormat object instance to be validated
      */
-    public void validateBusinessObjectFormat(Integer expectedBusinessObjectFormatId, String expectedNamespaceCode, String expectedBusinessObjectDefinitionName,
+    public void validateBusinessObjectFormat(Long expectedBusinessObjectFormatId, String expectedNamespaceCode, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         Boolean expectedIsLatestVersion, String expectedPartitionKey, String expectedDescription, String expectedDocumentSchema,
         String expectedDocumentSchemaUrl, List<Attribute> expectedAttributes, List<AttributeDefinition> expectedAttributeDefinitions, Schema expectedSchema,
@@ -723,7 +723,7 @@ public class BusinessObjectFormatServiceTestHelper
 
         if (expectedBusinessObjectFormatId != null)
         {
-            assertEquals(expectedBusinessObjectFormatId, Integer.valueOf(actualBusinessObjectFormat.getId()));
+            assertEquals(expectedBusinessObjectFormatId, Long.valueOf(actualBusinessObjectFormat.getId()));
         }
 
         assertEquals(expectedNamespaceCode, actualBusinessObjectFormat.getNamespace());

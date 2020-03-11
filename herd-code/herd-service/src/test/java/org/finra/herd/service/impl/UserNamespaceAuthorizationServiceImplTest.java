@@ -40,7 +40,7 @@ public class UserNamespaceAuthorizationServiceImplTest
 
     private static final String NAMESPACE_VALUE = "testNamespace";
 
-    private static final int USER_NAMESPACE_AUTHORIZATION_ID = 10;
+    private static final long USER_NAMESPACE_AUTHORIZATION_ID = 10L;
 
     private static final List<NamespacePermissionEnum> NAMESPACE_PERMISSIONS = ImmutableList.of(NamespacePermissionEnum.READ);
 

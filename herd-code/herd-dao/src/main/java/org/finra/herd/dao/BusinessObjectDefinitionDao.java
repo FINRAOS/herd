@@ -47,7 +47,7 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      *
      * @return the list of all business object definition entities.
      */
-    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids);
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Long> ids);
 
     /**
      * Gets a business object definition by key.
