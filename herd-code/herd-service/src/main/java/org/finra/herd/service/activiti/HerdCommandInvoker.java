@@ -57,7 +57,7 @@ public class HerdCommandInvoker extends CommandInvoker
              * If the exception is unable to create transaction due to JDBC connection issue,
              * throw out the exception, then let the Activiti engine take care of retries
              */
-            if ( StringUtils.containsIgnoreCase(ExceptionUtils.getMessage(e), CANNOT_CREATE_TRANSACTION_EXCEPTION))
+            if (StringUtils.containsIgnoreCase(ExceptionUtils.getMessage(e), CANNOT_CREATE_TRANSACTION_EXCEPTION))
             {
                 LOGGER.warn(String.format("HerdCommandInvoker caught a CannotCreateTransactionException."), e);
                 throw e;
