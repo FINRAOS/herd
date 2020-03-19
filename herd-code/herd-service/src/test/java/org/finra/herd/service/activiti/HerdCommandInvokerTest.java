@@ -17,6 +17,7 @@ package org.finra.herd.service.activiti;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -32,6 +33,7 @@ import org.activiti.engine.impl.interceptor.CommandConfig;
 import org.activiti.engine.impl.persistence.entity.JobEntity;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.junit.Test;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -169,5 +171,15 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
         {
             assertEquals(SecurityException.class.getName(), e.getMessage());
         }
+    }
+
+    @Test(expected = CannotCreateTransactionException.class)
+    public void testExecuteWithExceptionAndGetCreateTransactionException()
+    {
+        // Mock dependencies.
+        CommandConfig config = mock(CommandConfig.class);
+        ExecuteAsyncJobCmd command = mock(ExecuteAsyncJobCmd.class);
+        doThrow(CannotCreateTransactionException.class).when(command).execute(any());
+        herdCommandInvoker.execute(config, command);
     }
 }
