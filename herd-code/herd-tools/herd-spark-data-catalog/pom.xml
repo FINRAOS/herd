@@ -42,6 +42,12 @@
       </dependency>
 
       <dependency>
+         <groupId>com.fasterxml.jackson.module</groupId>
+         <artifactId>jackson-module-scala_2.11</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
          <groupId>com.fasterxml.jackson.jaxrs</groupId>
          <artifactId>jackson-jaxrs-json-provider</artifactId>
          <version>${apache.spark.jackson.version}</version>
