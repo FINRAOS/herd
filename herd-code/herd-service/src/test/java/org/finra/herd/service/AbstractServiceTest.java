@@ -445,9 +445,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
-    public static final Integer ID = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Long ID = (long) (Math.random() * Long.MAX_VALUE);
 
-    public static final Integer ID_2 = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final Long ID_2 = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -557,7 +557,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_FILE_SIZE = null;
 
-    public static final Integer NO_ID = null;
+    public static final Long NO_ID = null;
 
     public static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
 

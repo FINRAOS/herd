@@ -24,6 +24,7 @@ import org.activiti.engine.impl.interceptor.CommandConfig;
 import org.activiti.engine.impl.interceptor.CommandInvoker;
 import org.activiti.engine.impl.persistence.entity.JobEntity;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,8 @@ public class HerdCommandInvoker extends CommandInvoker
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HerdCommandInvoker.class);
 
+    private static final String CANNOT_CREATE_TRANSACTION_EXCEPTION = "CannotCreateTransactionException";
+
     @Override
     public <T> T execute(CommandConfig config, Command<T> command)
     {
@@ -49,6 +52,17 @@ public class HerdCommandInvoker extends CommandInvoker
         catch (Exception e)
         {
             LOGGER.debug(String.format("HerdCommandInvoker caught an exception."), e);
+
+            /*
+             * If the exception is unable to create transaction due to JDBC connection issue,
+             * throw out the exception, then let the Activiti engine take care of retries
+             */
+            if (StringUtils.containsIgnoreCase(ExceptionUtils.getMessage(e), CANNOT_CREATE_TRANSACTION_EXCEPTION))
+            {
+                LOGGER.warn(String.format("HerdCommandInvoker caught a CannotCreateTransactionException."), e);
+                throw e;
+            }
+
             /*
              * Attempt to handle exception based on the command.
              * If we bubble the exception up here, the transaction will be rolled back and all variables which were not committed will not be persisted.

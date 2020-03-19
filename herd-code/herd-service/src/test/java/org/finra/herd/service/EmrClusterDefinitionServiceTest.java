@@ -1357,13 +1357,13 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
      * @param expectedEmrClusterConfiguration the expected EMR cluster configuration
      * @param actualEmrClusterDefinition the EMR cluster definition object instance to be validated
      */
-    private void validateEmrClusterDefinition(Integer expectedEmrClusterDefinitionId, String expectedNamespace, String expectedEmrClusterDefinitionName,
+    private void validateEmrClusterDefinition(Long expectedEmrClusterDefinitionId, String expectedNamespace, String expectedEmrClusterDefinitionName,
         EmrClusterDefinition expectedEmrClusterConfiguration, EmrClusterDefinitionInformation actualEmrClusterDefinition)
     {
         assertNotNull(actualEmrClusterDefinition);
         if (expectedEmrClusterDefinitionId != null)
         {
-            assertEquals(expectedEmrClusterDefinitionId, Integer.valueOf(actualEmrClusterDefinition.getId()));
+            assertEquals(expectedEmrClusterDefinitionId, Long.valueOf(actualEmrClusterDefinition.getId()));
         }
         assertEquals(expectedNamespace, actualEmrClusterDefinition.getEmrClusterDefinitionKey().getNamespace());
         assertEquals(expectedEmrClusterDefinitionName, actualEmrClusterDefinition.getEmrClusterDefinitionKey().getEmrClusterDefinitionName());

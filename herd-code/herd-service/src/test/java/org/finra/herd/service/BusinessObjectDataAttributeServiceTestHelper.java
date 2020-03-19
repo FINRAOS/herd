@@ -86,7 +86,7 @@ public class BusinessObjectDataAttributeServiceTestHelper
      * @param expectedBusinessObjectDataAttributeValue the expected business object data attribute value
      * @param actualBusinessObjectDataAttribute the business object data attribute object instance to be validated
      */
-    public void validateBusinessObjectDataAttribute(Integer businessObjectDataAttributeId, String expectedNamespace,
+    public void validateBusinessObjectDataAttribute(Long businessObjectDataAttributeId, String expectedNamespace,
         String expectedBusinessObjectDefinitionName, String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType,
         Integer expectedBusinessObjectFormatVersion, String expectedBusinessObjectDataPartitionValue, List<String> expectedBusinessObjectDataSubPartitionValues,
         Integer expectedBusinessObjectDataVersion, String expectedBusinessObjectDataAttributeName, String expectedBusinessObjectDataAttributeValue,
@@ -95,7 +95,7 @@ public class BusinessObjectDataAttributeServiceTestHelper
         assertNotNull(actualBusinessObjectDataAttribute);
         if (businessObjectDataAttributeId != null)
         {
-            assertEquals(businessObjectDataAttributeId, Integer.valueOf(actualBusinessObjectDataAttribute.getId()));
+            assertEquals(businessObjectDataAttributeId, Long.valueOf(actualBusinessObjectDataAttribute.getId()));
         }
         validateBusinessObjectDataAttributeKey(expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage,
             expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, expectedBusinessObjectDataPartitionValue,

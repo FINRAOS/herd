@@ -49,7 +49,7 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @JsonBackReference(value="businessObjectDefinition-columns")
     @ManyToOne
@@ -77,12 +77,12 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @OrderBy("createdOn DESC")
     private Collection<BusinessObjectDefinitionColumnChangeEventEntity> changeEvents;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

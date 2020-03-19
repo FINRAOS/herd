@@ -35,7 +35,7 @@ public class EmrClusterCreationLogEntity extends AuditableEntity
     @SequenceGenerator(name = EmrClusterCreationLogEntity.TABLE_NAME + "_seq", sequenceName = EmrClusterCreationLogEntity.TABLE_NAME + "_seq",
         allocationSize = 1)
     @Column(name = EmrClusterCreationLogEntity.TABLE_NAME + "_id")
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "name_space_cd", nullable = false)
@@ -53,12 +53,12 @@ public class EmrClusterCreationLogEntity extends AuditableEntity
     @Column(name = "emr_clstr_dfntn_cl", nullable = false)
     private String emrClusterDefinition;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

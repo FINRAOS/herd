@@ -37,7 +37,7 @@ public class BusinessObjectFormatExternalInterfaceEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = false)
@@ -53,12 +53,12 @@ public class BusinessObjectFormatExternalInterfaceEntity extends AuditableEntity
     @Column(name = "xtrnl_intrfc_cd", insertable = false, updatable = false)
     private String externalInterfaceName;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

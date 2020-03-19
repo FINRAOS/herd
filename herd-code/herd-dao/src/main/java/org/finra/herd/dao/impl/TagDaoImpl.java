@@ -145,7 +145,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     }
 
     @Override
-    public List<TagEntity> getTagsByIds(List<Integer> ids)
+    public List<TagEntity> getTagsByIds(List<Long> ids)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -155,7 +155,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Expression<Integer> expression = tagEntityRoot.get(TagEntity_.id);
+        Expression<Long> expression = tagEntityRoot.get(TagEntity_.id);
         Predicate queryRestriction = expression.in(ids);
 
         criteria.select(tagEntityRoot).where(queryRestriction);
@@ -256,18 +256,18 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 
         // The criteria root is the tag.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Get the columns.
-        Path<Integer> idColumn = tagEntityRoot.get(TagEntity_.id);
+        Path<Long> idColumn = tagEntityRoot.get(TagEntity_.id);
 
         criteria.select(idColumn);
 
-        List<Integer> allTagIdsList = entityManager.createQuery(criteria).getResultList();
-        List<Integer> percentageOfTagIdsList = new ArrayList<>();
+        List<Long> allTagIdsList = entityManager.createQuery(criteria).getResultList();
+        List<Long> percentageOfTagIdsList = new ArrayList<>();
 
         /*
         * Gets a percentage of all tag entities.

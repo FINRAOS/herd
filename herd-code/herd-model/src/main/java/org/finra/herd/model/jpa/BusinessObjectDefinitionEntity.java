@@ -50,7 +50,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The name column.
@@ -129,12 +129,12 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
         this.tagSearchScoreMultiplier = tagSearchScoreMultiplier;
     }
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

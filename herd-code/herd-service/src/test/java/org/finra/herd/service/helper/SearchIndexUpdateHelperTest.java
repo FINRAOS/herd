@@ -70,10 +70,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -102,10 +102,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -131,10 +131,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -170,12 +170,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
         businessObjectDefinitionEntityList.add(businessObjectDefinitionEntity);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -204,12 +204,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
         businessObjectDefinitionEntityList.add(businessObjectDefinitionEntity);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -235,12 +235,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a business object data entity
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
-        businessObjectDefinitionEntity.setId(1);
+        businessObjectDefinitionEntity.setId(1L);
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
         businessObjectDefinitionEntityList.add(businessObjectDefinitionEntity);
 
         // Create a list of business object definition ids
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
 
         // Create a search index dto
@@ -276,10 +276,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -307,10 +307,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -335,10 +335,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -373,10 +373,10 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -400,12 +400,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity list
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
         List<TagEntity> tagEntityList = new ArrayList<>();
         tagEntityList.add(tagEntity);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -433,12 +433,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity list
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
         List<TagEntity> tagEntityList = new ArrayList<>();
         tagEntityList.add(tagEntity);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto
@@ -463,12 +463,12 @@ public class SearchIndexUpdateHelperTest extends AbstractServiceTest
     {
         // Create a tag entity list
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setId(1);
+        tagEntity.setId(1L);
         List<TagEntity> tagEntityList = new ArrayList<>();
         tagEntityList.add(tagEntity);
 
         // Create a list of tag ids
-        List<Integer> tagIds = new ArrayList<>();
+        List<Long> tagIds = new ArrayList<>();
         tagIds.add(tagEntity.getId());
 
         // Create a search index dto

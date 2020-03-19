@@ -53,7 +53,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @JsonBackReference(value = "businessObjectDefinition-businessObjectFormats")
     @ManyToOne
@@ -168,12 +168,12 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @JoinColumn(name = "rtntn_type_cd", referencedColumnName = "rtntn_type_cd", nullable = true)
     private RetentionTypeEntity retentionType;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

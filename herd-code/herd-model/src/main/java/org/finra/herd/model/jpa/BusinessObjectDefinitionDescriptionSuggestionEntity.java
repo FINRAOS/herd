@@ -40,7 +40,7 @@ public class BusinessObjectDefinitionDescriptionSuggestionEntity extends Auditab
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The business object definition entity.
@@ -68,12 +68,12 @@ public class BusinessObjectDefinitionDescriptionSuggestionEntity extends Auditab
     @JoinColumn(name = "bus_objct_dfntn_dscr_sgstn_stts_cd", referencedColumnName = "bus_objct_dfntn_dscr_sgstn_stts_cd", nullable = false)
     private BusinessObjectDefinitionDescriptionSuggestionStatusEntity status;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

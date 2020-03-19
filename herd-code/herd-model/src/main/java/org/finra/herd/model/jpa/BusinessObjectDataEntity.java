@@ -66,7 +66,7 @@ public class BusinessObjectDataEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @Column(name = "prtn_value_tx")
     private String partitionValue;
@@ -95,7 +95,7 @@ public class BusinessObjectDataEntity extends AuditableEntity
     private BusinessObjectFormatEntity businessObjectFormat;
 
     @Column(name = "bus_objct_frmt_id", insertable = false, updatable = false)
-    private Integer businessObjectFormatId;
+    private Long businessObjectFormatId;
 
     @OneToMany(mappedBy = "businessObjectData", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("storage")
@@ -130,12 +130,12 @@ public class BusinessObjectDataEntity extends AuditableEntity
     @Column(name = "rtntn_xprtn_ts")
     private Timestamp retentionExpiration;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }
@@ -220,12 +220,12 @@ public class BusinessObjectDataEntity extends AuditableEntity
         this.businessObjectFormat = businessObjectFormat;
     }
 
-    public Integer getBusinessObjectFormatId()
+    public Long getBusinessObjectFormatId()
     {
         return businessObjectFormatId;
     }
 
-    public void setBusinessObjectFormatId(Integer businessObjectFormatId)
+    public void setBusinessObjectFormatId(Long businessObjectFormatId)
     {
         this.businessObjectFormatId = businessObjectFormatId;
     }

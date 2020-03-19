@@ -37,7 +37,7 @@ public class NotificationMessageEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "msg_type_cd", referencedColumnName = "msg_type_cd", nullable = false)
@@ -52,12 +52,12 @@ public class NotificationMessageEntity extends AuditableEntity
     @Column(name = "msg_hdrs")
     private String messageHeaders;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }
