@@ -127,14 +127,14 @@ public class CustomDdlServiceTestHelper
      * @param expectedDdl the expected DDL
      * @param actualCustomDdl the custom DDL object instance to be validated
      */
-    public void validateCustomDdl(Integer customDdlId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
+    public void validateCustomDdl(Long customDdlId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         String expectedCustomDdlName, String expectedDdl, CustomDdl actualCustomDdl)
     {
         assertNotNull(actualCustomDdl);
         if (customDdlId != null)
         {
-            assertEquals(customDdlId, Integer.valueOf(actualCustomDdl.getId()));
+            assertEquals(customDdlId, Long.valueOf(actualCustomDdl.getId()));
         }
         assertEquals(
             new CustomDdlKey(expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage, expectedBusinessObjectFormatFileType,

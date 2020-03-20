@@ -41,7 +41,7 @@ public class BusinessObjectDefinitionColumnChangeEventEntity extends AuditableEn
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_clmn_id", referencedColumnName = "bus_objct_dfntn_clmn_id", nullable = false)
@@ -50,12 +50,12 @@ public class BusinessObjectDefinitionColumnChangeEventEntity extends AuditableEn
     @Column(name = "clmn_ds", length = 4000)
     private String description;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

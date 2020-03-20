@@ -1108,7 +1108,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
-        Set<Integer> businessObjectIdSet = new HashSet<>();
+        Set<Long> businessObjectIdSet = new HashSet<>();
         for (BusinessObjectDataEntity dataEntity : entityArray)
         {
             //need to skip the same data entity
@@ -1230,7 +1230,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Integer maxResults)
     {
         // Get ids for all business object formats registered with the specified business object definition.
-        List<Integer> businessObjectFormatIds = businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntity);
+        List<Long> businessObjectFormatIds = businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntity);
 
         // Return no results if the business object definition has no business object formats registered with it.
         if (CollectionUtils.isEmpty(businessObjectFormatIds))

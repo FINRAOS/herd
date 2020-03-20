@@ -389,7 +389,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Create a document on the search index
@@ -425,7 +425,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Create a document on the search index
@@ -461,7 +461,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Update a document in the search index
@@ -497,7 +497,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Update a document in the search index
@@ -533,7 +533,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
 
         // Create a list of business object definition ids that would require to be processed in chunks.
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.addAll(Collections.nCopies(BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE + 1, ID));
 
         // Mock the external calls.
@@ -576,7 +576,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Delete from the search index
@@ -609,7 +609,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()));
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Delete from the search index

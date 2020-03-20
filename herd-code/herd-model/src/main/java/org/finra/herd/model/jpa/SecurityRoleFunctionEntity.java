@@ -40,7 +40,7 @@ public class SecurityRoleFunctionEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "scrty_role_cd", referencedColumnName = "scrty_role_cd", nullable = false)
@@ -50,12 +50,12 @@ public class SecurityRoleFunctionEntity extends AuditableEntity
     @JoinColumn(name = "scrty_fn_cd", referencedColumnName = "scrty_fn_cd", nullable = false)
     private SecurityFunctionEntity securityFunction;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

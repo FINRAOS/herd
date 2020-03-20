@@ -2708,7 +2708,7 @@ public class BusinessObjectDataServiceTestHelper
      * @param expectedAttributes the expected attributes
      * @param actualBusinessObjectData the business object data availability object instance to be validated
      */
-    public void validateBusinessObjectData(Integer expectedBusinessObjectDataId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
+    public void validateBusinessObjectData(Long expectedBusinessObjectDataId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         String expectedBusinessObjectDataPartitionValue, List<String> expectedBusinessObjectDataSubPartitionValues, Integer expectedBusinessObjectDataVersion,
         Boolean expectedLatestVersion, String expectedStatusCode, String expectedStorageName, String expectedStorageDirectoryPath,
@@ -2740,7 +2740,7 @@ public class BusinessObjectDataServiceTestHelper
      * @param expectedStatusCode the expected business object data status code
      * @param actualBusinessObjectData the business object data availability object instance to be validated
      */
-    public void validateBusinessObjectData(Integer expectedBusinessObjectDataId, BusinessObjectDataKey expectedBusinessObjectDataKey,
+    public void validateBusinessObjectData(Long expectedBusinessObjectDataId, BusinessObjectDataKey expectedBusinessObjectDataKey,
         Boolean expectedLatestVersion, String expectedStatusCode, BusinessObjectData actualBusinessObjectData)
     {
         validateBusinessObjectData(expectedBusinessObjectDataId, expectedBusinessObjectDataKey.getNamespace(),
@@ -2766,7 +2766,7 @@ public class BusinessObjectDataServiceTestHelper
      * @param expectedStatusCode the expected business object data status code
      * @param actualBusinessObjectData the business object data availability object instance to be validated
      */
-    public void validateBusinessObjectData(Integer expectedBusinessObjectDataId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
+    public void validateBusinessObjectData(Long expectedBusinessObjectDataId, String expectedNamespace, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         String expectedBusinessObjectDataPartitionValue, List<String> expectedBusinessObjectDataSubPartitionValues, Integer expectedBusinessObjectDataVersion,
         Boolean expectedLatestVersion, String expectedStatusCode, BusinessObjectData actualBusinessObjectData)
@@ -2775,7 +2775,7 @@ public class BusinessObjectDataServiceTestHelper
 
         if (expectedBusinessObjectDataId != null)
         {
-            assertEquals(expectedBusinessObjectDataId, Integer.valueOf(actualBusinessObjectData.getId()));
+            assertEquals(expectedBusinessObjectDataId, Long.valueOf(actualBusinessObjectData.getId()));
         }
 
         assertEquals(expectedNamespace, actualBusinessObjectData.getNamespace());
@@ -2948,7 +2948,7 @@ public class BusinessObjectDataServiceTestHelper
      * @param notificationMessage the notification message to be validated
      */
     public void validateBusinessObjectDataStatusChangeMessageWithXmlPayload(String expectedMessageType, String expectedMessageDestination,
-        BusinessObjectDataKey expectedBusinessObjectDataKey, Integer expectedBusinessObjectDataId, String expectedUsername,
+        BusinessObjectDataKey expectedBusinessObjectDataKey, Long expectedBusinessObjectDataId, String expectedUsername,
         String expectedNewBusinessObjectDataStatus, String expectedOldBusinessObjectDataStatus, List<Attribute> expectedBusinessObjectDataAttributes,
         List<MessageHeader> expectedMessageHeaders, NotificationMessage notificationMessage)
     {

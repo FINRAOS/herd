@@ -40,7 +40,7 @@ public class JobDefinitionParameterEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The parameter name column.
@@ -58,12 +58,12 @@ public class JobDefinitionParameterEntity extends AuditableEntity
     @JoinColumn(name = "job_dfntn_id", referencedColumnName = "job_dfntn_id", nullable = false)
     private JobDefinitionEntity jobDefinition;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

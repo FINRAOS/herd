@@ -40,7 +40,7 @@ public class StorageFileEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The path column.
@@ -61,12 +61,12 @@ public class StorageFileEntity extends AuditableEntity
     @Column(name = "strge_unit_id", insertable = false, updatable = false)
     private Integer storageUnitId;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

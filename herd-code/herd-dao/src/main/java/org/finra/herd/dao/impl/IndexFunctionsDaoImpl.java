@@ -240,7 +240,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
      * The delete index documents function will delete a list of document in the index by a list of document ids.
      */
     @Override
-    public final void deleteIndexDocuments(String indexName, String documentType, List<Integer> ids)
+    public final void deleteIndexDocuments(String indexName, String documentType, List<Long> ids)
     {
         LOGGER.info("Deleting Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", indexName, documentType,
             ids.stream().map(Object::toString).collect(Collectors.joining(",")));

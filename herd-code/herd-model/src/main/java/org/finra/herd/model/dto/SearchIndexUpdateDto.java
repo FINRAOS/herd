@@ -58,7 +58,7 @@ public class SearchIndexUpdateDto
     /**
      * A list of business object definition ids that will be modified in the business object definition index.
      */
-    private List<Integer> businessObjectDefinitionIds;
+    private List<Long> businessObjectDefinitionIds;
 
     /**
      * The type of modification that will be processed. BUSINESS_OBJECT_DEFINITION, TAG
@@ -73,7 +73,7 @@ public class SearchIndexUpdateDto
     /**
      * A list of tag ids that will be modified in the tag index
      */
-    private List<Integer> tagIds;
+    private List<Long> tagIds;
 
     /**
      * Default constructor required for JSON object mapping
@@ -89,7 +89,7 @@ public class SearchIndexUpdateDto
      * @param ids a list of ids to modify
      * @param modificationType the type of modification
      */
-    public SearchIndexUpdateDto(String messageType, List<Integer> ids, String modificationType)
+    public SearchIndexUpdateDto(String messageType, List<Long> ids, String modificationType)
     {
         this.messageType = messageType;
 
@@ -109,12 +109,12 @@ public class SearchIndexUpdateDto
         this.modificationType = modificationType;
     }
 
-    public List<Integer> getBusinessObjectDefinitionIds()
+    public List<Long> getBusinessObjectDefinitionIds()
     {
         return businessObjectDefinitionIds;
     }
 
-    public void setBusinessObjectDefinitionIds(List<Integer> businessObjectDefinitionIds)
+    public void setBusinessObjectDefinitionIds(List<Long> businessObjectDefinitionIds)
     {
         this.businessObjectDefinitionIds = businessObjectDefinitionIds;
     }
@@ -139,12 +139,12 @@ public class SearchIndexUpdateDto
         this.modificationType = modificationType;
     }
 
-    public List<Integer> getTagIds()
+    public List<Long> getTagIds()
     {
         return tagIds;
     }
 
-    public void setTagIds(List<Integer> tagIds)
+    public void setTagIds(List<Long> tagIds)
     {
         this.tagIds = tagIds;
     }

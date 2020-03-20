@@ -66,7 +66,7 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      *
      * @return the list of business object format ids
      */
-    List<Integer> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+    List<Long> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
 
     /**
      * Gets the maximum available version of the specified business object format.
