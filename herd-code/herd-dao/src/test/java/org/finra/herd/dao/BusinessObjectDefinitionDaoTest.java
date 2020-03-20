@@ -152,7 +152,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
 
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 

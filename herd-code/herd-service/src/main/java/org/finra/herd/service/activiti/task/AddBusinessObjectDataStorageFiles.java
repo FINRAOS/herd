@@ -17,6 +17,8 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +41,7 @@ import org.finra.herd.service.BusinessObjectDataStorageFileService;
 @Component
 public class AddBusinessObjectDataStorageFiles extends BaseJavaDelegate
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AddBusinessObjectDataStorageFiles.class);
     private Expression contentType;
     private Expression businessObjectDataStorageFilesCreateRequest;
 
@@ -56,6 +59,7 @@ public class AddBusinessObjectDataStorageFiles extends BaseJavaDelegate
         BusinessObjectDataStorageFilesCreateRequest request =
                 getRequestObject(contentTypeString, requestString, BusinessObjectDataStorageFilesCreateRequest.class);
 
+        LOGGER.info("inside4 AddBusinessObjectDataStorageFiles");
         // Call the BusinessObjectDataStorageFiles service.
         BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
                 businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);

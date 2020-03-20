@@ -44,7 +44,7 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
+    private Long id;
 
     /**
      * The attribute name column.
@@ -65,12 +65,12 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @Type(type = "yes_no")
     private Boolean publishForFilter;
 
-    public Integer getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(Integer id)
+    public void setId(Long id)
     {
         this.id = id;
     }

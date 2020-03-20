@@ -984,7 +984,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       formatVersion, partitionKey, Seq(partitonValue), dataVersion)).thenReturn(businessObjectDataDDl)
 
     val thrown = intercept[Exception]{
-      val df = dataCatalog.findDataFrame(objectName, List(partitonValue))
+      val df = dataCatalog.findDataFrame(objectName, List(partitonValue), List("HUB"), List("ORC"))
     }
 
     assertEquals("No FileSystem for scheme: s3", thrown.getMessage)

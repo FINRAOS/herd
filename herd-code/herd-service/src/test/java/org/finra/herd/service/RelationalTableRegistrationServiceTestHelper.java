@@ -92,7 +92,7 @@ class RelationalTableRegistrationServiceTestHelper
     {
         List<SchemaColumn> expectedSchemaColumns = new ArrayList<>();
 
-        expectedSchemaColumns.add(new SchemaColumn("BUS_OBJCT_DFNTN_ID", "INTEGER", "10", true, null, null));
+        expectedSchemaColumns.add(new SchemaColumn("BUS_OBJCT_DFNTN_ID", "BIGINT", "19", true, null, null));
         expectedSchemaColumns.add(new SchemaColumn("CREAT_USER_ID", "VARCHAR", "255", false, null, null));
         expectedSchemaColumns.add(new SchemaColumn("CREAT_TS", "TIMESTAMP", "23", false, null, null));
         expectedSchemaColumns.add(new SchemaColumn("UPDT_USER_ID", "VARCHAR", "255", false, null, null));
@@ -101,7 +101,7 @@ class RelationalTableRegistrationServiceTestHelper
         expectedSchemaColumns.add(new SchemaColumn("DSPLY_NAME_TX", "VARCHAR", "255", false, null, null));
         expectedSchemaColumns.add(new SchemaColumn("NAME_TX", "VARCHAR", "255", false, null, null));
         expectedSchemaColumns.add(new SchemaColumn("DATA_PRVDR_CD", "VARCHAR", "255", true, null, null));
-        expectedSchemaColumns.add(new SchemaColumn("DESC_BUS_OBJCT_FRMT_ID", "INTEGER", "10", false, null, null));
+        expectedSchemaColumns.add(new SchemaColumn("DESC_BUS_OBJCT_FRMT_ID", "BIGINT", "19", false, null, null));
         expectedSchemaColumns.add(new SchemaColumn("NAME_SPACE_CD", "VARCHAR", "255", true, null, null));
 
         return expectedSchemaColumns;
