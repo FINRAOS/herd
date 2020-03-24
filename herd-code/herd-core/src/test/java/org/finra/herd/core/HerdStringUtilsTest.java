@@ -210,4 +210,24 @@ public class HerdStringUtilsTest extends AbstractCoreTest
             assertEquals(String.format("Failed to convert \"%s\" value to %s.", INVALID_INTEGER_VALUE, Integer.class.getName()), e.getMessage());
         }
     }
+
+    @Test
+    public void testLoggingPasswordMasked()
+    {
+        String message = "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"test-123\"," +
+            "\"hive.server3.keystore.password\":\"TEST$2!1\"," + "\"hive.server2.keystore.name\":\"testname1\"";
+        String expectedMessage =
+            "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," +
+                "\"hive.server3.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," + "\"hive.server2.keystore.name\":\"testname1\"";
+        String sanitizedMessage = HerdStringUtils.sanitizeLogText(message);
+        assertEquals(expectedMessage, sanitizedMessage);
+
+        String messsage2 = "{\"name\": \"jdbc.user\", \"value\": \"user\"}," +
+            "{\"name\": \"hive.server2.keystore.password\", \"value\": \"!This-is-password\"}, {\"name\": \"password\", \"value\": \"pass\"}\", {\"name\": \"jdbc.url\", \"value\": \"AURL\"}";
+        String expectedMessage2 =
+            "{\"name\": \"jdbc.user\", \"value\": \"user\"}," + "{\"name\": \"hive.server2.keystore.password\", \"value\": \"" + HerdStringUtils.HIDDEN_TEXT +
+                "\"}, {\"name\": \"password\", \"value\": \"" + HerdStringUtils.HIDDEN_TEXT + "\"}\", {\"name\": \"jdbc.url\", \"value\": \"AURL\"}";
+        String sanitizedMessage2 = HerdStringUtils.sanitizeLogText(messsage2);
+        assertEquals(expectedMessage2, sanitizedMessage2);
+    }
 }

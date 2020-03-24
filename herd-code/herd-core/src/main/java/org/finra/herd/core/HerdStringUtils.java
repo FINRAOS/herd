@@ -17,6 +17,7 @@ package org.finra.herd.core;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -33,6 +34,12 @@ public class HerdStringUtils
 {
     // Regex to check for CSV Injection. Any text that starts with "+", "=", "@", or "-" will be vulnerable to CSV Injection attack.
     private static final String CSV_INJECTION_REGEX = "^[+=@-].*";
+    // Hidden text content
+    public static final String HIDDEN_TEXT = "hidden";
+    // Regex to check json password pattern
+    private static Pattern REGEX_JSON_PASSWORD = Pattern.compile("\"(.*?password\":)\"[\\w\\p{Punct}&&[^&]]*?\"");
+    // Regex to check json password pattern
+    private static Pattern REGEX_JSON_PASSWORD2 = Pattern.compile("\"(name\": \".*?password\", \"value\": )\"[\\w\\p{Punct}&&[^&]]*?\"");
 
     /**
      * Decodes and return the base64 encoded string.
@@ -138,5 +145,20 @@ public class HerdStringUtils
         {
             return defaultValue;
         }
+    }
+
+    /**
+     * Sanitize log text by replacing the password
+     *
+     * @param loggingText logging text
+     * @return sanitized text
+     */
+    public static String sanitizeLogText(String loggingText)
+    {
+        String sanitizedText = loggingText;
+        sanitizedText = REGEX_JSON_PASSWORD.matcher(sanitizedText).replaceAll("\"$1\"" + HIDDEN_TEXT + "\"");
+        sanitizedText = REGEX_JSON_PASSWORD2.matcher(sanitizedText).replaceAll("\"$1\"" + HIDDEN_TEXT + "\"");
+
+        return sanitizedText;
     }
 }
