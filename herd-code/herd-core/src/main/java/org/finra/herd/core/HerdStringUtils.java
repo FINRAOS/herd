@@ -40,7 +40,9 @@ public class HerdStringUtils
     private static Pattern REGEX_JSON_PASSWORD = Pattern.compile("\"(.*?password\":)\"[\\w\\p{Punct}&&[^&]]*?\"");
     // Regex to check json password pattern
     private static Pattern REGEX_JSON_PASSWORD2 = Pattern.compile("\"(name\": \".*?password\", \"value\": )\"[\\w\\p{Punct}&&[^&]]*?\"");
-
+    // Regex to check xml password pattern
+    private static Pattern REGEX_XML_PASSWORD = Pattern.compile("(<.*?password>)[\\w\\p{Punct}&&[^&]]*?<");
+    
     /**
      * Decodes and return the base64 encoded string.
      *
@@ -158,6 +160,7 @@ public class HerdStringUtils
         String sanitizedText = loggingText;
         sanitizedText = REGEX_JSON_PASSWORD.matcher(sanitizedText).replaceAll("\"$1\"" + HIDDEN_TEXT + "\"");
         sanitizedText = REGEX_JSON_PASSWORD2.matcher(sanitizedText).replaceAll("\"$1\"" + HIDDEN_TEXT + "\"");
+        sanitizedText = REGEX_XML_PASSWORD.matcher(sanitizedText).replaceAll("$1" + HIDDEN_TEXT + "<");
 
         return sanitizedText;
     }
