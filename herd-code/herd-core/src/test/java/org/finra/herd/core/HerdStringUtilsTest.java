@@ -242,8 +242,8 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         String sanitizedMessage4 = HerdStringUtils.sanitizeLogText(message4);
         assertEquals(expectedMessage4, sanitizedMessage4);
 
-        String message5 = "\"username\":\"user1\",\"password\":\"pass!Word\",\"databaseType\":\"POSTGRES\"";
-        String expectedMessage5 = "\"username\":\"user1\",\"password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\",\"databaseType\":\"POSTGRES\"";
+        String message5 = "\\\"jdbc.password\\\":\\\"pass!word\\\",\\\"username\\\":\\\"user1\\\",\\\"password\\\":\\\"pass!word\\\",\\\"databaseType\\\":\\\"POSTGRES\\\"";
+        String expectedMessage5 = "\\\"jdbc.password\\\":\\\"" + HerdStringUtils.HIDDEN_TEXT + "\\\",\\\"username\\\":\\\"user1\\\",\\\"password\\\":\\\"" +  HerdStringUtils.HIDDEN_TEXT + "\\\",\\\"databaseType\\\":\\\"POSTGRES\\\"";
         String sanitizedMessage5 = HerdStringUtils.sanitizeLogText(message5);
         assertEquals(expectedMessage5, sanitizedMessage5);
     }
