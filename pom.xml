@@ -142,7 +142,7 @@
       <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
       <jsoup.version>1.11.3</jsoup.version>
       <bcprov-jdk15on.version>1.60</bcprov-jdk15on.version>
-      <hive-serde.version>2.3.4</hive-serde.version>
+      <hive-serde.version>3.1.2</hive-serde.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
