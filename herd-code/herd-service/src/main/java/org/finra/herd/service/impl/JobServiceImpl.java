@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.S3Dao;
@@ -165,7 +166,7 @@ public class JobServiceImpl implements JobService
 
         // If we get here, we have a newly created process instance. Log to know it was created successfully.
         LOGGER.info("Created process instance with Id: " + processInstance.getProcessInstanceId() +
-            " for process definition Id: " + processDefinitionId + " with merged parameters: " + mergedParameters);
+            " for process definition Id: " + processDefinitionId + " with merged parameters: " + HerdStringUtils.sanitizeLogText(mergedParameters.toString()));
 
         // Create and return the job object.
         return createJobFromRequest(namespaceEntity.getCode(), jobDefinitionEntity.getName(), mergedParameters, processInstance.getProcessInstanceId());

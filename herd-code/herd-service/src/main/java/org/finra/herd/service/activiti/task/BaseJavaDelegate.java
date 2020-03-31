@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
@@ -392,8 +393,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
      */
     protected void logInputParameters(DelegateExecution execution)
     {
+        String loggingText = execution.getVariables().entrySet().stream().map(entry -> entry.getKey() + "=" + jsonHelper.objectToJson(entry.getValue()))
+            .collect(Collectors.joining(" "));
         LOGGER.info("{} Input parameters for {}: {}", activitiHelper.getProcessIdentifyingInformation(execution), this.getClass().getName(),
-            execution.getVariables().entrySet().stream().map(entry -> entry.getKey() + "=" + jsonHelper.objectToJson(entry.getValue()))
-                .collect(Collectors.joining(" ")));
+            HerdStringUtils.sanitizeLogText(loggingText));
     }
 }
