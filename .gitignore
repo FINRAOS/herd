@@ -17,3 +17,5 @@ target/
 **/htmlcov/
 **/.coverage
 **/__pycache__/
+**/.flattened-pom.xml
+**/velocity.log*
