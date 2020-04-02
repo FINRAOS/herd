@@ -157,7 +157,7 @@ public class HerdStringUtils
      */
     public static String sanitizeLogText(String loggingText)
     {
-        String sanitizedText = loggingText;
+        String sanitizedText = (loggingText != null) ? loggingText : "";
         sanitizedText = sanitizedText.replaceAll("&quot;", "\"");
         sanitizedText = REGEX_JSON_PASSWORD.matcher(sanitizedText).replaceAll("$1" + HIDDEN_TEXT + "$2");
         sanitizedText = REGEX_JSON_PASSWORD2.matcher(sanitizedText).replaceAll("$1" + HIDDEN_TEXT + "\"");
