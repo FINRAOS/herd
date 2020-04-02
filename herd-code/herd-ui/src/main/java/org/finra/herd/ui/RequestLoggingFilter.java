@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ReadListener;
@@ -38,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
+
+import org.finra.herd.core.HerdStringUtils;
 
 /**
  * A servlet filter that logs incoming HTTP requests. This approach is similar to the Spring CommonsRequestLoggingFilter, but is customized to ensure that the
@@ -257,7 +258,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
 
             // Append the HTTP method.
             message.append(";method=").append(request.getMethod());
-
+           
             // Append the client information.
             if (isIncludeClientInfo())
             {
@@ -300,28 +301,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
             // Append the request payload if present.
             if (isIncludePayload() && StringUtils.hasLength(payloadString))
             {
-                String sanitizedPayloadString = payloadString;
-                /*
-                 * TODO Remove this logic once proper way of securing sensitive data is implemented.
-                 * Replaces the payload if it contains the word "password" for requests to jobDefinitions and jobs.
-                 */
-                if (request.getRequestURI().endsWith("/jobDefinitions") || request.getRequestURI().endsWith("/jobs") ||
-                    request.getRequestURI().endsWith("/jobs/signal"))
-                {
-                    Pattern pattern = Pattern.compile("password", Pattern.CASE_INSENSITIVE);
-                    if (pattern.matcher(payloadString).find())
-                    {
-                        sanitizedPayloadString = "<hidden because it may contain sensitive information>";
-                    }
-                }
-                /*
-                 * Limit logged payload length if max length is set
-                 */
-                else if (getMaxPayloadLength() != null)
-                {
-                    sanitizedPayloadString = payloadString.substring(0, Math.min(payloadString.length(), getMaxPayloadLength()));
-                }
-
+                String sanitizedPayloadString = HerdStringUtils.sanitizeLogText(payloadString);
                 message.append(";payload=").append(sanitizedPayloadString);
             }
 

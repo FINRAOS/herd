@@ -51,7 +51,7 @@ public class HerdCommandInvoker extends CommandInvoker
         }
         catch (Exception e)
         {
-            LOGGER.debug(String.format("HerdCommandInvoker caught an exception."), e);
+            LOGGER.warn(String.format("HerdCommandInvoker caught an exception."), e);
 
             /*
              * If the exception is unable to create transaction due to JDBC connection issue,

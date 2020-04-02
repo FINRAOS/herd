@@ -210,4 +210,48 @@ public class HerdStringUtilsTest extends AbstractCoreTest
             assertEquals(String.format("Failed to convert \"%s\" value to %s.", INVALID_INTEGER_VALUE, Integer.class.getName()), e.getMessage());
         }
     }
+
+    @Test
+    public void testLoggingPasswordMasked()
+    {
+        String message = "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"test-123\"," +
+            "\"hive.server3.keystore.password\":\"TEST$2!1\"," + "\"hive.server2.keystore.name\":\"testname1\"";
+        String expectedMessage =
+            "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," +
+                "\"hive.server3.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," + "\"hive.server2.keystore.name\":\"testname1\"";
+        String sanitizedMessage = HerdStringUtils.sanitizeLogText(message);
+        assertEquals(expectedMessage, sanitizedMessage);
+
+        String messsage2 = "{\"name\": \"jdbc.user\", \"value\": \"user\"}," +
+            "{\"name\": \"hive.server2.keystore.password\", \"value\": \"!This-is-password\"}, {\"name\": \"password\", \"value\": \"pass\"}\", {\"name\": \"jdbc.url\", \"value\": \"AURL\"}";
+        String expectedMessage2 =
+            "{\"name\": \"jdbc.user\", \"value\": \"user\"}," + "{\"name\": \"hive.server2.keystore.password\", \"value\": \"" + HerdStringUtils.HIDDEN_TEXT +
+                "\"}, {\"name\": \"password\", \"value\": \"" + HerdStringUtils.HIDDEN_TEXT + "\"}\", {\"name\": \"jdbc.url\", \"value\": \"AURL\"}";
+        String sanitizedMessage2 = HerdStringUtils.sanitizeLogText(messsage2);
+        assertEquals(expectedMessage2, sanitizedMessage2);
+
+        String message3 = "<username>tester</username><password>@!pass_dd</password><url>a url</url>";
+        String expectedMessage3 = "<username>tester</username><password>" + HerdStringUtils.HIDDEN_TEXT + "</password><url>a url</url>";
+        String sanitizedMessage3 = HerdStringUtils.sanitizeLogText(message3);
+        assertEquals(expectedMessage3, sanitizedMessage3);
+
+        String message4 = "<hive.password>hive!pass</hive.password><username>tester</username><jdbc.password>@!pass_dd</jdbc.password><url>a url</url>";
+        String expectedMessage4 =
+            "<hive.password>" + HerdStringUtils.HIDDEN_TEXT + "</hive.password><username>tester</username>" + "<jdbc.password>" + HerdStringUtils.HIDDEN_TEXT +
+                "</jdbc.password><url>a url</url>";
+        String sanitizedMessage4 = HerdStringUtils.sanitizeLogText(message4);
+        assertEquals(expectedMessage4, sanitizedMessage4);
+
+        String message5 = "\\\"jdbc.password\\\":\\\"pass!word\\\",\\\"username\\\":\\\"user1\\\",\\\"password\\\":\\\"pass!word\\\",\\\"databaseType\\\":\\\"POSTGRES\\\"";
+        String expectedMessage5 = "\\\"jdbc.password\\\":\\\"" + HerdStringUtils.HIDDEN_TEXT + "\\\",\\\"username\\\":\\\"user1\\\",\\\"password\\\":\\\"" +  HerdStringUtils.HIDDEN_TEXT + "\\\",\\\"databaseType\\\":\\\"POSTGRES\\\"";
+        String sanitizedMessage5 = HerdStringUtils.sanitizeLogText(message5);
+        assertEquals(expectedMessage5, sanitizedMessage5);
+
+        String message6 = "&quot;username&quot;:&quot;user1&quot;,&quot;password&quot;:&quot;pass!word&quot;,&quot;databaseType&quot;:&quot;POSTGRES&quot;";
+        String expectedMessage6 = "\"username\":\"user1\",\"password\":\"hidden\",\"databaseType\":\"POSTGRES\"";
+        String sanitizedMessage6 = HerdStringUtils.sanitizeLogText(message6);
+        assertEquals(expectedMessage6, sanitizedMessage6);
+    }
+
+
 }
