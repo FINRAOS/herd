@@ -456,7 +456,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         try
         {
             String s3KeyPrefix = "s3KeyPrefix";
-            String storageName = "storageName";
+            String storageName = "S3_MANAGED";
             Path targetDirectoryPath = localPath.resolve(s3KeyPrefix);
             Path targetFilePath = targetDirectoryPath.resolve("file");
 
@@ -494,8 +494,12 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
 
             downloaderController.performDownload(regServerAccessParamsDto, manifestPath, s3FileTransferRequestParamsDto);
 
-            assertEquals(String.format("Found 1 files in \"%s\" target local directory:%n    %s%n", targetDirectoryPath, targetFilePath),
-                stringWriter.toString());
+            // Assert that the proper delegate method is called with the expected params to retrieve credentials
+            verify(mockDownloaderManifestReader).readJsonManifest(manifestPath);
+            verify(mockDownloaderWebClient).getBusinessObjectData(downloaderInputManifestDto);
+            verify(mockBusinessObjectDataHelper).getStorageUnitByStorageName(businessObjectData, storageName);
+            verify(mockDownloaderWebClient).getS3KeyPrefix(businessObjectData);
+            verify(mockS3Service).downloadDirectory(s3FileTransferRequestParamsDto);
         }
         finally
         {
