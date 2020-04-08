@@ -97,6 +97,7 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
         verify(notificationMessageInMemoryQueue, times(3)).isEmpty();
         verify(notificationMessageInMemoryQueue).remove();
         verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
+        verify(notificationMessageInMemoryQueue).size();
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -139,6 +140,7 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
         verify(notificationMessageInMemoryQueue).remove();
         verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
         verify(notificationMessagePublishingService).addNotificationMessageToDatabaseQueue(notificationMessage);
+        verify(notificationMessageInMemoryQueue).size();
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -182,6 +184,7 @@ public class PublishNotificationMessagesAdviceTest extends AbstractServiceTest
         verify(notificationMessageInMemoryQueue).remove();
         verify(notificationMessagePublishingService).publishNotificationMessage(notificationMessage);
         verify(notificationMessagePublishingService).addNotificationMessageToDatabaseQueue(notificationMessage);
+        verify(notificationMessageInMemoryQueue).size();
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.

@@ -76,6 +76,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.Ec2Dao;
@@ -188,7 +189,7 @@ public class EmrDaoImpl implements EmrDao
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
     {
         RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition);
-        LOGGER.info("runJobFlowRequest={}", jsonHelper.objectToJson(runJobFlowRequest));
+        LOGGER.info("runJobFlowRequest={}", HerdStringUtils.sanitizeLogText(jsonHelper.objectToJson(runJobFlowRequest)));
         String clusterId = emrOperations.runEmrJobFlow(getEmrClient(awsParams), runJobFlowRequest);
         LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
 
