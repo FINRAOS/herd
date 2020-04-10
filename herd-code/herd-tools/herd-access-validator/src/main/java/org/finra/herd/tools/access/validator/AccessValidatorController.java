@@ -43,8 +43,11 @@ import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
@@ -80,6 +83,7 @@ class AccessValidatorController
     static final String S3_BUCKET_NAME_ATTRIBUTE = "bucket.name";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessValidatorController.class);
+
     private static final long MAX_BYTES_TO_READ = 200;
 
     private static final String LINE_FEED = "\n\n\n";
@@ -93,14 +97,12 @@ class AccessValidatorController
     @Autowired
     private S3Operations s3Operations;
 
-
     /**
      * Runs the application with the given command line arguments.
      *
      * @param propertiesFile the properties file
-     * @param messageFlag message flag to read SQS message
-     *
-     * @throws IOException if an I/O error was encountered
+     * @param messageFlag    the message flag that specifies to read SQS message
+     * @throws IOException  if an I/O error was encountered
      * @throws ApiException if a Herd API client error was encountered
      */
     void validateAccess(File propertiesFile, Boolean messageFlag) throws IOException, ApiException
@@ -166,7 +168,7 @@ class AccessValidatorController
         else
         {
             LOGGER.info("Creating BusinessObjectDataKey from properties file");
-            bdataKey = getBdataKeyPropertiesFile();
+            bdataKey = getBusinessObjectDataKeyFromPropertiesFile();
         }
         LOGGER.info("Using business object data key: {}", bdataKey);
 
@@ -186,10 +188,7 @@ class AccessValidatorController
 
         // Check if retrieved business object data has storage unit registered with it.
         Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits()), "Business object data has no storage unit registered with it.");
-        Assert.isTrue(CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits().get(0).getStorageFiles()),
-            "No storage files registered with the business object data storage unit.");
         Assert.isTrue(businessObjectData.getStorageUnits().get(0).getStorage() != null, "Business object data storage unit does not have storage information.");
-
 
         // Get S3 bucket name.
         String bucketName = null;
@@ -204,43 +203,85 @@ class AccessValidatorController
         Assert.isTrue(StringUtils.isNotBlank(bucketName), "S3 bucket name is not configured for the storage.");
 
         // Validate that S3 files registered with the business object data under can be streamed to disk.
-        // Only getting the first 200 bytes to prevent downloading massive files
         LOGGER.info("Validating that S3 files registered with the business object data are downloadable.");
 
+        // Initialize a flag to be used to determine if we did not find any non-zero byte files registered for this business object data.
         boolean validated = false;
 
-        // loop thru the list of storage files and attempt to read at least one file which has valid content
-        for (StorageFile storageFile : businessObjectData.getStorageUnits().get(0).getStorageFiles())
+        // If business object data has registered storage files, we go though the list until we fail
+        // accessing S3 metadata or find a non-zero byte file that we can try to download.
+        if (CollectionUtils.isNotEmpty(businessObjectData.getStorageUnits().get(0).getStorageFiles()))
         {
-            LOGGER.info("Attempting to read \"{}/{}\" S3 file...", bucketName, storageFile.getFilePath());
-
-            // Get S3 Object's metadata
-            ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(bucketName, storageFile.getFilePath(), amazonS3);
-
-            // Use object's metadata to determine if it has readable content (and that it's not just a zero-byte file)
-            if (objectMetadata.getContentLength() > 0)
+            // loop through the list of storage files and attempt to read at least one file which has valid content.
+            for (StorageFile storageFile : businessObjectData.getStorageUnits().get(0).getStorageFiles())
             {
-                // read contents of the file
-                GetObjectRequest getObjectRequest =
-                    new GetObjectRequest(bucketName, storageFile.getFilePath()).withRange(0, Math.min(objectMetadata.getContentLength(), MAX_BYTES_TO_READ));
+                LOGGER.info("Attempting to read \"{}/{}\" S3 file...", bucketName, storageFile.getFilePath());
 
-                // Attempt to GET object from S3
-                try (S3Object s3Object = s3Operations.getS3Object(getObjectRequest, amazonS3))
+                // Get S3 object metadata.
+                ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(bucketName, storageFile.getFilePath(), amazonS3);
+
+                // Use S3 object metadata to determine if it has readable content (and that it's not just a zero-byte file).
+                if (objectMetadata.getContentLength() > 0)
                 {
-                    StringWriter stringWriter = new StringWriter();
-                    IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
-                    LOGGER.info("{}Finished: SUCCESS", LINE_FEED);
-
-                    validated = true;
-                    break;
+                    // Attempt to read content of the file from S3. Try to get only the first 200 bytes to prevent downloading massive files.
+                    try (S3Object s3Object = s3Operations.getS3Object(new GetObjectRequest(bucketName, storageFile.getFilePath())
+                        .withRange(0, Math.min(objectMetadata.getContentLength(), MAX_BYTES_TO_READ)), amazonS3))
+                    {
+                        StringWriter stringWriter = new StringWriter();
+                        IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
+                        LOGGER.info("{}Finished: SUCCESS", LINE_FEED);
+                        validated = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    LOGGER.warn("Encountered empty file: \"{}/{}\". Skipping.", bucketName, storageFile.getFilePath());
                 }
             }
-            else
+        }
+        // If business object data has no registered storage files, we go though the list of S3 files found under
+        // the storage unit directory path (S3 key prefix) until we find a non-zero byte file that we can try to download.
+        else
+        {
+            // Check if storage unit has a non-blank directory path.
+            Assert.isTrue(businessObjectData.getStorageUnits().get(0).getStorageDirectory() != null &&
+                    StringUtils.isNotBlank(businessObjectData.getStorageUnits().get(0).getStorageDirectory().getDirectoryPath()),
+                "" + "No storage files or directory path is registered with the business object data storage unit.");
+
+            // Since storage unit directory path represents a directory, we add a trailing '/' character to it.
+            String getS3KeyPrefix = StringUtils.appendIfMissing(businessObjectData.getStorageUnits().get(0).getStorageDirectory().getDirectoryPath(), "/");
+
+            // List all S3 files located under the S3 prefix.
+            // We are not using pagination here assuming that AWS page limit is enough to find at least one non-zero byte file.
+            LOGGER.info("Attempting to list S3 files located under \"{}/{}\" S3 key prefix...", bucketName, getS3KeyPrefix);
+            ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(bucketName).withPrefix(getS3KeyPrefix);
+            ObjectListing objectListing = s3Operations.listObjects(listObjectsRequest, amazonS3);
+
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
             {
-                LOGGER.warn("Encountered empty file: \"{}/{}\". Skipping.", bucketName, storageFile.getFilePath());
+                // Ignore zero-byte S3 files.
+                if (objectSummary.getSize() > 0L)
+                {
+                    // Attempt to read content of the file from S3. Try to get only the first 200 bytes to prevent downloading massive files.
+                    try (S3Object s3Object = s3Operations.getS3Object(
+                        new GetObjectRequest(bucketName, objectSummary.getKey()).withRange(0, Math.min(objectSummary.getSize(), MAX_BYTES_TO_READ)), amazonS3))
+                    {
+                        StringWriter stringWriter = new StringWriter();
+                        IOUtils.copy(s3Object.getObjectContent(), stringWriter, Charset.defaultCharset());
+                        LOGGER.info("{}Finished: SUCCESS", LINE_FEED);
+                        validated = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    LOGGER.warn("Encountered empty file: \"{}/{}\". Skipping.", bucketName, objectSummary.getKey());
+                }
             }
         }
-        // need this block in case only empty files are found
+
+        // Need this block in case only empty files are found.
         if (!validated)
         {
             LOGGER.error("{}Could not read valid content from any file: FAILURE", LINE_FEED);
@@ -248,11 +289,11 @@ class AccessValidatorController
     }
 
     /**
-     * Converts properties to BusinessObjectDataKey
+     * Gets business object data key from the properties file.
      *
-     * @return BusinessObjectDataKey
+     * @return the business object data key
      */
-    BusinessObjectDataKey getBdataKeyPropertiesFile()
+    private BusinessObjectDataKey getBusinessObjectDataKeyFromPropertiesFile()
     {
         BusinessObjectDataKey bdataKey = new BusinessObjectDataKey();
 
