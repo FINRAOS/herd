@@ -15,7 +15,7 @@
 
 
 herdTagVersion=${HERD_RELEASE}
-herdUIVersion='0.68.0'
+herdUIVersion='0.89.0'
 NexusPath='https://oss.sonatype.org/service/local/repositories/releases/content/org/finra/herd/'
 
 # Tomcat paths since they change based on whether we're using the apache tomcat image
@@ -25,8 +25,6 @@ TC_HOME=/usr/local/tomcat
 
 set -ex ;
 
-
-curl ${NexusPath}herd-scripts-sql/${herdTagVersion}/herd-scripts-sql-${herdTagVersion}.jar > herd-sql.jar
 # clear out existing apps
 rm -rf $TC_HOME/webapps/*
 mv /herd-app.war $TC_HOME/webapps/
