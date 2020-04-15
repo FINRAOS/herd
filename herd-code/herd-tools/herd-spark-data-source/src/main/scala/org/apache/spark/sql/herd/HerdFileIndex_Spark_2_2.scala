@@ -49,6 +49,7 @@ private[sql] class HerdFileIndex(
                           filters: Seq[Expression],
                           dataFilters: scala.Seq[org.apache.spark.sql.catalyst.expressions.Expression]
                         ): Seq[PartitionDirectory] = {
+
     val prunedPartitions = if (partitionSpec.partitionColumns.isEmpty) {
       partitionSpec.partitions
     } else {
@@ -60,14 +61,12 @@ private[sql] class HerdFileIndex(
         .filter(p => cachedAllFiles.get(p.path).isEmpty)
         .map(_.path)
 
-      cachedAllFiles ++= bulkListLeafFiles(pathsToFetch, formatFileType)
-
       prunedPartitions.map {
         case PartitionPath(values, path) =>
-          val fileStatuses = cachedAllFiles(path)
-
-          PartitionDirectoryShim(values, fileStatuses)
+          cachedAllFiles ++= bulkListLeafFiles(Seq(path), formatFileType)
+          PartitionDirectoryShim(values, cachedAllFiles(path))
       }
+
     }
 
     if (isTraceEnabled()) {
@@ -127,7 +126,7 @@ private[sql] class HerdFileIndex(
 
   override def filterPartitions(filters: Seq[Expression]): FileIndex = {
     val files = listFiles(filters, Seq.empty).toArray
-
+    
     new PrunedHerdFileIndex(files, partitionSchema)
   }
 
