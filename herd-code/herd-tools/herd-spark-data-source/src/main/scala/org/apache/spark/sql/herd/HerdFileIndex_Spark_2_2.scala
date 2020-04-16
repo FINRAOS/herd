@@ -126,7 +126,6 @@ private[sql] class HerdFileIndex(
 
   override def filterPartitions(filters: Seq[Expression]): FileIndex = {
     val files = listFiles(filters, Seq.empty).toArray
-    
     new PrunedHerdFileIndex(files, partitionSchema)
   }
 
