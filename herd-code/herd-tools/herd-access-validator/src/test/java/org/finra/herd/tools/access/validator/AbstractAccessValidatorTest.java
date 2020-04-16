@@ -20,7 +20,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -58,7 +60,7 @@ abstract class AbstractAccessValidatorTest extends AbstractDataBridgeTest
 
     static final String PROPERTIES_FILE_PATH = "test.properties";
 
-    static final String SUB_PARTITION_VALUES = "testSubPartitionValues";
+    static final String SUB_PARTITION_VALUES = "A|B|C|D";
 
     static final String AWS_SQS_QUEUE_URL = "testAwsSqsUrl";
 
