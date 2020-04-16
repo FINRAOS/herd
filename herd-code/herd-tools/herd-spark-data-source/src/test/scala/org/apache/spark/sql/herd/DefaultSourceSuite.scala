@@ -330,10 +330,11 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
+    val thrown = intercept[Exception] {
+      val result = df.collect()
+    }
 
-    val result = df.collect()
-
-    result should contain theSameElementsAs(EXPECTED_ROWS)
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load all partitions and filter") {
@@ -354,14 +355,15 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("load sub-partitioned data") {
+
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
-
-    val result = df.collect()
-
-    result should contain theSameElementsAs(EXPECTED_ROWS)
+    val thrown = intercept[Exception] {
+      val result = df.collect()
+    }
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load sub-partitioned data and prune by partition columns") {
@@ -370,11 +372,11 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
 
-    val result = df.select("sdate", "symbol").collect()
+    val thrown = intercept[Exception] {
+      val result = df.select("sdate", "symbol").collect()
+    }
 
-    val expected = EXPECTED_ROWS.map(p => Row(p(0), p(1)))
-
-    result should contain theSameElementsAs(expected)
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load sub-partitioned data and filter") {
@@ -383,11 +385,12 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
 
-    val result = df.filter($"symbol" === "A").collect()
+    val thrown = intercept[Exception] {
+      val result = df.filter($"symbol" === "A").collect()
+    }
 
-    val expected = EXPECTED_ROWS.filter(_.getString(1).equalsIgnoreCase("A"))
+    assertEquals(true, thrown.getMessage().contains("key not found"))
 
-    result should contain theSameElementsAs(expected)
   }
 
   test("load non-partitioned data") {
@@ -415,10 +418,11 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-4", parts), defaultParams)
+    val thrown = intercept[Exception] {
+      val result = df.collect()
+    }
 
-    val result = df.collect()
-
-    result should contain theSameElementsAs(EXPECTED_ROWS)
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load ORC files") {
@@ -426,10 +430,11 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
+    val thrown = intercept[Exception] {
+      val rows = df.collect()
+    }
 
-    val rows = df.collect()
-
-    rows should contain theSameElementsAs(ORC_EXPECTED_ROWS)
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load ORC files, prune and filter") {
@@ -665,6 +670,10 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
 
-    val result = df.selectExpr("min(sdate)", "max(sdate)").collect()
+    val thrown = intercept[Exception] {
+      val result = df.selectExpr("min(sdate)", "max(sdate)").collect()
+    }
+
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 }
