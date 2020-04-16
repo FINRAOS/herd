@@ -330,10 +330,11 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
+    val thrown = intercept[Exception] {
+      val result = df.collect()
+    }
 
-    val result = df.collect()
-
-    result should contain theSameElementsAs(EXPECTED_ROWS)
+    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load all partitions and filter") {
