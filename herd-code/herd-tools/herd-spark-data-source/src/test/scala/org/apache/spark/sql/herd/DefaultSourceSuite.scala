@@ -371,7 +371,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
     val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
 
-    val thrown=intercept[Exception] {
+    val thrown = intercept[Exception] {
       val result = df.select("sdate", "symbol").collect()
     }
 
@@ -417,7 +417,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-4", parts), defaultParams)
-    val thrown=intercept[Exception] {
+    val thrown = intercept[Exception] {
       val result = df.collect()
     }
 
@@ -429,7 +429,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
-    val thrown=intercept[Exception] {
+    val thrown = intercept[Exception] {
       val rows = df.collect()
     }
 
