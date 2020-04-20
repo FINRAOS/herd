@@ -45,6 +45,7 @@ import org.finra.herd.service.BusinessObjectDataService;
  *   <activiti:field name="businessObjectDataStatus" stringValue=""/>
  *   <activiti:field name="includeBusinessObjectDataStatusHistory" stringValue=""/>
  *   <activiti:field name="includeStorageUnitStatusHistory" stringValue=""/>
+ *   <activiti:field name="excludeBusinessObjectDataStorageFiles" stringValue=""/>
  * </extensionElements>
  * </pre>
  */
@@ -75,6 +76,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
 
     private Expression includeStorageUnitStatusHistory;
 
+    private Expression excludeBusinessObjectDataStorageFiles;
+
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
 
@@ -98,6 +101,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
             .getExpressionVariableAsBoolean(this.includeBusinessObjectDataStatusHistory, execution, "includeBusinessObjectDataStatusHistory", false, false);
         Boolean includeStorageUnitStatusHistory =
             activitiHelper.getExpressionVariableAsBoolean(this.includeStorageUnitStatusHistory, execution, "includeStorageUnitStatusHistory", false, false);
+        Boolean excludeBusinessObjectDataStorageFiles =
+                activitiHelper.getExpressionVariableAsBoolean(this.excludeBusinessObjectDataStorageFiles, execution, "excludeBusinessObjectDataStorageFiles", false, false);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(namespace);
@@ -111,7 +116,7 @@ public class GetBusinessObjectData extends BaseJavaDelegate
 
         BusinessObjectData businessObjectData = businessObjectDataService
             .getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory,
-                includeStorageUnitStatusHistory);
+                includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
 
         setJsonResponseAsWorkflowVariable(businessObjectData, execution);
     }

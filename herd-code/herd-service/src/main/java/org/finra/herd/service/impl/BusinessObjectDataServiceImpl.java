@@ -477,10 +477,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory,
+        Boolean excludeBusinessObjectDataStorageFiles)
     {
         return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+            includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
     }
 
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.READ)
@@ -1104,11 +1105,13 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * @param businessObjectDataStatus the business object data status, may be null
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the retrieved business object data information
      */
     BusinessObjectData getBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory,
+        Boolean excludeBusinessObjectDataStorageFiles)
     {
         // Validate and trim the business object data key.
         businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, false, false);
@@ -1139,7 +1142,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
         // Create and return the business object definition object from the persisted entity.
         return businessObjectDataHelper
-            .createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+            .createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
     }
 
     /**

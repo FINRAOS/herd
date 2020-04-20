@@ -206,7 +206,7 @@ public class BusinessObjectDataHelper
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity)
     {
-        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false, false);
+        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false, false, false);
     }
 
     /**
@@ -215,11 +215,12 @@ public class BusinessObjectDataHelper
      * @param businessObjectDataEntity the newly persisted business object data entity.
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the business object data.
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity,
-        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
+        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory, Boolean excludeBusinessObjectDataStorageFiles)
     {
         // Make the business object format associated with this data easily accessible.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
@@ -241,7 +242,7 @@ public class BusinessObjectDataHelper
 
         // Add in the storage units.
         businessObjectData
-            .setStorageUnits(storageUnitHelper.createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits(), includeStorageUnitStatusHistory));
+            .setStorageUnits(storageUnitHelper.createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits(), includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles));
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();

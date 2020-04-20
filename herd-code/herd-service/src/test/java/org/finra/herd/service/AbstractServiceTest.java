@@ -461,6 +461,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
 
+    public static final Boolean EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = true;
+
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
 
     /**
@@ -570,6 +572,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
+
+    public static final Boolean NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = false;
 
     public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
 

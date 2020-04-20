@@ -124,7 +124,7 @@ public class StorageUnitHelper
      *
      * @return the list of storage units.
      */
-    public List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory)
+    public List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory, Boolean excludeBusinessObjectDataStorageFiles)
     {
         List<StorageUnit> storageUnits = new ArrayList<>();
 
@@ -163,7 +163,7 @@ public class StorageUnitHelper
             }
 
             // Add the storage files.
-            if (!storageUnitEntity.getStorageFiles().isEmpty())
+            if (!storageUnitEntity.getStorageFiles().isEmpty() && BooleanUtils.isFalse(excludeBusinessObjectDataStorageFiles))
             {
                 List<StorageFile> storageFiles = new ArrayList<>();
                 storageUnit.setStorageFiles(storageFiles);
