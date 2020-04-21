@@ -175,7 +175,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // by retrieving business object data using an incorrect business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
@@ -197,7 +197,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -210,7 +210,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -223,7 +223,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -236,7 +236,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -249,7 +249,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    Collections.singletonList(BLANK_TEXT), DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    Collections.singletonList(BLANK_TEXT), DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                     NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when subpartition value is not specified.");
         }
@@ -278,7 +278,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, NO_SUBPARTITION_VALUES, null),
-                partitionKey, NO_BDATA_STATUS, null, null);
+                partitionKey, NO_BDATA_STATUS, null, null, null);
 
             // Validate the returned object.
             businessObjectDataServiceTestHelper
@@ -301,7 +301,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), NO_DATA_VERSION),
-            addWhitespace(PARTITION_KEY), addWhitespace(BDATA_STATUS), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+            addWhitespace(PARTITION_KEY), addWhitespace(BDATA_STATUS), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -326,7 +326,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
                 FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), NO_DATA_VERSION), PARTITION_KEY.toUpperCase(),
-            BDATA_STATUS.toUpperCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+            BDATA_STATUS.toUpperCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -352,7 +352,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
                 FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), NO_DATA_VERSION), PARTITION_KEY.toLowerCase(),
-            BDATA_STATUS.toLowerCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+            BDATA_STATUS.toLowerCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -372,7 +372,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Validate that we can perform a get on our business object data.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -384,7 +384,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    SUBPARTITION_VALUES, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
@@ -400,7 +400,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
         catch (ObjectNotFoundException e)
@@ -415,7 +415,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
         catch (ObjectNotFoundException e)
@@ -430,7 +430,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), "I_DO_NOT_EXIST", NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), "I_DO_NOT_EXIST", NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when using an invalid partition key.");
         }
         catch (IllegalArgumentException e)
@@ -445,7 +445,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, "I_DO_NOT_EXIST", SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
         catch (ObjectNotFoundException e)
@@ -465,7 +465,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 testSubPartitionValues.set(i, "I_DO_NOT_EXIST");
                 businessObjectDataService.getBusinessObjectData(
                     new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        testSubPartitionValues, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                        testSubPartitionValues, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                         NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
                 fail("Should throw an ObjectNotFoundException when not able to find business object data.");
             }
@@ -484,7 +484,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             testSubPartitionValues.add("EXTRA_SUBPARTITION_VALUE");
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    testSubPartitionValues, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    testSubPartitionValues, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                     NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an IllegalArgumentException when passing too many subpartition values.");
         }
@@ -498,7 +498,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    SUBPARTITION_VALUES, DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
@@ -514,7 +514,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    INVALID_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    INVALID_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data.");
         }
@@ -530,7 +530,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when not able to find business object data status.");
         }
         catch (ObjectNotFoundException e)
@@ -550,7 +550,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -565,7 +565,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                    NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -603,7 +603,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve the business object data.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
-                DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -636,7 +636,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve the business object data with enabled include business object data status history flag.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Build the expected response object. The business object data history record is expected to have system username for the createdBy auditable field.
@@ -657,37 +657,37 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                        DATA_VERSION);
 
         // Create a business object data storage unit key.
         BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
-            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity =
-            storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, StorageUnitStatusEntity.DISABLED);
+                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, StorageUnitStatusEntity.DISABLED);
 
         // Execute a storage unit status change.
         businessObjectDataStorageUnitStatusService.updateBusinessObjectDataStorageUnitStatus(businessObjectDataStorageUnitKey,
-            new BusinessObjectDataStorageUnitStatusUpdateRequest(StorageUnitStatusEntity.ENABLED));
+                new BusinessObjectDataStorageUnitStatusUpdateRequest(StorageUnitStatusEntity.ENABLED));
 
         // Retrieve the business object data with enabled include storage unit status history flag.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService
-            .getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
+                .getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                        INCLUDE_STORAGE_UNIT_STATUS_HISTORY, EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Build the expected response object. The storage unit history record is expected to have system username for the createdBy auditable field.
         BusinessObjectData expectedBusinessObjectData =
-            new BusinessObjectData(storageUnitEntity.getBusinessObjectData().getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Collections
-                .singletonList(
-                    new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED,
-                        Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
-                            HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                            HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
+                new BusinessObjectData(storageUnitEntity.getBusinessObjectData().getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                        FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Collections
+                        .singletonList(
+                                new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED,
+                                        Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
+                                                HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
+                                                HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
+                        NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
@@ -709,7 +709,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve the business object data.
         BusinessObjectData result = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
              NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Build the expected response object.
@@ -751,7 +751,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data for the initial business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the result for the initial business object format version.
@@ -763,7 +763,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data for the second business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the result for the second business object format version.
@@ -777,7 +777,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when latest valid business object data does not exist.");
         }
@@ -791,7 +791,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data by explicitly specifying VALID business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object, it should be the latest VALID business object data version available for the initial business object format version.
@@ -803,7 +803,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data by explicitly specifying business object data status testing value.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object, it should be the latest business object data version with
@@ -818,7 +818,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
@@ -897,7 +897,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve an initial business object data version without specifying business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                INITIAL_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -907,7 +907,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a second business object data version without specifying business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                SECOND_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                SECOND_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -917,7 +917,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a third business object data version without specifying business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                THIRD_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                THIRD_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -928,7 +928,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // by retrieving business object data using no business object format version and an incorrect business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object.
         businessObjectDataServiceTestHelper
@@ -975,7 +975,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data without specifying business object format version, business object data version, and business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object, it should be the latest VALID business object format and data version available.
         businessObjectDataServiceTestHelper
@@ -985,7 +985,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data by explicitly specifying VALID business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
             NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object, it should be the latest VALID business object format and data version available.
@@ -996,7 +996,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         // Retrieve a business object data by explicitly specifying business object data status testing value.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+                NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY, NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Validate the returned object, it should be the latest business object format and data version with the test business object data status.
         businessObjectDataServiceTestHelper
@@ -1008,7 +1008,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         {
             businessObjectDataService.getBusinessObjectData(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                    SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
                 NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }

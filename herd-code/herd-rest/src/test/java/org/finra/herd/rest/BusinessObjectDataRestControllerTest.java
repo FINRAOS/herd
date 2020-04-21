@@ -405,7 +405,7 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
         // Mock the external calls.
         when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
         when(businessObjectDataService.getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, BDATA_STATUS, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-            INCLUDE_STORAGE_UNIT_STATUS_HISTORY, )).thenReturn(businessObjectData);
+            INCLUDE_STORAGE_UNIT_STATUS_HISTORY, EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
