@@ -1175,8 +1175,46 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(
                 new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME), S3_BUCKET_NAME,
                 MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
-                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()),
+                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, null, downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()),
             downloadResponse);
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFileFromKmsStorage()
+    {
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")));
+
+
+        // Create and persist a business object definition entity with sample data files.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), Lists.newArrayList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
+
+        // Initiate download of a sample data file.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setDirectoryPath(DIRECTORY_PATH);
+        sampleDataFileKey.setFileName(FILE_NAME);
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+            uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+
+        // Validate the response.
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getPreSignedUrl());
+        assertEquals(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(
+            new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME), S3_BUCKET_NAME,
+            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
+            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+            downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()), downloadResponse);
     }
 
     @Test
@@ -1483,6 +1521,40 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsS3BucketName(), S3_BUCKET_NAME);
         assertEquals(response.getS3KeyPrefix(), expectedS3KeyPrefix);
         assertEquals(response.getAwsAccessKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY);
+        assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
+        assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
+    }
+
+    @Test
+    public void testUploadBusinessObjectDefinitionSampleFileFromKmsStorage()
+    {
+        String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
+        String expectedS3KeyPrefix = NAMESPACE.toLowerCase() + "/" + BDEF_NAME.toLowerCase() + "/";
+        expectedS3KeyPrefix = expectedS3KeyPrefix.replace("_", "-");
+
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), UPLOADER_ROLE_ARN),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), s3_velocity_template),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")));
+
+        // Create and persist a business object definition entity with sample data files.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        request.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response = uploadDownloadService.initiateUploadSampleFile(request);
+        assertEquals(response.getBusinessObjectDefinitionKey(), businessObjectDefinitionKey);
+        assertEquals(response.getAwsS3BucketName(), S3_BUCKET_NAME);
+        assertEquals(response.getS3KeyPrefix(), expectedS3KeyPrefix);
+        assertEquals(response.getAwsAccessKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY);
+        assertEquals(response.getAwsKmsKeyId(), "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012");
         assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
     }
