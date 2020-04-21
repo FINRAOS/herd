@@ -5314,7 +5314,7 @@
          <xs:element name="awsAccessKey" type="xs:string"/>
          <xs:element name="awsSecretKey" type="xs:string"/>
          <xs:element name="awsSessionToken" type="xs:string"/>
-         <xs:element name="awsKmsKeyId" type="xs:string" />
+         <xs:element name="awsKmsKeyId" type="xs:string"/>
          <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
       </xs:all>
    </xs:complexType>
