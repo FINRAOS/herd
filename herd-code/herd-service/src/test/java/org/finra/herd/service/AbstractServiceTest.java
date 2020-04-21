@@ -364,6 +364,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
+    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
+
     public static final Boolean DELETE_FILES = true;
 
     public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";
@@ -407,6 +409,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DateTime END_TIME = getRandomDateTime();
 
     public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
+
+    public static final Boolean EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = true;
 
     public static final Boolean EXCLUSION_SEARCH_FILTER = true;
 
@@ -460,8 +464,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
 
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
-
-    public static final Boolean EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = true;
 
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
 
@@ -555,6 +557,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final RuntimeException NO_EXCEPTION = null;
 
+    public static final Boolean NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = false;
+
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
@@ -572,8 +576,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
-
-    public static final Boolean NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES = false;
 
     public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
 
@@ -675,8 +677,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ROW_FORMAT = "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' " +
         "MAP KEYS TERMINATED BY '#' NULL DEFINED AS '\\N'";
-
-    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
     public static final String S3_ARCHIVE_TO_GLACIER_TAG_KEY = "UT_S3_Archive_To_Glacier_Tag_Key_" + RANDOM_SUFFIX;
 

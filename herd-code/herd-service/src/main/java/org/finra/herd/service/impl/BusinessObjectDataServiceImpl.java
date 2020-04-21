@@ -1142,7 +1142,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
         // Create and return the business object definition object from the persisted entity.
         return businessObjectDataHelper
-            .createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
+            .createBusinessObjectDataFromEntity(businessObjectDataEntity, includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory,
+                excludeBusinessObjectDataStorageFiles);
     }
 
     /**
