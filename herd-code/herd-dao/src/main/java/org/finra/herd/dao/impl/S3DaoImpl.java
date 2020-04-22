@@ -67,6 +67,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
+import com.amazonaws.services.s3.model.SSECustomerKey;
 import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.Tag;
@@ -416,6 +417,17 @@ public class S3DaoImpl implements S3Dao
     {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
+
+        String kmsKeyId = s3FileTransferRequestParamsDto.getKmsKeyId();
+
+        if (kmsKeyId != null)
+        {
+            // Explicitly specifying your KMS customer master KMS key ID.
+            generatePresignedUrlRequest.setSSEAlgorithm(SSEAlgorithm.KMS.getAlgorithm());
+            generatePresignedUrlRequest.setKmsCmkId(s3FileTransferRequestParamsDto.getKmsKeyId());
+        }
+
+
         AmazonS3Client s3 = getAmazonS3(s3FileTransferRequestParamsDto);
         try
         {
