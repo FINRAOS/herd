@@ -657,37 +657,37 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                        DATA_VERSION);
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
 
         // Create a business object data storage unit key.
         BusinessObjectDataStorageUnitKey businessObjectDataStorageUnitKey =
-                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
+            new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity =
-                storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, StorageUnitStatusEntity.DISABLED);
+            storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, StorageUnitStatusEntity.DISABLED);
 
         // Execute a storage unit status change.
         businessObjectDataStorageUnitStatusService.updateBusinessObjectDataStorageUnitStatus(businessObjectDataStorageUnitKey,
-                new BusinessObjectDataStorageUnitStatusUpdateRequest(StorageUnitStatusEntity.ENABLED));
+            new BusinessObjectDataStorageUnitStatusUpdateRequest(StorageUnitStatusEntity.ENABLED));
 
         // Retrieve the business object data with enabled include storage unit status history flag.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService
-                .getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                        INCLUDE_STORAGE_UNIT_STATUS_HISTORY, EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
+            .getBusinessObjectData(businessObjectDataKey, PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
+                INCLUDE_STORAGE_UNIT_STATUS_HISTORY, EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Build the expected response object. The storage unit history record is expected to have system username for the createdBy auditable field.
         BusinessObjectData expectedBusinessObjectData =
-                new BusinessObjectData(storageUnitEntity.getBusinessObjectData().getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                        FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Collections
-                        .singletonList(
-                                new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED,
-                                        Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
-                                                HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                                                HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                        NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
+            new BusinessObjectData(storageUnitEntity.getBusinessObjectData().getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Collections
+                .singletonList(
+                        new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), NO_STORAGE_DIRECTORY, null, StorageUnitStatusEntity.ENABLED,
+                                Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
+                                        HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
+                                        HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
