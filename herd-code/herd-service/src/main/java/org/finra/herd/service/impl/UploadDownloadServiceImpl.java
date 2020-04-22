@@ -765,7 +765,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
          */
         if (storageKmsKeyId != null)
         {
-
             awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
         }
 
