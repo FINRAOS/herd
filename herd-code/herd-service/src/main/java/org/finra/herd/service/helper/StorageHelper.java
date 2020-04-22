@@ -103,18 +103,10 @@ public class StorageHelper
         String s3BucketName =
             getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
 
-        // Get Kms key id of the storage entity.
-        String storageKmsKeyId =
-            getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false);
-
         S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
 
         params.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         params.setS3BucketName(s3BucketName);
-        if (storageKmsKeyId != null)
-        {
-            params.setKmsKeyId(storageKmsKeyId);
-        }
 
         return params;
     }
