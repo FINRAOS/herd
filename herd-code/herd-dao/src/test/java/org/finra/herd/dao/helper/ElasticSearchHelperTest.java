@@ -489,7 +489,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         when(searchResponse.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(RESULT_TYPE_AGGS)).thenReturn(terms);
-        when(terms.getBuckets()).thenReturn(buckets);
+        //when(terms.getBuckets()).thenReturn(buckets);
         when(bucket.getKeyAsString()).thenReturn(TAG_CODE);
         when(bucket.getDocCount()).thenReturn(TAG_COUNT);
 
@@ -519,7 +519,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         when(searchResponse.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(TAG_TYPE_FACET_AGGS)).thenReturn(terms);
-        when(terms.getBuckets()).thenReturn(tagTypeCodeEntryList);
+        //when(terms.getBuckets()).thenReturn(tagTypeCodeEntryList);
         when(tagTypeCodeEntry.getKeyAsString()).thenReturn(TAG_TYPE_CODE);
         when(tagTypeCodeEntry.getAggregations()).thenReturn(aggregations);
 
@@ -528,7 +528,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         List<Terms.Bucket> tagTypeDisplayNameEntryList = Collections.singletonList(tagTypeDisplayNameEntry);
         when(aggregations.get(TAGTYPE_NAME_AGGREGATION)).thenReturn(tagTypeDisplayNameAggs);
         when(tagTypeDisplayNameEntry.getAggregations()).thenReturn(aggregations);
-        when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
+        //when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
         when(tagTypeDisplayNameEntry.getKeyAsString()).thenReturn(TAG_TYPE_DISPLAY_NAME);
 
         StringTerms tagCodeAggs = mock(StringTerms.class);
@@ -536,7 +536,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         List<Terms.Bucket> tagCodeEntryList = Collections.singletonList(tagCodeEntry);
 
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);
-        when(tagCodeAggs.getBuckets()).thenReturn(tagCodeEntryList);
+        //when(tagCodeAggs.getBuckets()).thenReturn(tagCodeEntryList);
         when(tagCodeEntry.getAggregations()).thenReturn(aggregations);
         when(tagCodeEntry.getKeyAsString()).thenReturn(TAG_CODE);
         when(tagCodeEntry.getDocCount()).thenReturn((long) TAG_CODE_COUNT);
@@ -545,7 +545,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         List<Terms.Bucket> tagNameEntryList = Collections.singletonList(tagNameEntry);
         when(tagNameEntry.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(TAG_NAME_AGGREGATION)).thenReturn(tagNameAggs);
-        when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
+        //when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
         when(tagNameEntry.getKeyAsString()).thenReturn(TAG_DISPLAY_NAME);
 
         List<TagTypeIndexSearchResponseDto> resultList = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse);

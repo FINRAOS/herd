@@ -71,7 +71,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
 
     @Override
     @Async
-    public Future<Void> indexAllBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType)
+    public Future<Void> indexAllBusinessObjectDefinitions(SearchIndexKey searchIndexKey)
     {
         // Index all business object definitions defined in the system using pagination.
         int startPosition = 0;
@@ -82,7 +82,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         {
             // Index business object definitions selected for processing.
             businessObjectDefinitionHelper
-                .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
+                .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), businessObjectDefinitionEntities,
                     indexFunctionsDao::createIndexDocument);
 
             // Increment the offset.
@@ -93,7 +93,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         }
 
         // Perform a simple count validation, index size should equal entity list size.
-        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, processedBusinessObjectDefinitionsCount);
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), processedBusinessObjectDefinitionsCount);
 
         // Update search index status to READY.
         searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
@@ -105,16 +105,16 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
 
     @Override
     @Async
-    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey, String documentType)
+    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey)
     {
         // Get a list of all tags
         final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
 
         // Index all tags.
-        tagHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, indexFunctionsDao::createIndexDocument);
+        tagHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), tagEntities, indexFunctionsDao::createIndexDocument);
 
         // Simple count validation, index size should equal entity list size.
-        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), tagEntities.size());
 
         // Update search index status to READY.
         searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
@@ -128,14 +128,13 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
      * Performs a simple count validation on the specified search index.
      *
      * @param indexName the name of the index
-     * @param documentType the document type
      * @param expectedIndexSize the expected index size
      *
      * @return true if index size matches the expected size, false otherwise
      */
-    protected boolean validateSearchIndexSize(String indexName, String documentType, int expectedIndexSize)
+    protected boolean validateSearchIndexSize(String indexName, int expectedIndexSize)
     {
-        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName);
 
         boolean result = true;
         if (indexSize != expectedIndexSize)

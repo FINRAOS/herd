@@ -16,8 +16,6 @@
 package org.finra.herd.service.functional;
 
 
-import java.io.IOException;
-
 /**
  * Represents an operation that accepts four input arguments and returns no result. This is a functional interface whose functional method is
  * accept(java.lang.Object, java.lang.Object, java.lang.Object).
@@ -35,8 +33,6 @@ public interface TriConsumer<A, B, C>
      * @param first the first argument to the operation
      * @param second the second argument to the operation
      * @param third the third argument to the operation
-     *
-     * @throws IOException an IO exception
      */
-    void accept(A first, B second, C third) throws IOException;
+    void accept(A first, B second, C third);
 }

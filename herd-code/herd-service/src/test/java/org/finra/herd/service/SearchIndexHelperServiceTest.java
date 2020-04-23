@@ -101,18 +101,18 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, chunkSize)).thenReturn(businessObjectDefinitionEntities);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(chunkSize, chunkSize)).thenReturn(new ArrayList<>());
 
-        when(indexFunctionsDao.getNumberOfTypesInIndex(any(), any())).thenReturn(2L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(any())).thenReturn(2L);
 
         // Index all business object definitions defined in the system.
-        Future<Void> response = searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+        Future<Void> response = searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey);
 
         // Verify the external calls.
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(0, chunkSize);
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(chunkSize, chunkSize);
         verify(businessObjectDefinitionHelper)
-            .executeFunctionForBusinessObjectDefinitionEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(businessObjectDefinitionEntities),
+            .executeFunctionForBusinessObjectDefinitionEntities(eq(SEARCH_INDEX_NAME), eq(businessObjectDefinitionEntities),
                 any());
-        verify(indexFunctionsDao).getNumberOfTypesInIndex(any(), any());
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(any());
         verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
         verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchIndexDaoHelper, tagDao, tagHelper);
 
@@ -134,18 +134,18 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
 
         // Mock the external calls. Please note that we mock index size is set to be equal to the tag entity list size.
         when(tagDao.getTags()).thenReturn(tagEntities);
-        doNothing().when(indexFunctionsDao).createIndexDocument(any(), any(), any(), any());
+        doNothing().when(indexFunctionsDao).createIndexDocument(any(), any(), any());
 
-        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(2L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME)).thenReturn(2L);
 
         // Index all tags defined in the system.
-        Future<Void> response = searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+        Future<Void> response = searchIndexHelperService.indexAllTags(searchIndexKey);
 
         // Verify the external calls.
         verify(tagDao).getTags();
         //verify(indexFunctionsDao).createIndexDocument(any(), any(), any(), any());
-        verify(tagHelper).executeFunctionForTagEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(tagEntities), any());
-        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
+        verify(tagHelper).executeFunctionForTagEntities(eq(SEARCH_INDEX_NAME), eq(tagEntities), any());
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME);
         verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
         verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchIndexDaoHelper, tagDao, tagHelper);
 

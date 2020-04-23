@@ -553,22 +553,22 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
         when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
         when(searchResponse.getHits()).thenReturn(searchHits);
-        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(searchHits.getHits()).thenReturn(searchHitArray);
         Map<String, Object> sourceMap1 = new HashMap<>();
         Map<String, Object> tagTypeMap = new HashMap<>();
         tagTypeMap.put(CODE, TAG_TYPE_CODE);
         sourceMap1.put(TAG_TYPE, tagTypeMap);
-        when(searchHit1.sourceAsMap()).thenReturn(sourceMap1);
+        when(searchHit1.getSourceAsMap()).thenReturn(sourceMap1);
         Map<String, Object> sourceMap2 = new HashMap<>();
         Map<String, Object> businessObjectDefinitionMap = new HashMap<>();
         businessObjectDefinitionMap.put(CODE, NAMESPACE_CODE);
         sourceMap2.put(NAMESPACE, businessObjectDefinitionMap);
-        when(searchHit2.sourceAsMap()).thenReturn(sourceMap2);
+        when(searchHit2.getSourceAsMap()).thenReturn(sourceMap2);
         when(searchHit1.getShard()).thenReturn(searchShardTarget1);
         when(searchHit2.getShard()).thenReturn(searchShardTarget2);
         when(searchShardTarget1.getIndex()).thenReturn(TAG_SEARCH_INDEX_NAME);
         when(searchShardTarget2.getIndex()).thenReturn(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME);
-        when(searchHits.getTotalHits()).thenReturn(200L);
+        when(searchHits.getTotalHits().value).thenReturn(200L);
 
         Map<String, HighlightField> highlightFieldMap = new HashMap<>();
         highlightFieldMap.put("displayName", highlightField);

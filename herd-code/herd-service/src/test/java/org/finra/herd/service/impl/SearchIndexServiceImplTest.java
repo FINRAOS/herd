@@ -114,9 +114,6 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
     @Test
     public void testCreateSearchIndexEntity()
     {
-        // Create a search index key.
-        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
-
         // Create a search index create request.
         SearchIndexCreateRequest searchIndexCreateRequest = new SearchIndexCreateRequest(SEARCH_INDEX_TYPE);
 
@@ -205,7 +202,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_SETTINGS);
 
-        when(searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
+        when(searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey)).thenReturn(mockedFuture);
 
         // Create a search index.
         searchIndexServiceImpl.createSearchIndexHelper(searchIndexKey, searchIndexType);
@@ -215,8 +212,8 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
-        verify(indexFunctionDao).createIndex(any(), any(), any(), any(), any());
-        verify(searchIndexHelperService).indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+        verify(indexFunctionDao).createIndex(any(), any(), any(), any());
+        verify(searchIndexHelperService).indexAllBusinessObjectDefinitions(searchIndexKey);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper,
             indexFunctionDao, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
@@ -253,7 +250,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
 
         // Get a search index settings created.
-        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats, 0l);
+        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats, 0L);
 
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
@@ -261,7 +258,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new SearchIndexStatistics(NO_SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
-            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID, 0l), response);
+            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID, 0L), response);
     }
 
     @Test
