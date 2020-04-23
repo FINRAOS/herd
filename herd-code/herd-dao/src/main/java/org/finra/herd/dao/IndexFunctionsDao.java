@@ -25,7 +25,7 @@ import org.elasticsearch.index.shard.DocsStats;
 public interface IndexFunctionsDao extends BaseJpaDao
 {
     /**
-     * The index function will take as arguments indexName, documentType, id, json and add the document to the index.
+     * The index function will take as arguments indexName, id, json and add the document to the index.
      *
      * @param indexName index name
      * @param id id

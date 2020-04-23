@@ -224,12 +224,9 @@ public class IndexFunctionsDaoTest
     public void testCreateIndexFunction()
     {
         JestResult jestResult = mock(JestResult.class);
+
         // Build mocks
         when(jestClientHelper.execute(any())).thenReturn(jestResult);
-        //indexFunctionsDao.createIndex("Index", "Document_Type", "Mapping", "Settings");
-
-
-        // verifyNoMoreInteractions(jestClientHelper);
     }
 
 

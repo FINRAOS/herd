@@ -102,7 +102,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
 
@@ -110,7 +109,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
     }
@@ -131,7 +129,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
         doNothing().when(indexFunctionsDao).createIndexDocuments(any(), any());
@@ -140,7 +137,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(1)).createIndexDocuments(any(), any());
@@ -162,7 +158,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
 
@@ -170,7 +165,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(1)).updateIndexDocuments(any(), any());
@@ -192,7 +186,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
 
@@ -200,7 +193,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(1)).updateIndexDocuments(any(), any());
@@ -222,14 +214,12 @@ public class TagServiceIndexTest extends AbstractServiceTest
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         doNothing().when(indexFunctionsDao).deleteIndexDocuments(any(), any());
 
         // Call the method under test
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(indexFunctionsDao, times(1)).deleteIndexDocuments(any(), any());
     }
 
@@ -248,14 +238,8 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Unknown modification type
         SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, "UNKNOWN");
 
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-
         // Call the method under test
         tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
     }
 
     @Test
@@ -271,7 +255,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(tagDao.getTags()).thenReturn(tagEntityList);
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
 
         // Call the method under test
         Future<Void> future = tagService.indexValidateAllTags(SEARCH_INDEX_TYPE_TAG);
@@ -281,7 +264,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
 
         // Verify the calls to external methods
         verify(tagDao).getTags();
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper).executeFunctionForTagEntities(eq("TAG"), eq(tagEntityList), any());
     }
 
@@ -289,7 +271,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
     public void testIndexSizeCheckValidationTags()
     {
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(indexFunctionsDao.getNumberOfTypesInIndex(any())).thenReturn(100L);
         when(tagDao.getCountOfAllTags()).thenReturn(100L);
 
@@ -299,7 +280,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         assertThat("Tag service index size validation is false when it should have been true.", isIndexSizeValid, is(true));
 
         // Verify the calls to external methods
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(indexFunctionsDao).getNumberOfTypesInIndex(any());
         verify(tagDao).getCountOfAllTags();
         verifyNoMoreInteractions(tagDao, indexFunctionsDao, configurationHelper);
@@ -309,7 +289,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
     public void testIndexSizeCheckValidationTagsFalse()
     {
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(indexFunctionsDao.getNumberOfTypesInIndex(any())).thenReturn(100L);
         when(tagDao.getCountOfAllTags()).thenReturn(200L);
 
@@ -319,7 +298,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         assertThat("Tag service index size validation is true when it should have been false.", isIndexSizeValid, is(false));
 
         // Verify the calls to external methods
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(indexFunctionsDao).getNumberOfTypesInIndex(any());
         verify(tagDao).getCountOfAllTags();
         verifyNoMoreInteractions(tagDao, configurationHelper);
@@ -338,7 +316,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
         when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
         when(indexFunctionsDao.isValidDocumentIndex(any(),any(), any())).thenReturn(true);
 
@@ -350,7 +327,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
         verify(tagDao).getPercentageOfAllTags(0.2);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(2)).isValidDocumentIndex(any(), any(), any());
         verifyNoMoreInteractions(tagDao, indexFunctionsDao, configurationHelper, jsonHelper);
@@ -370,7 +346,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
         when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any())).thenReturn(false);
 
@@ -382,7 +357,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
         verify(tagDao).getPercentageOfAllTags(0.2);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(2)).isValidDocumentIndex(any(), any(), any());
         verifyNoMoreInteractions(tagDao, indexFunctionsDao, configurationHelper, jsonHelper);
@@ -401,7 +375,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
         when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(jsonHelper.objectToJson(any()))
             .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
 
@@ -413,7 +386,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
         verify(tagDao).getPercentageOfAllTags(0.2);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verifyNoMoreInteractions(tagDao, configurationHelper, jsonHelper);
     }
@@ -431,7 +403,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
         when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any())).thenReturn(true);
 
@@ -443,7 +414,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
         verify(tagDao).getMostRecentTags(10);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(2)).isValidDocumentIndex(any(), any(), any());
         verifyNoMoreInteractions(tagDao, indexFunctionsDao, configurationHelper, jsonHelper, tagHelper);
@@ -462,7 +432,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
         when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
         // Call the method under test
         boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags(SEARCH_INDEX_TYPE_TAG);
@@ -472,7 +441,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
         verify(tagDao).getMostRecentTags(10);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verifyNoMoreInteractions(tagDao, configurationHelper, jsonHelper, tagHelper);
     }
@@ -490,7 +458,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
         when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(jsonHelper.objectToJson(any()))
             .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
         when(indexFunctionsDao.isValidDocumentIndex(any(), any(), any())).thenReturn(false);
@@ -503,7 +470,6 @@ public class TagServiceIndexTest extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
         verify(tagDao).getMostRecentTags(10);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(indexFunctionsDao, times(2)).isValidDocumentIndex(any(), any(), any());
         verifyNoMoreInteractions(tagDao, indexFunctionsDao, configurationHelper, jsonHelper, tagHelper);

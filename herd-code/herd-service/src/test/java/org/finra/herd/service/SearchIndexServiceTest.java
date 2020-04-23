@@ -147,7 +147,6 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         when(searchIndexTypeDaoHelper.getSearchIndexTypeEntity(searchIndexType)).thenReturn(searchIndexTypeEntity);
         when(searchIndexStatusDaoHelper.getSearchIndexStatusEntity(searchIndexStatus)).thenReturn(searchIndexStatusEntity);
         when(searchIndexDao.saveAndRefresh(any(SearchIndexEntity.class))).thenReturn(searchIndexEntity);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn(SEARCH_INDEX_ALIAS_BDEF);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_SETTINGS);
@@ -162,7 +161,6 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         verify(searchIndexTypeDaoHelper).getSearchIndexTypeEntity(searchIndexType);
         verify(searchIndexStatusDaoHelper).getSearchIndexStatusEntity(searchIndexStatus);
         verify(searchIndexDao).saveAndRefresh(any(SearchIndexEntity.class));
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
@@ -236,7 +234,6 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         when(indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME)).thenReturn(mockedDocsStats);
         when(mockedDocsStats.getCount()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS);
         when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("doc");
         when(indexFunctionsDao.getNumberOfTypesInIndex(any())).thenReturn(0L);
 
         // Get a search index.
@@ -249,7 +246,6 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         verify(mockedDocsStats).getDeleted();
         verify(indexFunctionsDao).getIndexSettings(SEARCH_INDEX_NAME);
         verify(indexFunctionsDao).getIndexStats(SEARCH_INDEX_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(indexFunctionsDao).getNumberOfTypesInIndex(any());
 
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,

@@ -197,7 +197,6 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         Future<Void> mockedFuture = mock(Future.class);
 
         // Mock the external calls.
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn(SEARCH_INDEX_ALIAS_BDEF);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_SETTINGS);
@@ -208,7 +207,6 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         searchIndexServiceImpl.createSearchIndexHelper(searchIndexKey, searchIndexType);
 
         // Verify the external calls.
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
