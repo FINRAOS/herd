@@ -97,7 +97,7 @@
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
-      <elasticsearch.version>5.1.1</elasticsearch.version>
+      <elasticsearch.version>7.6.2</elasticsearch.version>
       <search-guard-ssl.version>6.5.3-25.5</search-guard-ssl.version>
       <jcredstash.version>0.0.4</jcredstash.version>
       <jest.version>6.3.1</jest.version>
@@ -867,7 +867,12 @@
          </dependency>
          <dependency>
             <groupId>org.elasticsearch.client</groupId>
-            <artifactId>transport</artifactId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>${elasticsearch.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
             <version>${elasticsearch.version}</version>
          </dependency>
          <dependency>

@@ -859,6 +859,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME("elasticsearch.domain.rest.client.hostname", "localhost"),
 
     /**
+     * The elasticsearch search domain rest client hostname version 2
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME_V2("elasticsearch.domain.rest.client.hostname.v2", "localhost"),
+
+    /**
      * The elasticsearch search domain rest client port number
      */
     ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT("elasticsearch.domain.rest.client.port", 443),
