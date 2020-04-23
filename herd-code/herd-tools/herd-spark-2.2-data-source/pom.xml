@@ -29,7 +29,7 @@
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-spark-2.2-data-source</artifactId>
-   <version>1.0.0-SNAPSHOT</version>
+   <version>0.120.1-SNAPSHOT</version>
 
    <!-- build the data source for spark version 2.2.0 -->
    <properties>
