@@ -1,23 +1,25 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -29,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -40,8 +43,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
+import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -126,25 +131,48 @@ public class StorageUnitHelperTest extends AbstractServiceTest
             new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME);
 
-        Timestamp restoredExpirationOn = new Timestamp(new Date().getTime());
+        // Create a storage file entity with a file path that does not start with storage unit directory path.
+        StorageFileEntity storageFileOneEntity = new StorageFileEntity();
+        storageFileOneEntity.setStorageUnit(null);
+        storageFileOneEntity.setPath(FILE_NAME);
+        storageFileOneEntity.setFileSizeBytes(FILE_SIZE);
+        storageFileOneEntity.setRowCount(ROW_COUNT);
+
+        // Create a storage file entity with a file path that starts with the storage unit directory path.
+        StorageFileEntity storageFileTwoEntity = new StorageFileEntity();
+        storageFileTwoEntity.setStorageUnit(null);
+        storageFileTwoEntity.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME_2);
+        storageFileTwoEntity.setFileSizeBytes(FILE_SIZE_2);
+        storageFileTwoEntity.setRowCount(ROW_COUNT_2);
+
+        // Create an expiration timestamp for restoration.
+        final Timestamp restoredExpirationOn = new Timestamp(new Date().getTime());
+
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper.createStorageUnitEntity(businessObjectDataStorageUnitKey, STORAGE_UNIT_STATUS);
         storageUnitEntity.setDirectoryPath(STORAGE_DIRECTORY_PATH);
+        storageUnitEntity.setStorageFiles(Lists.newArrayList(storageFileOneEntity, storageFileTwoEntity));
         storageUnitEntity.setStoragePolicyTransitionFailedAttempts(STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS);
         storageUnitEntity.setRestoreExpirationOn(restoredExpirationOn);
+
+        // Mock the external calls.
+        when(storageFileHelper.createStorageFileFromEntity(any(StorageFileEntity.class), eq(STORAGE_DIRECTORY_PATH))).thenCallRealMethod();
 
         // Call the method under test.
         List<StorageUnit> result =
             storageUnitHelper.createStorageUnitsFromEntities(Collections.singletonList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
 
         // Verify the external calls.
+        verify(storageFileHelper).createStorageFileFromEntity(storageFileOneEntity, STORAGE_DIRECTORY_PATH);
+        verify(storageFileHelper).createStorageFileFromEntity(storageFileTwoEntity, STORAGE_DIRECTORY_PATH);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(Collections.singletonList(
-            new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), null, STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS_HISTORY, STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, HerdDateUtils.getXMLGregorianCalendarValue(restoredExpirationOn))),
-            result);
+            new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3, null), new StorageDirectory(STORAGE_DIRECTORY_PATH), Lists
+                .newArrayList(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+                    new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2)), STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS_HISTORY,
+                STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, HerdDateUtils.getXMLGregorianCalendarValue(restoredExpirationOn))), result);
     }
 
     @Test
