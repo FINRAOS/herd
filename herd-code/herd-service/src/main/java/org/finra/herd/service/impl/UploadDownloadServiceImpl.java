@@ -59,7 +59,6 @@ import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFile
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -687,24 +686,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class), awsPolicyBuilder.build());
     }
 
-    private Credentials getDownloaderCredentialsUsingDownloaderAWSParams(StorageEntity storageEntity, String sessionName, AwsPolicyBuilder awsPolicyBuilder)
-    {
-        // Assume the role.
-        Credentials credentials = stsDao
-            .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), UUID.randomUUID().toString(), getStorageDownloadRoleArn(storageEntity),
-                configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class), awsPolicyBuilder.build());
-
-        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-
-        // Update the AWS parameters DTO with the temporary credentials.
-        awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
-        awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
-        awsParamsDto.setSessionToken(credentials.getSessionToken());
-
-        return stsDao.getTemporarySecurityCredentials(awsParamsDto, sessionName, getStorageDownloadRoleArn(storageEntity),
-            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class), awsPolicyBuilder.build());
-    }
-
     /**
      * Gets the storage's upload session duration in seconds. Defaults to the configured default value if not defined.
      *
@@ -787,7 +768,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
         }
 
-        Credentials downloaderCredentials = getDownloaderCredentialsUsingDownloaderAWSParams(storageEntity, sessionID, awsPolicyBuilder);
+        Credentials downloaderCredentials = getDownloaderCredentials(storageEntity, sessionID, awsPolicyBuilder);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
