@@ -547,6 +547,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Construct and return the response
@@ -773,6 +780,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Create the download business object definition sample data file single initiation response.
@@ -985,6 +999,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Convert the business object format entity to the business object format model object
