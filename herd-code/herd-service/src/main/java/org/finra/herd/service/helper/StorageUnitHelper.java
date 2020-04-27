@@ -121,10 +121,12 @@ public class StorageUnitHelper
      *
      * @param storageUnitEntities the storage unit entities
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the list of storage units
      */
-    List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory)
+    List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory,
+        Boolean excludeBusinessObjectDataStorageFiles)
     {
         List<StorageUnit> storageUnits = new ArrayList<>();
 
@@ -162,8 +164,8 @@ public class StorageUnitHelper
                 storageDirectory.setDirectoryPath(storageUnitEntity.getDirectoryPath());
             }
 
-            // Add the storage files.
-            if (!storageUnitEntity.getStorageFiles().isEmpty())
+            // Add the storage files, is they are not excluded and present in the database.
+            if (BooleanUtils.isNotTrue(excludeBusinessObjectDataStorageFiles) && CollectionUtils.isNotEmpty(storageUnitEntity.getStorageFiles()))
             {
                 List<StorageFile> storageFiles = new ArrayList<>();
                 storageUnit.setStorageFiles(storageFiles);

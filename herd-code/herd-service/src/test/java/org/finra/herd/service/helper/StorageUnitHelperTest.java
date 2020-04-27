@@ -160,7 +160,8 @@ public class StorageUnitHelperTest extends AbstractServiceTest
 
         // Call the method under test.
         List<StorageUnit> result =
-            storageUnitHelper.createStorageUnitsFromEntities(Collections.singletonList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY);
+            storageUnitHelper.createStorageUnitsFromEntities(Collections.singletonList(storageUnitEntity), NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY,
+                    NO_EXCLUDE_BUSINESS_OBJECT_DATA_STORAGE_FILES);
 
         // Verify the external calls.
         verify(storageFileHelper).createStorageFileFromEntity(storageFileOneEntity, STORAGE_DIRECTORY_PATH);

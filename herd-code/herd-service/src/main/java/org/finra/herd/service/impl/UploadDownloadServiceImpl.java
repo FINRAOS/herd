@@ -547,6 +547,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Construct and return the response
@@ -752,14 +759,34 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         StorageEntity storageEntity = businessObjectDefinitionSampleDataFileEntity.getStorage();
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false);
 
         String sessionID = UUID.randomUUID().toString();
-        // Get the temporary credentials.
-        Credentials downloaderCredentials = getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
+
+        // Create an AWS policy builder.
+        AwsPolicyBuilder awsPolicyBuilder = new AwsPolicyBuilder().withS3(s3BucketName, s3ObjectKey, S3Actions.GetObject);
+
+        /*
+         * Only add KMS policies if the storage specifies a KMS ID.
+         */
+        if (storageKmsKeyId != null)
+        {
+            awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
+        }
+
+        Credentials downloaderCredentials = getDownloaderCredentials(storageEntity, sessionID, awsPolicyBuilder);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Create the download business object definition sample data file single initiation response.
@@ -772,6 +799,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
         response.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
         response.setAwsSessionToken(downloaderCredentials.getSessionToken());
+        response.setAwsKmsKeyId(storageKmsKeyId);
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
         response.setPreSignedUrl(presignedUrl);
 
@@ -877,23 +905,36 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3EndPoint = storageHelper.getS3BucketAccessParams(storageEntity).getS3Endpoint();
         String awsRoleArn = getStorageUploadRoleArn(storageEntity);
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false);
+
         String sessionID = UUID.randomUUID().toString();
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
         s3KeyPrefix = StringUtils.appendIfMissing(s3KeyPrefix, "/");
         //need to add star for aws authorization
         String s3Path = s3KeyPrefix + "*";
 
+        Policy policy = createUploaderPolicyNoKmsKey(s3BucketName, s3Path);
+
+        /*
+         * Only apply KMS policies if the storage specifies a KMS ID
+         */
+        if (storageKmsKeyId != null)
+        {
+            policy = createUploaderPolicy(s3BucketName, s3Path, storageKmsKeyId);
+        }
+
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
             .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
-                createUploaderPolicyNoKmsKey(s3BucketName, s3Path));
+                policy);
 
         response.setAwsAccessKey(assumedSessionCredentials.getAccessKeyId());
         response.setAwsSecretKey(assumedSessionCredentials.getSecretAccessKey());
         response.setAwsSessionToken(assumedSessionCredentials.getSessionToken());
+        response.setAwsKmsKeyId(storageKmsKeyId);
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(assumedSessionCredentials.getExpiration()));
-
         response.setAwsS3BucketName(s3BucketName);
         response.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         response.setS3Endpoint(s3EndPoint);
@@ -958,6 +999,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Convert the business object format entity to the business object format model object

@@ -178,7 +178,7 @@ class AccessValidatorController
             .businessObjectDataGetBusinessObjectData(businessObjectDataApi, bdataKey.getNamespace(), bdataKey.getBusinessObjectDefinitionName(),
                 bdataKey.getBusinessObjectFormatUsage(), bdataKey.getBusinessObjectFormatFileType(), null, bdataKey.getPartitionValue(),
                 StringUtils.join(bdataKey.getSubPartitionValues(), "|"), bdataKey.getBusinessObjectFormatVersion(), bdataKey.getBusinessObjectDataVersion(),
-                null, false, false);
+                null, false, false, false);
 
         // Log business object data information returned by the registration server.
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
