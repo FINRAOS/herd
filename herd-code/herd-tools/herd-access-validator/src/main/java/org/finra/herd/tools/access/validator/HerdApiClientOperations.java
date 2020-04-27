@@ -103,6 +103,7 @@ class HerdApiClientOperations
      * Default value is \&quot;VALID\&quot; (optional)
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response (optional)
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response (optional)
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response (optional)
      *
      * @return BusinessObjectData
      * @throws ApiException if fails to make API call
@@ -110,12 +111,13 @@ class HerdApiClientOperations
     BusinessObjectData businessObjectDataGetBusinessObjectData(BusinessObjectDataApi businessObjectDataApi, String namespace,
         String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType, String partitionKey, String partitionValue,
         String subPartitionValues, Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String businessObjectDataStatus,
-        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory) throws ApiException
+        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory, Boolean excludeBusinessObjectDataStorageFiles)
+        throws ApiException
     {
         return businessObjectDataApi
             .businessObjectDataGetBusinessObjectData(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 partitionKey, partitionValue, subPartitionValues, businessObjectFormatVersion, businessObjectDataVersion, businessObjectDataStatus,
-                includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+                includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
     }
 
     /**
