@@ -747,25 +747,25 @@ public enum ConfigurationValue
     ELASTICSEARCH_TAG_INDEX_NAME("elasticsearch.tag.index.name", "tag"),
 
     /**
-     * The elasticsearch business object definition mappings JSON
+     * The elasticsearch business object definition mappings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON_V2("elasticsearch.bdef.mappings.json.v2", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
-     * The elasticsearch business object definition settings JSON
+     * The elasticsearch business object definition settings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_BDEF_SETTINGS_JSON("elasticsearch.bdef.settings.json",
+    ELASTICSEARCH_BDEF_SETTINGS_JSON_V2("elasticsearch.bdef.settings.json.v2",
         "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
-     * The elasticsearch tag mappings JSON
+     * The elasticsearch tag mappings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+    ELASTICSEARCH_TAG_MAPPINGS_JSON_V2("elasticsearch.tag.mappings.json.v2", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
-     * The elasticsearch tag settings JSON
+     * The elasticsearch tag settings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_TAG_SETTINGS_JSON("elasticsearch.tag.settings.json",
+    ELASTICSEARCH_TAG_SETTINGS_JSON_V2("elasticsearch.tag.settings.json.v2",
         "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**

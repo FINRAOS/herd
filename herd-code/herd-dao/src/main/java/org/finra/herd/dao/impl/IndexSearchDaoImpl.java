@@ -38,6 +38,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
@@ -311,15 +312,19 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         searchRequest.source(searchSourceBuilder);
         searchRequest.indices(bdefActiveIndex, tagActiveIndex);
 
-        // Retrieve the indexSearch response
+        // Create a search response object.
         SearchResponse searchResponse;
-        try
+
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            searchResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().search(searchRequest, RequestOptions.DEFAULT);
+            // Retrieve the indexSearch response
+            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 

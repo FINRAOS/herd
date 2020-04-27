@@ -44,6 +44,7 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
@@ -95,20 +96,20 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the index request.
         IndexRequest indexRequest = new IndexRequest(indexName).id(id).source(json, XContentType.JSON);
 
-        // Make the create index document request.
-        IndexResponse indexResponse;
-
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            indexResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().index(indexRequest, RequestOptions.DEFAULT);
+            // Make the create index document request.
+            IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+
+            LOGGER.info("Created Index Document, indexName={}, id={}, status={}.", indexName, id, indexResponse.status().getStatus());
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
-
-        LOGGER.info("Created Index Document, indexName={}, id={}, status={}.", indexName, id, indexResponse.status().getStatus());
     }
 
     @Override
@@ -119,16 +120,19 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the get request.
         GetRequest getRequest = new GetRequest(indexName, id);
 
-        // Make the get request.
+        // Create the get response object.
         GetResponse getResponse;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            getResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().get(getRequest, RequestOptions.DEFAULT);
+            // Make the get request.
+            getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 
@@ -147,16 +151,19 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the get index request.
         GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
 
-        // Make the get index request.
+        // Create the index exists boolean flag.
         boolean isIndexExists;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            isIndexExists = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+            // Make the get index request.
+            isIndexExists = restHighLevelClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 
@@ -171,16 +178,18 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the delete index request
         DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
 
-        // Call the Elasticsearch REST client to delete the index and receive the response.
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            AcknowledgedResponse deleteIndexResponse =
-                elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+            // Call the Elasticsearch REST client to delete the index and receive the response.
+            AcknowledgedResponse deleteIndexResponse = restHighLevelClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+
             LOGGER.info("Deleted Elasticsearch index, indexName={}, isAcknowledge={}.", indexName, deleteIndexResponse.isAcknowledged());
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
     }
@@ -193,16 +202,19 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the get request.
         GetRequest getRequest = new GetRequest(indexName, id);
 
-        // Make the get request.
+        // Create the get response object.
         GetResponse getResponse;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            getResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().get(getRequest, RequestOptions.DEFAULT);
+            // Make the get request.
+            getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 
@@ -213,12 +225,15 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         if (StringUtils.isEmpty(jsonStringFromIndex))
         {
             LOGGER.warn("Document does not exist in the index, adding the document to the index.");
+
+            // Create the index document.
             createIndexDocument(indexName, id, json);
         }
         // Else if the JSON does not match the JSON from the index update the index
         else if (!json.equals(jsonStringFromIndex))
         {
             LOGGER.warn("Document does not match the document in the index, updating the document in the index.");
+
             // Note that create index will update the document if it exists.
             createIndexDocument(indexName, id, json);
         }
@@ -231,32 +246,32 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         List<String> allIndices = getAliases(indexName);
 
-        for (String index : allIndices)
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            // Prepare a bulk request
-            BulkRequest bulkRequest = new BulkRequest();
-
-            // For each document prepare an insert request and add it to the bulk request
-            documentMap.forEach((id, jsonString) -> bulkRequest.add(new IndexRequest(index).id(id).source(jsonString, XContentType.JSON)));
-
-            // Make the bulk request.
-            BulkResponse bulkResponse;
-
-            try
+            for (String index : allIndices)
             {
-                bulkResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().bulk(bulkRequest, RequestOptions.DEFAULT);
-            }
-            catch (final IOException ioException)
-            {
-                LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
-                throw new ElasticsearchRestClientException();
-            }
+                // Prepare a bulk request
+                BulkRequest bulkRequest = new BulkRequest();
 
-            // If there are failures log them
-            if (!bulkResponse.hasFailures())
-            {
-                LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                // For each document prepare an insert request and add it to the bulk request
+                documentMap.forEach((id, jsonString) -> bulkRequest.add(new IndexRequest(index).id(id).source(jsonString, XContentType.JSON)));
+
+                // Make the bulk request.
+                BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+                // If there are failures log them
+                if (!bulkResponse.hasFailures())
+                {
+                    LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                }
             }
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
+            throw new ElasticsearchRestClientException();
         }
     }
 
@@ -271,20 +286,20 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         createIndexRequest.mapping(mapping, XContentType.JSON);
         createIndexRequest.alias(new Alias(alias));
 
-        // Make the create index request.
-        CreateIndexResponse createIndexResponse;
-
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            createIndexResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().indices().create(createIndexRequest, RequestOptions.DEFAULT);
+            // Make the create index request.
+            CreateIndexResponse createIndexResponse = restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+
+            LOGGER.info("Created Elasticsearch index, indexName={}, isAcknowledge={}.", indexName, createIndexResponse.isAcknowledged());
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
-
-        LOGGER.info("Created Elasticsearch index, indexName={}, isAcknowledge={}.", indexName, createIndexResponse.isAcknowledged());
     }
 
     @Override
@@ -295,20 +310,20 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the delete request.
         DeleteRequest deleteRequest = new DeleteRequest(indexName, id);
 
-        // Make the delete request.
-        DeleteResponse deleteResponse;
-
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            deleteResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().delete(deleteRequest, RequestOptions.DEFAULT);
+            // Make the delete request.
+            DeleteResponse deleteResponse = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
+
+            LOGGER.info("Deleted Elasticsearch document from index, indexName={}, id={}, status={}.", indexName, id, deleteResponse.status());
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
-
-        LOGGER.info("Deleted Elasticsearch document from index, indexName={}, id={}, status={}.", indexName, id, deleteResponse.status());
     }
 
     @Override
@@ -319,32 +334,32 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         List<String> allIndices = getAliases(indexName);
 
-        // For each index in the list of indices.
-        for (String index : allIndices)
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            // Prepare a bulk request
-            BulkRequest bulkRequest = new BulkRequest();
-
-            // For each document prepare an insert request and add it to the bulk request
-            ids.forEach(id -> bulkRequest.add(new DeleteRequest(index, id.toString())));
-
-            BulkResponse bulkResponse;
-
-            try
+            // For each index in the list of indices.
+            for (String index : allIndices)
             {
-                bulkResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().bulk(bulkRequest, RequestOptions.DEFAULT);
-            }
-            catch (final IOException ioException)
-            {
-                LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
-                throw new ElasticsearchRestClientException();
-            }
+                // Prepare a bulk request
+                BulkRequest bulkRequest = new BulkRequest();
 
-            // If there are failures log them
-            if (!bulkResponse.hasFailures())
-            {
-                LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                // For each document prepare an insert request and add it to the bulk request
+                ids.forEach(id -> bulkRequest.add(new DeleteRequest(index, id.toString())));
+
+                BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+                // If there are failures log them
+                if (!bulkResponse.hasFailures())
+                {
+                    LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                }
             }
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
+            throw new ElasticsearchRestClientException();
         }
     }
 
@@ -357,16 +372,19 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         CountRequest countRequest = new CountRequest(indexName);
         countRequest.query(QueryBuilders.matchAllQuery());
 
-        // Make the count request.
+        // Create the count response object.
         CountResponse countResponse;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            countResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().count(countRequest, RequestOptions.DEFAULT);
+            // Make the count request.
+            countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 
@@ -391,71 +409,52 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
         searchRequest.source(searchSourceBuilder);
 
-        // Make the search request.
-        SearchResponse searchResponse;
-
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            searchResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().search(searchRequest, RequestOptions.DEFAULT);
+            // Make the search request.
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+            // While there are hits available, scroll through the results and add them to the id list
+            while (searchHits != null && searchHits.length > 0)
+            {
+                // Add each search hit to the id list.
+                for (SearchHit searchHit : searchResponse.getHits().getHits())
+                {
+                    idList.add(searchHit.getId());
+                }
+
+                // Build a search scroll request.
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+
+                // Make the search scroll request.
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+            }
+
+            // Build a clear scroll request.
+            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+            clearScrollRequest.addScrollId(scrollId);
+
+            // Make the clear scroll request.
+            ClearScrollResponse clearScrollResponse = restHighLevelClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+
+            boolean succeeded = clearScrollResponse.isSucceeded();
+
+            LOGGER.info("Retrieved the ids for the documents in index={}, succeeded={}.", indexName, succeeded);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
-
-        String scrollId = searchResponse.getScrollId();
-        SearchHit[] searchHits = searchResponse.getHits().getHits();
-
-        // While there are hits available, scroll through the results and add them to the id list
-        while (searchHits != null && searchHits.length > 0)
-        {
-
-            // Add each search hit to the id list.
-            for (SearchHit searchHit : searchResponse.getHits().getHits())
-            {
-                idList.add(searchHit.getId());
-            }
-
-            // Build a search scroll request.
-            SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-            scrollRequest.scroll(scroll);
-
-            // Make the search scroll request.
-            try
-            {
-                searchResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().scroll(scrollRequest, RequestOptions.DEFAULT);
-            }
-            catch (final IOException ioException)
-            {
-                LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
-                throw new ElasticsearchRestClientException();
-            }
-
-            scrollId = searchResponse.getScrollId();
-            searchHits = searchResponse.getHits().getHits();
-        }
-
-        // Build a clear scroll request.
-        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-        clearScrollRequest.addScrollId(scrollId);
-
-        // Make the clear scroll request.
-        ClearScrollResponse clearScrollResponse;
-
-        try
-        {
-            clearScrollResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
-        }
-        catch (final IOException ioException)
-        {
-            LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
-            throw new ElasticsearchRestClientException();
-        }
-
-        boolean succeeded = clearScrollResponse.isSucceeded();
-
-        LOGGER.info("Retrieved the ids for the documents in index={}, succeeded={}.", indexName, succeeded);
 
         return idList;
     }
@@ -467,32 +466,32 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
 
         List<String> allIndices = getAliases(indexName);
 
-        for (String index : allIndices)
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            // Prepare a bulk request
-            BulkRequest bulkRequest = new BulkRequest();
-
-            // For each document prepare an insert request and add it to the bulk request
-            documentMap.forEach((id, jsonString) -> bulkRequest.add(new IndexRequest(index).id(id).source(jsonString, XContentType.JSON)));
-
-            // Make the bulk request
-            BulkResponse bulkResponse;
-
-            try
+            for (String index : allIndices)
             {
-                bulkResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().bulk(bulkRequest, RequestOptions.DEFAULT);
-            }
-            catch (final IOException ioException)
-            {
-                LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
-                throw new ElasticsearchRestClientException();
-            }
+                // Prepare a bulk request
+                BulkRequest bulkRequest = new BulkRequest();
 
-            // If there are failures log them
-            if (!bulkResponse.hasFailures())
-            {
-                LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                // For each document prepare an insert request and add it to the bulk request
+                documentMap.forEach((id, jsonString) -> bulkRequest.add(new IndexRequest(index).id(id).source(jsonString, XContentType.JSON)));
+
+                // Make the bulk request
+                BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+                // If there are failures log them
+                if (!bulkResponse.hasFailures())
+                {
+                    LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
+                }
             }
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
+            throw new ElasticsearchRestClientException();
         }
     }
 
@@ -504,19 +503,21 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the get settings request.
         GetSettingsRequest request = new GetSettingsRequest().indices(indexName);
 
-        // Make the get settings request.
+        // Create a get settings reponse object.
         GetSettingsResponse getSettingsResponse;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            getSettingsResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().indices().getSettings(request, RequestOptions.DEFAULT);
+            // Make the get settings request.
+            getSettingsResponse = restHighLevelClient.indices().getSettings(request, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
-
 
         return getSettingsResponse.getIndexToSettings().get(indexName);
     }
@@ -536,16 +537,19 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         // Build the get aliases request.
         GetAliasesRequest getAliasesRequest = new GetAliasesRequest(aliasName);
 
-        // Make the get aliases request.
+        // Create a get alias response object.
         GetAliasesResponse getAliasesResponse;
 
-        try
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
-            getAliasesResponse = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient().indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
+            // Make the get aliases request.
+            getAliasesResponse = restHighLevelClient.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
         }
         catch (final IOException ioException)
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
             throw new ElasticsearchRestClientException();
         }
 
