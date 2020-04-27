@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.text.ParseException;
@@ -206,7 +206,7 @@ public class BusinessObjectDataHelper
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity)
     {
-        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false, false);
+        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false, false, false);
     }
 
     /**
@@ -215,11 +215,12 @@ public class BusinessObjectDataHelper
      * @param businessObjectDataEntity the newly persisted business object data entity.
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the business object data.
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity,
-        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory)
+        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory, Boolean excludeBusinessObjectDataStorageFiles)
     {
         // Make the business object format associated with this data easily accessible.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
@@ -240,8 +241,9 @@ public class BusinessObjectDataHelper
         businessObjectData.setLatestVersion(businessObjectDataEntity.getLatestVersion());
 
         // Add in the storage units.
-        businessObjectData
-            .setStorageUnits(storageUnitHelper.createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits(), includeStorageUnitStatusHistory));
+        businessObjectData.setStorageUnits(storageUnitHelper
+            .createStorageUnitsFromEntities(businessObjectDataEntity.getStorageUnits(), includeStorageUnitStatusHistory,
+                excludeBusinessObjectDataStorageFiles));
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();
@@ -529,6 +531,7 @@ public class BusinessObjectDataHelper
      * @param storageName the storage name
      *
      * @return the storage unit
+     *
      * @throws IllegalStateException if business object data has no storage unit with the specified storage name
      */
     public StorageUnit getStorageUnitByStorageName(BusinessObjectData businessObjectData, String storageName) throws IllegalStateException

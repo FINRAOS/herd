@@ -154,11 +154,13 @@ public interface BusinessObjectDataService
      * @param businessObjectDataStatus the business object data status, may be null
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the retrieved business object data information
      */
     BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory);
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory,
+        Boolean excludeBusinessObjectDataStorageFiles);
 
     /**
      * Retrieves a list of existing business object data versions, if any.
