@@ -145,7 +145,7 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         // Create a response.
         DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse response =
             new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(businessObjectDefinitionSampleDataFileKey, S3_BUCKET_NAME,
-                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, null, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME,
+                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, NO_AWS_KMS_KEY_ID, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME,
                 AWS_PRE_SIGNED_URL);
 
         // Mock the external calls.
@@ -175,7 +175,7 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         // Create a response.
         UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response =
             new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse(businessObjectDefinitionKey, S3_BUCKET_NAME, S3_ENDPOINT, S3_KEY_PREFIX,
-                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, null, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
+                AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, NO_AWS_KMS_KEY_ID, AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME);
 
         // Mock the external calls.
         when(uploadDownloadService.initiateUploadSampleFile(request)).thenReturn(response);

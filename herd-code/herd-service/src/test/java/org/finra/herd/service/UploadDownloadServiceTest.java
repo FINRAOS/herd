@@ -626,8 +626,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
         storageEntity.getAttributes().add(storageDaoTestHelper
-            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID));
 
         // Initiate a file upload.
         UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
@@ -667,8 +666,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
         storageEntity.getAttributes().add(storageDaoTestHelper
-            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID));
 
         // Initiate a file upload.
         UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
@@ -731,8 +729,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         storageEntity.getAttributes().add(storageDaoTestHelper
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
         storageEntity.getAttributes().add(storageDaoTestHelper
-            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID));
 
         // Initiate a file upload.
         UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
@@ -1175,7 +1172,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(
                 new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME), S3_BUCKET_NAME,
                 MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
-                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, null, downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()),
+                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, NO_AWS_KMS_KEY_ID, downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()),
             downloadResponse);
     }
 
@@ -1186,8 +1183,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")));
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID)));
 
 
         // Create and persist a business object definition entity with sample data files.
@@ -1213,8 +1209,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(
             new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME), S3_BUCKET_NAME,
             MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
-            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-            downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()), downloadResponse);
+            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, S3_KMS_KEY_ID, downloadResponse.getAwsSessionExpirationTime(),
+            downloadResponse.getPreSignedUrl()), downloadResponse);
     }
 
     @Test
@@ -1537,8 +1533,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), UPLOADER_ROLE_ARN),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), s3_velocity_template),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")));
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID)));
 
         // Create and persist a business object definition entity with sample data files.
         businessObjectDefinitionDaoTestHelper
@@ -1554,7 +1549,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsS3BucketName(), S3_BUCKET_NAME);
         assertEquals(response.getS3KeyPrefix(), expectedS3KeyPrefix);
         assertEquals(response.getAwsAccessKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY);
-        assertEquals(response.getAwsKmsKeyId(), "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012");
+        assertEquals(response.getAwsKmsKeyId(), S3_KMS_KEY_ID);
         assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
     }
@@ -1798,8 +1793,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")));
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), S3_KMS_KEY_ID)));
 
         // Create relative database entities.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
