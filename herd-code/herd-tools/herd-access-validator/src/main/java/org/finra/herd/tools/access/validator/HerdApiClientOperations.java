@@ -110,12 +110,12 @@ class HerdApiClientOperations
     BusinessObjectData businessObjectDataGetBusinessObjectData(BusinessObjectDataApi businessObjectDataApi, String namespace,
         String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType, String partitionKey, String partitionValue,
         String subPartitionValues, Integer businessObjectFormatVersion, Integer businessObjectDataVersion, String businessObjectDataStatus,
-        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory) throws ApiException
+        Boolean includeBusinessObjectDataStatusHistory, Boolean includeStorageUnitStatusHistory, Boolean excludeBusinessObjectDataStorageFiles) throws ApiException
     {
         return businessObjectDataApi
             .businessObjectDataGetBusinessObjectData(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 partitionKey, partitionValue, subPartitionValues, businessObjectFormatVersion, businessObjectDataVersion, businessObjectDataStatus,
-                includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory);
+                includeBusinessObjectDataStatusHistory, includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
     }
 
     /**
