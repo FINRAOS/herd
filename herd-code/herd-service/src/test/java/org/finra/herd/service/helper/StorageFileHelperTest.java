@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
@@ -28,17 +28,18 @@ import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -67,7 +68,46 @@ public class StorageFileHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testValidateRegisteredS3Files() throws IOException
+    public void testCreateStorageFileFromEntity()
+    {
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity = new StorageFileEntity();
+        storageFileEntity.setStorageUnit(null);
+        storageFileEntity.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME);
+        storageFileEntity.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity.setRowCount(ROW_COUNT);
+
+        // Create storage file from entity when directory path is not specified (passed as null).
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, NO_STORAGE_DIRECTORY_PATH));
+
+        // Create storage file from entity when directory path is passed as blank text.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, BLANK_TEXT));
+
+        // Create storage file from entity when directory path is matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STORAGE_DIRECTORY_PATH));
+
+        // Create storage file from entity when directory path is matching
+        // the beginning of storage file path and directory path has '/' trailing character.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STORAGE_DIRECTORY_PATH + "/"));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STRING_VALUE));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has '/' trailing character.
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STRING_VALUE + "/"));
+    }
+
+    @Test
+    public void testValidateRegisteredS3Files()
     {
         // Create two lists of expected and actual storage files.
         // Please note we use different row count values to confirm that row count match is not validated.
