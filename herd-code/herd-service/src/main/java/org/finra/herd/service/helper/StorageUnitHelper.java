@@ -119,13 +119,13 @@ public class StorageUnitHelper
     /**
      * Creates a list of storage units from the list of storage unit entities.
      *
-     * @param storageUnitEntities the storage unit entities.
+     * @param storageUnitEntities the storage unit entities
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
      * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
-     * @return the list of storage units.
+     * @return the list of storage units
      */
-    public List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory,
+    List<StorageUnit> createStorageUnitsFromEntities(Collection<StorageUnitEntity> storageUnitEntities, Boolean includeStorageUnitStatusHistory,
         Boolean excludeBusinessObjectDataStorageFiles)
     {
         List<StorageUnit> storageUnits = new ArrayList<>();
@@ -172,7 +172,7 @@ public class StorageUnitHelper
 
                 for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
                 {
-                    storageFiles.add(storageFileHelper.createStorageFileFromEntity(storageFileEntity));
+                    storageFiles.add(storageFileHelper.createStorageFileFromEntity(storageFileEntity, storageUnitEntity.getDirectoryPath()));
                 }
             }
 
