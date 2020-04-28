@@ -873,6 +873,16 @@ public enum ConfigurationValue
      */
     ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
 
+    /*
+     * The Elasticsearch search rest client connection timeout in milliseconds.
+     */
+    ELASTICSEARCH_REST_HIGH_LEVEL_CLIENT_CONNECTION_TIMEOUT("elasticsearch.rest.high.level.client.connection.timeout", 5000),
+
+    /*
+     * The Elasticsearch search rest client socket timeout in milliseconds.
+     */
+    ELASTICSEARCH_REST_HIGH_LEVEL_CLIENT_SOCKET_TIMEOUT("elasticsearch.rest.high.level.client.socket.timeout", 600000),
+
     /**
      * The search index update queue name
      */
