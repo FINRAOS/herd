@@ -177,7 +177,7 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
         }
     }
 
-    @Test(expected = CannotCreateTransactionException.class)
+    @Test
     public void testExecuteWithExceptionAndGetCreateTransactionException()
     {
         // Mock dependencies.
@@ -185,7 +185,8 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
         JobEntity job = mock(JobEntity.class);
         JobEntityManager jobEntityManager = mock(JobEntityManager.class);
         CommandContext commandContext = mock(CommandContext.class);
-
+        //Save the command context to use later
+        CommandContext commandContextSaved = Context.getCommandContext();
         Context.setCommandContext(commandContext);
         String jobId = "testId100";
         when(job.getId()).thenReturn(jobId);
@@ -195,6 +196,20 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
         doThrow(CannotCreateTransactionException.class).when(job).execute(any());
         when(commandContext.getJobEntityManager()).thenReturn(jobEntityManager);
         when(jobEntityManager.findJobById(jobId)).thenReturn(job);
-        herdCommandInvoker.execute(config, command);
+
+        try
+        {
+            herdCommandInvoker.execute(config, command);
+            fail();
+        }
+        catch (CannotCreateTransactionException e)
+        {
+           //Get expected exception
+        }
+        finally
+        {
+            Context.setCommandContext(commandContextSaved);
+        }
+
     }
 }
