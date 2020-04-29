@@ -78,6 +78,6 @@ public class ElasticsearchRestHighLevelClientFactory
         LOGGER.info("Creating new Elasticsearch REST high level client with hostname={}, port={}, and scheme={}.", hostname, port, scheme);
 
         // Return a new REST high level client to be used to connect and make requests to the Elasticsearch domain.
-        return new RestHighLevelClient(RestClient.builder(new HttpHost(hostname, port, scheme)));
+        return new RestHighLevelClient(restClientBuilder);
     }
 }
