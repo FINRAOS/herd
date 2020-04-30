@@ -144,6 +144,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         boolean taskSuccessFlag = false;
         try
         {
+            // Set the task begin time
+            taskBeginTimeMillis = System.currentTimeMillis();
+            
             // Need to clear the security context here since the current thread may have been reused,
             // which may might have left over its security context. If we do not clear the security
             // context, any subsequent calls may be restricted by the permissions given
@@ -163,9 +166,6 @@ public abstract class BaseJavaDelegate implements JavaDelegate
 
             // Log all input variables from the execution (before the execution starts).
             logInputParameters(execution);
-
-            // Set the task begin time
-            taskBeginTimeMillis = System.currentTimeMillis();
 
             // Perform the execution implementation handled in the sub-class.
             executeImpl(execution);

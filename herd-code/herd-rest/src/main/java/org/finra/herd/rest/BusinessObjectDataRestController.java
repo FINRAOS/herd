@@ -493,6 +493,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * Default value is "VALID"
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      * @param includeStorageUnitStatusHistory specifies to include storage unit status history for each storage unit in the response
+     * @param excludeBusinessObjectDataStorageFiles specifies to exclude storage files in the response
      *
      * @return the retrieved business object data information
      */
@@ -512,13 +513,14 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion,
         @RequestParam(value = "businessObjectDataStatus", required = false) String businessObjectDataStatus,
         @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory,
-        @RequestParam(value = "includeStorageUnitStatusHistory", required = false) Boolean includeStorageUnitStatusHistory)
+        @RequestParam(value = "includeStorageUnitStatusHistory", required = false) Boolean includeStorageUnitStatusHistory,
+        @RequestParam(value = "excludeBusinessObjectDataStorageFiles", required = false) Boolean excludeBusinessObjectDataStorageFiles)
     {
         return businessObjectDataService.getBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
                 businessObjectDataVersion), businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory,
-            includeStorageUnitStatusHistory);
+            includeStorageUnitStatusHistory, excludeBusinessObjectDataStorageFiles);
     }
 
     /**

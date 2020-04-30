@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
@@ -29,8 +30,11 @@ import org.activiti.bpmn.model.SequenceFlow;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.impl.cmd.ExecuteAsyncJobCmd;
+import org.activiti.engine.impl.context.Context;
 import org.activiti.engine.impl.interceptor.CommandConfig;
+import org.activiti.engine.impl.interceptor.CommandContext;
 import org.activiti.engine.impl.persistence.entity.JobEntity;
+import org.activiti.engine.impl.persistence.entity.JobEntityManager;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.junit.Test;
 import org.springframework.transaction.CannotCreateTransactionException;
@@ -173,13 +177,39 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
         }
     }
 
-    @Test(expected = CannotCreateTransactionException.class)
+    @Test
     public void testExecuteWithExceptionAndGetCreateTransactionException()
     {
         // Mock dependencies.
         CommandConfig config = mock(CommandConfig.class);
-        ExecuteAsyncJobCmd command = mock(ExecuteAsyncJobCmd.class);
-        doThrow(CannotCreateTransactionException.class).when(command).execute(any());
-        herdCommandInvoker.execute(config, command);
+        JobEntity job = mock(JobEntity.class);
+        JobEntityManager jobEntityManager = mock(JobEntityManager.class);
+        CommandContext commandContext = mock(CommandContext.class);
+        //Save the command context to use later
+        CommandContext commandContextSaved = Context.getCommandContext();
+        Context.setCommandContext(commandContext);
+        String jobId = "testId100";
+        when(job.getId()).thenReturn(jobId);
+        when(job.getProcessInstanceId()).thenReturn("testProcessId100");
+        when(job.getRetries()).thenReturn(3);
+        ExecuteAsyncJobCmd command = new ExecuteAsyncJobCmd(job);
+        doThrow(CannotCreateTransactionException.class).when(job).execute(any());
+        when(commandContext.getJobEntityManager()).thenReturn(jobEntityManager);
+        when(jobEntityManager.findJobById(jobId)).thenReturn(job);
+
+        try
+        {
+            herdCommandInvoker.execute(config, command);
+            fail();
+        }
+        catch (CannotCreateTransactionException e)
+        {
+           //Get expected exception
+        }
+        finally
+        {
+            Context.setCommandContext(commandContextSaved);
+        }
+
     }
 }

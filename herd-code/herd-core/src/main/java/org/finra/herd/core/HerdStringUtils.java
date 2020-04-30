@@ -37,11 +37,13 @@ public class HerdStringUtils
     // Hidden text content
     public static final String HIDDEN_TEXT = "hidden";
     // Regex to check json password pattern, password wrapped in " or "\", like "jdbc.password":"password1"
-    private static Pattern REGEX_JSON_PASSWORD = Pattern.compile("(\\\\?\".*?password\\\\?\":\\\\?\")[\\w\\p{Punct}&&[^&]]*?(\\\\?\")");
+    private static Pattern REGEX_JSON_PASSWORD =
+        Pattern.compile("(\\\\?\"?password\\\\?\":\\\\?\")[\\w\\p{Punct}&&[^&]]*?(\\\\?\")", Pattern.CASE_INSENSITIVE);
     // Regex to check json password pattern, like "name": "password", "value": "password1"
-    private static Pattern REGEX_JSON_PASSWORD2 = Pattern.compile("(\"name\": \".*?password\", \"value\": \")[\\w\\p{Punct}&&[^&]]*?\"");
+    private static Pattern REGEX_JSON_PASSWORD2 =
+        Pattern.compile("(\"name\": \".*?password\", \"value\": \")[\\w\\p{Punct}&&[^&]]*?\"", Pattern.CASE_INSENSITIVE);
     // Regex to check xml password pattern, like "<password>password1</password>
-    private static Pattern REGEX_XML_PASSWORD = Pattern.compile("(<.*?password>)[\\w\\p{Punct}&&[^&]]*?<");
+    private static Pattern REGEX_XML_PASSWORD = Pattern.compile("(<.*?password>)[\\w\\p{Punct}&&[^&]]*?<", Pattern.CASE_INSENSITIVE);
     
     /**
      * Decodes and return the base64 encoded string.
