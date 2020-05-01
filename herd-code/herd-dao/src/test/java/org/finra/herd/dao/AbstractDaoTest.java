@@ -981,6 +981,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
 
+    public static final String SEARCH_INDEX_ID = "UT_SearchIndexId_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_JSON_STRING = "UT_SearchIndexJsonString_" + RANDOM_SUFFIX;
+
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
