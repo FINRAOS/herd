@@ -23,8 +23,8 @@ import org.activiti.engine.impl.interceptor.Command;
 import org.activiti.engine.impl.interceptor.CommandConfig;
 import org.activiti.engine.impl.interceptor.CommandInvoker;
 import org.activiti.engine.impl.persistence.entity.JobEntity;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -54,16 +54,6 @@ public class HerdCommandInvoker extends CommandInvoker
             LOGGER.warn(String.format("HerdCommandInvoker caught an exception."), e);
 
             /*
-             * If the exception is unable to create transaction due to JDBC connection issue,
-             * throw out the exception, then let the Activiti engine take care of retries
-             */
-            if (StringUtils.containsIgnoreCase(ExceptionUtils.getMessage(e), CANNOT_CREATE_TRANSACTION_EXCEPTION))
-            {
-                LOGGER.warn(String.format("HerdCommandInvoker caught a CannotCreateTransactionException."), e);
-                throw e;
-            }
-
-            /*
              * Attempt to handle exception based on the command.
              * If we bubble the exception up here, the transaction will be rolled back and all variables which were not committed will not be persisted.
              * The problem with swallowing the exception, however, is that the exception message is not persisted automatically. To get around it, we must save
@@ -78,6 +68,18 @@ public class HerdCommandInvoker extends CommandInvoker
                  */
                 ExecuteAsyncJobCmd executeAsyncJobCmd = (ExecuteAsyncJobCmd) command;
                 JobEntity jobEntity = getJobEntity(executeAsyncJobCmd);
+
+                /*
+                 * If the exception is unable to create transaction due to JDBC connection issue,
+                 * throw out the exception, then let the Activiti engine take care of retries
+                 */
+                if (StringUtils.containsIgnoreCase(ExceptionUtils.getMessage(e), CANNOT_CREATE_TRANSACTION_EXCEPTION))
+                {
+                    LOGGER.warn(String.format("HerdCommandInvoker caught a CannotCreateTransactionException. Job id %s, Process instance id %s, Retries %d.",
+                        jobEntity.getId(), jobEntity.getProcessInstanceId(), jobEntity.getRetries()), e);
+                    throw e;
+                }
+
                 jobEntity.setExceptionMessage(ExceptionUtils.getMessage(e));
                 jobEntity.setExceptionStacktrace(ExceptionUtils.getStackTrace(e));
                 return null;

@@ -648,6 +648,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_AWS_ACCESS_KEY = null;
 
+    public static final String NO_AWS_KMS_KEY_ID = null;
+
     public static final String NO_AWS_REGION_NAME = null;
 
     public static final String NO_AWS_SECRET_KEY = null;
@@ -914,6 +916,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_KEY_2 = "UT_S3_Key_2_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
+
+    public static final String S3_KMS_KEY_ID = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012";
 
     public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
 
