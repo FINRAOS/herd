@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
@@ -1713,7 +1714,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlWithoutPrefixShort()
+    public void testGenerateBusinessObjectDataDdlStorageFilesWithoutPrefix()
     {
         // Create an S3 storage entity with the relative attributes.
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
@@ -1722,7 +1723,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                     S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
 
         // Expected business object format file type to Hive file format mapping.
-        HashMap<String, String> businessObjectFormatFileTypeMap = new HashMap<>();
+        Map<String, String> businessObjectFormatFileTypeMap = new HashMap<>();
         businessObjectFormatFileTypeMap.put(FileTypeEntity.BZ_FILE_TYPE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT);
 
         for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())

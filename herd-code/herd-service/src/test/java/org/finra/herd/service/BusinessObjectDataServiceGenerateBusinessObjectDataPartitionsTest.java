@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1222,7 +1223,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
     }
 
     @Test
-    public void testGenerateBusinessObjectDataPartitionsWithoutPrefixShort()
+    public void testGenerateBusinessObjectDataPartitionsStorageFilesWithoutPrefix()
     {
         // Create an S3 storage entity with the relative attributes.
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
@@ -1231,7 +1232,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
                     S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
 
         // Expected business object format file type to Hive file format mapping.
-        HashMap<String, String> businessObjectFormatFileTypeMap = new HashMap<>();
+        Map<String, String> businessObjectFormatFileTypeMap = new HashMap<>();
         businessObjectFormatFileTypeMap.put(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT);
 
         for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())

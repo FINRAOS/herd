@@ -427,7 +427,7 @@ public class BusinessObjectDataDdlPartitionsHelper
 
             // If flag is set to suppress scan for unregistered sub-partitions, use the directory path or the S3 key prefix
             // as the partition's location, otherwise, use storage files to discover all unregistered sub-partitions.
-            ArrayList<String> storageFilePaths = new ArrayList<>();
+            List<String> storageFilePaths = new ArrayList<>();
             if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
             {
                 // Validate the directory path value if it is present.
