@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,12 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import io.searchbox.client.JestResult;
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.SearchScroll;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -50,16 +45,25 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.ClearScrollResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -650,138 +654,368 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testDeleteIndexDocumentsFunction()
+    public void testDeleteIndexDocumentsFunction() throws Exception
     {
-        SearchResult jestResult = mock(SearchResult.class);
-        JestResult jestResultAliases = mock(JestResult.class);
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("INDEX_NAME_1", "INDEX_NAME");
-        jsonObject.addProperty("INDEX_NAME_2", "INDEX_NAME");
         // Build mocks
-        when(jestClientHelper.execute(any())).thenReturn(jestResult);
-        when(jestResult.isSucceeded()).thenReturn(true);
-        when(jestClientHelper.execute(any())).thenReturn(jestResultAliases);
-        when(jestResultAliases.isSucceeded()).thenReturn(true);
-        when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
-        // Call the method under test
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
         List<Long> businessObjectDefinitionIds = new ArrayList<>();
-        businessObjectDefinitionIds.add(1L);
-        indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", businessObjectDefinitionIds);
+        businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(false);
+
+        // Call the method under test
+        indexFunctionsDao.deleteIndexDocuments(SEARCH_INDEX_NAME, businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(jestClientHelper, times(3)).execute(any());
-        verifyNoMoreInteractions(jestClientHelper);
+        verify(elasticsearchRestHighLevelClientFactory, times(2)).getRestHighLevelClient();
+        verify(restHighLevelClient).indices();
+        verify(restHighLevelClient).bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT));
+        verify(indicesClient).getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT));
+        verify(getAliasesResponse).getAliases();
+        verify(bulkResponse).hasFailures();
+        verify(restHighLevelClient, times(2)).close();
+        verifyNoMoreInteractions(bulkResponse, elasticsearchRestHighLevelClientFactory, getAliasesResponse, indicesClient, restHighLevelClient);
     }
 
     @Test
-    public void testDeleteIndexDocumentsFunctionWithFailures()
+    public void testDeleteIndexDocumentsFunctionWithFailures() throws Exception
     {
-        SearchResult jestResult = mock(SearchResult.class);
-        JestResult jestResultAliases = mock(JestResult.class);
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("INDEX_NAME_1", "INDEX_NAME");
-        jsonObject.addProperty("INDEX_NAME_2", "INDEX_NAME");
         // Build mocks
-        when(jestClientHelper.execute(any())).thenReturn(jestResult);
-        when(jestResult.isSucceeded()).thenReturn(false);
-        when(jestClientHelper.execute(any())).thenReturn(jestResultAliases);
-        when(jestResultAliases.isSucceeded()).thenReturn(true);
-        when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
-        // Call the method under test
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
         List<Long> businessObjectDefinitionIds = new ArrayList<>();
-        businessObjectDefinitionIds.add(1L);
-        indexFunctionsDao.deleteIndexDocuments("INDEX_NAME", businessObjectDefinitionIds);
+        businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
 
-        // Verify the calls to external methods
-        verify(jestClientHelper, times(3)).execute(any());
-        verifyNoMoreInteractions(jestClientHelper);
-    }
-
-    @Test
-    public void testNumberOfTypesInIndexFunction()
-    {
-        JestResult searchResult = mock(SearchResult.class);
-        // Build mocks
-        when(jestClientHelper.execute(any())).thenReturn(searchResult);
-        when(searchResult.getSourceAsString()).thenReturn("100");
-        indexFunctionsDao.getNumberOfTypesInIndex("INDEX_NAME");
-        // Verify the calls to external methods
-        verify(jestClientHelper).execute(any());
-        verify(searchResult).getSourceAsString();
-
-        verifyNoMoreInteractions(jestClientHelper);
-    }
-
-    @Test
-    public void testIdsInIndexFunction()
-    {
-        JestResult jestResult = mock(JestResult.class);
-        SearchResult searchResult = mock(SearchResult.class);
-        List<String> idList = Lists.newArrayList("{id:1}");
-        List<String> emptyList = new ArrayList<>();
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("_scroll_id", "100");
-        when(jestClientHelper.execute(any(Search.class))).thenReturn(searchResult);
-        when(searchResult.getSourceAsStringList()).thenReturn(idList);
-        when(searchResult.getJsonObject()).thenReturn(jsonObject);
-        when(jestClientHelper.execute(any(SearchScroll.class))).thenReturn(jestResult);
-        when(jestResult.getSourceAsStringList()).thenReturn(emptyList);
-        indexFunctionsDao.getIdsInIndex("INDEX_NAME");
-        verify(jestClientHelper).execute(any(Search.class));
-        verify(searchResult, times(2)).getSourceAsStringList();
-        verify(searchResult).getJsonObject();
-        verify(jestClientHelper).execute(any(SearchScroll.class));
-        verify(jestResult).getSourceAsStringList();
-    }
-
-
-    @Test
-    public void testUpdateIndexDocumentsFunction()
-    {
-        SearchResult jestResult = mock(SearchResult.class);
-        JestResult jestResultAliases = mock(JestResult.class);
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("INDEX_NAME_1", "INDEX_NAME");
-        jsonObject.addProperty("INDEX_NAME_2", "INDEX_NAME");
-        // Build mocks
-        when(jestClientHelper.execute(any())).thenReturn(jestResult);
-        when(jestResult.isSucceeded()).thenReturn(true);
-        when(jestClientHelper.execute(any())).thenReturn(jestResultAliases);
-        when(jestResultAliases.isSucceeded()).thenReturn(true);
-        when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(true);
+        when(bulkResponse.buildFailureMessage()).thenReturn(ERROR_MESSAGE);
 
         // Call the method under test
-        Map<String, String> documentMap = new HashMap<>();
-        documentMap.put("1", "JSON");
-        indexFunctionsDao.updateIndexDocuments("INDEX_NAME", documentMap);
+        indexFunctionsDao.deleteIndexDocuments(SEARCH_INDEX_NAME, businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(jestClientHelper, times(3)).execute(any());
-        verifyNoMoreInteractions(jestClientHelper);
+        verify(elasticsearchRestHighLevelClientFactory, times(2)).getRestHighLevelClient();
+        verify(restHighLevelClient).indices();
+        verify(restHighLevelClient).bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT));
+        verify(indicesClient).getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT));
+        verify(getAliasesResponse).getAliases();
+        verify(bulkResponse).hasFailures();
+        verify(bulkResponse).buildFailureMessage();
+        verify(restHighLevelClient, times(2)).close();
+        verifyNoMoreInteractions(bulkResponse, elasticsearchRestHighLevelClientFactory, getAliasesResponse, indicesClient, restHighLevelClient);
+    }
+
+    @Test(expected = ElasticsearchRestClientException.class)
+    public void testDeleteIndexDocumentsFunctionThrowsElasticsearchRestClientException() throws Exception
+    {
+        // Build mocks
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
+        List<Long> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenThrow(new IOException());
+
+        // Call the method under test
+        indexFunctionsDao.deleteIndexDocuments(SEARCH_INDEX_NAME, businessObjectDefinitionIds);
     }
 
     @Test
-    public void testUpdateIndexDocumentsFunctionWithFailures()
+    public void testNumberOfTypesInIndexFunction() throws Exception
     {
-        SearchResult jestResult = mock(SearchResult.class);
-        JestResult jestResultAliases = mock(JestResult.class);
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("INDEX_NAME_1", "INDEX_NAME");
-        jsonObject.addProperty("INDEX_NAME_2", "INDEX_NAME");
         // Build mocks
-        when(jestClientHelper.execute(any())).thenReturn(jestResult);
-        when(jestResult.isSucceeded()).thenReturn(false);
-        when(jestClientHelper.execute(any())).thenReturn(jestResultAliases);
-        when(jestResultAliases.isSucceeded()).thenReturn(true);
-        when(jestResultAliases.getJsonObject()).thenReturn(jsonObject);
+        CountResponse countResponse = mock(CountResponse.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.count(any(CountRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(countResponse);
+        when(countResponse.getCount()).thenReturn(SEARCH_INDEX_DOCUMENT_COUNT);
 
         // Call the method under test
-        Map<String, String> documentMap = new HashMap<>();
-        documentMap.put("1", "JSON");
-        indexFunctionsDao.updateIndexDocuments("INDEX_NAME", documentMap);
+        long numberOfTypesInIndex = indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME);
+        assertThat("The numberOfTypesInIndex is not the correct value.", numberOfTypesInIndex, is(equalTo(SEARCH_INDEX_DOCUMENT_COUNT)));
 
         // Verify the calls to external methods
-        verify(jestClientHelper, times(3)).execute(any());
-        verifyNoMoreInteractions(jestClientHelper);
+        verify(elasticsearchRestHighLevelClientFactory).getRestHighLevelClient();
+        verify(restHighLevelClient).count(any(CountRequest.class), eq(RequestOptions.DEFAULT));
+        verify(countResponse).getCount();
+        verify(restHighLevelClient).close();
+        verifyNoMoreInteractions(elasticsearchRestHighLevelClientFactory, countResponse, restHighLevelClient);
+    }
+
+    @Test(expected = ElasticsearchRestClientException.class)
+    public void testNumberOfTypesInIndexFunctionThrowsElasticsearchRestClientException() throws Exception
+    {
+        // Build mocks
+        CountResponse countResponse = mock(CountResponse.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.count(any(CountRequest.class), eq(RequestOptions.DEFAULT))).thenThrow(new IOException());
+
+        // Call the method under test
+        indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME);
+    }
+
+    @Test
+    public void testIdsInIndexFunction() throws Exception
+    {
+        // Create objects needed for the test.
+        SearchHit[] searchHitsArray = {new SearchHit(SEARCH_INDEX_DOCUMENT_ID_INT)};
+        SearchHit[] searchHitsArrayScroll = {};
+
+        // Build mocks
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        ClearScrollResponse clearScrollResponse = mock(ClearScrollResponse.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.search(any(SearchRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(searchResponse);
+        when(restHighLevelClient.scroll(any(SearchScrollRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(searchResponseScroll);
+        when(restHighLevelClient.clearScroll(any(ClearScrollRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(clearScrollResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchResponse.getScrollId()).thenReturn(SEARCH_INDEX_SCROLL_ID);
+        when(searchHits.getHits()).thenReturn(searchHitsArray);
+        when(searchHitsScroll.getHits()).thenReturn(searchHitsArrayScroll);
+        when(clearScrollResponse.isSucceeded()).thenReturn(true);
+
+        // Call the method under test
+        List<String> idsInIndex = indexFunctionsDao.getIdsInIndex(SEARCH_INDEX_NAME);
+        assertThat("Ids in index is not correct.", idsInIndex.size(), is(equalTo(1)));
+
+        // Verify the calls to external methods
+        verify(elasticsearchRestHighLevelClientFactory).getRestHighLevelClient();
+        verify(restHighLevelClient).search(any(SearchRequest.class), eq(RequestOptions.DEFAULT));
+        verify(restHighLevelClient).scroll(any(SearchScrollRequest.class), eq(RequestOptions.DEFAULT));
+        verify(restHighLevelClient).clearScroll(any(ClearScrollRequest.class), eq(RequestOptions.DEFAULT));
+        verify(searchResponse, times(2)).getHits();
+        verify(searchResponse).getScrollId();
+        verify(searchHits, times(2)).getHits();
+        verify(clearScrollResponse).isSucceeded();
+        verify(restHighLevelClient).close();
+        verifyNoMoreInteractions(elasticsearchRestHighLevelClientFactory, clearScrollResponse, searchResponse, searchHits, restHighLevelClient);
+    }
+
+    @Test
+    public void testIdsInIndexFunctionSearchHitsArrayNull() throws Exception
+    {
+        // Build mocks
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        ClearScrollResponse clearScrollResponse = mock(ClearScrollResponse.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.search(any(SearchRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(searchResponse);
+        when(restHighLevelClient.clearScroll(any(ClearScrollRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(clearScrollResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchResponse.getScrollId()).thenReturn(SEARCH_INDEX_SCROLL_ID);
+        when(searchHits.getHits()).thenReturn(null);
+        when(clearScrollResponse.isSucceeded()).thenReturn(true);
+
+        // Call the method under test
+        List<String> idsInIndex = indexFunctionsDao.getIdsInIndex(SEARCH_INDEX_NAME);
+        assertThat("Ids in index is not correct.", idsInIndex.size(), is(equalTo(0)));
+
+        // Verify the calls to external methods
+        verify(elasticsearchRestHighLevelClientFactory).getRestHighLevelClient();
+        verify(restHighLevelClient).search(any(SearchRequest.class), eq(RequestOptions.DEFAULT));
+        verify(restHighLevelClient).clearScroll(any(ClearScrollRequest.class), eq(RequestOptions.DEFAULT));
+        verify(searchResponse).getHits();
+        verify(searchResponse).getScrollId();
+        verify(searchHits).getHits();
+        verify(clearScrollResponse).isSucceeded();
+        verify(restHighLevelClient).close();
+        verifyNoMoreInteractions(elasticsearchRestHighLevelClientFactory, clearScrollResponse, searchResponse, searchHits, restHighLevelClient);
+    }
+
+    @Test(expected = ElasticsearchRestClientException.class)
+    public void testIdsInIndexFunctionThrowsElasticsearchRestClientException() throws Exception
+    {
+        // Build mocks
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.search(any(SearchRequest.class), eq(RequestOptions.DEFAULT))).thenThrow(new IOException());
+
+        // Call the method under test
+        indexFunctionsDao.getIdsInIndex(SEARCH_INDEX_NAME);
+    }
+
+    @Test
+    public void testUpdateIndexDocumentsFunction() throws Exception
+    {
+        // Build mocks
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
+
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(false);
+
+        // Call the method under test
+        indexFunctionsDao.updateIndexDocuments(SEARCH_INDEX_NAME, documentMap);
+
+        // Verify the calls to external methods
+        verify(elasticsearchRestHighLevelClientFactory, times(2)).getRestHighLevelClient();
+        verify(restHighLevelClient).indices();
+        verify(restHighLevelClient).bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT));
+        verify(indicesClient).getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT));
+        verify(getAliasesResponse).getAliases();
+        verify(bulkResponse).hasFailures();
+        verify(restHighLevelClient, times(2)).close();
+        verifyNoMoreInteractions(bulkResponse, elasticsearchRestHighLevelClientFactory, getAliasesResponse, indicesClient, restHighLevelClient);
+    }
+
+    @Test
+    public void testUpdateIndexDocumentsFunctionWithFailures() throws Exception
+    {
+        // Build mocks
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
+
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(true);
+        when(bulkResponse.buildFailureMessage()).thenReturn(ERROR_MESSAGE);
+
+        // Call the method under test
+        indexFunctionsDao.updateIndexDocuments(SEARCH_INDEX_NAME, documentMap);
+
+        // Verify the calls to external methods
+        verify(elasticsearchRestHighLevelClientFactory, times(2)).getRestHighLevelClient();
+        verify(restHighLevelClient).indices();
+        verify(restHighLevelClient).bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT));
+        verify(indicesClient).getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT));
+        verify(getAliasesResponse).getAliases();
+        verify(bulkResponse).hasFailures();
+        verify(bulkResponse).buildFailureMessage();
+        verify(restHighLevelClient, times(2)).close();
+        verifyNoMoreInteractions(bulkResponse, elasticsearchRestHighLevelClientFactory, getAliasesResponse, indicesClient, restHighLevelClient);
+    }
+
+    @Test(expected = ElasticsearchRestClientException.class)
+    public void testUpdateIndexDocumentsFunctionThrowsElasticsearchRestClientException() throws Exception
+    {
+        // Build mocks
+        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Create objects needed for the test.
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
+
+        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
+        aliasMetaDataSet.add(aliasMetaData);
+
+        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getAlias(any(GetAliasesRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getAliasesResponse);
+        when(getAliasesResponse.getAliases()).thenReturn(aliases);
+        when(restHighLevelClient.bulk(any(BulkRequest.class), eq(RequestOptions.DEFAULT))).thenThrow(new IOException());
+
+        // Call the method under test
+        indexFunctionsDao.updateIndexDocuments(SEARCH_INDEX_NAME, documentMap);
     }
 }
