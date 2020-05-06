@@ -182,9 +182,9 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
         {
             // Call the Elasticsearch REST client to delete the index and receive the response.
-            AcknowledgedResponse deleteIndexResponse = restHighLevelClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+            AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
 
-            LOGGER.info("Deleted Elasticsearch index, indexName={}, isAcknowledge={}.", indexName, deleteIndexResponse.isAcknowledged());
+            LOGGER.info("Deleted Elasticsearch index, indexName={}, isAcknowledge={}.", indexName, acknowledgedResponse.isAcknowledged());
         }
         catch (final IOException ioException)
         {
@@ -261,7 +261,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
                 BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
 
                 // If there are failures log them
-                if (!bulkResponse.hasFailures())
+                if (bulkResponse.hasFailures())
                 {
                     LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
                 }
@@ -349,7 +349,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
                 BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
 
                 // If there are failures log them
-                if (!bulkResponse.hasFailures())
+                if (bulkResponse.hasFailures())
                 {
                     LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
                 }
@@ -481,7 +481,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
                 BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
 
                 // If there are failures log them
-                if (!bulkResponse.hasFailures())
+                if (bulkResponse.hasFailures())
                 {
                     LOGGER.error("Bulk response error={}.", bulkResponse.buildFailureMessage());
                 }

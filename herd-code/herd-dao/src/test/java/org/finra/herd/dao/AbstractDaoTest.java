@@ -981,6 +981,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
 
+    public static final String SEARCH_INDEX_DOCUMENT = "UT_SearchIndexDocument_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_DOCUMENT_ID = "UT_SearchIndexDocumentId_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_DOCUMENT_JSON = "UT_SearchIndexDocumentJson_1_" + RANDOM_SUFFIX;
+
     public static final String SEARCH_INDEX_ID = "UT_SearchIndexId_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_JSON_STRING = "UT_SearchIndexJsonString_" + RANDOM_SUFFIX;
@@ -992,6 +998,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS_JSON =
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}";
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
