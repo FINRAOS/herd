@@ -19,6 +19,7 @@ import static org.finra.herd.service.helper.DdlGenerator.NON_PARTITIONED_TABLE_L
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -427,7 +428,7 @@ public class BusinessObjectDataDdlPartitionsHelper
 
             // If flag is set to suppress scan for unregistered sub-partitions, use the directory path or the S3 key prefix
             // as the partition's location, otherwise, use storage files to discover all unregistered sub-partitions.
-            Collection<String> storageFilePaths = new ArrayList<>();
+            ArrayList<String> storageFilePaths = new ArrayList<>();
             if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
             {
                 // Validate the directory path value if it is present.
@@ -457,7 +458,7 @@ public class BusinessObjectDataDdlPartitionsHelper
                     String storageUnitDirectoryPath = StringUtils.appendIfMissing(storageUnitAvailabilityDto.getStorageUnitDirectoryPath(), "/");
 
                     // Prepend storage unit directory path to storage file paths, if not already there.
-                    storageFilePaths.forEach(storageFilePath -> StringUtils.prependIfMissing(storageFilePath, storageUnitDirectoryPath));
+                    storageFilePaths.replaceAll(storageFilePath -> StringUtils.prependIfMissing(storageFilePath, storageUnitDirectoryPath));
                 }
 
                 // Validate storage file paths registered with this business object data in the specified storage.
