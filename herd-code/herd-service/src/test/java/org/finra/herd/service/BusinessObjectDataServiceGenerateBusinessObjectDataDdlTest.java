@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1691,6 +1692,67 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 {
                     storageFileDaoTestHelper
                         .createStorageFileEntity(storageUnitEntity, String.format("%s/data%d.dat", s3KeyPrefix, i), FILE_SIZE_1_KB, ROW_COUNT_1000);
+                }
+
+                herdDao.saveAndRefresh(storageUnitEntity);
+                herdDao.saveAndRefresh(businessObjectDataEntity);
+            }
+
+            // Retrieve business object data ddl.
+            BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+            request.setBusinessObjectFormatFileType(businessObjectFormatFileType);
+            BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+            // Validate the results.
+            String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
+            String expectedDdl = businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, expectedHiveFileFormat,
+                    businessObjectFormatFileType, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
+                    SUBPARTITION_VALUES, false, true, true);
+            businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+        }
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlStorageFilesWithoutPrefix()
+    {
+        // Create an S3 storage entity with the relative attributes.
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Expected business object format file type to Hive file format mapping.
+        Map<String, String> businessObjectFormatFileTypeMap = new HashMap<>();
+        businessObjectFormatFileTypeMap.put(FileTypeEntity.BZ_FILE_TYPE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT);
+
+        for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())
+        {
+            // Prepare test data for the respective business object format file type.
+            List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
+            String partitionKey = partitionColumns.get(0).getName();
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES,
+                    SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                    null, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+
+            for (String partitionValue : STORAGE_1_AVAILABLE_PARTITION_VALUES)
+            {
+                BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
+                        NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+                String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), STORAGE_NAME);
+                // add s3KeyPrefix as storage directory
+                StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
+
+                // Create two storage files without prefix
+                for (int i = 0; i < 2; i++)
+                {
+                    storageFileDaoTestHelper
+                        .createStorageFileEntity(storageUnitEntity, String.format("data%d.dat", i), FILE_SIZE_1_KB, ROW_COUNT_1000);
                 }
 
                 herdDao.saveAndRefresh(storageUnitEntity);
