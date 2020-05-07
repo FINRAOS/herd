@@ -427,7 +427,7 @@ public class BusinessObjectDataDdlPartitionsHelper
 
             // If flag is set to suppress scan for unregistered sub-partitions, use the directory path or the S3 key prefix
             // as the partition's location, otherwise, use storage files to discover all unregistered sub-partitions.
-            Collection<String> storageFilePaths = new ArrayList<>();
+            List<String> storageFilePaths = new ArrayList<>();
             if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
             {
                 // Validate the directory path value if it is present.
@@ -448,7 +448,17 @@ public class BusinessObjectDataDdlPartitionsHelper
             {
                 // Retrieve storage file paths registered with this business object data in the specified storage.
                 storageFilePaths = storageUnitIdToStorageFilePathsMap.containsKey(storageUnitAvailabilityDto.getStorageUnitId()) ?
-                    storageUnitIdToStorageFilePathsMap.get(storageUnitAvailabilityDto.getStorageUnitId()) : new ArrayList<>();
+                    new ArrayList<>(storageUnitIdToStorageFilePathsMap.get(storageUnitAvailabilityDto.getStorageUnitId())) : new ArrayList<>();
+
+                // If storage directory path is specified, prepend it to storage file paths, if not already there.
+                if (StringUtils.isNotBlank(storageUnitAvailabilityDto.getStorageUnitDirectoryPath()))
+                {
+                    // Since storage unit directory path represents a directory, we add a trailing '/' character to it, unless it is already present.
+                    String storageUnitDirectoryPath = StringUtils.appendIfMissing(storageUnitAvailabilityDto.getStorageUnitDirectoryPath(), "/");
+
+                    // Prepend storage unit directory path to storage file paths, if not already there.
+                    storageFilePaths.replaceAll(storageFilePath -> StringUtils.prependIfMissing(storageFilePath, storageUnitDirectoryPath));
+                }
 
                 // Validate storage file paths registered with this business object data in the specified storage.
                 // The validation check below is required even if we have no storage files registered.
