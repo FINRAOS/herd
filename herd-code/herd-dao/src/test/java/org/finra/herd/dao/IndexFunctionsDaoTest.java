@@ -37,6 +37,8 @@ import java.util.Set;
 
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -61,6 +63,9 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.DocsStats;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -71,9 +76,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.exception.ElasticsearchRestClientException;
-import org.finra.herd.dao.helper.HerdStringHelper;
-import org.finra.herd.dao.helper.JestClientHelper;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexFunctionsDaoImpl;
 
 public class IndexFunctionsDaoTest extends AbstractDaoTest
@@ -83,16 +85,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
 
     @InjectMocks
     private IndexFunctionsDaoImpl indexFunctionsDao;
-
-    @Mock
-    private HerdStringHelper herdStringHelper;
-
-    @Mock
-    private JsonHelper jsonHelper;
-
-    @Mock
-    private JestClientHelper jestClientHelper;
-
 
     @Before
     public void before()
@@ -559,21 +551,12 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
     public void testCreateIndexDocumentsFunctionThrowsElasticsearchRestClientExceptionWhenGetAliasRequest() throws Exception
     {
         // Build mocks
-        GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
-        BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
-
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
-
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -592,7 +575,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
         AliasMetaData aliasMetaData = mock(AliasMetaData.class);
-        BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
@@ -747,7 +729,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
         AliasMetaData aliasMetaData = mock(AliasMetaData.class);
-        BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
@@ -798,7 +779,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
     public void testNumberOfTypesInIndexFunctionThrowsElasticsearchRestClientException() throws Exception
     {
         // Build mocks
-        CountResponse countResponse = mock(CountResponse.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
 
         // Mock the calls to external methods
@@ -891,7 +871,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
     public void testIdsInIndexFunctionThrowsElasticsearchRestClientException() throws Exception
     {
         // Build mocks
-        SearchResponse searchResponse = mock(SearchResponse.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
 
         // Mock the calls to external methods
@@ -996,7 +975,6 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
         AliasMetaData aliasMetaData = mock(AliasMetaData.class);
-        BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
@@ -1017,5 +995,61 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
 
         // Call the method under test
         indexFunctionsDao.updateIndexDocuments(SEARCH_INDEX_NAME, documentMap);
+    }
+
+    @Test
+    public void testGetIndexSettings() throws Exception
+    {
+        // Build mocks
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        GetSettingsResponse getSettingsResponse = mock(GetSettingsResponse.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+        Settings settings = mock(Settings.class);
+        @SuppressWarnings("unchecked")
+        ImmutableOpenMap<String, Settings> immutableOpenMap = mock(ImmutableOpenMap.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getSettings(any(GetSettingsRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(getSettingsResponse);
+        when(getSettingsResponse.getIndexToSettings()).thenReturn(immutableOpenMap);
+        when(immutableOpenMap.get(SEARCH_INDEX_NAME)).thenReturn(settings);
+
+        // Call the method under test
+        Settings settingsReturned = indexFunctionsDao.getIndexSettings(SEARCH_INDEX_NAME);
+        assertThat("The settingsReturned is not correct.", settingsReturned, is(equalTo(settings)));
+
+        // Verify the calls to external methods
+        verify(elasticsearchRestHighLevelClientFactory).getRestHighLevelClient();
+        verify(restHighLevelClient).indices();
+        verify(indicesClient).getSettings(any(GetSettingsRequest.class), eq(RequestOptions.DEFAULT));
+        verify(getSettingsResponse).getIndexToSettings();
+        verify(immutableOpenMap).get(SEARCH_INDEX_NAME);
+        verify(restHighLevelClient).close();
+        verifyNoMoreInteractions(elasticsearchRestHighLevelClientFactory, indicesClient, getSettingsResponse, immutableOpenMap, restHighLevelClient);
+    }
+
+    @Test(expected = ElasticsearchRestClientException.class)
+    public void testGetIndexSettingsThrowsElasticsearchRestClientException() throws Exception
+    {
+        // Build mocks
+        IndicesClient indicesClient = mock(IndicesClient.class);
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+
+        // Mock the calls to external methods
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.indices()).thenReturn(indicesClient);
+        when(indicesClient.getSettings(any(GetSettingsRequest.class), eq(RequestOptions.DEFAULT))).thenThrow(new IOException());
+
+        // Call the method under test
+        indexFunctionsDao.getIndexSettings(SEARCH_INDEX_NAME);
+    }
+
+    @Test
+    public void testGetIndexStats()
+    {
+        // Call the method under test
+        DocsStats docsStats = indexFunctionsDao.getIndexStats(SEARCH_INDEX_NAME);
+        assertThat("The docsStats count is not correct.", docsStats.getCount(), is(equalTo(0L)));
     }
 }
