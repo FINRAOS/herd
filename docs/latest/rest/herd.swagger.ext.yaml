@@ -9,10 +9,10 @@ tags:
 - name: "Partition Key Group"
 - name: "Current User"
 - name: "Business Object Data"
-- name: "Business Object Definition"
+- name: "Storage"
 - name: "Expected Partition Value"
 - name: "Business Object Format"
-- name: "Storage"
+- name: "Business Object Definition"
 paths:
   /businessObjectData/availability:
     post:
