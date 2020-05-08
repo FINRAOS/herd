@@ -15,6 +15,7 @@
 */
 package org.apache.spark.sql.herd
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.spark.internal.Logging
@@ -229,6 +230,9 @@ private object HerdFileIndexBase extends Logging {
       }
     }).toList
 
+    val emptySubPartitionRegex = "subPartitionValues=/"
+    val partitionValueTuplesMap = mutable.Map[String, ArrayBuffer[String]]()
+    var containUnregisteredSubpartition = false
     var s3KeyPrefixes = new ArrayBuffer[String]()
     if (partitionKey.equalsIgnoreCase("partition")) {
       // Handling non-partitioned
@@ -268,26 +272,58 @@ private object HerdFileIndexBase extends Logging {
             var partitionValueTuple = partitionValueTuples(index)
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
               // Replace s3n with databricks mount point mnt
-              if (storagePathPrefix.equalsIgnoreCase("mnt")) {
-                partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "/mnt/")
+              var filePath = ""
+              if (storagePathPrefix.equalsIgnoreCase("mnt"))
+              {
+                filePath = m.group(2).replaceAll("s3n://", "/mnt/")
+              } // Replace s3n with user specific mount point
+              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a"))
+              {
+                filePath = m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+              } // Replace s3n with s3a since Hadoop has much better support on s3a
+              else
+              {
+                filePath = m.group(2).replaceAll("s3n://", "s3a://")
               }
-              // Replace s3n with user specific mount point
-              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
-                s3KeyPrefixes += m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+
+              partitionValueTuple._3 += filePath
+              // ddlPartitionValue is longer than partition value, which means there is unregistered subpartition from ddl
+              if (ddlPartitionValue.length > partitionValueTuple._2.length)
+              {
+                containUnregisteredSubpartition = true
+                var path = partitionValueTuple._1
+                val subPartitionValue = ddlPartitionValue.substring(ddlPartitionValue.indexOf(",") + 1)
+                path = StringUtils.replaceIgnoreCase(path, emptySubPartitionRegex, "subPartitionValues=" + subPartitionValue + "/")
+
+                val s3filePathList = partitionValueTuplesMap.getOrElse(path, null) //
+                if (s3filePathList != null)
+                {
+                  partitionValueTuplesMap.updated(path, s3filePathList + filePath)
+                }
+                else
+                {
+                  partitionValueTuplesMap.put(path, ArrayBuffer(filePath))
+                }
               }
-              // Replace s3n with s3a since Hadoop has much better support on s3a
-              else {
-                partitionValueTuple._3 += m.group(2).replaceAll("s3n://", "s3a://")
-              }
+
               done = true
             }
             index += 1
           }
         })
 
-      partitionValueTuples.map(p => {
-        (p._1, p._3)
-      })
+      if (containUnregisteredSubpartition)
+      {
+        partitionValueTuplesMap.toList
+      }
+      else
+      {
+        partitionValueTuples.map(p =>
+        {
+          (p._1, p._3)
+        })
+     }
+
     }
   }
 
