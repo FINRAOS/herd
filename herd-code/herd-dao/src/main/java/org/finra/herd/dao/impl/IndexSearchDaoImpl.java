@@ -83,8 +83,6 @@ import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.IndexSearchHighlightFields;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
-//import io.searchbox.core.Search;
-
 @Repository
 public class IndexSearchDaoImpl implements IndexSearchDao
 {

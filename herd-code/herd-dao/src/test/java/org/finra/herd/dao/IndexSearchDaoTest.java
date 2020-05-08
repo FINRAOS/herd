@@ -16,7 +16,6 @@
 package org.finra.herd.dao;
 
 import static org.finra.herd.dao.helper.ElasticsearchHelper.DISPLAY_NAME_SOURCE;
-import static org.finra.herd.dao.helper.ElasticsearchHelper.TAG_TYPE_FACET_AGGS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -42,21 +41,21 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.search.aggregation.MetricAggregation;
-import io.searchbox.core.search.aggregation.TermsAggregation;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
@@ -70,7 +69,6 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.helper.HerdSearchQueryHelper;
-import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
@@ -108,7 +106,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private ElasticsearchHelper elasticsearchHelper;
 
     @Mock
-    private JestClientHelper jestClientHelper;
+    private ElasticsearchRestHighLevelClientFactory elasticsearchRestHighLevelClientFactory;
 
     @Mock
     private JsonHelper jsonHelper;
@@ -445,6 +443,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         boolean isHitHighlightingEnabled, boolean testExceptions, boolean setInvalidSearchResultIndexName, boolean isColumnFields) throws IOException
     {
         // Build the mocks
+        RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
+
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
@@ -460,6 +460,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchHit[] searchHitArray = new SearchHit[2];
         searchHitArray[0] = searchHit1;
         searchHitArray[1] = searchHit2;
+
+        TotalHits totalHits = mock(TotalHits.class);
 
         BoolQueryBuilder boolQueryBuilder = mock(BoolQueryBuilder.class);
 
@@ -596,44 +598,46 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(herdSearchQueryHelper.extractNegationTerms(any(IndexSearchRequest.class))).thenCallRealMethod();
         when(herdSearchQueryHelper.extractSearchPhrase(any(IndexSearchRequest.class))).thenCallRealMethod();
 
-        SearchResult searchResult = mock(SearchResult.class);
-        when(jestClientHelper.execute(any())).thenReturn(searchResult);
+        when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
+        when(restHighLevelClient.search(any(SearchRequest.class), eq(RequestOptions.DEFAULT))).thenReturn(searchResponse);
 
-        List<SearchResult.Hit<Map, Void>> searchHitList = new ArrayList<>();
-        Gson gson = new Gson();
-        Map<String, Object> map = new HashMap<>();
-        map.put(DISPLAY_NAME_SOURCE, "Display Name");
-        Map<String, Object> codeMap = new HashMap<>();
-        codeMap.put(CODE, "Code");
-        map.put(TAG_TYPE, codeMap);
-        map.put(NAMESPACE, codeMap);
-        JsonElement element = gson.toJsonTree(map);
-        List<String> highlightList = new ArrayList<>();
-        highlightList.add("Highlight 1");
-        Map<String, List<String>> highlightMap = new HashMap<>();
-        highlightMap.put("field", highlightList);
+        //List<SearchResult.Hit<Map, Void>> searchHitList = new ArrayList<>();
+//        Gson gson = new Gson();
+//        Map<String, Object> map = new HashMap<>();
+//        map.put(DISPLAY_NAME_SOURCE, "Display Name");
+//        Map<String, Object> codeMap = new HashMap<>();
+//        codeMap.put(CODE, "Code");
+//        map.put(TAG_TYPE, codeMap);
+//        map.put(NAMESPACE, codeMap);
+//        JsonElement element = gson.toJsonTree(map);
+//        List<String> highlightList = new ArrayList<>();
+//        highlightList.add("Highlight 1");
+//        Map<String, List<String>> highlightMap = new HashMap<>();
+//        highlightMap.put("field", highlightList);
 
-        SearchResult.Hit<Map, Void> hit1 = new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null,
-            setInvalidSearchResultIndexName ? INVALID_VALUE : TAG_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME, "type", 1.0);
-        SearchResult.Hit<Map, Void> hit2 =
-            new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME,
-                BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, "type", 2.0);
-        searchHitList.add(hit1);
-        searchHitList.add(hit2);
+//        SearchResult.Hit<Map, Void> hit1 = new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null,
+//            setInvalidSearchResultIndexName ? INVALID_VALUE : TAG_SEARCH_INDEX_NAME, TAG_SEARCH_INDEX_NAME, "type", 1.0);
+//        SearchResult.Hit<Map, Void> hit2 =
+//            new SearchResult(gson).new Hit(HashMap.class, element, HashMap.class, null, highlightMap, null, BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME,
+//                BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME, "type", 2.0);
+//        searchHitList.add(hit1);
+//        searchHitList.add(hit2);
 
-        when(searchResult.getHits(Map.class)).thenReturn(searchHitList);
-        when(searchResult.getTotal()).thenReturn(200L);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.getHits()).thenReturn(searchHitArray);
+        when(searchHits.getTotalHits()).thenReturn(totalHits);
+        when(totalHits.value).thenReturn(2L);
 
-        MetricAggregation metricAggregation = mock(MetricAggregation.class);
-        TermsAggregation termsAggregation = mock(TermsAggregation.class);
-        when(searchResult.getAggregations()).thenReturn(metricAggregation);
-        when(metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS)).thenReturn(termsAggregation);
-        List<TermsAggregation.Entry> buckets = new ArrayList<>();
-        TermsAggregation.Entry entry1 = mock(TermsAggregation.Entry.class);
-        TermsAggregation.Entry entry2 = mock(TermsAggregation.Entry.class);
-        buckets.add(entry1);
-        buckets.add(entry2);
-        when(termsAggregation.getBuckets()).thenReturn(buckets);
+        Aggregations aggregations = mock(Aggregations.class);
+        Aggregations aggregation = mock(Aggregations.class);
+        when(searchResponse.getAggregations()).thenReturn(aggregation);
+        //when(aggregations.asMap().get(TAG_TYPE_FACET_AGGS)).thenReturn();
+//        List<TermsAggregation.Entry> buckets = new ArrayList<>();
+//        TermsAggregation.Entry entry1 = mock(TermsAggregation.Entry.class);
+//        TermsAggregation.Entry entry2 = mock(TermsAggregation.Entry.class);
+//        buckets.add(entry1);
+//        buckets.add(entry2);
+        // when(aggregation.getAsMap()).thenReturn(buckets);
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse =
@@ -680,25 +684,25 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
             if (indexSearchRequest.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
             {
-                verify(elasticsearchHelper).getNestedTagTagIndexSearchResponseDto(searchResult);
-                verify(elasticsearchHelper).getTagTagIndexSearchResponseDto(searchResult);
+                //verify(elasticsearchHelper).getNestedTagTagIndexSearchResponseDto(searchResult);
+                //verify(elasticsearchHelper).getTagTagIndexSearchResponseDto(searchResult);
             }
 
             if (indexSearchRequest.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
             {
-                verify(elasticsearchHelper).getResultTypeIndexSearchResponseDto(searchResult);
+                //verify(elasticsearchHelper).getResultTypeIndexSearchResponseDto(searchResult);
             }
 
             verify(elasticsearchHelper)
                 .getFacetsResponse(any(ElasticsearchResponseDto.class), eq(BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME), eq(TAG_SEARCH_INDEX_NAME));
         }
 
-        verify(jestClientHelper).execute(any());
-        verify(searchResult).getTotal();
-        verify(searchResult).getHits(Map.class);
+        //verify(jestClientHelper).execute(any());
+        //verify(searchResult).getTotal();
+        //verify(searchResult).getHits(Map.class);
         verifyNoMoreInteractions(searchRequestBuilder, searchRequestBuilderWithSource, searchRequestBuilderWithSize, searchRequestBuilderWithSorting,
             searchRequestBuilderWithHighlighting, searchResponse, searchHits, searchHit1, searchHit2, searchShardTarget1, searchShardTarget2, highlightField,
-            listenableActionFuture, searchResult, metricAggregation, termsAggregation, entry1, entry2);
+            listenableActionFuture);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -738,6 +742,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(configurationHelper, jsonHelper, elasticsearchHelper, jestClientHelper, herdSearchQueryHelper);
+        verifyNoMoreInteractions(configurationHelper, jsonHelper, elasticsearchHelper, herdSearchQueryHelper);
     }
 }

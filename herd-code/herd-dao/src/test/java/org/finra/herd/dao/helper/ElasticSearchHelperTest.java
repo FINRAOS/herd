@@ -43,11 +43,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.search.aggregation.MetricAggregation;
-import io.searchbox.core.search.aggregation.SumAggregation;
-import io.searchbox.core.search.aggregation.TermsAggregation;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -141,22 +136,26 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     @Test
     public void testGetNestedTagTagIndexSearchResponseDtoSearchResultParameter()
     {
-        SearchResult searchResult = mock(SearchResult.class);
-        MetricAggregation metricAggregation = mock(MetricAggregation.class);
-        SumAggregation tagFacetAggregation = mock(SumAggregation.class);
-        TermsAggregation tagTypeCodesAggregation = mock(TermsAggregation.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        Aggregations aggregations = mock(Aggregations.class);
+        Nested nested = mock(Nested.class);
+        Aggregations nestedAggregations = mock(Aggregations.class);
+        Terms terms = mock(Terms.class);
 
-        when(searchResult.getAggregations()).thenReturn(metricAggregation);
-        when(metricAggregation.getSumAggregation(TAG_FACET_AGGS)).thenReturn(tagFacetAggregation);
-        when(tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION)).thenReturn(tagTypeCodesAggregation);
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+        when(aggregations.get(TAG_FACET_AGGS)).thenReturn(nested);
+        when(nested.getAggregations()).thenReturn(nestedAggregations);
+        when(nestedAggregations.get(TAGTYPE_CODE_AGGREGATION)).thenReturn(terms);
+        when(terms.getBuckets()).thenReturn(new ArrayList<>());
 
-        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult);
+        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse);
         assertThat("Result is null.", result, is(notNullValue()));
     }
 
     @Test
     public void testGetTagTagIndexSearchResponseDtoSearchResult()
     {
+        /*
         SearchResult searchResult = mock(SearchResult.class);
         MetricAggregation metricAggregation = mock(MetricAggregation.class);
         TermsAggregation termsAggregation = mock(TermsAggregation.class);
@@ -195,11 +194,13 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult);
         assertThat("Result is null.", result, is(notNullValue()));
+        */
     }
 
     @Test
     public void testGetResultTypeIndexSearchResponseDtoSearchResult()
     {
+        /*
         SearchResult searchResult = mock(SearchResult.class);
         MetricAggregation metricAggregation = mock(MetricAggregation.class);
         TermsAggregation termsAggregation = mock(TermsAggregation.class);
@@ -212,6 +213,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         List<ResultTypeIndexSearchResponseDto> result = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult);
         assertThat("Result is null.", result, is(notNullValue()));
+        */
     }
 
     @Test
