@@ -72,7 +72,7 @@ private[sql] class HerdFileIndex(
       val partitionPattern = new Regex("(?i)/partitionValue=(.*?)/")
       val subPartitionPattern = new Regex("(?i)/subPartitionValues=(.*?)/")
       // there is unregistered subpartition here
-      if (cachedAllFiles.get(partitionPath.path) == None)
+      if (cachedAllFiles.size != 0 && cachedAllFiles.get(partitionPath.path) == None)
       {
         for (elem <- cachedAllFiles)
         {
