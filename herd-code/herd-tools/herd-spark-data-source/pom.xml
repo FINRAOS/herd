@@ -29,7 +29,7 @@
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-spark-data-source</artifactId>
-   <version>0.120.1-SNAPSHOT</version>
+   <version>0.120.2-SNAPSHOT</version>
 
    <!-- build the data source for spark version 2.3.0 -->
    <properties>
@@ -40,6 +40,12 @@
    </properties>
 
    <dependencies>
+
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-text</artifactId>
+         <version>1.8</version>
+      </dependency>
 
       <dependency>
          <groupId>com.fasterxml.jackson.core</groupId>
