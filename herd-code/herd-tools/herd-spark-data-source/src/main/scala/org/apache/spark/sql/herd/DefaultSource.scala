@@ -588,12 +588,23 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
             }
           },
           "nullValue" -> {
-            val nValue = StringEscapeUtils unescapeJava schema.getNullValue
-            nValue
+            if (schema.getNullValue != null) {
+              val nValue = StringEscapeUtils unescapeJava schema.getNullValue
+              nValue
+            }
+            else {
+              schema.getNullValue
+            }
           },
           "escape" -> {
-            val eValue = StringEscapeUtils unescapeJava schema.getEscapeCharacter
-            eValue
+            if (schema.getEscapeCharacter != null) {
+              val eValue = StringEscapeUtils unescapeJava schema.getEscapeCharacter
+              eValue
+            }
+            else
+              {
+                schema.getEscapeCharacter
+              }
             }
 
         ) ++ compression ++ options)
