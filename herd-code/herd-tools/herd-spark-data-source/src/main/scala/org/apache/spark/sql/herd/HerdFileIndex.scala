@@ -206,7 +206,7 @@ private object HerdFileIndexBase extends Logging {
       case Success(objectDataDdl) => getS3KeyPrefixes(objectDataDdl.getDdl(), paths, storagePathPrefix)
       case Failure(error) =>
         log.error(s"Could not fetch object data DDL request for $partitionValues", error)
-        Seq.empty
+        throw new RuntimeException(error)
     }
   }
 
