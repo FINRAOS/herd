@@ -515,6 +515,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
+    public static final String INVALID_SEARCH_INDEX_NAME = "InvalidSearchIndexName";
+
     public static final String INVALID_VALUE = "UT_InvalidValue_1_" + RANDOM_SUFFIX;
 
     public static final String INVALID_VALUE_2 = "UT_InvalidValue_2_" + RANDOM_SUFFIX;

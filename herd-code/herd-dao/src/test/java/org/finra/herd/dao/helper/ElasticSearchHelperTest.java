@@ -40,13 +40,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
@@ -59,6 +57,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.dao.mock.MockBucket;
+import org.finra.herd.dao.mock.MockTerms;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
@@ -811,108 +811,5 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(jsonHelper, tagDaoHelper);
-    }
-}
-
-/**
- * Mock Terms implementation used for testing.
- */
-class MockTerms implements Terms
-{
-
-    @Override
-    public List<MockBucket> getBuckets()
-    {
-        return null;
-    }
-
-    @Override
-    public Bucket getBucketByKey(String s)
-    {
-        return null;
-    }
-
-    @Override
-    public long getDocCountError()
-    {
-        return 0;
-    }
-
-    @Override
-    public String getName()
-    {
-        return null;
-    }
-
-    @Override
-    public String getType()
-    {
-        return null;
-    }
-
-    @Override
-    public Map<String, Object> getMetaData()
-    {
-        return null;
-    }
-
-    @Override
-    public long getSumOfOtherDocCounts()
-    {
-        return 0;
-    }
-
-    @Override
-    public XContentBuilder toXContent(XContentBuilder xContentBuilder, Params params)
-    {
-        return null;
-    }
-}
-
-/**
- * Mock Bucket implementation used for testing.
- */
-class MockBucket implements Terms.Bucket
-{
-    @Override
-    public Object getKey()
-    {
-        return null;
-    }
-
-    @Override
-    public String getKeyAsString()
-    {
-        return null;
-    }
-
-    @Override
-    public long getDocCount()
-    {
-        return 0;
-    }
-
-    @Override
-    public Aggregations getAggregations()
-    {
-        return null;
-    }
-
-    @Override
-    public Number getKeyAsNumber()
-    {
-        return null;
-    }
-
-    @Override
-    public long getDocCountError()
-    {
-        return 0;
-    }
-
-    @Override
-    public XContentBuilder toXContent(XContentBuilder xContentBuilder, Params params)
-    {
-        return null;
     }
 }
