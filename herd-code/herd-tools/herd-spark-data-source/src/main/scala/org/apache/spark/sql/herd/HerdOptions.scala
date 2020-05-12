@@ -127,12 +127,13 @@ private object HerdOptions {
 
     val partitionValue = input.get("partitionValue")
 
-    val subPartitionKeys = input.get("subPartitionKeys")
-      .map(_.split("\\|").map(_.trim))
-      .getOrElse(Array.empty)
+    val subPartitionKeys = input.get("subPartitionKeys") match {
+      case Some(value) => value.split("\\|").map(_.trim).filter(_.nonEmpty)
+      case None => Array.empty[String]
+    }
 
     val subPartitions = input.get("subPartitionValues") match {
-      case Some(value) => value.split("\\|").map(_.trim)
+      case Some(value) => value.split("\\|").map(_.trim).filter(_.nonEmpty)
       case None => Array.empty[String]
     }
 
@@ -144,6 +145,13 @@ private object HerdOptions {
     if (subPartitionKeys.isEmpty ^ subPartitions.isEmpty) {
       logger.error("subPartitionKeys and subPartitionValues are both required when either one is specified")
       throw new IllegalArgumentException("subPartitionKeys and subPartitionValues are both required when either one is specified")
+    }
+
+    if (subPartitionKeys.length != subPartitions.length) {
+      logger.error("An equal number of subPartitionKeys and subPartitionValues should be specified. \n" +
+        s"subPartitionKeys: $subPartitionKeys, subPartitionValues: $subPartitions")
+      throw new IllegalArgumentException("An equal number of subPartitionKeys and subPartitionValues should be specified. \n" +
+        s"subPartitionKeys: $subPartitionKeys, subPartitionValues: $subPartitions")
     }
 
     val storageName = input.get("storage")
