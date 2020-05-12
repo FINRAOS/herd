@@ -1514,7 +1514,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param usage             DM supported format usage (e.g., "PRC")
    * @param fileFormat        DM supported file format (e.g., "BZ", "PARQUET", etc)
    */
-  @deprecated("Use saveDataFrame(df: DataFrame, baseHerdOptions: BaseHerdOptions)", "0.120.1")
+  @deprecated("Use saveDataFrame(df: DataFrame, baseHerdOptions: BaseHerdOptions)", "0.121.0")
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
