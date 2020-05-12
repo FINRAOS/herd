@@ -134,7 +134,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         List<StorageUnitEntity> resultList = entityManager.createQuery(criteria).setMaxResults(1).getResultList();
 
         // Return single result or null.
-        return resultList.size() > 0 ? resultList.get(0) : null;
+        return CollectionUtils.isNotEmpty(resultList) ? resultList.get(0) : null;
     }
 
     @Override
