@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import java.sql.Timestamp;
@@ -35,9 +35,9 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.StorageUnitDao;
@@ -70,6 +70,73 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDao
 {
+    @Override
+    public StorageUnitEntity getExplicitlyRegisteredSubPartition(StorageEntity storageEntity, BusinessObjectFormatEntity businessObjectFormatEntity,
+        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
+    {
+        // Get size of the list of sub-partition values.
+        int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
+
+        // If a full set of sub-partition values is specified, where cannot be any explicitly registered sub-partitions for this business object data.
+        if (subPartitionValuesCount == BusinessObjectDataEntity.MAX_SUBPARTITIONS)
+        {
+            return null;
+        }
+
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageUnitEntity> criteria = builder.createQuery(StorageUnitEntity.class);
+
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntityRoot = criteria.from(StorageUnitEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntityJoin = storageUnitEntityRoot.join(StorageUnitEntity_.businessObjectData);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+
+        // Add restriction on business object format identifier.
+        // This restriction covers business object format usage, file type, and business object format version elements of business object data alternate key.
+        predicates.add(builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.businessObjectFormatId), businessObjectFormatEntity.getId()));
+
+        // Add restriction on business object data version.
+        predicates.add(builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
+
+        // Add restriction on primary partition value of the business object data.
+        predicates.add(builder.equal(businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.partitionValue), partitionValue));
+
+        // Add restrictions on sub-partition values:
+        // 1) match all sub-partition values in the business object data, if any present
+        // 2) require the next sub-partition value, if still possible, to be not null
+        // Please note that check again maximum number of allowed explicitly registered sub-partitions is redundant due to the service layer checks on business
+        // object format schema versus sub-partition values of the business object data, but it is still implemented here to keep the code safe against index
+        // out of bounds exception.
+
+        // Match relative sub-partition value from the business object data alternate key.
+        for (int i = 0; i < subPartitionValuesCount; i++)
+        {
+            predicates.add(builder.equal(businessObjectDataEntityJoin.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(i)), subPartitionValues.get(i)));
+        }
+
+        // Require the next sub-partition value to be not null.
+        {
+            predicates.add(builder.isNotNull(businessObjectDataEntityJoin.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(subPartitionValuesCount))));
+        }
+
+        //  Add restriction on storage.
+        predicates.add(builder.equal(storageUnitEntityRoot.get(StorageUnitEntity_.storageName), storageEntity.getName()));
+
+        // Add all clauses to the query.
+        criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[0])));
+
+        // Execute the query and ask to return only the first record.
+        List<StorageUnitEntity> resultList = entityManager.createQuery(criteria).setMaxResults(1).getResultList();
+
+        // Return single result or null.
+        return resultList.size() > 0 ? resultList.get(0) : null;
+    }
+
     @Override
     public List<StorageUnitEntity> getLatestVersionStorageUnitsByStoragePlatformAndFileType(String storagePlatform, String businessObjectFormatFileType)
     {
@@ -429,16 +496,16 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage (case-insensitive)
      * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
      * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
      * values for the relative partitions not to be used for selection passed as nulls
      * @param businessObjectDataVersion the optional business object data version. If a business object data version isn't specified, the latest data version
      * based on the specified business object data status is returned
-     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version
-     * is specified. When business object data version and business object data status both are not specified, the latest data version for each set of
-     * partition values will be used regardless of the status
+     * @param businessObjectDataStatusEntity the optional business object data status entity. This parameter is ignored when the business object data version is
+     * specified. When business object data version and business object data status both are not specified, the latest data version for each set of partition
+     * values will be used regardless of the status
      * @param storageEntities the optional list of storage entities where business object data storage units should be looked for
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
@@ -606,7 +673,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
                 storageUnitAvailabilityDtos.removeIf(n -> !n.getBusinessObjectDataStatus().equalsIgnoreCase(filteredStatusCode));
             }
         }
-        
+
         // If at least one of the business object format and business object data versions was not specified,
         // filter in only latest version for each set of partition values.
         if (businessObjectFormatVersion == null || businessObjectDataVersion == null)
