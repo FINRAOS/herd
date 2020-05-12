@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +39,7 @@ import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -47,6 +48,76 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
 public class StorageUnitDaoTest extends AbstractDaoTest
 {
+    @Test
+    public void testGetExplicitlyRegisteredSubPartition()
+    {
+        // Create business object data key that contains maximum number of partition values (primary partition and four sub-partition values).
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create storage unit entity for the business object data.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataKey, AbstractDaoTest.LATEST_VERSION_FLAG_SET,
+                AbstractDaoTest.BDATA_STATUS, STORAGE_UNIT_STATUS, AbstractDaoTest.NO_STORAGE_DIRECTORY_PATH);
+
+        // Get storage entity.
+        StorageEntity storageEntity = storageUnitEntity.getStorage();
+
+        // Get business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat();
+
+        // Retrieve sub-partition entity for all possible combination of specified partition values in business object data key.
+        for (int i = 0; i < SUBPARTITION_VALUES.size(); i++)
+        {
+            assertEquals(storageUnitEntity, storageUnitDao
+                .getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES.subList(0, i),
+                    DATA_VERSION));
+        }
+
+        // Test passing optional list of sub-partition values as null.
+        assertEquals(storageUnitEntity,
+            storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE, null, DATA_VERSION));
+
+        // Validate that specifying all business object data alternate key values does not return any matches.
+        assertNull(
+            storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION));
+
+        // Test case sensitivity of the input parameters.
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE.toLowerCase(),
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0).toLowerCase(), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1).toLowerCase(), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2).toLowerCase()), DATA_VERSION));
+
+        // Create a different storage entity.
+        StorageEntity invalidStorageEntity = new StorageEntity();
+        invalidStorageEntity.setName(STORAGE_NAME_2);
+
+        // Create a different business object format entity.
+        BusinessObjectFormatEntity invalidBusinessObjectFormatEntity = new BusinessObjectFormatEntity();
+        invalidBusinessObjectFormatEntity.setId(0L);
+
+        // Try to retrieve storage units using invalid input parameters.
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(invalidStorageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, invalidBusinessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, INVALID_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(INVALID_VALUE, SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), INVALID_VALUE, SUBPARTITION_VALUES.get(2)), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), INVALID_VALUE), DATA_VERSION));
+        assertNull(storageUnitDao.getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, PARTITION_VALUE,
+            Lists.newArrayList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2)), INVALID_DATA_VERSION));
+    }
+
     @Test
     public void testGetLatestVersionStorageUnitsByStoragePlatformAndFileType()
     {
