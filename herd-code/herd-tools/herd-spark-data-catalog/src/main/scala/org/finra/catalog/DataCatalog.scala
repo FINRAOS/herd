@@ -542,6 +542,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     // return all s3 prefixes
     s3KeyPrefixes.map("s3n://" + _).toList
   }
+
   /**
    * Get available namespaces
    *
@@ -985,8 +986,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "2000-01-01"
-    val lastPartValue = "2099-12-31"
+    val firstPartValue = "${minimum.partition.value}"
+    val lastPartValue = "${maximum.partition.value}"
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
@@ -1437,7 +1438,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // @todo Change the corresponding Herd data source function to pass null: Integer
     // @todo Then use Herd data source's function instead of Herd SDK here
-    val retrivedObject = api.businessObjectDataGetBusinessObjectData(
+    val retrievedObject = api.businessObjectDataGetBusinessObjectData(
       nameSpace,
       objectName,
       usage,
@@ -1451,7 +1452,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       false,
       false)
 
-    retrivedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
+    retrievedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
   }
 
   /** Register a new formatVersion
@@ -1502,7 +1503,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   }
 
-  /** saves a DataFrame and register with DM
+  /** saves a DataFrame and registers with Herd.
    *
    * @param df                a DataFrame
    * @param namespace         a logical name of the namespace
@@ -1513,6 +1514,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param usage             DM supported format usage (e.g., "PRC")
    * @param fileFormat        DM supported file format (e.g., "BZ", "PARQUET", etc)
    */
+  @deprecated("Use saveDataFrame(df: DataFrame, baseHerdOptions: BaseHerdOptions)", "0.120.1")
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
@@ -1545,10 +1547,53 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     ).filter(opt => opt._2.nonEmpty)
 
     // add optional parameters if specified by user
-    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get) )
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
+
+    // write out the data
+    baseWriteOptions.save()
+  }
+
+  /**
+   * Saves a DataFrame and registers with Herd.
+   *
+   * @param dataFrame       DataFrame to save and register
+   * @param baseHerdOptions herd options
+   */
+  def saveDataFrame(dataFrame: DataFrame, baseHerdOptions: BaseHerdOptions): Unit = {
+
+    require(!baseHerdOptions.namespace.isEmpty, "'namespace' is required!")
+    require(!baseHerdOptions.objectName.isEmpty, "'objectName' is required!")
+    require(!baseHerdOptions.usage.isEmpty, "'usage' is required!")
+    require(!baseHerdOptions.fileType.isEmpty, "'fileType' is required!")
+    require(!baseHerdOptions.partitionKey.isEmpty, "'partitionKey' is required!")
+    require(!baseHerdOptions.partitionValue.isEmpty, "'partitionValue' is required!")
+    require(!baseHerdOptions.partitionKeyGroup.isEmpty, "'partitionKeyGroup' is required!")
+
+    var baseWriteOptions = dataFrame.write.format("herd")
+      .option("url", baseRestUrl)
+      .option("username", username)
+      .option("password", password)
+      .option("namespace", baseHerdOptions.namespace)
+      .option("businessObjectName", baseHerdOptions.objectName)
+      .option("businessObjectFormatUsage", baseHerdOptions.usage)
+      .option("businessObjectFormatFileType", baseHerdOptions.fileType)
+      .option("partitionKey", baseHerdOptions.partitionKey)
+      .option("partitionValue", baseHerdOptions.partitionValue)
+      .option("partitionKeyGroup", baseHerdOptions.partitionKeyGroup)
+      .option("registerNewFormat", "true")
+
+    val options = Map(
+      "subPartitionKeys" -> Option(baseHerdOptions.subPartitionKeys),
+      "subPartitionValues" -> Option(baseHerdOptions.subPartitionValues),
+      "delimiter" -> Option(baseHerdOptions.delimiter),
+      "escape" -> Option(baseHerdOptions.escapeChar),
+      "nullValue" -> Option(baseHerdOptions.nullValue)
+    ).filter(opt => opt._2.nonEmpty)
+
+    // add optional parameters if specified by user
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
 
     // write out the data
     baseWriteOptions.save()
   }
 }
-
