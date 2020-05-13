@@ -76,11 +76,20 @@ public class StorageFileHelper
         // If storage directory path is specified, prepend it to the storage file path, if not already there.
         if (StringUtils.isNotBlank(storageUnitDirectoryPath))
         {
-            // Since storage unit directory path represents a directory, we add a trailing '/' character to it, unless it is already present.
-            storageUnitDirectoryPath = StringUtils.appendIfMissing(storageUnitDirectoryPath, "/");
-
-            // Prepend storage unit directory path to the storage file path, if it is not already there.
-            storageFilePath = StringUtils.prependIfMissing(storageFilePath, storageUnitDirectoryPath);
+            // If storage file path does not start with storage unit directory path:
+            // - For the empty folder S3 marker prepend storage unit directory path as is
+            // - For all other storage files, prepend storage unit directory path with slash
+            if (!StringUtils.startsWith(storageFilePath, storageUnitDirectoryPath))
+            {
+                if (StringUtils.equals(storageFilePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                {
+                    storageFilePath = storageUnitDirectoryPath + storageFilePath;
+                }
+                else
+                {
+                    storageFilePath = StringUtils.appendIfMissing(storageUnitDirectoryPath, "/") + storageFilePath;
+                }
+            }
         }
 
         // Create and return storage file.
