@@ -197,7 +197,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     api: HerdApi,
     params: HerdOptions,
     data: Option[DataFrame] = None,
-    registerIfNotPresent: Boolean = false
+    registerIfNotPresent: Boolean = false,
+    actualParams: Map[String, String] = null
   ): (String, String, Int) = {
 
     log.info("checking if herd format exist")
@@ -218,38 +219,78 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     if (result.isEmpty && registerIfNotPresent && data.nonEmpty) {
       log.info("bformat doesn't exist and dataFrame exists, create new format")
       registerNewSchema(api, data.get.schema, params)
-      } else if (result.nonEmpty) {
-          val fmt = api.getBusinessObjectFormat(
-            params.namespace,
-            params.businessObjectName,
-            result.get._1,
-            result.get._2,
-            result.get._3
-          )
-          // if format exist but doesn't match existing data frame, create new format
-          if (registerIfNotPresent && data.nonEmpty && !doesDataFrameMatchBformat(fmt, data.get)) {
-            log.info("herd format exist but doesn't match provided data frame, so creating new herd format")
-            registerNewSchema(api, data.get.schema, params)
-            // if format exist and matches existing data frame(save dataFrame), or data frame is none(load/get dataFrame, return format
-          } else if (data.isEmpty || (data.nonEmpty && doesDataFrameMatchBformat(fmt, data.get))) {
-            log.info("herd format exist and match provided data frame, return existing herd format")
-            result.get
-          }
-          else {
-            sys.error("provided dataframe doesn't matach herd schema but failed to create new format," +
-              "either provided data frame is Invalid, or registerNewSchema is not enabled")          }
-        } else {
-          sys.error("no suitable format usage and file type found")
-        }
+    } else if (result.nonEmpty) {
+      val fmt = api.getBusinessObjectFormat(
+        params.namespace,
+        params.businessObjectName,
+        result.get._1,
+        result.get._2,
+        result.get._3
+      )
+      // if format exist but doesn't match existing data frame, create new format
+      if (registerIfNotPresent && data.nonEmpty && !doesDataFrameMatchBformat(fmt, data.get, actualParams)) {
+        log.info("herd format exist but doesn't match provided data frame, so creating new herd format")
+        registerNewSchema(api, data.get.schema, params)
+        // if format exist and matches existing data frame(save dataFrame), or data frame is none(load/get dataFrame, return format
+      } else if (data.isEmpty || (data.nonEmpty && doesDataFrameMatchBformat(fmt, data.get, actualParams))) {
+        log.info("herd format exist and match provided data frame, return existing herd format")
+        result.get
+      }
+      else {
+        sys.error("provided dataframe doesn't match herd schema but failed to create new format," +
+          "either provided dataframe is Invalid, or registerNewSchema is not enabled")
+      }
+    } else {
+      sys.error("no suitable format usage and file type found")
+    }
   }
 
-  private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame): Boolean = {
+  private def doesDataFrameMatchBformat(fmt: BusinessObjectFormat, data: DataFrame, parameters: Map[String, String]): Boolean = {
     val partitionColumns = fmt.getSchema.getPartitions.asScala.map(_.getName)
 
     val targetSchema = makeSparkSchema(fmt.getSchema.getColumns.asScala)
 
-    val rows = data.drop(partitionColumns : _*)
-    rows.schema.sql.equalsIgnoreCase(targetSchema.sql)
+    val rows = data.drop(partitionColumns: _*)
+    rows.schema.sql.equalsIgnoreCase(targetSchema.sql) && compareParams(fmt, parameters)
+  }
+
+  // compares delimiter, escapeChar and nullValue
+  private def compareParams(fmt: BusinessObjectFormat, parameters: Map[String, String]): Boolean = {
+
+    val providedDelimiter = parameters.get("delimiter")
+    val providedEscapeChar = parameters.get("escape")
+    val providedNullValue = parameters.get("nullValue")
+
+    val formatNullValue = StringEscapeUtils unescapeJava fmt.getSchema.getNullValue
+    val formatEscapeChar = StringEscapeUtils unescapeJava fmt.getSchema.getEscapeCharacter
+    val formatDelimiter = StringEscapeUtils unescapeJava fmt.getSchema.getDelimiter
+
+    if (providedDelimiter.isDefined) {
+      if (formatDelimiter != providedDelimiter.get) {
+        log.error(prepareSchemaOptionUnmatchMsg("delimiter", providedDelimiter.get, formatDelimiter))
+        throw new IllegalArgumentException(prepareSchemaOptionUnmatchMsg("delimiter", providedDelimiter.get, formatDelimiter))
+      }
+    }
+
+    if (providedEscapeChar.isDefined) {
+      if (formatEscapeChar != providedEscapeChar.get) {
+        log.error(prepareSchemaOptionUnmatchMsg("escapeChar", providedEscapeChar.get, formatEscapeChar))
+        throw new IllegalArgumentException(prepareSchemaOptionUnmatchMsg("escapeChar", providedEscapeChar.get, formatEscapeChar))
+      }
+    }
+
+    if (providedNullValue.isDefined) {
+      if (formatNullValue != providedNullValue.get) {
+        log.error(prepareSchemaOptionUnmatchMsg("nullValue", providedNullValue.get, formatNullValue))
+        throw new IllegalArgumentException(prepareSchemaOptionUnmatchMsg("nullValue", providedNullValue.get, formatNullValue))
+      }
+    }
+
+    true
+  }
+
+  private def prepareSchemaOptionUnmatchMsg(providedItemName: String, providedItem: String, expectedItem: String) = {
+    s"Provided $providedItemName: $providedItem does not match existing $providedItem: $expectedItem on format registered with Herd. Ambiguous state reached."
   }
 
   private def getPathPrefix(storage: Storage, storagePathPrefix: String): String = {
@@ -388,7 +429,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       api,
       params,
       Some(data),
-      params.registerNewFormat
+      params.registerNewFormat,
+      parameters
     )
 
     log.info(s"Writing to ${params.namespace} ${params.businessObjectName} ${formatUsage} ${formatFileType} ${formatVersion}")
@@ -408,8 +450,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val (dataSourceFormat, options) = toSparkDataSourceAndOptions(formatFileType, fmt.getSchema, parameters)
 
+    // prevent password from appearing in the logs
+    val logOptions = options.filterNot(_._1.equalsIgnoreCase("password"))
 
-    log.info(s"Using $dataSourceFormat with options[${options.mkString(",")}]")
+    log.info(s"Using $dataSourceFormat with options[${logOptions.mkString(",")}]")
 
     val partitionValue = params.partitionValue.getOrElse("none")
 
@@ -628,6 +672,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     herdSchema.setPartitions(partitionColumns.toSeq.asJava)
     params.partitionKeyGroup.foreach(herdSchema.setPartitionKeyGroup)
 
+    log.info(s"Herd Schema: $herdSchema")
     herdSchema
   }
 
@@ -701,9 +746,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case "TIMESTAMP" => TimestampType
       case "BOOLEAN" => BooleanType
       case _ => toComplexSparkType(col)
-
     }
-
   }
 
   def toComplexSparkType(col: SchemaColumn): DataType = {
@@ -717,8 +760,6 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
   }
 
 }
-
-
 
 object DefaultSource {
 
