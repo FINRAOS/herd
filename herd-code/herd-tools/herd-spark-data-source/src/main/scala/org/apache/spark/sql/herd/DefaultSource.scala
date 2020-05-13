@@ -24,6 +24,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.jessecoyle.{CredStashBouncyCastleCrypto, JCredStash}
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.DeveloperApi
@@ -560,10 +561,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
           "header" -> "false",
           "delimiter" -> {
             if (schema.getDelimiter != null) {
-              schema.getDelimiter.contains("\\") match {
-                case true => schema.getDelimiter.replace("\\", "").toInt.toChar.toString
-                case false => schema.getDelimiter
-              }
+              val dValue = StringEscapeUtils unescapeJava schema.getDelimiter
+              dValue
             } else {
               null
             }
@@ -588,13 +587,26 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
               null
             }
           },
-          "nullValue" -> schema.getNullValue,
-          "escape" -> {
-            Try{ schema.getEscapeCharacter.replace("\\", "").toInt }.isSuccess match {
-              case true => schema.getEscapeCharacter.replace("\\", "").toInt.toChar.toString
-              case false => schema.getEscapeCharacter.replace("\\", "")
+          "nullValue" -> {
+            if (schema.getNullValue != null) {
+              val nValue = StringEscapeUtils unescapeJava schema.getNullValue
+              nValue
             }
-          }
+            else {
+              schema.getNullValue
+            }
+          },
+          "escape" -> {
+            if (schema.getEscapeCharacter != null) {
+              val eValue = StringEscapeUtils unescapeJava schema.getEscapeCharacter
+              eValue
+            }
+            else
+              {
+                schema.getEscapeCharacter
+              }
+            }
+
         ) ++ compression ++ options)
       case "parquet" =>
         ("parquet", Map(
