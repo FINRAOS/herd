@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
@@ -206,15 +206,16 @@ public class TagServiceImpl implements TagService, SearchableService
         if (tagEntity.getParentTagEntity() != null)
         {
             LOGGER.info("Modify the parent tag in the search index associated with the tag being deleted." +
-                    " tagTypeCode=\"{}\", tagCode=\"{}\", parentTagTypeCode=\"{}\", parentTagCode=\"{}\", searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(),
-                tagKey.getTagCode(), tagEntity.getParentTagEntity().getTagType().getCode(), tagEntity.getParentTagEntity().getTagCode(),
-                SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+                    " tagTypeCode=\"{}\", tagCode=\"{}\", parentTagTypeCode=\"{}\", parentTagCode=\"{}\", searchIndexUpdateType=\"{}\"",
+                tagKey.getTagTypeCode(), tagKey.getTagCode(), tagEntity.getParentTagEntity().getTagType().getCode(),
+                tagEntity.getParentTagEntity().getTagCode(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
             searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         }
 
         // Notify the search index that a business object definition must be updated.
         LOGGER.info("Modify the business object definitions in the search index associated with the tag being deleted." +
-                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(), tagKey.getTagCode(),
+                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"",
+            tagKey.getTagTypeCode(), tagKey.getTagCode(),
             businessObjectDefinitionEntities.stream().map(businessObjectDefinitionEntity -> String.valueOf(businessObjectDefinitionEntity.getId()))
                 .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
@@ -398,7 +399,8 @@ public class TagServiceImpl implements TagService, SearchableService
         // Notify the search index that a business object definition must be updated.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
         LOGGER.info("Modify the business object definitions in the search index associated with the tag being updated." +
-                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"", tagKey.getTagTypeCode(), tagKey.getTagCode(),
+                " tagTypeCode=\"{}\", tagCode=\"{}\", businessObjectDefinitionIds=[{}], searchIndexUpdateType=\"{}\"",
+            tagKey.getTagTypeCode(), tagKey.getTagCode(),
             businessObjectDefinitionEntities.stream().map(businessObjectDefinitionEntity -> String.valueOf(businessObjectDefinitionEntity.getId()))
                 .collect(Collectors.joining(", ")), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
