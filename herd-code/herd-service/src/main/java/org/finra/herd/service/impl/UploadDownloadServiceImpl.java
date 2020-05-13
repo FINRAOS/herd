@@ -329,20 +329,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).withKms(awsKmsKeyId, KmsActions.DECRYPT).build();
     }
 
-    /**
-     * Creates a restricted policy JSON string which only allows GetObject to the given bucket name and object key, and allows Decrypt for the given key ID.
-     *
-     * @param s3BucketName - The S3 bucket name to restrict uploads to
-     * @param s3Key - The S3 object key to restrict the uploads to
-     *
-     * @return the policy JSON string
-     */
-    @SuppressWarnings("PMD.CloseResource") // These are not SQL statements so they don't need to be closed.
-    private Policy createDownloaderPolicy(String s3BucketName, String s3Key)
-    {
-        return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).build();
-    }
-
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
@@ -660,22 +646,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
             configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class),
             createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
-    }
-
-    /**
-     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
-     *
-     * @param storageEntity The storage entity of the external storage.
-     * @param sessionName The session name to use for the temporary credentials.
-     * @param s3ObjectKey The S3 object key of the path to the data in the bucket.
-     *
-     * @return {@link Credentials} temporary session token
-     */
-    private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
-    {
-        return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class),
-            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
     }
 
     /**
