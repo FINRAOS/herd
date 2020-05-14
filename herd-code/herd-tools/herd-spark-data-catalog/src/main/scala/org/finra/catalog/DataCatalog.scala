@@ -987,8 +987,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "${minimum.partition.value}"
-    val lastPartValue = "${maximum.partition.value}"
+    val firstPartValue = "0"
+    val lastPartValue = "z"
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
