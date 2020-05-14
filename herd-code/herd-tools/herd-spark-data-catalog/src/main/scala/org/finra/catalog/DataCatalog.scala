@@ -1504,7 +1504,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   }
 
-  /** Registers a new ML Model with Data Management
+  /** Registers a new ML Model with Herd
    *
    *
    * @param model               ML Model being registered
