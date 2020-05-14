@@ -273,35 +273,29 @@ private object HerdFileIndexBase extends Logging {
             if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
               // Replace s3n with databricks mount point mnt
               var filePath = ""
-              if (storagePathPrefix.equalsIgnoreCase("mnt"))
-              {
+              if (storagePathPrefix.equalsIgnoreCase("mnt")) {
                 filePath = m.group(2).replaceAll("s3n://", "/mnt/")
               } // Replace s3n with user specific mount point
-              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a"))
-              {
-                filePath = m.group(1).replaceAll("s3n://", "/" + storagePathPrefix + "/")
+              else if (storagePathPrefix != null && !storagePathPrefix.contains("s3a")) {
+                filePath = m.group(2).replaceAll("s3n://", "/" + storagePathPrefix + "/")
               } // Replace s3n with s3a since Hadoop has much better support on s3a
-              else
-              {
+              else {
                 filePath = m.group(2).replaceAll("s3n://", "s3a://")
               }
 
               partitionValueTuple._3 += filePath
               // ddlPartitionValue is longer than partition value, which means there is unregistered subpartition from ddl
-              if (ddlPartitionValue.length > partitionValueTuple._2.length)
-              {
+              if (ddlPartitionValue.length > partitionValueTuple._2.length) {
                 containUnregisteredSubpartition = true
                 var path = partitionValueTuple._1
                 val subPartitionValue = ddlPartitionValue.substring(ddlPartitionValue.indexOf(",") + 1)
                 path = StringUtils.replaceIgnoreCase(path, emptySubPartitionRegex, "subPartitionValues=" + subPartitionValue + "/")
 
                 val s3filePathList = partitionValueTuplesMap.getOrElse(path, null) //
-                if (s3filePathList != null)
-                {
+                if (s3filePathList != null) {
                   partitionValueTuplesMap.updated(path, s3filePathList + filePath)
                 }
-                else
-                {
+                else {
                   partitionValueTuplesMap.put(path, ArrayBuffer(filePath))
                 }
               }
