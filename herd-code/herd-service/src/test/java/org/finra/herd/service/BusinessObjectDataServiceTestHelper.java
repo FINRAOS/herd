@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -206,6 +206,31 @@ public class BusinessObjectDataServiceTestHelper
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionKey, String partitionValue,
         String businessObjectDataStatusCode, String storageName, String storageDirectoryPath, List<StorageFile> storageFiles)
     {
+        return createBusinessObjectDataCreateRequest(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+            businessObjectFormatVersion, partitionKey, partitionValue, null, businessObjectDataStatusCode, storageName, storageDirectoryPath, storageFiles);
+    }
+
+    /**
+     * Returns a newly created business object data create request.
+     *
+     * @param namespaceCode the namespace code
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     * @param partitionKey the partition key
+     * @param partitionValue the partition value
+     * @param subPartitionValues the list of sub-partition values, maybe null
+     * @param storageName the storage name
+     * @param storageDirectoryPath the storage directory path
+     * @param storageFiles the list of storage files
+     *
+     * @return the business object create request
+     */
+    public BusinessObjectDataCreateRequest createBusinessObjectDataCreateRequest(String namespaceCode, String businessObjectDefinitionName,
+        String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionKey, String partitionValue,
+        List<String> subPartitionValues, String businessObjectDataStatusCode, String storageName, String storageDirectoryPath, List<StorageFile> storageFiles)
+    {
         // Create a business object data create request.
         BusinessObjectDataCreateRequest businessObjectDataCreateRequest = new BusinessObjectDataCreateRequest();
         businessObjectDataCreateRequest.setNamespace(namespaceCode);
@@ -215,6 +240,7 @@ public class BusinessObjectDataServiceTestHelper
         businessObjectDataCreateRequest.setBusinessObjectFormatVersion(businessObjectFormatVersion);
         businessObjectDataCreateRequest.setPartitionKey(partitionKey);
         businessObjectDataCreateRequest.setPartitionValue(partitionValue);
+        businessObjectDataCreateRequest.setSubPartitionValues(subPartitionValues);
         businessObjectDataCreateRequest.setStatus(businessObjectDataStatusCode);
 
         List<StorageUnitCreateRequest> storageUnits = new ArrayList<>();
@@ -272,12 +298,9 @@ public class BusinessObjectDataServiceTestHelper
         String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens,
         String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
     {
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFormatFileType, partitionKey,
-            partitionKeyGroupName, partitionColumnPosition, partitionValues,
-            subPartitionValues, schemaDelimiter, schemaCollectionItemsDelimiter,
-            schemaMapKeysDelimiter, schemaEscapeCharacter,
-            schemaCustomRowFormat, schemaNullValue, schemaColumns,
-            partitionColumns, replaceUnderscoresWithHyphens, customDdlName, generateStorageFileEntities,
+        createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFormatFileType, partitionKey, partitionKeyGroupName, partitionColumnPosition,
+            partitionValues, subPartitionValues, schemaDelimiter, schemaCollectionItemsDelimiter, schemaMapKeysDelimiter, schemaEscapeCharacter,
+            schemaCustomRowFormat, schemaNullValue, schemaColumns, partitionColumns, replaceUnderscoresWithHyphens, customDdlName, generateStorageFileEntities,
             allowDuplicateBusinessObjectData, null);
     }
 
@@ -286,12 +309,12 @@ public class BusinessObjectDataServiceTestHelper
      */
     public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
-        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue,
-        List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName,
-        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
+        String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
+        String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens,
+        String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
     {
         // Use default data version
-        if  (businessObjectVersion == null)
+        if (businessObjectVersion == null)
         {
             businessObjectVersion = AbstractServiceTest.DATA_VERSION;
         }
@@ -482,7 +505,7 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @return the list of created storage unit entities
      */
-    public List<StorageUnitEntity>  createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(List<List<String>> partitions)
+    public List<StorageUnitEntity> createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(List<List<String>> partitions)
     {
         // Create a list of storage unit entities to be returned.
         List<StorageUnitEntity> result = new ArrayList<>();
@@ -1489,7 +1512,8 @@ public class BusinessObjectDataServiceTestHelper
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
                 AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
-                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl, AbstractServiceTest.NO_AS_OF_TIME);
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl,
+                AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl responses to the collection response.
         businessObjectDataDdlResponses.add(expectedBusinessObjectDataDdl);
@@ -2194,7 +2218,8 @@ public class BusinessObjectDataServiceTestHelper
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
                 AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
-                AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_AS_OF_TIME);
+                AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE,
+                AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
