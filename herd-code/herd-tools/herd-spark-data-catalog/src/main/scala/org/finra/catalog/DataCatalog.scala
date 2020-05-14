@@ -1568,6 +1568,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                       isNewFormatVersion: Boolean = false,
                       formatVersion: Int = -1): String = {
 
+    // short-circuit execution if a mount-point is not specified
+    require(mountPoint.nonEmpty, "mountPoint is a required parameter, eg. \"/mnt/{bucket-name}\" or \"s3a://{bucket-name}\"")
+
     if (isNewFormatVersion) {
       // check if model exists and register new format version
       Try(herdApiWrapper.getHerdApi().getBusinessObjectByName(nameSpace, modelName)) match {
