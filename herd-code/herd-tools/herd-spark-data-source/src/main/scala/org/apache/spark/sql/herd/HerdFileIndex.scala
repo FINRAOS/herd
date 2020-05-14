@@ -299,25 +299,20 @@ private object HerdFileIndexBase extends Logging {
                   partitionValueTuplesMap.put(path, ArrayBuffer(filePath))
                 }
               }
-
               done = true
             }
             index += 1
           }
         })
 
-      if (containUnregisteredSubpartition)
-      {
+      if (containUnregisteredSubpartition) {
         partitionValueTuplesMap.toList
       }
-      else
-      {
-        partitionValueTuples.map(p =>
-        {
+      else {
+        partitionValueTuples.map(p => {
           (p._1, p._3)
         })
-     }
-
+      }
     }
   }
 
