@@ -104,6 +104,17 @@ public class StorageFileHelperTest extends AbstractServiceTest
         // the beginning of storage file path and directory path has '/' trailing character.
         assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
             storageFileHelper.createStorageFileFromEntity(storageFileEntity, STRING_VALUE + "/"));
+
+        // Create a storage file entity with storage file representing an empty S3 directory.
+        StorageFileEntity emptyDirectoryStorageFileEntity = new StorageFileEntity();
+        emptyDirectoryStorageFileEntity.setStorageUnit(null);
+        emptyDirectoryStorageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+        emptyDirectoryStorageFileEntity.setFileSizeBytes(FILE_SIZE_0_BYTE);
+        emptyDirectoryStorageFileEntity.setRowCount(NO_ROW_COUNT);
+
+        // Create storage file from entity when directory path is not matching the beginning of storage file path and storage file represents an empty S3 directory.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + StorageFileEntity.S3_EMPTY_PARTITION, FILE_SIZE_0_BYTE, NO_ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(emptyDirectoryStorageFileEntity, STORAGE_DIRECTORY_PATH));
     }
 
     @Test
