@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import java.io.IOException;
@@ -108,7 +108,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -133,7 +133,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         // Retrieve the JSON string from the get response
@@ -164,7 +164,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         return isIndexExists;
@@ -190,7 +190,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -215,7 +215,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         // Retrieve the JSON string from the get response
@@ -271,7 +271,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -298,7 +298,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -322,7 +322,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -359,7 +359,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -385,7 +385,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         return countResponse.getCount();
@@ -453,7 +453,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         return idList;
@@ -491,7 +491,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
     }
 
@@ -516,7 +516,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         return getSettingsResponse.getIndexToSettings().get(indexName);
@@ -550,7 +550,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         // Get the aliases from the response.

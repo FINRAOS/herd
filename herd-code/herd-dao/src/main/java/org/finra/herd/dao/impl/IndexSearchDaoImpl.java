@@ -325,7 +325,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         {
             LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
 
-            throw new ElasticsearchRestClientException();
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
         }
 
         final List<IndexSearchResult> indexSearchResults =
