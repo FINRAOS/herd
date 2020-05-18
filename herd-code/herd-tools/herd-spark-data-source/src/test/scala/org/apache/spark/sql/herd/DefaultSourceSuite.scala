@@ -468,6 +468,24 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
   }
 
+  test("save subPartitioned data, one level") {
+    FileUtils.deleteDirectory(new java.io.File("./test-output"))
+
+    val df = spark.createDataFrame(EXPECTED_ROWS.asJava, EXPECTED_SCHEMA)
+      .filter($"sdate" === "2017-01-01")
+      .filter($"symbol" === "A")
+
+    val params = defaultParams + ("partitionValue" -> "2017-01-01") + ("subPartitionKeys" -> "symbol") + ("subPartitionValues" -> "A")
+
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+
+    noException should be thrownBy {
+      writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+    }
+  }
+
   test("save complex dataType dataframe") {
     FileUtils.deleteDirectory(new java.io.File("./test-output"))
 

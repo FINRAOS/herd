@@ -59,6 +59,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
@@ -188,9 +189,8 @@ public class BusinessObjectDataDdlPartitionsHelper
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.
-        boolean isPartitioned =
-            !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY) || partitionFilters.size() != 1 ||
-                !partitionFilters.get(0).get(0).equalsIgnoreCase(NO_PARTITIONING_PARTITION_VALUE);
+        boolean isPartitioned = !businessObjectFormatEntity.getPartitionKey().equalsIgnoreCase(NO_PARTITIONING_PARTITION_KEY) || partitionFilters.size() != 1 ||
+            !partitionFilters.get(0).get(0).equalsIgnoreCase(NO_PARTITIONING_PARTITION_VALUE);
 
         // Generate the create table Hive 13 DDL.
         BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest = getGenerateDdlRequestWrapperInstance();
@@ -427,7 +427,7 @@ public class BusinessObjectDataDdlPartitionsHelper
 
             // If flag is set to suppress scan for unregistered sub-partitions, use the directory path or the S3 key prefix
             // as the partition's location, otherwise, use storage files to discover all unregistered sub-partitions.
-            Collection<String> storageFilePaths = new ArrayList<>();
+            List<String> storageFilePaths = new ArrayList<>();
             if (BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions))
             {
                 // Validate the directory path value if it is present.
@@ -448,7 +448,41 @@ public class BusinessObjectDataDdlPartitionsHelper
             {
                 // Retrieve storage file paths registered with this business object data in the specified storage.
                 storageFilePaths = storageUnitIdToStorageFilePathsMap.containsKey(storageUnitAvailabilityDto.getStorageUnitId()) ?
-                    storageUnitIdToStorageFilePathsMap.get(storageUnitAvailabilityDto.getStorageUnitId()) : new ArrayList<>();
+                    new ArrayList<>(storageUnitIdToStorageFilePathsMap.get(storageUnitAvailabilityDto.getStorageUnitId())) : new ArrayList<>();
+
+                // If storage directory path is specified, prepend it to storage file paths, if not already there.
+                if (StringUtils.isNotBlank(storageUnitAvailabilityDto.getStorageUnitDirectoryPath()))
+                {
+                    // Get storage unit directory path as is.
+                    String storageUnitDirectoryPath = storageUnitAvailabilityDto.getStorageUnitDirectoryPath();
+
+                    // Since storage unit directory path represents a directory, we add a trailing '/' character to it, unless it is already present.
+                    String storageUnitDirectoryPathWithSlash = StringUtils.appendIfMissing(storageUnitAvailabilityDto.getStorageUnitDirectoryPath(), "/");
+
+                    // If storage file path does not start with storage unit directory path:
+                    // - For the empty folder S3 marker prepend storage unit directory path as is
+                    // - For all other storage files, prepend storage unit directory path with slash
+                    List<String> fullStorageFilePaths = new ArrayList<>();
+                    for (String storageFilePath : storageFilePaths)
+                    {
+                        if (StringUtils.startsWith(storageFilePath, storageUnitDirectoryPath))
+                        {
+                            fullStorageFilePaths.add(storageFilePath);
+                        }
+                        else
+                        {
+                            if (StringUtils.equals(storageFilePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                            {
+                                fullStorageFilePaths.add(storageUnitDirectoryPath + storageFilePath);
+                            }
+                            else
+                            {
+                                fullStorageFilePaths.add(storageUnitDirectoryPathWithSlash + storageFilePath);
+                            }
+                        }
+                    }
+                    storageFilePaths = fullStorageFilePaths;
+                }
 
                 // Validate storage file paths registered with this business object data in the specified storage.
                 // The validation check below is required even if we have no storage files registered.
@@ -609,6 +643,7 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @param storageNames the list of storage names
      *
      * @return the updated list of storage unit availability DTOs
+     *
      * @throws IllegalArgumentException on business object data being registered in multiple storage and storage names are not specified to resolve this
      */
     protected List<StorageUnitAvailabilityDto> excludeDuplicateBusinessObjectData(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos,
@@ -663,8 +698,8 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the business object format usage (case-insensitive)
      * @param fileTypeEntity the file type entity
-     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest
-     * available format version for each partition value will be used
+     * @param businessObjectFormatVersion the optional business object format version. If a business object format version isn't specified, the latest available
+     * format version for each partition value will be used
      * @param matchedAvailablePartitionFilters the list of "matched" partition filters
      * @param availablePartitions the list of already discovered "available" partitions, where each partition consists of primary and optional sub-partition
      * values
@@ -856,9 +891,9 @@ public class BusinessObjectDataDdlPartitionsHelper
     }
 
     /**
-     * Gets a list of Hive partitions. For single level partitioning, no auto-discovery of sub-partitions (sub-directories) is needed - the business object
-     * data will be represented by a single Hive partition instance. For multiple level partitioning, this method performs an auto-discovery of all
-     * sub-partitions (sub-directories) and creates a Hive partition object instance for each partition.
+     * Gets a list of Hive partitions. For single level partitioning, no auto-discovery of sub-partitions (sub-directories) is needed - the business object data
+     * will be represented by a single Hive partition instance. For multiple level partitioning, this method performs an auto-discovery of all sub-partitions
+     * (sub-directories) and creates a Hive partition object instance for each partition.
      *
      * @param businessObjectDataKey the business object data key
      * @param autoDiscoverableSubPartitionColumns the auto-discoverable sub-partition columns

@@ -30,6 +30,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
@@ -542,6 +543,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     // return all s3 prefixes
     s3KeyPrefixes.map("s3n://" + _).toList
   }
+
   /**
    * Get available namespaces
    *
@@ -985,8 +987,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "2000-01-01"
-    val lastPartValue = "2099-12-31"
+    val firstPartValue = "0"
+    val lastPartValue = "z"
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
@@ -1437,7 +1439,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // @todo Change the corresponding Herd data source function to pass null: Integer
     // @todo Then use Herd data source's function instead of Herd SDK here
-    val retrivedObject = api.businessObjectDataGetBusinessObjectData(
+    val retrievedObject = api.businessObjectDataGetBusinessObjectData(
       nameSpace,
       objectName,
       usage,
@@ -1451,7 +1453,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       false,
       false)
 
-    retrivedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
+    retrievedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
   }
 
   /** Register a new formatVersion
@@ -1502,7 +1504,110 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   }
 
-  /** saves a DataFrame and register with DM
+  /** Registers a new ML Model with Herd
+   *
+   *
+   * @param model               ML Model being registered
+   * @param mountPoint          Mount Point of where to register the ML Model  (eg. /mnt/{{bucket-name}})
+   * @param nameSpace           Model Namespace (eg. myNamespace)
+   * @param modelName           Model Name (eg. myMmodel )
+   * @param partitionKey        Partition Key (default partition = none)
+   * @param partitionValue      Partition Value (default partition = none)
+   * @param isNewFormatVersion  Boolean indicating if a new format version (ie. schema version) is being created for an existing registered model
+   * @param formatVersion       Format Version (default -1 which translates to latest version)
+   *
+   * @return  Returns the path to the registered model
+   *
+   * Example Usage:
+   * {{{
+   *
+   *   // Example 1: Register new model
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 2: Re-register existing model (parameters remain the same and Herd increments data version)
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 3: Re-register existing model with a new format version. This usage may be for cases where, for example, new
+   *   //            feature columns have been added/removed and have impact to the model training.
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = true   <-- set to true for new format version
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   * }}}
+   */
+  def registerMLModel(model: PipelineModel,
+                      mountPoint: String,
+                      nameSpace: String,
+                      modelName: String,
+                      partitionKey: String = "partition",
+                      partitionValue: String = "none",
+                      isNewFormatVersion: Boolean = false,
+                      formatVersion: Int = -1): String = {
+
+    // short-circuit execution if a mount-point is not specified
+    require(mountPoint != null && mountPoint.trim.nonEmpty, "mountPoint is a required parameter, eg. \"/mnt/{bucket-name}\" or \"s3a://{bucket-name}\"")
+
+    if (isNewFormatVersion) {
+      // check if model exists and register new format version
+      Try(herdApiWrapper.getHerdApi().getBusinessObjectByName(nameSpace, modelName)) match {
+        case Success(_) => registerNewFormat(nameSpace, modelName, partitionKey, partitionValue)
+        case Failure(ex) =>
+          logger.info("A new format version cannot be created for a model being registered for the first time. Proceeding to initialize registration.", ex)
+      }
+    }
+
+    val (modelFormatVersion, dataVersion, path) = preRegisterBusinessObjectPath(nameSpace, modelName, formatVersion, partitionKey, partitionValue)
+
+    val registrationPath = if (!mountPoint.endsWith("/")) {
+      mountPoint + "/" + path
+    } else mountPoint + path
+
+    Try (model.write.overwrite().save(registrationPath)) match {
+      case Success(_) =>
+        // Model successfully registered - Mark status as VALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion)
+      case Failure(ex) =>
+        // Model registration failed - Mark status as INVALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion,
+          org.apache.spark.sql.herd.ObjectStatus.INVALID)
+        logger.error("Failed to register model.", ex)
+        throw ex
+    }
+
+    // return registered path
+    getBusinessObjectPath(nameSpace,
+      modelName,
+      modelFormatVersion,
+      partitionKey,
+      partitionValue,
+      dataVersion)
+  }
+
+  /** saves a DataFrame and registers with Herd.
    *
    * @param df                a DataFrame
    * @param namespace         a logical name of the namespace
@@ -1513,6 +1618,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param usage             DM supported format usage (e.g., "PRC")
    * @param fileFormat        DM supported file format (e.g., "BZ", "PARQUET", etc)
    */
+  @deprecated("Use saveDataFrame(df: DataFrame, baseHerdOptions: BaseHerdOptions)", "0.121.0")
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
@@ -1545,10 +1651,53 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     ).filter(opt => opt._2.nonEmpty)
 
     // add optional parameters if specified by user
-    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get) )
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
+
+    // write out the data
+    baseWriteOptions.save()
+  }
+
+  /**
+   * Saves a DataFrame and registers with Herd.
+   *
+   * @param dataFrame       DataFrame to save and register
+   * @param baseHerdOptions herd options
+   */
+  def saveDataFrame(dataFrame: DataFrame, baseHerdOptions: BaseHerdOptions): Unit = {
+
+    require(!baseHerdOptions.namespace.isEmpty, "'namespace' is required!")
+    require(!baseHerdOptions.objectName.isEmpty, "'objectName' is required!")
+    require(!baseHerdOptions.usage.isEmpty, "'usage' is required!")
+    require(!baseHerdOptions.fileType.isEmpty, "'fileType' is required!")
+    require(!baseHerdOptions.partitionKey.isEmpty, "'partitionKey' is required!")
+    require(!baseHerdOptions.partitionValue.isEmpty, "'partitionValue' is required!")
+    require(!baseHerdOptions.partitionKeyGroup.isEmpty, "'partitionKeyGroup' is required!")
+
+    var baseWriteOptions = dataFrame.write.format("herd")
+      .option("url", baseRestUrl)
+      .option("username", username)
+      .option("password", password)
+      .option("namespace", baseHerdOptions.namespace)
+      .option("businessObjectName", baseHerdOptions.objectName)
+      .option("businessObjectFormatUsage", baseHerdOptions.usage)
+      .option("businessObjectFormatFileType", baseHerdOptions.fileType)
+      .option("partitionKey", baseHerdOptions.partitionKey)
+      .option("partitionValue", baseHerdOptions.partitionValue)
+      .option("partitionKeyGroup", baseHerdOptions.partitionKeyGroup)
+      .option("registerNewFormat", "true")
+
+    val options = Map(
+      "subPartitionKeys" -> Option(baseHerdOptions.subPartitionKeys),
+      "subPartitionValues" -> Option(baseHerdOptions.subPartitionValues),
+      "delimiter" -> Option(baseHerdOptions.delimiter),
+      "escape" -> Option(baseHerdOptions.escapeChar),
+      "nullValue" -> Option(baseHerdOptions.nullValue)
+    ).filter(opt => opt._2.nonEmpty)
+
+    // add optional parameters if specified by user
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
 
     // write out the data
     baseWriteOptions.save()
   }
 }
-
