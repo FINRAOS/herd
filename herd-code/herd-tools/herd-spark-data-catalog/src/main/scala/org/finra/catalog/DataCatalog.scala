@@ -30,6 +30,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
@@ -986,8 +987,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "${minimum.partition.value}"
-    val lastPartValue = "${maximum.partition.value}"
+    val firstPartValue = "0"
+    val lastPartValue = "z"
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
@@ -1501,6 +1502,109 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("storagePathPrefix", storagePathPrefix)
       .load()
 
+  }
+
+  /** Registers a new ML Model with Herd
+   *
+   *
+   * @param model               ML Model being registered
+   * @param mountPoint          Mount Point of where to register the ML Model  (eg. /mnt/{{bucket-name}})
+   * @param nameSpace           Model Namespace (eg. myNamespace)
+   * @param modelName           Model Name (eg. myMmodel )
+   * @param partitionKey        Partition Key (default partition = none)
+   * @param partitionValue      Partition Value (default partition = none)
+   * @param isNewFormatVersion  Boolean indicating if a new format version (ie. schema version) is being created for an existing registered model
+   * @param formatVersion       Format Version (default -1 which translates to latest version)
+   *
+   * @return  Returns the path to the registered model
+   *
+   * Example Usage:
+   * {{{
+   *
+   *   // Example 1: Register new model
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 2: Re-register existing model (parameters remain the same and Herd increments data version)
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 3: Re-register existing model with a new format version. This usage may be for cases where, for example, new
+   *   //            feature columns have been added/removed and have impact to the model training.
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = true   <-- set to true for new format version
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   * }}}
+   */
+  def registerMLModel(model: PipelineModel,
+                      mountPoint: String,
+                      nameSpace: String,
+                      modelName: String,
+                      partitionKey: String = "partition",
+                      partitionValue: String = "none",
+                      isNewFormatVersion: Boolean = false,
+                      formatVersion: Int = -1): String = {
+
+    // short-circuit execution if a mount-point is not specified
+    require(mountPoint != null && mountPoint.trim.nonEmpty, "mountPoint is a required parameter, eg. \"/mnt/{bucket-name}\" or \"s3a://{bucket-name}\"")
+
+    if (isNewFormatVersion) {
+      // check if model exists and register new format version
+      Try(herdApiWrapper.getHerdApi().getBusinessObjectByName(nameSpace, modelName)) match {
+        case Success(_) => registerNewFormat(nameSpace, modelName, partitionKey, partitionValue)
+        case Failure(ex) =>
+          logger.info("A new format version cannot be created for a model being registered for the first time. Proceeding to initialize registration.", ex)
+      }
+    }
+
+    val (modelFormatVersion, dataVersion, path) = preRegisterBusinessObjectPath(nameSpace, modelName, formatVersion, partitionKey, partitionValue)
+
+    val registrationPath = if (!mountPoint.endsWith("/")) {
+      mountPoint + "/" + path
+    } else mountPoint + path
+
+    Try (model.write.overwrite().save(registrationPath)) match {
+      case Success(_) =>
+        // Model successfully registered - Mark status as VALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion)
+      case Failure(ex) =>
+        // Model registration failed - Mark status as INVALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion,
+          org.apache.spark.sql.herd.ObjectStatus.INVALID)
+        logger.error("Failed to register model.", ex)
+        throw ex
+    }
+
+    // return registered path
+    getBusinessObjectPath(nameSpace,
+      modelName,
+      modelFormatVersion,
+      partitionKey,
+      partitionValue,
+      dataVersion)
   }
 
   /** saves a DataFrame and registers with Herd.
