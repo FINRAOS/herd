@@ -946,11 +946,20 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val availData = (
       for (businessObjectDataAvailableStatus <- businessObjectDataAvailableStatuses.asScala)
-      yield Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
-      businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
-      businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
-      businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue,
-      businessObjectDataAvailableStatus.getSubPartitionValues))
+        yield
+        if (businessObjectDataAvailableStatus.getSubPartitionValues != null) {
+           Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
+            businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
+            businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
+            businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue)++
+            businessObjectDataAvailableStatus.getSubPartitionValues.toArray())
+        }
+        else {
+          Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
+            businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
+            businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
+            businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue))
+        }
     ).toList
 
     // make list an RDD
