@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
@@ -22,7 +22,6 @@ import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,14 +29,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.searchbox.core.Search;
-import io.searchbox.core.SearchResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchAction;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -48,8 +51,10 @@ import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,11 +63,12 @@ import org.springframework.stereotype.Repository;
 
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.ElasticsearchRestHighLevelClientFactory;
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.exception.ElasticsearchRestClientException;
 import org.finra.herd.dao.helper.ElasticsearchClientImpl;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.helper.HerdSearchQueryHelper;
-import org.finra.herd.dao.helper.JestClientHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.Facet;
@@ -194,7 +200,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private ElasticsearchHelper elasticsearchHelper;
 
     @Autowired
-    private JestClientHelper jestClientHelper;
+    private ElasticsearchRestHighLevelClientFactory elasticsearchRestHighLevelClientFactory;
 
     @Autowired
     private HerdSearchQueryHelper herdSearchQueryHelper;
@@ -223,9 +229,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 if (CollectionUtils.isNotEmpty(negationTerms))
                 {
                     negationTerms.forEach(term ->
-                    {
-                        indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED, match));
-                    });
+                        indexSearchQueryBuilder.mustNot(buildMultiMatchQuery(term, PHRASE, 100f, FIELD_TYPE_STEMMED, match)));
                 }
 
                 // Remove the negation terms from the search phrase
@@ -303,34 +307,57 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Log the actual elasticsearch query when debug is enabled
         LOGGER.debug("indexSearchRequest={}", searchRequestBuilder.toString());
 
-        // Retrieve the indexSearch response
-        final Search.Builder searchBuilder = new Search.Builder(searchRequestBuilder.toString()).addIndices(Arrays.asList(bdefActiveIndex, tagActiveIndex));
-        final SearchResult searchResult = jestClientHelper.execute(searchBuilder.build());
+        // Build the search request.
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.source(searchSourceBuilder);
+        searchRequest.indices(bdefActiveIndex, tagActiveIndex);
+
+        // Create a search response object.
+        SearchResponse searchResponse;
+
+        // Get the Elasticsearch REST high level client. The REST high level client is auto closeable, so use try with resources.
+        try (final RestHighLevelClient restHighLevelClient = elasticsearchRestHighLevelClientFactory.getRestHighLevelClient())
+        {
+            // Retrieve the indexSearch response
+            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        }
+        catch (final IOException ioException)
+        {
+            LOGGER.error("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+
+            throw new ElasticsearchRestClientException("Caught IOException while attempting to use the ElasticsearchRestHighLevelClient.", ioException);
+        }
+
         final List<IndexSearchResult> indexSearchResults =
-            buildIndexSearchResults(fields, tagActiveIndex, bdefActiveIndex, searchResult, indexSearchRequest.isEnableHitHighlighting());
+            buildIndexSearchResults(fields, tagActiveIndex, bdefActiveIndex, searchResponse, indexSearchRequest.isEnableHitHighlighting());
 
         List<Facet> facets = null;
         if (CollectionUtils.isNotEmpty(indexSearchRequest.getFacetFields()))
         {
             // Extract facets from the search response
-            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResult, bdefActiveIndex, tagActiveIndex));
+            facets = new ArrayList<>(extractFacets(indexSearchRequest, searchResponse, bdefActiveIndex, tagActiveIndex));
         }
 
-        return new IndexSearchResponse(searchResult.getTotal(), indexSearchResults, facets);
+        // Get the total index search results in a null safe way.
+        SearchHits searchHits = searchResponse.getHits();
+        TotalHits totalHits = searchHits.getTotalHits();
+        long totalIndexSearchResults = totalHits != null ? totalHits.value : 0L;
+
+        return new IndexSearchResponse(totalIndexSearchResults, indexSearchResults, facets);
     }
 
     /**
-     * Extracts and builds a list of {@link IndexSearchResult}s from a given {@link SearchResult}
+     * Extracts and builds a list of {@link IndexSearchResult}s from a given {@link SearchResponse}
      *
      * @param fields the specified fields to be included in the response
      * @param tagActiveIndex the name of the active tag index
      * @param bdefActiveIndex the name of the active business object definition index
-     * @param searchResult the raw search result returned by the elasticsearch client
+     * @param searchResponse the search response returned by the elasticsearch client
      * @param isHighlightingEnabled boolean which specifies if highlighting is requested or not
      *
      * @return A {@link List} of {@link IndexSearchResult} which represent the search response
      */
-    private List<IndexSearchResult> buildIndexSearchResults(Set<String> fields, String tagActiveIndex, String bdefActiveIndex, SearchResult searchResult,
+    private List<IndexSearchResult> buildIndexSearchResults(Set<String> fields, String tagActiveIndex, String bdefActiveIndex, SearchResponse searchResponse,
         Boolean isHighlightingEnabled)
     {
         final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
@@ -339,94 +366,81 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         List<IndexSearchResult> indexSearchResults = new ArrayList<>();
 
-        try
+        final SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+        // For each indexSearch hit
+        for (final SearchHit hit : searchHits)
         {
+            // Get the source map from the indexSearch hit
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> sourceMap = hit.getSourceAsMap();
 
+            // Get the index from which this result is from
+            final String index = hit.getIndex();
 
-            final List<SearchResult.Hit<Map, Void>> searchHitList = searchResult.getHits(Map.class);
+            // Create a new document to populate with the indexSearch results
+            final IndexSearchResult indexSearchResult = new IndexSearchResult();
 
-            // For each indexSearch hit
-            for (final SearchResult.Hit<Map, Void> hit : searchHitList)
+            // Populate the results
+            indexSearchResult.setSearchIndexKey(new SearchIndexKey(index));
+            if (fields.contains(DISPLAY_NAME_FIELD))
             {
-                // Get the source map from the indexSearch hit
-                @SuppressWarnings("unchecked")
-                final Map<String, Object> sourceMap = hit.source;
-
-                // Get the index from which this result is from
-                final String index = hit.index;
-
-                // Create a new document to populate with the indexSearch results
-                final IndexSearchResult indexSearchResult = new IndexSearchResult();
-
-                // Populate the results
-                indexSearchResult.setSearchIndexKey(new SearchIndexKey(index));
-                if (fields.contains(DISPLAY_NAME_FIELD))
-                {
-                    indexSearchResult.setDisplayName((String) sourceMap.get(DISPLAY_NAME_SOURCE));
-                }
-
-                // Populate tag index specific key
-                if (index.equals(tagActiveIndex))
-                {
-                    if (fields.contains(SHORT_DESCRIPTION_FIELD))
-                    {
-                        indexSearchResult
-                            .setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), tagShortDescMaxLength));
-                    }
-
-                    final TagKey tagKey = new TagKey();
-                    tagKey.setTagCode((String) sourceMap.get(TAG_CODE_SOURCE));
-                    tagKey.setTagTypeCode((String) ((Map) sourceMap.get(TAG_TYPE)).get(CODE));
-                    indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
-                    indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
-                }
-                // Populate business object definition key
-                else if (index.equals(bdefActiveIndex))
-                {
-                    if (fields.contains(SHORT_DESCRIPTION_FIELD))
-                    {
-                        indexSearchResult.setShortDescription(
-                            HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), businessObjectDefinitionShortDescMaxLength));
-                    }
-
-                    final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
-                    businessObjectDefinitionKey.setNamespace((String) ((Map) sourceMap.get(NAMESPACE)).get(CODE));
-                    businessObjectDefinitionKey.setBusinessObjectDefinitionName((String) sourceMap.get(NAME_SOURCE));
-                    indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
-                    indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
-                }
-                else
-                {
-                    throw new IllegalStateException(String
-                        .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=\"%s\" bdefActiveIndex=\"%s\"",
-                            index, tagActiveIndex, bdefActiveIndex));
-                }
-
-                if (BooleanUtils.isTrue(isHighlightingEnabled))
-                {
-                    // Fetch configured 'tag' values for highlighting
-                    String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
-                    String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
-
-                    // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
-                    Highlight highlightedContent = extractHighlightedContent(hit, preTag, postTag);
-
-                    // Set highlighted content in the response element
-                    indexSearchResult.setHighlight(highlightedContent);
-                }
-
-                indexSearchResults.add(indexSearchResult);
+                indexSearchResult.setDisplayName((String) sourceMap.get(DISPLAY_NAME_SOURCE));
             }
-        }
-        catch (RuntimeException e)
-        {
-            // Log the error along with the search response and throw the exception.
-            LOGGER.error("Failed to parse search results. tagActiveIndex=\"{}\" bdefActiveIndex=\"{}\" fields={} isHighlightingEnabled={} searchResult={}",
-                tagActiveIndex, bdefActiveIndex, jsonHelper.objectToJson(fields), isHighlightingEnabled, jsonHelper.objectToJson(searchResult), e);
 
-            // Throw an exception.
-            throw new IllegalStateException("Unexpected response received when attempting to retrieve search results.");
+            // Populate tag index specific key
+            if (index.equals(tagActiveIndex))
+            {
+                if (fields.contains(SHORT_DESCRIPTION_FIELD))
+                {
+                    indexSearchResult
+                        .setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), tagShortDescMaxLength));
+                }
+
+                final TagKey tagKey = new TagKey();
+                tagKey.setTagCode((String) sourceMap.get(TAG_CODE_SOURCE));
+                tagKey.setTagTypeCode((String) ((Map) sourceMap.get(TAG_TYPE)).get(CODE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.TAG.name());
+                indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(tagKey, null));
+            }
+            // Populate business object definition key
+            else if (index.equals(bdefActiveIndex))
+            {
+                if (fields.contains(SHORT_DESCRIPTION_FIELD))
+                {
+                    indexSearchResult.setShortDescription(
+                        HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), businessObjectDefinitionShortDescMaxLength));
+                }
+
+                final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
+                businessObjectDefinitionKey.setNamespace((String) ((Map) sourceMap.get(NAMESPACE)).get(CODE));
+                businessObjectDefinitionKey.setBusinessObjectDefinitionName((String) sourceMap.get(NAME_SOURCE));
+                indexSearchResult.setIndexSearchResultType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+                indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
+            }
+            else
+            {
+                throw new IllegalStateException(String
+                    .format("Search result index name \"%s\" does not match any of the active search indexes. tagActiveIndex=\"%s\" bdefActiveIndex=\"%s\"",
+                        index, tagActiveIndex, bdefActiveIndex));
+            }
+
+            if (BooleanUtils.isTrue(isHighlightingEnabled))
+            {
+                // Fetch configured 'tag' values for highlighting
+                String preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+                String postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+
+                // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
+                Highlight highlightedContent = extractHighlightedContent(hit, preTag, postTag);
+
+                // Set highlighted content in the response element
+                indexSearchResult.setHighlight(highlightedContent);
+            }
+
+            indexSearchResults.add(indexSearchResult);
         }
+
 
         return indexSearchResults;
     }
@@ -462,16 +476,16 @@ public class IndexSearchDaoImpl implements IndexSearchDao
      *
      * @return {@link Highlight} a cleaned highlighted content
      */
-    private Highlight extractHighlightedContent(SearchResult.Hit<Map, Void> searchHit, String preTag, String postTag)
+    private Highlight extractHighlightedContent(SearchHit searchHit, String preTag, String postTag)
     {
         Highlight highlightedContent = new Highlight();
 
         List<Field> highlightFields = new ArrayList<>();
 
         // make sure there is highlighted content in the search hit
-        if (MapUtils.isNotEmpty(searchHit.highlight))
+        if (MapUtils.isNotEmpty(searchHit.getHighlightFields()))
         {
-            Set<String> keySet = searchHit.highlight.keySet();
+            Set<String> keySet = searchHit.getHighlightFields().keySet();
 
             for (String key : keySet)
             {
@@ -483,11 +497,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 List<String> cleanFragments = new ArrayList<>();
 
                 // Extract fragments which have the highlighted content
-                List<String> fragments = searchHit.highlight.get(key);
+                HighlightField highlightField = searchHit.getHighlightFields().get(key);
 
-                for (String fragment : fragments)
+
+                for (Text fragment : highlightField.fragments())
                 {
-                    cleanFragments.add(HerdStringUtils.stripHtml(fragment, preTag, postTag));
+                    cleanFragments.add(HerdStringUtils.stripHtml(fragment.string(), preTag, postTag));
                 }
                 field.setFragments(cleanFragments);
                 highlightFields.add(field);
@@ -500,26 +515,26 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     }
 
     /**
-     * Extracts facet information from a {@link SearchResult} object
+     * Extracts facet information from a {@link SearchResponse} object
      *
      * @param request The specified {@link IndexSearchRequest}
-     * @param searchResult A given {@link SearchResult} to extract the facet information from
+     * @param searchResponse A given {@link SearchResponse} to extract the facet information from
      * @param bdefActiveIndex the name of the active index for business object definitions
      * @param tagActiveIndex the name os the active index for tags
      *
      * @return A list of {@link Facet} objects
      */
-    private List<Facet> extractFacets(IndexSearchRequest request, SearchResult searchResult, final String bdefActiveIndex, final String tagActiveIndex)
+    private List<Facet> extractFacets(IndexSearchRequest request, SearchResponse searchResponse, final String bdefActiveIndex, final String tagActiveIndex)
     {
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
         if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
         {
-            elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult));
-            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult));
+            elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse));
+            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse));
         }
         if (request.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
         {
-            elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult));
+            elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
         }
 
         return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, bdefActiveIndex, tagActiveIndex);

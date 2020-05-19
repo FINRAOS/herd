@@ -72,8 +72,7 @@ public class TagHelperTest extends AbstractServiceTest
         when(jsonHelper.objectToJson(any())).thenReturn(JSON_STRING);
 
         // Execute a function for all tag entities.
-        tagHelper.executeFunctionForTagEntities(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, tagEntities, (indexName, documentType, id, json) -> {
-        });
+        tagHelper.executeFunctionForTagEntities(SEARCH_INDEX_NAME, tagEntities, (indexName, id, json) -> { });
 
         // Verify the external calls.
         verify(jsonHelper, times(tagEntities.size())).objectToJson(any());

@@ -147,24 +147,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Retrieve index settings from the actual search index. A non-existing search index name results in a "no such index" internal server error.
         Settings settings = indexFunctionsDao.getIndexSettings(searchIndexKey.getSearchIndexName());
 
-        String searchIndexType = searchIndexEntity.getType().getCode();
-        String documentType = null;
-        // Currently, only search index for business object definitions and tag are supported.
-        if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
-        {
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        }
-        else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
-        {
-
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_DOCUMENT_TYPE, String.class);
-        }
-        else
-        {
-            throw new IllegalArgumentException(String.format("Search index type with code \"%s\" is not supported.", searchIndexType));
-        }
-
-        long indexCount = indexFunctionsDao.getNumberOfTypesInIndex(searchIndexKey.getSearchIndexName(), documentType);
+        long indexCount = indexFunctionsDao.getNumberOfTypesInIndex(searchIndexKey.getSearchIndexName());
 
         // Update the search index statistics.
         searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats, indexCount));
@@ -234,7 +217,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
      */
     protected void createSearchIndexHelper(SearchIndexKey searchIndexKey, String searchIndexType)
     {
-        String documentType;
         String mapping;
         String settings;
         String alias;
@@ -242,16 +224,14 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
-            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
+            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON_V2.getKey());
+            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON_V2.getKey());
             alias = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
-            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_DOCUMENT_TYPE, String.class);
-            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
-            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_SETTINGS_JSON.getKey());
+            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON_V2.getKey());
+            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_SETTINGS_JSON_V2.getKey());
             alias = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_INDEX_NAME, String.class);
         }
         else
@@ -260,18 +240,18 @@ public class SearchIndexServiceImpl implements SearchIndexService
         }
 
         // Create the index.
-        indexFunctionsDao.createIndex(searchIndexKey.getSearchIndexName(), documentType, mapping, settings, alias);
+        indexFunctionsDao.createIndex(searchIndexKey.getSearchIndexName(), mapping, settings, alias);
 
         //Fetch data from database and index them
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
             // Asynchronously index all business object definitions.
-            searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+            searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey);
         }
         else
         {
             // Asynchronously index all tags. If we got to this point, it is tags
-            searchIndexHelperService.indexAllTags(searchIndexKey, documentType);
+            searchIndexHelperService.indexAllTags(searchIndexKey);
         }
     }
 
@@ -290,7 +270,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
 
         Long creationDate = settings.getAsLong(IndexMetaData.SETTING_CREATION_DATE, -1L);
-        if (creationDate.longValue() != -1L)
+        if (creationDate != -1L)
         {
             DateTime creationDateTime = new DateTime(creationDate, DateTimeZone.UTC);
             searchIndexStatistics.setIndexCreationDate(HerdDateUtils.getXMLGregorianCalendarValue(creationDateTime.toDate()));

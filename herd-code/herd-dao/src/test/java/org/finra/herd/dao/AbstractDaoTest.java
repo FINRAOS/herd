@@ -515,6 +515,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
+    public static final String INVALID_SEARCH_INDEX_NAME = "InvalidSearchIndexName";
+
     public static final String INVALID_VALUE = "UT_InvalidValue_1_" + RANDOM_SUFFIX;
 
     public static final String INVALID_VALUE_2 = "UT_InvalidValue_2_" + RANDOM_SUFFIX;
@@ -979,9 +981,23 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_ALIAS_TAG = "tag";
 
+    public static final long SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID = 1L;
+
     public static final Boolean SEARCH_INDEX_DEFAULT_ACTIVE_FLAG = false;
 
-    public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
+    public static final String SEARCH_INDEX_DOCUMENT = "UT_SearchIndexDocument_1_" + RANDOM_SUFFIX;
+
+    public static final long SEARCH_INDEX_DOCUMENT_COUNT = 10L;
+
+    public static final String SEARCH_INDEX_DOCUMENT_ID = "UT_SearchIndexDocumentId_1_" + RANDOM_SUFFIX;
+
+    public static final int SEARCH_INDEX_DOCUMENT_ID_INT = 1;
+
+    public static final String SEARCH_INDEX_DOCUMENT_JSON = "UT_SearchIndexDocumentJson_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_ID = "UT_SearchIndexId_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_JSON_STRING = "UT_SearchIndexJsonString_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
@@ -989,7 +1005,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
 
+    public static final String SEARCH_INDEX_SCROLL_ID = "UT_SearchIndexScrollId_1_" + RANDOM_SUFFIX;
+
     public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS_JSON =
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}";
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 

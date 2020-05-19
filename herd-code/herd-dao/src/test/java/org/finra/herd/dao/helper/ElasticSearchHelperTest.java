@@ -43,11 +43,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import io.searchbox.core.SearchResult;
-import io.searchbox.core.search.aggregation.MetricAggregation;
-import io.searchbox.core.search.aggregation.SumAggregation;
-import io.searchbox.core.search.aggregation.TermsAggregation;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -62,6 +57,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.dao.mock.MockBucket;
+import org.finra.herd.dao.mock.MockTerms;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
@@ -78,29 +75,29 @@ import org.finra.herd.model.jpa.TagTypeEntity;
 
 public class ElasticSearchHelperTest extends AbstractDaoTest
 {
-    public static final String INDEX_SEARCH_RESULT_TYPE = "Index Search Result Type 1";
+    private static final String INDEX_SEARCH_RESULT_TYPE = "Index Search Result Type 1";
 
-    public static final String TAG_TYPE_CODE = "Tag Type Code 1";
+    private static final String TAG_TYPE_CODE = "Tag Type Code 1";
 
-    public static final String TAG_TYPE_CODE_2 = "Tag Type Code 2";
+    private static final String TAG_TYPE_CODE_2 = "Tag Type Code 2";
 
-    public static final String TAG_TYPE_CODE_3 = "Tag Type Code 3";
+    private static final String TAG_TYPE_CODE_3 = "Tag Type Code 3";
 
-    public static final String TAG_TYPE_DISPLAY_NAME = "Tag Type DisplayName";
+    private static final String TAG_TYPE_DISPLAY_NAME = "Tag Type DisplayName";
 
-    public static final String TAG_TYPE_DISPLAY_NAME_2 = "Tag Type DisplayName 2";
+    private static final String TAG_TYPE_DISPLAY_NAME_2 = "Tag Type DisplayName 2";
 
-    public static final String TAG_TYPE_DISPLAY_NAME_3 = "Tag Type DisplayName 3";
+    private static final String TAG_TYPE_DISPLAY_NAME_3 = "Tag Type DisplayName 3";
 
-    public static final String TAG_CODE = "Tag Code 1";
+    private static final String TAG_CODE = "Tag Code 1";
 
-    public static final String TAG_CODE_2 = "Tag Code 2";
+    private static final String TAG_CODE_2 = "Tag Code 2";
 
-    public static final int TAG_CODE_COUNT = 1;
+    private static final int TAG_CODE_COUNT = 1;
 
-    public static final String TAG_CODE_DISPLAY_NAME = "Tag Code DisplayName";
+    private static final String TAG_CODE_DISPLAY_NAME = "Tag Code DisplayName";
 
-    public static final String TAG_CODE_DISPLAY_NAME_2 = "Tag Code DisplayName 2";
+    private static final String TAG_CODE_DISPLAY_NAME_2 = "Tag Code DisplayName 2";
 
     @InjectMocks
     private ElasticsearchHelper elasticsearchHelper;
@@ -141,77 +138,50 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     @Test
     public void testGetNestedTagTagIndexSearchResponseDtoSearchResultParameter()
     {
-        SearchResult searchResult = mock(SearchResult.class);
-        MetricAggregation metricAggregation = mock(MetricAggregation.class);
-        SumAggregation tagFacetAggregation = mock(SumAggregation.class);
-        TermsAggregation tagTypeCodesAggregation = mock(TermsAggregation.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        Aggregations aggregations = mock(Aggregations.class);
+        Nested nested = mock(Nested.class);
+        Aggregations nestedAggregations = mock(Aggregations.class);
+        Terms terms = mock(Terms.class);
 
-        when(searchResult.getAggregations()).thenReturn(metricAggregation);
-        when(metricAggregation.getSumAggregation(TAG_FACET_AGGS)).thenReturn(tagFacetAggregation);
-        when(tagFacetAggregation.getTermsAggregation(TAGTYPE_CODE_AGGREGATION)).thenReturn(tagTypeCodesAggregation);
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+        when(aggregations.get(TAG_FACET_AGGS)).thenReturn(nested);
+        when(nested.getAggregations()).thenReturn(nestedAggregations);
+        when(nestedAggregations.get(TAGTYPE_CODE_AGGREGATION)).thenReturn(terms);
+        when(terms.getBuckets()).thenReturn(new ArrayList<>());
 
-        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResult);
-        assertThat("Result is null.", result, is(notNullValue()));
-    }
-
-    @Test
-    public void testGetTagTagIndexSearchResponseDtoSearchResult()
-    {
-        SearchResult searchResult = mock(SearchResult.class);
-        MetricAggregation metricAggregation = mock(MetricAggregation.class);
-        TermsAggregation termsAggregation = mock(TermsAggregation.class);
-
-        when(searchResult.getAggregations()).thenReturn(metricAggregation);
-        when(metricAggregation.getTermsAggregation(TAG_TYPE_FACET_AGGS)).thenReturn(termsAggregation);
-
-        List<TermsAggregation.Entry> buckets = new ArrayList<>();
-        TermsAggregation.Entry entryL1 = mock(TermsAggregation.Entry.class);
-        buckets.add(entryL1);
-        when(termsAggregation.getBuckets()).thenReturn(buckets);
-
-        TermsAggregation termsAggregationL1 = mock(TermsAggregation.class);
-        when(entryL1.getTermsAggregation(TAGTYPE_NAME_AGGREGATION)).thenReturn(termsAggregationL1);
-
-        List<TermsAggregation.Entry> bucketsL1 = new ArrayList<>();
-        TermsAggregation.Entry entryL2 = mock(TermsAggregation.Entry.class);
-        bucketsL1.add(entryL2);
-        when(termsAggregationL1.getBuckets()).thenReturn(bucketsL1);
-
-        TermsAggregation entryTermsAggregation = mock(TermsAggregation.class);
-        when(entryL2.getTermsAggregation(TAG_CODE_AGGREGATION)).thenReturn(entryTermsAggregation);
-
-        List<TermsAggregation.Entry> bucketsL2 = new ArrayList<>();
-        TermsAggregation.Entry entryL3 = mock(TermsAggregation.Entry.class);
-        bucketsL2.add(entryL3);
-        when(entryTermsAggregation.getBuckets()).thenReturn(bucketsL2);
-
-        TermsAggregation entryEntryTermsAggregation = mock(TermsAggregation.class);
-        when(entryL3.getTermsAggregation(TAG_NAME_AGGREGATION)).thenReturn(entryEntryTermsAggregation);
-
-        List<TermsAggregation.Entry> bucketsL3 = new ArrayList<>();
-        TermsAggregation.Entry entryL4 = mock(TermsAggregation.Entry.class);
-        bucketsL3.add(entryL4);
-        when(entryEntryTermsAggregation.getBuckets()).thenReturn(bucketsL3);
-
-        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResult);
+        List<TagTypeIndexSearchResponseDto> result = elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse);
         assertThat("Result is null.", result, is(notNullValue()));
     }
 
     @Test
     public void testGetResultTypeIndexSearchResponseDtoSearchResult()
     {
-        SearchResult searchResult = mock(SearchResult.class);
-        MetricAggregation metricAggregation = mock(MetricAggregation.class);
-        TermsAggregation termsAggregation = mock(TermsAggregation.class);
-        List<TermsAggregation.Entry> buckets = new ArrayList<>();
-        buckets.add(new TermsAggregation("TermAggregation", new JsonObject()).new Entry(new JsonObject(), "key", 1L));
+        // Build the mocks need for the test.
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        Aggregations aggregations = mock(Aggregations.class);
+        MockTerms terms = mock(MockTerms.class);
+        MockBucket bucket = mock(MockBucket.class);
+        List<MockBucket> bucketList = Collections.singletonList(bucket);
 
-        when(searchResult.getAggregations()).thenReturn(metricAggregation);
-        when(metricAggregation.getTermsAggregation(RESULT_TYPE_AGGS)).thenReturn(termsAggregation);
-        when(termsAggregation.getBuckets()).thenReturn(buckets);
+        // Mock the external calls.
+        when(searchResponse.getAggregations()).thenReturn(aggregations);
+        when(aggregations.get(RESULT_TYPE_AGGS)).thenReturn(terms);
+        when(terms.getBuckets()).thenReturn(bucketList);
 
-        List<ResultTypeIndexSearchResponseDto> result = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResult);
+        // Call the method under test.
+        List<ResultTypeIndexSearchResponseDto> result = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse);
+
+        // Validate the test results.
         assertThat("Result is null.", result, is(notNullValue()));
+
+        // Verify the external calls.
+        verify(searchResponse).getAggregations();
+        verify(aggregations).get(RESULT_TYPE_AGGS);
+        verify(terms).getBuckets();
+        verify(bucket, times(2)).getKeyAsString();
+        verify(bucket).getDocCount();
+        verifyNoMoreInteractions(aggregations, bucket, searchResponse, terms);
     }
 
     @Test
@@ -481,23 +451,37 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     @Test
     public void testGetResultTypeIndexSearchResponseDto()
     {
+        // Build the mocks need for the test.
         SearchResponse searchResponse = mock(SearchResponse.class);
-        Terms terms = mock(Terms.class);
         Aggregations aggregations = mock(Aggregations.class);
-        Terms.Bucket bucket = mock(Terms.Bucket.class);
-        List<Terms.Bucket> buckets = Collections.singletonList(bucket);
+        MockTerms terms = mock(MockTerms.class);
+        MockBucket bucket = mock(MockBucket.class);
+        List<MockBucket> buckets = Collections.singletonList(bucket);
 
+        // Mock the calls to external methods.
         when(searchResponse.getAggregations()).thenReturn(aggregations);
         when(aggregations.get(RESULT_TYPE_AGGS)).thenReturn(terms);
         when(terms.getBuckets()).thenReturn(buckets);
         when(bucket.getKeyAsString()).thenReturn(TAG_CODE);
         when(bucket.getDocCount()).thenReturn(TAG_COUNT);
 
+        // Build the objects needed for the test.
         List<ResultTypeIndexSearchResponseDto> expectedList = new ArrayList<>();
         expectedList.add(new ResultTypeIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_CODE));
+
+        // Call the method under test.
         List<ResultTypeIndexSearchResponseDto> resultList = elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse);
 
+        // Validate the results.
         assertEquals(expectedList, resultList);
+
+        // Verify the calls to external methods.
+        verify(searchResponse).getAggregations();
+        verify(aggregations).get(RESULT_TYPE_AGGS);
+        verify(terms).getBuckets();
+        verify(bucket, times(2)).getKeyAsString();
+        verify(bucket).getDocCount();
+        verifyNoMoreInteractions(aggregations, bucket, searchResponse, terms);
     }
 
     @Test
@@ -511,50 +495,83 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
     @Test
     public void testGetTagTagIndexSearchResponseDto()
     {
+        // Build the mocks need for the test.
         SearchResponse searchResponse = mock(SearchResponse.class);
-        Terms terms = mock(Terms.class);
-        Aggregations aggregations = mock(Aggregations.class);
-        Terms.Bucket tagTypeCodeEntry = mock(Terms.Bucket.class);
-        List<Terms.Bucket> tagTypeCodeEntryList = Collections.singletonList(tagTypeCodeEntry);
 
+        MockTerms terms = mock(MockTerms.class);
+        Aggregations aggregations = mock(Aggregations.class);
+        MockBucket tagTypeCodeEntry = mock(MockBucket.class);
+        List<MockBucket> tagTypeCodeEntryList = Collections.singletonList(tagTypeCodeEntry);
+
+        MockTerms tagTypeDisplayNameAggs = mock(MockTerms.class);
+        MockBucket tagTypeDisplayNameEntry = mock(MockBucket.class);
+        List<MockBucket> tagTypeDisplayNameEntryList = Collections.singletonList(tagTypeDisplayNameEntry);
+
+        StringTerms tagCodeAggs = mock(StringTerms.class);
+        StringTerms.Bucket tagCodeEntry = mock(StringTerms.Bucket.class);
+        List<StringTerms.Bucket> tagCodeEntryList = Collections.singletonList(tagCodeEntry);
+
+        MockTerms tagNameAggs = mock(MockTerms.class);
+        MockBucket tagNameEntry = mock(MockBucket.class);
+        List<MockBucket> tagNameEntryList = Collections.singletonList(tagNameEntry);
+
+        // Mock the calls to external methods.
         when(searchResponse.getAggregations()).thenReturn(aggregations);
+
         when(aggregations.get(TAG_TYPE_FACET_AGGS)).thenReturn(terms);
         when(terms.getBuckets()).thenReturn(tagTypeCodeEntryList);
         when(tagTypeCodeEntry.getKeyAsString()).thenReturn(TAG_TYPE_CODE);
         when(tagTypeCodeEntry.getAggregations()).thenReturn(aggregations);
 
-        Terms tagTypeDisplayNameAggs = mock(Terms.class);
-        Terms.Bucket tagTypeDisplayNameEntry = mock(Terms.Bucket.class);
-        List<Terms.Bucket> tagTypeDisplayNameEntryList = Collections.singletonList(tagTypeDisplayNameEntry);
         when(aggregations.get(TAGTYPE_NAME_AGGREGATION)).thenReturn(tagTypeDisplayNameAggs);
-        when(tagTypeDisplayNameEntry.getAggregations()).thenReturn(aggregations);
         when(tagTypeDisplayNameAggs.getBuckets()).thenReturn(tagTypeDisplayNameEntryList);
+        when(tagTypeDisplayNameEntry.getAggregations()).thenReturn(aggregations);
         when(tagTypeDisplayNameEntry.getKeyAsString()).thenReturn(TAG_TYPE_DISPLAY_NAME);
-
-        StringTerms tagCodeAggs = mock(StringTerms.class);
-        StringTerms.Bucket tagCodeEntry = mock(StringTerms.Bucket.class);
-        List<Terms.Bucket> tagCodeEntryList = Collections.singletonList(tagCodeEntry);
 
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);
         when(tagCodeAggs.getBuckets()).thenReturn(tagCodeEntryList);
         when(tagCodeEntry.getAggregations()).thenReturn(aggregations);
         when(tagCodeEntry.getKeyAsString()).thenReturn(TAG_CODE);
         when(tagCodeEntry.getDocCount()).thenReturn((long) TAG_CODE_COUNT);
-        Terms tagNameAggs = mock(Terms.class);
-        Terms.Bucket tagNameEntry = mock(Terms.Bucket.class);
-        List<Terms.Bucket> tagNameEntryList = Collections.singletonList(tagNameEntry);
-        when(tagNameEntry.getAggregations()).thenReturn(aggregations);
+
         when(aggregations.get(TAG_NAME_AGGREGATION)).thenReturn(tagNameAggs);
         when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
         when(tagNameEntry.getKeyAsString()).thenReturn(TAG_DISPLAY_NAME);
 
+        // Call the method under test.
         List<TagTypeIndexSearchResponseDto> resultList = elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse);
+
+        // Validate the results.
         List<TagTypeIndexSearchResponseDto> expectedList = new ArrayList<>();
         List<TagIndexSearchResponseDto> expectedTagList = new ArrayList<>();
         expectedTagList.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_CODE_COUNT, TAG_DISPLAY_NAME));
         expectedList.add(new TagTypeIndexSearchResponseDto(TAG_TYPE_CODE, expectedTagList, TAG_TYPE_DISPLAY_NAME));
-
         assertEquals(expectedList, resultList);
+
+        // Verify the calls to external methods.
+        verify(searchResponse).getAggregations();
+        verify(aggregations).get(TAG_TYPE_FACET_AGGS);
+        verify(terms).getBuckets();
+        verify(tagTypeCodeEntry).getKeyAsString();
+        verify(tagTypeCodeEntry).getAggregations();
+
+        verify(aggregations).get(TAGTYPE_NAME_AGGREGATION);
+        verify(tagTypeDisplayNameAggs).getBuckets();
+        verify(tagTypeDisplayNameEntry).getAggregations();
+        verify(tagTypeDisplayNameEntry).getKeyAsString();
+
+        verify(aggregations).get(TAG_CODE_AGGREGATION);
+        verify(tagCodeAggs).getBuckets();
+        verify(tagCodeEntry).getAggregations();
+        verify(tagCodeEntry).getKeyAsString();
+        verify(tagCodeEntry).getDocCount();
+
+        verify(aggregations).get(TAG_NAME_AGGREGATION);
+        verify(tagNameAggs).getBuckets();
+        verify(tagNameEntry).getKeyAsString();
+
+        verifyNoMoreInteractions(aggregations, searchResponse, tagCodeAggs, tagCodeEntry, tagNameAggs, tagNameEntry, tagTypeDisplayNameAggs,
+            tagTypeDisplayNameEntry, tagTypeCodeEntry, terms);
     }
 
     @Test

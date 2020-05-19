@@ -189,10 +189,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Override
     public boolean indexSizeCheckValidationBusinessObjectDefinitions(String indexName)
     {
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
         // Simple count validation, index size should equal entity list size
-        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName, documentType);
+        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName);
         final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions();
         if (businessObjectDefinitionDatabaseTableSize != indexSize)
         {
@@ -232,17 +230,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Async
     public Future<Void> indexValidateAllBusinessObjectDefinitions(String indexName)
     {
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
         // Get a list of all business object definitions
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
         // Remove any index documents that are not in the database
-        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(indexName, documentType, businessObjectDefinitionEntityList);
+        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(indexName, businessObjectDefinitionEntityList);
 
         // Validate all Business Object Definitions
-        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
+        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, businessObjectDefinitionEntityList,
             indexFunctionsDao::validateDocumentIndex);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
@@ -254,10 +250,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * Method to remove business object definitions in the index that don't exist in the database
      *
      * @param indexName the name of the index
-     * @param documentType the document type
      * @param businessObjectDefinitionEntityList list of business object definitions in the database
      */
-    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(final String indexName, final String documentType,
+    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(final String indexName,
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
     {
         // Get a list of business object definition ids from the list of business object definition entities in the database
@@ -266,13 +261,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             .forEach(businessObjectDefinitionEntity -> databaseBusinessObjectDefinitionIdList.add(businessObjectDefinitionEntity.getId().toString()));
 
         // Get a list of business object definition ids in the search index
-        List<String> indexDocumentBusinessObjectDefinitionIdList = indexFunctionsDao.getIdsInIndex(indexName, documentType);
+        List<String> indexDocumentBusinessObjectDefinitionIdList = indexFunctionsDao.getIdsInIndex(indexName);
 
         // Remove the database ids from the index ids
         indexDocumentBusinessObjectDefinitionIdList.removeAll(databaseBusinessObjectDefinitionIdList);
 
         // If there are any ids left in the index list they need to be removed
-        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, documentType, id));
+        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, id));
     }
 
     /**
@@ -284,8 +279,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private boolean indexValidateBusinessObjectDefinitionsList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList, String indexName)
     {
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
         Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
@@ -297,7 +290,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Convert the business object definition entity to a JSON string
             final String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
-            return indexFunctionsDao.isValidDocumentIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+            return indexFunctionsDao.isValidDocumentIndex(indexName, businessObjectDefinitionEntity.getId().toString(), jsonString);
         };
 
         boolean isValid = true;
@@ -927,7 +920,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     protected void updateSearchIndexDocumentBusinessObjectDefinitionImpl(SearchIndexUpdateDto searchIndexUpdateDto)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         String modificationType = searchIndexUpdateDto.getModificationType();
         List<Long> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
@@ -950,17 +942,17 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             {
                 case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                     // Create a search index document
-                    indexFunctionsDao.createIndexDocuments(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                    indexFunctionsDao.createIndexDocuments(indexName, convertBusinessObjectDefinitionEntityListToJSONStringMap(
                         businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
                     break;
                 case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                     // Update a search index document
-                    indexFunctionsDao.updateIndexDocuments(indexName, documentType, convertBusinessObjectDefinitionEntityListToJSONStringMap(
+                    indexFunctionsDao.updateIndexDocuments(indexName, convertBusinessObjectDefinitionEntityListToJSONStringMap(
                         businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids.subList(fromIndex, toIndex))));
                     break;
                 case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                     // Delete a search index document
-                    indexFunctionsDao.deleteIndexDocuments(indexName, documentType, ids.subList(fromIndex, toIndex));
+                    indexFunctionsDao.deleteIndexDocuments(indexName, ids.subList(fromIndex, toIndex));
                     break;
                 default:
                     LOGGER.warn("Unknown modification type received.");

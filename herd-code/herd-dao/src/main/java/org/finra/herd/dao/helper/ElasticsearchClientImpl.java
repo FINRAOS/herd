@@ -15,12 +15,11 @@
 */
 package org.finra.herd.dao.helper;
 
-import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
-import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.action.ActionType;
 import org.elasticsearch.client.ElasticsearchClient;
 import org.elasticsearch.threadpool.ThreadPool;
 
@@ -30,28 +29,18 @@ import org.elasticsearch.threadpool.ThreadPool;
  */
 public class ElasticsearchClientImpl implements ElasticsearchClient
 {
+
     @Override
-    public <RequestT extends ActionRequest, ResponseT extends ActionResponse,
-        RequestBuilderT extends ActionRequestBuilder<RequestT, ResponseT, RequestBuilderT>> ActionFuture<ResponseT> execute(
-        Action<RequestT, ResponseT, RequestBuilderT> action, RequestT request)
+    public <Request extends ActionRequest, Response extends ActionResponse> ActionFuture<Response> execute(ActionType<Response> actionType, Request request)
     {
         return null;
     }
 
     @Override
-    public <RequestT extends ActionRequest, ResponseT extends ActionResponse,
-        RequestBuilderT extends ActionRequestBuilder<RequestT, ResponseT, RequestBuilderT>> void execute(
-        Action<RequestT, ResponseT, RequestBuilderT> action, RequestT request, ActionListener<ResponseT> actionListener)
+    public <Request extends ActionRequest, Response extends ActionResponse> void execute(ActionType<Response> actionType, Request request,
+        ActionListener<Response> actionListener)
     {
-      // stub method
-    }
 
-    @Override
-    public <RequestT extends ActionRequest, ResponseT extends ActionResponse,
-        RequestBuilderT extends ActionRequestBuilder<RequestT, ResponseT, RequestBuilderT>> RequestBuilderT prepareExecute(
-        Action<RequestT, ResponseT, RequestBuilderT> action)
-    {
-        return null;
     }
 
     @Override
