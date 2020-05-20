@@ -912,6 +912,29 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
+   * Get partition values, which include all subPartitions
+   * @param businessObjectDataAvailableStatus  business object data available status
+   * @param partitions partition key list
+   * @return  all partitions
+   */
+  private def getPartitionValues(businessObjectDataAvailableStatus: BusinessObjectDataStatus, partitions: StructType): Array[String] = {
+    val partitionValues = new java.util.ArrayList[String]()
+    partitionValues.add(businessObjectDataAvailableStatus.getPartitionValue)
+
+    if (businessObjectDataAvailableStatus.getSubPartitionValues != null) {
+      partitionValues.addAll(businessObjectDataAvailableStatus.getSubPartitionValues)
+    }
+
+    val missingPartitionsCount = partitions.size - partitionValues.size
+    var x = 0
+    while (x < missingPartitionsCount) {
+      partitionValues.add("")
+      x = x + 1
+    }
+    partitionValues.toArray(new Array[String](0))
+  }
+
+  /**
    * Returns data availability
    *
    * @param namespace    DM namespace
@@ -947,19 +970,10 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val availData = (
       for (businessObjectDataAvailableStatus <- businessObjectDataAvailableStatuses.asScala)
         yield
-        if (businessObjectDataAvailableStatus.getSubPartitionValues != null) {
-           Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
-            businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
-            businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
-            businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue)++
-            businessObjectDataAvailableStatus.getSubPartitionValues.toArray())
-        }
-        else {
           Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
             businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
             businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
-            businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue))
-        }
+            businessObjectDataAvailableStatus.getReason) ++ getPartitionValues(businessObjectDataAvailableStatus, parts))
     ).toList
 
     // make list an RDD
