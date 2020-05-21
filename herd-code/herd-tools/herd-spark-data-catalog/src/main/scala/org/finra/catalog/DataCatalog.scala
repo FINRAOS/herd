@@ -482,7 +482,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     {
       var prefix = "s3a://"
       // replace s3a with storage path prefix
-      if (storagePathPrefix != null) {
+      if (storagePathPrefix != null && storagePathPrefix.trim.nonEmpty) {
         prefix = StringUtils.appendIfMissing(StringUtils.prependIfMissing(storagePathPrefix, "/"), "/")
       }
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
@@ -1143,6 +1143,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     */
   def getDataFrame(availableData: DataFrame, storagePathPrefix: String): DataFrame = {
 
+    require(storagePathPrefix != null && storagePathPrefix.trim.nonEmpty,
+            "storagePathPrefix is a required parameter, eg. mnt")
+
     val formatVersionCol = "FormatVersion"
     val dataVersionCol = "DataVersion"
     val reasonCol = "Reason"
@@ -1161,10 +1164,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       Nil
 
     // check that schema is as expected
-    if (baseCols.intersect(availableData.schema.fieldNames).length != baseCols.length) {
-      logger.error(s"Unexpected schema, does not contain $baseCols")
-      return null
-    }
+    require (baseCols.intersect(availableData.schema.fieldNames).length == baseCols.length,
+              "Unexpected schema, does not contain $baseCols")
 
     // other cols are the partition names
     val partitionCols = availableData.schema.fieldNames.diff(baseCols)
