@@ -482,10 +482,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     {
       var prefix = "s3a://"
       // replace s3a with storage path prefix
-      if (storagePathPrefix != null)
-      {
+      if (storagePathPrefix != null) {
         prefix = StringUtils.appendIfMissing(StringUtils.prependIfMissing(storagePathPrefix, "/"), "/")
-
       }
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
