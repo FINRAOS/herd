@@ -1927,4 +1927,49 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 downloadBusinessObjectDataStorageFileSingleInitiationResponse.getPreSignedUrl()),
             downloadBusinessObjectDataStorageFileSingleInitiationResponse);
     }
+
+    @Test
+    public void testInitiateDownloadSingleBusinessObjectDataStorageFileWithoutPrefix()
+    {
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN)));
+
+        // Create relative database entities.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, DIRECTORY_PATH);
+
+        // Create storage file entity with only a file name and no directory path prefix.
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, ROW_COUNT_1000);
+
+        // Create a business object data storage file key.
+        BusinessObjectDataStorageFileKey businessObjectDataStorageFileKey =
+            new BusinessObjectDataStorageFileKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, DIRECTORY_PATH + FILE_NAME);
+
+        // Create a download business object data storage file single initiation request.
+        DownloadBusinessObjectDataStorageFileSingleInitiationRequest downloadBusinessObjectDataStorageFileSingleInitiationRequest =
+            new DownloadBusinessObjectDataStorageFileSingleInitiationRequest(businessObjectDataStorageFileKey);
+
+        // Initiate download of a business object data storage file.
+        DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
+            uploadDownloadService.initiateDownloadSingleBusinessObjectDataStorageFile(downloadBusinessObjectDataStorageFileSingleInitiationRequest);
+
+        // Validate the response.
+        assertEquals("Expected S3 bucket name not equal to actual S3 bucket name.", S3_BUCKET_NAME,
+            downloadBusinessObjectDataStorageFileSingleInitiationResponse.getAwsS3BucketName());
+        assertNotNull("Aws access key is null.", downloadBusinessObjectDataStorageFileSingleInitiationResponse.getAwsAccessKey());
+        assertNotNull("Aws secret key is null.", downloadBusinessObjectDataStorageFileSingleInitiationResponse.getAwsSecretKey());
+        assertNotNull("Aws session expiration time is null.", downloadBusinessObjectDataStorageFileSingleInitiationResponse.getAwsSessionExpirationTime());
+        assertNotNull("Pre signed url is null.", downloadBusinessObjectDataStorageFileSingleInitiationResponse.getPreSignedUrl());
+        assertEquals("Expected response not equal to actual response.",
+            new DownloadBusinessObjectDataStorageFileSingleInitiationResponse(businessObjectDataStorageFileKey, S3_BUCKET_NAME,
+                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
+                MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN,
+                downloadBusinessObjectDataStorageFileSingleInitiationResponse.getAwsSessionExpirationTime(),
+                downloadBusinessObjectDataStorageFileSingleInitiationResponse.getPreSignedUrl()),
+            downloadBusinessObjectDataStorageFileSingleInitiationResponse);
+    }
 }

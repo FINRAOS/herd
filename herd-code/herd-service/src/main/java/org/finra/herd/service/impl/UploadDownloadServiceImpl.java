@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
 
@@ -982,13 +983,27 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         BusinessObjectFormat businessObjectFormat =
             businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
 
+        String filePath = storageFileEntity.getPath();
+
+        if (!StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
+        {
+            if (StringUtils.equals(filePath, StorageFileEntity.S3_EMPTY_PARTITION))
+            {
+                filePath = storageUnitEntity.getDirectoryPath() + filePath;
+            }
+            else
+            {
+                filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+            }
+        }
+
         // Create a business object data storage file key for the download business object data storage file single initiation response.
         BusinessObjectDataStorageFileKey businessObjectDataStorageFileKeyForResponse =
             new BusinessObjectDataStorageFileKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
                 businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
                 businessObjectFormat.getBusinessObjectFormatVersion(), businessObjectDataEntity.getPartitionValue(),
                 businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity), businessObjectDataEntity.getVersion(),
-                storageUnitEntity.getStorageName(), storageFileEntity.getPath());
+                storageUnitEntity.getStorageName(), filePath);
 
         // Create the download business object data storage file single initiation response.
         DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =
