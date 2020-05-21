@@ -1143,7 +1143,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     * @return Spark DataFrame of data
     *
     */
-  def getDataFrameWithMountPoint(availableData: DataFrame, storagePathPrefix: String = null): DataFrame = {
+  def getDataFrame(availableData: DataFrame, storagePathPrefix: String): DataFrame = {
 
     val formatVersionCol = "FormatVersion"
     val dataVersionCol = "DataVersion"
