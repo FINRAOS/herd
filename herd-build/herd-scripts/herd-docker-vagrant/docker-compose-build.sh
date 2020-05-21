@@ -71,10 +71,17 @@ DELETE FROM cnfgn WHERE cnfgn_key_nm = 'herd.notification.sqs.incoming.queue.nam
 INSERT INTO cnfgn VALUES ('herd.notification.sqs.incoming.queue.name','${INCOMING_SQSQ}', NULL);
 DELETE FROM cnfgn WHERE cnfgn_key_nm = 'search.index.update.sqs.queue.name';
 INSERT INTO cnfgn VALUES ('search.index.update.sqs.queue.name','${IDXUPTD_SQSQ}', NULL);
+DELETE FROM cnfgn WHERE cnfgn_key_nm = 'security.enabled.spel.expression';
+INSERT INTO cnfgn VALUES ('security.enabled.spel.expression','false', NULL);
 INSERT INTO cnfgn VALUES ('elasticsearch.best.fields.query.boost','100', NULL);
 INSERT INTO cnfgn VALUES ('elasticsearch.phrase.prefix.query.boost','1', NULL);
 INSERT INTO cnfgn VALUES ('elasticsearch.phrase.query.boost','1000', NULL);
 INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.hostname','herd-elasticsearch', NULL);
+INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.scheme','http', NULL);
+INSERT INTO cnfgn VALUES ('elasticsearch.rest.client.port','9200', NULL);
+INSERT INTO cnfgn VALUES ('elasticsearch.domain.rest.client.hostname','herd-elasticsearch', NULL);
+INSERT INTO cnfgn VALUES ('elasticsearch.domain.rest.client.port','9200', NULL);
+INSERT INTO cnfgn VALUES ('elasticsearch.domain.rest.client.scheme','http', NULL);
 
 EOF
 fi ;
