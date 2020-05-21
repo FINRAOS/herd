@@ -580,7 +580,6 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     businessObjectDataPartitionsRequest.setBusinessObjectFormatUsage(formatUsage)
     businessObjectDataPartitionsRequest.setBusinessObjectFormatFileType(formatFileType)
     businessObjectDataPartitionsRequest.setBusinessObjectFormatVersion(formatVersion)
-    businessObjectDataPartitionsRequest.setAllowMissingData(true)
 
     val partitionValueFilter = new PartitionValueFilter()
     partitionValueFilter.setPartitionKey(partitionKey)
