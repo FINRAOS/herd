@@ -37,7 +37,9 @@ services:
       - herd-pgsql
       - herd-elasticsearch
     environment:
-      - HERD_UI_HOST=${HERD_UI_HOST}
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_KEY
+      - HERD_UI_HOST=localhost:5443
     links:
       - "herd-pgsql"
       - "herd-elasticsearch"
