@@ -193,13 +193,48 @@ cat > $TC_HOME/conf/server.xml << EOF2
 
 EOF2
 
+cat > $TC_HOME/conf/tomcat-users.xml << EOF3
+<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+<!--
+  NOTE:  By default, no user is included in the "manager-gui" role required
+  to operate the "/manager/html" web application.  If you wish to use this app,
+  you must define such a user - the username and password are arbitrary. It is
+  strongly recommended that you do NOT use one of the users in the commented out
+  section below since they are intended for use with the examples web
+  application.
+-->
+<!--
+  NOTE:  The sample user and role entries below are intended for use with the
+  examples web application. They are wrapped in a comment and thus are ignored
+  when reading this file. If you wish to configure these users for use with the
+  examples web application, do not forget to remove the <!.. ..> that surrounds
+  them. You will also need to set the passwords to something appropriate.
+-->
+<!--
+  <role rolename="tomcat"/>
+  <role rolename="role1"/>
+  <user username="tomcat" password="<must-be-changed>" roles="tomcat"/>
+  <user username="both" password="<must-be-changed>" roles="tomcat,role1"/>
+  <user username="role1" password="<must-be-changed>" roles="role1"/>
+-->
+  <role rolename="test1"/>
+  <user username="test1" password="test123" roles="test1"/>
+</tomcat-users>
+EOF3
+
+## NOTE: CORS settings can be finicky, so if this needs to get hacked up for making
+## the docker container run elsewhere other than localhost
+
 /bin/sed -i '/Built In Filter Definitions/a \
 <filter>\
 <filter-name>CorsFilter</filter-name>\
 <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>\
 <init-param>\
 <param-name>cors.allowed.origins</param-name>\
-<param-value>*</param-value>\
+<param-value>http://localhost:5443</param-value>\
 </init-param>\
 <init-param>\
 <param-name>cors.allowed.headers</param-name>\
@@ -208,6 +243,10 @@ EOF2
 <init-param>\
 <param-name>cors.allowed.methods</param-name>\
 <param-value>GET,POST,PUT,DELETE,HEAD,OPTIONS</param-value>\
+</init-param>\
+<init-param>\
+<param-name>cors.support.credentials</param-name>\
+<param-value>true</param-value>\
 </init-param>\
 </filter>\
 <filter-mapping>\
