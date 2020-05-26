@@ -30,6 +30,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -474,20 +475,26 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param path        full path to read, can be parent directory
    * @return
    */
-  private[catalog] def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String): DataFrame = {
+  private[catalog] def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String,
+                                       storagePathPrefix: String = null): DataFrame = {
 
     val df =
     {
+      var prefix = "s3a://"
+      // replace s3a with storage path prefix
+      if (storagePathPrefix != null && storagePathPrefix.trim.nonEmpty) {
+        prefix = StringUtils.appendIfMissing(StringUtils.prependIfMissing(storagePathPrefix, "/"), "/")
+      }
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
       if (readSchema != null && !readFormat.equals("orc")) {
-        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path.replaceAll("s3n://", "s3a://"))
+        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path.replaceAll("s3n://", prefix))
       }
 
       else {
         // This is here as a sort of worst case fallback, but this should never get executed. If the file is ORC, we will read schema from file,
         // and if it's bz, txt, or csv, use parseSchema.
-        spark.sqlContext.read.format(readFormat).options(readOptions).load(path.replaceAll("s3n://", "s3a://"))
+        spark.sqlContext.read.format(readFormat).options(readOptions).load(path.replaceAll("s3n://", prefix))
       }
     }
     df
@@ -912,6 +919,29 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
+   * Get partition values, which include all subPartitions
+   * @param businessObjectDataAvailableStatus  business object data available status
+   * @param partitions partition key list
+   * @return  all partitions
+   */
+  private def getPartitionValues(businessObjectDataAvailableStatus: BusinessObjectDataStatus, partitions: StructType): Array[String] = {
+    val partitionValues = new java.util.ArrayList[String]()
+    partitionValues.add(businessObjectDataAvailableStatus.getPartitionValue)
+
+    if (businessObjectDataAvailableStatus.getSubPartitionValues != null) {
+      partitionValues.addAll(businessObjectDataAvailableStatus.getSubPartitionValues)
+    }
+
+    val missingPartitionsCount = partitions.size - partitionValues.size
+    var x = 0
+    while (x < missingPartitionsCount) {
+      partitionValues.add("")
+      x = x + 1
+    }
+    partitionValues.toArray(new Array[String](0))
+  }
+
+  /**
    * Returns data availability
    *
    * @param namespace    DM namespace
@@ -946,11 +976,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val availData = (
       for (businessObjectDataAvailableStatus <- businessObjectDataAvailableStatuses.asScala)
-      yield Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
-      businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
-      businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
-      businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue,
-      businessObjectDataAvailableStatus.getSubPartitionValues))
+        yield
+          Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
+            businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
+            businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
+            businessObjectDataAvailableStatus.getReason) ++ getPartitionValues(businessObjectDataAvailableStatus, parts))
     ).toList
 
     // make list an RDD
@@ -1007,7 +1037,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   // noinspection SimplifyBoolean
   def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer = null,
-                   dataVersion: Integer = null): DataFrame = {
+                   dataVersion: Integer = null, storagePathPrefix: String = null): DataFrame = {
 
     // get the fileReading format. We treat ORC differently from the others..
     val sparkReader = fileFormat.toUpperCase match {
@@ -1058,7 +1088,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // Multiple directories MAY mean we have multiple partitions
     for (aPath <- s3Paths) {
-      var aDF = createDataFrame(sparkReader, readOptions, readSchema, aPath)
+      var aDF = createDataFrame(sparkReader, readOptions, readSchema, aPath, storagePathPrefix)
 
       // Convert dataframe to right schema
       if (csvBug) {
@@ -1094,6 +1124,82 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     retDF
   }
+
+   /**
+    * Get dataframes using the given dataframe for schema/data version and partitions along with storagePathPrefix
+    *
+    * storagePathPrefix and input DataFrame is expected to be returned from the getDataAvailability call
+    *
+    * returned dataframe created will be a unioned schema of all the DataFrames created
+    *
+    * Expected Columns:
+    * FormatVersion: schema version
+    * DataVersion: version of the data
+    * [partitionName]: other columns are the partitions for the object
+    *
+    * @param availableData Dataframe from getDataAvailability call, which data to use
+    * @return Spark DataFrame of data
+    *
+    */
+  def getDataFrame(availableData: DataFrame, storagePathPrefix: String): DataFrame = {
+
+    require(storagePathPrefix != null && storagePathPrefix.trim.nonEmpty,
+            "storagePathPrefix is a required parameter, eg. mnt")
+
+    val formatVersionCol = "FormatVersion"
+    val dataVersionCol = "DataVersion"
+    val reasonCol = "Reason"
+    val namespaceCol = "Namespace"
+    val objectNameCol = "ObjectName"
+    val usageCol = "Usage"
+    val fileFormatCol = "FileFormat"
+
+    val baseCols = formatVersionCol ::
+      dataVersionCol ::
+      reasonCol ::
+      namespaceCol ::
+      objectNameCol ::
+      usageCol ::
+      fileFormatCol ::
+      Nil
+
+    // check that schema is as expected
+    require (baseCols.intersect(availableData.schema.fieldNames).length == baseCols.length,
+              "Unexpected schema, does not contain $baseCols")
+
+    // other cols are the partition names
+    val partitionCols = availableData.schema.fieldNames.diff(baseCols)
+
+    // the dataframe to create and return
+    var retDF: DataFrame = null
+
+    for (aRow <- availableData.filter(col(reasonCol) === "VALID").collect()) {
+      // construct the partitions collection
+      val parts = partitionCols.map { aPart =>
+        Partition(aPart, aRow.get(aRow.fieldIndex(aPart)).toString)
+      }.toList
+
+      // get the schema and data versions
+      val schemaVersion = aRow.getAs[Int](formatVersionCol)
+      val dataVersion = aRow.getAs[Int](dataVersionCol)
+      val namespace = aRow.getAs[String](namespaceCol)
+      val objectName = aRow.getAs[String](objectNameCol)
+      val usage = aRow.getAs[String](usageCol)
+      val fileFormat = aRow.getAs[String](fileFormatCol)
+
+      // create the dataframe
+      val aDF = getDataFrame(namespace, objectName, usage, fileFormat, parts, schemaVersion, dataVersion, storagePathPrefix)
+      if (retDF == null) {
+        retDF = aDF
+      } else {
+        // union the dataframes, using the union of their schemas
+        retDF = unionUnionSchema(retDF, aDF)
+      }
+    }
+
+    retDF
+  }
+
 
   /**
    * Get dataframes using the given dataframe for schema/data version and partitions
