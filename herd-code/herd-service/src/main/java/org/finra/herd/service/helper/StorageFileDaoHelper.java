@@ -106,18 +106,21 @@ public class StorageFileDaoHelper
     {
         StorageFileEntity storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
 
-        if (storageFileEntity == null)
+        if (storageFileEntity == null
+            && StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath())
+            && StringUtils.startsWith(filePath, StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/")))
         {
             // Attempt to retrieve the storage file with the file-only prefix.
-            storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, StringUtils.substringAfterLast(filePath, "/"));
+            storageFileEntity = storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity,
+                StringUtils.remove(filePath, StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/")));
+        }
 
-            if (storageFileEntity == null)
-            {
-                throw new ObjectNotFoundException(String
-                    .format("Storage file \"%s\" doesn't exist in \"%s\" storage. Business object data: {%s}", filePath,
-                        storageUnitEntity.getStorage().getName(),
-                        businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-            }
+        if (storageFileEntity == null)
+        {
+            throw new ObjectNotFoundException(String
+                .format("Storage file \"%s\" doesn't exist in \"%s\" storage. Business object data: {%s}", filePath,
+                    storageUnitEntity.getStorage().getName(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         return storageFileEntity;
