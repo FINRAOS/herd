@@ -26,6 +26,7 @@ import static org.finra.herd.dao.AbstractDaoTest.PARTITION_VALUE;
 import static org.finra.herd.dao.AbstractDaoTest.STORAGE_NAME;
 import static org.finra.herd.dao.AbstractDaoTest.SUBPARTITION_VALUES;
 import static org.finra.herd.dao.AbstractDaoTest.TEST_S3_KEY_PREFIX;
+import static org.finra.herd.service.AbstractServiceTest.DIRECTORY_PATH;
 import static org.finra.herd.service.AbstractServiceTest.EXPECTED_STORAGE_FILES_COUNT;
 import static org.finra.herd.service.AbstractServiceTest.FILE_NAME;
 import static org.finra.herd.service.AbstractServiceTest.FILE_NAME_2;
@@ -193,7 +194,88 @@ public class StorageFileDaoHelperTest
     }
 
     @Test
+    public void testGetStorageFileEntityByStorageUnitEntityAndFilePathWithFileOnlyPrefix()
+    {
+        // Create a new business object data key
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage unit entity.
+        StorageEntity storageEntity = new StorageEntity();
+        storageEntity.setName(STORAGE_NAME);
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setDirectoryPath(TEST_S3_KEY_PREFIX);
+
+        // Create a file path.
+        String filePath = TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE;
+
+        // Create a storage file entity
+        StorageFileEntity storageFileEntity = new StorageFileEntity();
+        storageFileEntity.setPath(TEST_S3_KEY_PREFIX);
+        storageFileEntity.setRowCount(ROW_COUNT);
+        storageFileEntity.setFileSizeBytes(FILE_SIZE);
+
+        // Mock the external calls.
+        when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath)).thenReturn(null);
+        when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE)).thenReturn(storageFileEntity);
+
+        // Call the method under test.
+        StorageFileEntity result = storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, filePath, businessObjectDataKey);
+
+        // Validate the results.
+        assertThat("Result not equal to storage file entity.", result, is(storageFileEntity));
+
+        // Verify the external calls.
+        verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
+        verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, LOCAL_FILE);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
     public void testGetStorageFileEntityByStorageUnitEntityAndFilePathWithNullStorageFileEntity()
+    {
+        // Create a new business object data key
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage unit entity.
+        StorageEntity storageEntity = new StorageEntity();
+        storageEntity.setName(STORAGE_NAME);
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStorage(storageEntity);
+        storageUnitEntity.setDirectoryPath(DIRECTORY_PATH);
+
+        // Create a file path.
+        String filePath = TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE;
+
+        // Mock the external calls.
+        when(storageFileDao.getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath)).thenReturn(null);
+
+        try
+        {
+            // Call the method under test.
+            storageFileDaoHelper.getStorageFileEntity(storageUnitEntity, filePath, businessObjectDataKey);
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            // Validate the exception message.
+            assertThat("Exception message not equal to expected exception message.", objectNotFoundException.getMessage(), is(String
+                .format("Storage file \"%s\" doesn't exist in \"%s\" storage. Business object data: {%s}", filePath, storageUnitEntity.getStorage().getName(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey))));
+        }
+
+        // Verify the external calls.
+        verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
+        verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testGetStorageFileEntityByStorageUnitEntityAndFilePathWithNullStorageFileEntityWithBlankDirectoryPath()
     {
         // Create a new business object data key
         BusinessObjectDataKey businessObjectDataKey =
