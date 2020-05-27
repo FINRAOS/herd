@@ -222,42 +222,6 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     }
 
     @Override
-    public List<String> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<StorageFileEntity> criteria = builder.createQuery(StorageFileEntity.class);
-
-        // The criteria root is the storage files.
-        Root<StorageFileEntity> storageFileEntity = criteria.from(StorageFileEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<StorageFileEntity, StorageUnitEntity> storageUnitEntity = storageFileEntity.join(StorageFileEntity_.storageUnit);
-        Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate filePathRestriction = builder.like(storageFileEntity.get(StorageFileEntity_.path), String.format("%s%%", filePathPrefix));
-        Predicate storageNameRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
-
-        // Order the results by file path.
-        Order orderByFilePath = builder.asc(storageFileEntity.get(StorageFileEntity_.path));
-
-        criteria.select(storageFileEntity).where(builder.and(filePathRestriction, storageNameRestriction)).orderBy(orderByFilePath);
-
-        // Retrieve the storage files.
-        List<StorageFileEntity> storageFileEntities = entityManager.createQuery(criteria).getResultList();
-
-        // Build the result list.
-        List<String> storageFilePaths = new ArrayList<>();
-        for (StorageFileEntity storageFile : storageFileEntities)
-        {
-            storageFilePaths.add(storageFile.getPath());
-        }
-
-        return storageFilePaths;
-    }
-
-    @Override
     public void saveStorageFiles(final List<StorageFileEntity> storageFileEntities)
     {
         // Get the current user id.
