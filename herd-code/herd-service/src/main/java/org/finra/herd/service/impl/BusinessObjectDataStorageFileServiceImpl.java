@@ -216,9 +216,19 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             BusinessObjectFormat businessObjectFormat =
                 businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
 
-            // Check business object data for explicitly registered sub-partitions in the specified storage.
-            storageUnitDaoHelper.checkBusinessObjectDataForExplicitlyRegisteredSubPartitionsInStorage(storageUnitEntity.getStorage(),
-                storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey, directoryPath);
+            // Check business object data for any explicitly registered sub-partitions in the specified storage.
+            StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDaoHelper
+                .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                    storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey);
+
+            // Throw an exception if explicitly registered sub-partition is found.
+            if (explicitlyRegisteredSubPartitionStorageUnit != null)
+            {
+                throw new AlreadyExistsException(String.format(
+                    "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                    directoryPath, storageEntity.getName(),
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
+            }
         }
 
         // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.

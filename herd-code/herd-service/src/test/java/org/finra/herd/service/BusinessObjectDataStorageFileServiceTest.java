@@ -743,7 +743,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Business object data matching \"%s\" S3 key prefix is already registered in \"%s\" storage. Business object data: {%s}",
+            assertEquals(String.format(
+                "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
                 higherLevelS3KeyPrefix, StorageEntity.MANAGED_STORAGE,
                 businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }

@@ -951,8 +951,8 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(storageHelper).getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE, storageEntity, false, true);
         verify(businessObjectFormatHelper).createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
         verify(storageUnitDaoHelper)
-            .checkBusinessObjectDataForExplicitlyRegisteredSubPartitionsInStorage(storageEntity, businessObjectFormatEntity, businessObjectFormat,
-                BUSINESS_OBJECT_DATA_KEY, testS3KeyPrefix);
+            .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectFormat,
+                BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper).getS3BucketAccessParams(storageEntity);
         verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);

@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageUnitDao;
-import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -57,19 +56,20 @@ public class StorageUnitDaoHelper
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
 
     /**
-     * Checks for business object data not to have any explicitly registered sub-partitions explicitly registered in the specified storage. Method throws an
-     * exception if at least one such sub-partition is found.
+     * Tries to find at least one sub-partition for the specified business object data that is explicitly registered in the same storage.
      *
      * @param storageEntity the storage entity
      * @param businessObjectFormatEntity the business object format entity
      * @param businessObjectFormat the business object format
      * @param businessObjectDataKey the business object data key
-     * @param s3KeyPrefix the S3 key prefix for the business object data in the specified storage
+     *
+     * @return the storage unit entity for the explicitly registered sub-partition - if it is found, otherwise null
      */
-    public void checkBusinessObjectDataForExplicitlyRegisteredSubPartitionsInStorage(StorageEntity storageEntity,
-        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectFormat businessObjectFormat, BusinessObjectDataKey businessObjectDataKey,
-        String s3KeyPrefix)
+    public StorageUnitEntity findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(StorageEntity storageEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectFormat businessObjectFormat, BusinessObjectDataKey businessObjectDataKey)
     {
+        StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = null;
+
         // There is no need to check if business object format schema or number of sub-partitions specified
         // for this business object data do not allow any additional sub-partitions to be explicitly registered.
         // This check is an optimization added here to avoid unnecessary call to the database.
@@ -77,18 +77,12 @@ public class StorageUnitDaoHelper
             Math.min(CollectionUtils.size(businessObjectFormat.getSchema().getPartitions()), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1) >
                 CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) + 1)
         {
-            StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDao
+            explicitlyRegisteredSubPartitionStorageUnit = storageUnitDao
                 .getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, businessObjectDataKey.getPartitionValue(),
                     businessObjectDataKey.getSubPartitionValues(), businessObjectDataKey.getBusinessObjectDataVersion());
-
-            if (explicitlyRegisteredSubPartitionStorageUnit != null)
-            {
-                throw new AlreadyExistsException(String
-                    .format("Business object data matching \"%s\" S3 key prefix is already registered in \"%s\" storage. Business object data: {%s}",
-                        s3KeyPrefix, storageEntity.getName(),
-                        businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
-            }
         }
+
+        return explicitlyRegisteredSubPartitionStorageUnit;
     }
 
     /**
