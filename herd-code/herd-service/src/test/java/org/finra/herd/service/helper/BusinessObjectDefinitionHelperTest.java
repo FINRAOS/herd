@@ -103,8 +103,8 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
 
         // Execute a function for all business object definition entities.
         businessObjectDefinitionHelper
-            .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, businessObjectDefinitionEntities,
-                (indexName, documentType, id, json) ->
+            .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, businessObjectDefinitionEntities,
+                (indexName, id, json) ->
                 {
                 });
 
@@ -137,8 +137,8 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
 
         // Execute a function for all business object definition entities.
         businessObjectDefinitionHelper
-            .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, businessObjectDefinitionEntities,
-                (indexName, documentType, id, json) ->
+            .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, businessObjectDefinitionEntities,
+                (indexName, id, json) ->
                 {
                 });
 

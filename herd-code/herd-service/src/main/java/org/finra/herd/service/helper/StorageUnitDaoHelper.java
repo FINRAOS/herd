@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,8 +23,11 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -51,6 +54,36 @@ public class StorageUnitDaoHelper
 
     @Autowired
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
+
+    /**
+     * Tries to find at least one sub-partition for the specified business object data that is explicitly registered in the same storage.
+     *
+     * @param storageEntity the storage entity
+     * @param businessObjectFormatEntity the business object format entity
+     * @param businessObjectFormat the business object format
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the storage unit entity for the explicitly registered sub-partition - if it is found, otherwise null
+     */
+    public StorageUnitEntity findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(StorageEntity storageEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectFormat businessObjectFormat, BusinessObjectDataKey businessObjectDataKey)
+    {
+        StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = null;
+
+        // There is no need to check if business object format schema or number of sub-partitions specified
+        // for this business object data do not allow any additional sub-partitions to be explicitly registered.
+        // This check is an optimization added here to avoid unnecessary call to the database.
+        if (businessObjectFormat.getSchema() != null &&
+            Math.min(CollectionUtils.size(businessObjectFormat.getSchema().getPartitions()), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1) >
+                CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) + 1)
+        {
+            explicitlyRegisteredSubPartitionStorageUnit = storageUnitDao
+                .getExplicitlyRegisteredSubPartition(storageEntity, businessObjectFormatEntity, businessObjectDataKey.getPartitionValue(),
+                    businessObjectDataKey.getSubPartitionValues(), businessObjectDataKey.getBusinessObjectDataVersion());
+        }
+
+        return explicitlyRegisteredSubPartitionStorageUnit;
+    }
 
     /**
      * Retrieves a storage unit entity for the business object data in the specified storage and make sure it exists.

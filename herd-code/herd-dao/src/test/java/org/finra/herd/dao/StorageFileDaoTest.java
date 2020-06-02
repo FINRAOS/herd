@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import static org.hamcrest.core.Is.is;
@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,44 +150,6 @@ public class StorageFileDaoTest extends AbstractDaoTest
 
         // Validate that we can get correct count of files from the LOCAL_FILES list that match "folder" file path prefix.
         assertEquals(Long.valueOf(3L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE, "folder"));
-    }
-
-    @Test
-    public void testGetStorageFilesByStorageAndFilePathPrefix()
-    {
-        // Create relative database entities.
-        createDatabaseEntitiesForStorageFilesTesting();
-
-        List<String> storageFilePaths;
-
-        // Validate that we can retrieve each file.
-        for (String file : LOCAL_FILES)
-        {
-            storageFilePaths = storageFileDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, file);
-            assertEquals(1, storageFilePaths.size());
-            assertEquals(file, storageFilePaths.get(0));
-        }
-
-        // Validate that we can retrieve the test file using upper and lower storage name.
-        assertEquals(LOCAL_FILES.get(0),
-            storageFileDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE.toUpperCase(), LOCAL_FILES.get(0)).get(0));
-        assertEquals(LOCAL_FILES.get(0),
-            storageFileDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE.toLowerCase(), LOCAL_FILES.get(0)).get(0));
-
-        // Try to get file entities by specifying non-existing storage.
-        assertEquals(0, storageFileDao.getStorageFilesByStorageAndFilePathPrefix("I_DO_NOT_EXIST", LOCAL_FILES.get(0)).size());
-
-        // Try to get file entities by specifying non-existing file path prefix.
-        assertEquals(0, storageFileDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST").size());
-
-        // Validate that we can retrieve the last 3 files in the expected order from the LOCAL_FILES list that match "folder" file path prefix.
-        storageFilePaths = storageFileDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, "folder");
-        List<String> expectedFiles = Arrays.asList(LOCAL_FILES.get(5), LOCAL_FILES.get(4), LOCAL_FILES.get(3));
-        assertEquals(expectedFiles.size(), storageFilePaths.size());
-        for (int i = 0; i < expectedFiles.size(); i++)
-        {
-            assertEquals(expectedFiles.get(i), storageFilePaths.get(i));
-        }
     }
 
     @Test

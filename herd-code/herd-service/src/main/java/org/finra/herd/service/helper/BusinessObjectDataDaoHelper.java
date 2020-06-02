@@ -790,24 +790,18 @@ public class BusinessObjectDataDaoHelper
             // storage by some other business object data that start with the expected S3 key prefix.
             if (validatePathPrefix && isS3StoragePlatform)
             {
-                // There is no need to check if business object format schema or number of sub-partitions specified
-                // for this business object data do not allow any additional sub-partitions to be explicitly registered.
-                if (businessObjectFormat.getSchema() != null &&
-                    Math.min(CollectionUtils.size(businessObjectFormat.getSchema().getPartitions()), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1) >
-                        CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) + 1)
-                {
-                    StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDao
-                        .getExplicitlyRegisteredSubPartition(storageUnitEntity.getStorage(),
-                            storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey.getPartitionValue(),
-                            businessObjectDataKey.getSubPartitionValues(), businessObjectDataKey.getBusinessObjectDataVersion());
+                // Check business object data for any explicitly registered sub-partitions in the specified storage.
+                StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDaoHelper
+                    .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                        storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey);
 
-                    if (explicitlyRegisteredSubPartitionStorageUnit != null)
-                    {
-                        throw new AlreadyExistsException(String
-                            .format("Business object data matching \"%s\" S3 key prefix is already registered in \"%s\" storage. Business object data: {%s}",
-                                expectedS3KeyPrefix, storageEntity.getName(), businessObjectDataHelper
-                                    .businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
-                    }
+                // Throw an exception if explicitly registered sub-partition is found.
+                if (explicitlyRegisteredSubPartitionStorageUnit != null)
+                {
+                    throw new AlreadyExistsException(String
+                        .format("Business object data matching \"%s\" S3 key prefix is already registered in \"%s\" storage. Business object data: {%s}",
+                            expectedS3KeyPrefix, storageEntity.getName(), businessObjectDataHelper
+                                .businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
                 }
             }
 

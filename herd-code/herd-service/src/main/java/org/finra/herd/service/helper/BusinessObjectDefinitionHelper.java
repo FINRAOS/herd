@@ -30,7 +30,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
-import org.finra.herd.service.functional.QuadConsumer;
+import org.finra.herd.service.functional.TriConsumer;
 
 /**
  * A helper class for BusinessObjectDefinition related code.
@@ -63,12 +63,11 @@ public class BusinessObjectDefinitionHelper
      * Executes a function for business object definition entities.
      *
      * @param indexName the name of the index
-     * @param documentType the document type
      * @param businessObjectDefinitionEntities the list of business object definitions entities
      * @param function the function to apply to all business object definitions
      */
-    public void executeFunctionForBusinessObjectDefinitionEntities(final String indexName, final String documentType,
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities, final QuadConsumer<String, String, String, String> function)
+    public void executeFunctionForBusinessObjectDefinitionEntities(final String indexName,
+        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities, final TriConsumer<String, String, String> function)
     {
         // For each business object definition apply the passed in function
         businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
@@ -89,12 +88,12 @@ public class BusinessObjectDefinitionHelper
                 // Call the function that will process each business object definition entity against the index
                 try
                 {
-                    function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+                    function.accept(indexName, businessObjectDefinitionEntity.getId().toString(), jsonString);
                 }
                 catch (Exception ex)
                 {
-                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}, {}", ex, indexName, documentType,
-                        businessObjectDefinitionEntity.getId().toString(), jsonString);
+                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}", ex, indexName, businessObjectDefinitionEntity.getId().toString(),
+                        jsonString);
                 }
             }
         });

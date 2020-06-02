@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
@@ -29,13 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataStorageFilesDto;
@@ -50,6 +50,7 @@ import org.finra.herd.service.BusinessObjectDataStorageFileService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
@@ -70,6 +71,9 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
@@ -77,9 +81,6 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
 
     @Autowired
     private S3Service s3Service;
-
-    @Autowired
-    private StorageFileDao storageFileDao;
 
     @Autowired
     private StorageFileDaoHelper storageFileDaoHelper;
@@ -110,8 +111,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
     }
 
     /**
-     * The implementation of create business object data storage files.
-     * Splits the functionality into read only transaction and a JDBC batch save files transaction.
+     * The implementation of create business object data storage files. Splits the functionality into read only transaction and a JDBC batch save files
+     * transaction.
      *
      * @param businessObjectDataStorageFilesCreateRequest the business object data storage files create request
      *
@@ -138,27 +139,34 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
     protected BusinessObjectDataStorageFilesDto createBusinessObjectDataStorageFilesDto(
         BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest)
     {
-        // validate request
+        // Validate request.
         validateBusinessObjectDataStorageFilesCreateRequest(businessObjectDataStorageFilesCreateRequest);
 
-        // retrieve and validate that the business object data exists
+        // Retrieve and validate that the business object data exists.
         BusinessObjectDataEntity businessObjectDataEntity =
             businessObjectDataDaoHelper.getBusinessObjectDataEntity(getBusinessObjectDataKey(businessObjectDataStorageFilesCreateRequest));
+
+        // Get business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Get text representation of the business object data key.
+        String businessObjectDataKeyAsString = businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey);
 
         // Validate that business object data is in one of the pre-registered states.
         Assert.isTrue(BooleanUtils.isTrue(businessObjectDataEntity.getStatus().getPreRegistrationStatus()), String
             .format("Business object data status must be one of the pre-registration statuses. Business object data status {%s}, business object data {%s}",
-                businessObjectDataEntity.getStatus().getCode(), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                businessObjectDataEntity.getStatus().getCode(), businessObjectDataKeyAsString));
 
-        // retrieve and validate that the storage unit exists
+        // Retrieve and validate that the storage unit exists.
         StorageUnitEntity storageUnitEntity =
             storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataStorageFilesCreateRequest.getStorageName(), businessObjectDataEntity);
 
         // Validate the storage unit has an acceptable status for adding new files.
         Assert.isTrue(StorageUnitStatusEntity.ENABLED.equals(storageUnitEntity.getStatus().getCode()), String
             .format("Storage unit must be in the ENABLED status. Storage unit status {%s}, business object data {%s}", storageUnitEntity.getStatus().getCode(),
-                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                businessObjectDataKeyAsString));
 
+        // Get storage from the storage unit.
         StorageEntity storageEntity = storageUnitEntity.getStorage();
 
         // Get the S3 validation flags.
@@ -179,20 +187,76 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
                 String.format("Storage \"%s\" has file size validation enabled without file existence validation.", storageEntity.getName()));
         }
 
-        // Process the add storage files request based on the auto-discovery of storage files being enabled or not.
+        // Get directory path. Please note that for auto-discovery of storage file storage unit directory path must be non blank.
+        String directoryPath = null;
+        boolean usingExpectedS3keyPrefix = false;
+        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()))
+        {
+            // Use the storage directory path from the storage unit.
+            directoryPath = storageUnitEntity.getDirectoryPath();
+        }
+        else if (BooleanUtils.isTrue(businessObjectDataStorageFilesCreateRequest.isDiscoverStorageFiles()))
+        {
+            // Throw exception since storage unit directory path is required for auto-discovery of storage files.
+            throw new IllegalArgumentException("Business object data has no storage directory path which is required for auto-discovery of storage files.");
+        }
+        else if (validatePathPrefix || validateFileExistence)
+        {
+            // Use expected S3 key prefix value as the storage unit directory path.
+            directoryPath = s3KeyPrefixHelper
+                .buildS3KeyPrefix(storageUnitEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
+            usingExpectedS3keyPrefix = true;
+        }
+
+        // If we know the directory path, ensure that there are no storage files already registered in this
+        // storage by some other business object data that start with the same S3 key prefix.
+        if (StringUtils.isNotBlank(directoryPath))
+        {
+            // Get business object format from the entity.
+            BusinessObjectFormat businessObjectFormat =
+                businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
+
+            // Check business object data for any explicitly registered sub-partitions in the specified storage.
+            StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDaoHelper
+                .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                    storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey);
+
+            // Throw an exception if explicitly registered sub-partition is found.
+            if (explicitlyRegisteredSubPartitionStorageUnit != null)
+            {
+                throw new AlreadyExistsException(String.format(
+                    "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                    directoryPath, storageEntity.getName(),
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
+            }
+        }
+
+        // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.
+        Map<String, StorageFileEntity> storageFileEntities = storageFileHelper.getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
+
+        // Add a trailing slash to the storage directory path if it doesn't already have it.
+        String directoryPathWithTrailingSlash = null;
+        if (StringUtils.isNotBlank(directoryPath))
+        {
+            directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
+        }
+
+        // If auto-discovery is specified retrieve a list S3 keys matching the directory path with the trailing slash.
         List<StorageFile> storageFiles;
         if (BooleanUtils.isTrue(businessObjectDataStorageFilesCreateRequest.isDiscoverStorageFiles()))
         {
             // Discover new storage files for this storage unit.
-            storageFiles = discoverStorageFiles(storageUnitEntity);
+            storageFiles = discoverStorageFiles(storageUnitEntity, storageFileEntities, directoryPathWithTrailingSlash);
         }
+        // Otherwise, use the list of storage files specified in the request.
         else
         {
             // Get the list of storage files from the request.
             storageFiles = businessObjectDataStorageFilesCreateRequest.getStorageFiles();
 
             // Validate storage files.
-            validateStorageFiles(storageFiles, storageUnitEntity, validatePathPrefix, validateFileExistence, validateFileSize);
+            validateStorageFiles(storageFiles, storageUnitEntity, storageFileEntities, directoryPathWithTrailingSlash, usingExpectedS3keyPrefix,
+                validateFileExistence, validateFileSize, businessObjectDataKeyAsString);
         }
 
         return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity);
@@ -205,8 +269,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      *
      * @return BusinessObjectDataStorageFilesCreateResponse
      */
-    private BusinessObjectDataStorageFilesCreateResponse addBusinessObjectDataStorageFiles(
-        BusinessObjectDataStorageFilesDto businessObjectDataStorageFilesDto)
+    private BusinessObjectDataStorageFilesCreateResponse addBusinessObjectDataStorageFiles(BusinessObjectDataStorageFilesDto businessObjectDataStorageFilesDto)
     {
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataStorageFilesDto.getBusinessObjectDataEntity();
         StorageUnitEntity storageUnitEntity = businessObjectDataStorageFilesDto.getStorageUnitEntity();
@@ -223,35 +286,14 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      * Discovers new storage files in S3 for the specified storage unit.
      *
      * @param storageUnitEntity the storage unit entity
+     * @param storageFileEntities the storage files already registered for this storage unit loaded in a map for easy access
+     * @param directoryPathWithTrailingSlash the S3 key prefix that has a trailing slash character
      *
      * @return the list of discovered storage files
      */
-    private List<StorageFile> discoverStorageFiles(StorageUnitEntity storageUnitEntity)
+    private List<StorageFile> discoverStorageFiles(StorageUnitEntity storageUnitEntity, Map<String, StorageFileEntity> storageFileEntities,
+        String directoryPathWithTrailingSlash)
     {
-        // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.
-        Map<String, StorageFileEntity> storageFileEntities = storageFileHelper.getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
-
-        // Validate and get storage directory path from the storage unit.
-        Assert.hasText(storageUnitEntity.getDirectoryPath(),
-            "Business object data has no storage directory path which is required for auto-discovery of storage files.");
-        String directoryPath = storageUnitEntity.getDirectoryPath();
-
-        // Add a trailing slash to the storage directory path if it doesn't already have it.
-        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
-
-        // Retrieve all already registered storage files from the storage that start with the directory path.
-        List<String> registeredStorageFilePaths =
-            storageFileDao.getStorageFilesByStorageAndFilePathPrefix(storageUnitEntity.getStorage().getName(), directoryPathWithTrailingSlash);
-
-        // Sanity check already registered storage files.
-        if (storageFileEntities.size() != registeredStorageFilePaths.size())
-        {
-            throw new IllegalArgumentException(String.format(
-                "Number of storage files (%d) already registered for the business object data in \"%s\" storage is not equal to " +
-                    "the number of registered storage files (%d) matching \"%s\" S3 key prefix in the same storage.", storageFileEntities.size(),
-                storageUnitEntity.getStorage().getName(), registeredStorageFilePaths.size(), directoryPathWithTrailingSlash));
-        }
-
         // Get S3 bucket access parameters and set the key prefix to the directory path with a trailing slash.
         // Please note that since we got here, the directory path can not be empty.
         S3FileTransferRequestParamsDto params = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
@@ -284,96 +326,42 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      *
      * @param storageFiles the list of storage files
      * @param storageUnitEntity the storage unit entity
-     * @param validatePathPrefix the validate path prefix flag
+     * @param storageFileEntities the storage files already registered for this storage unit loaded in a map for easy access
+     * @param directoryPathWithTrailingSlash the S3 key prefix that has a trailing slash character
+     * @param usingExpectedS3keyPrefix specifies if expected S3 key prefix is being used since storage unit directory path is not set
      * @param validateFileExistence the validate file existence flag
      * @param validateFileSize the validate file size flag
      */
-    private void validateStorageFiles(List<StorageFile> storageFiles, StorageUnitEntity storageUnitEntity, boolean validatePathPrefix,
-        boolean validateFileExistence, boolean validateFileSize)
+    private void validateStorageFiles(List<StorageFile> storageFiles, StorageUnitEntity storageUnitEntity, Map<String, StorageFileEntity> storageFileEntities,
+        String directoryPathWithTrailingSlash, boolean usingExpectedS3keyPrefix, boolean validateFileExistence, boolean validateFileSize,
+        String businessObjectDataKeyAsString)
     {
-        // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.
-        Map<String, StorageFileEntity> storageFileEntities = storageFileHelper.getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
-
         // Perform validation of storage files listed in the request per storage directory path and/or validation flags.
-        String directoryPath = null;
-        String directoryPathWithTrailingSlash = null;
-        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()))
+        if (StringUtils.isNotBlank(directoryPathWithTrailingSlash))
         {
-            // Use the storage directory path from the storage unit.
-            directoryPath = storageUnitEntity.getDirectoryPath();
-
-            // Add a trailing slash to the storage directory path if it doesn't already have it.
-            directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
-
             // If a storage directory path exists, then validate that all files being added are contained within that directory.
             for (StorageFile storageFile : storageFiles)
             {
                 Assert.isTrue(storageFile.getFilePath().startsWith(directoryPathWithTrailingSlash), String
-                    .format("Storage file path \"%s\" does not match the storage directory path \"%s\".", storageFile.getFilePath(),
-                        directoryPathWithTrailingSlash));
-            }
-        }
-        else if (validatePathPrefix || validateFileExistence)
-        {
-            // Use the expected S3 key prefix value as the storage directory path.
-            directoryPath = s3KeyPrefixHelper
-                .buildS3KeyPrefix(storageUnitEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(),
-                    businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()));
-
-            // Add a trailing slash to the expected S3 key prefix if it doesn't already have it.
-            directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
-
-            // Validate that all files are contained within the expected S3 key prefix.
-            for (StorageFile storageFile : storageFiles)
-            {
-                Assert.isTrue(storageFile.getFilePath().startsWith(directoryPathWithTrailingSlash), String
-                    .format("Specified storage file path \"%s\" does not match the expected S3 key prefix \"%s\".", storageFile.getFilePath(),
-                        directoryPathWithTrailingSlash));
+                    .format("Specified storage file path \"%s\" does not match the %s \"%s\".", storageFile.getFilePath(),
+                        (usingExpectedS3keyPrefix ? "expected S3 key prefix" : "storage unit directory path"), directoryPathWithTrailingSlash));
             }
         }
 
-        // Validate that files in the request does not already exist in the database.
-        if (StringUtils.isNotBlank(directoryPath))
+        // Get a list of request storage file paths.
+        List<String> requestStorageFilePaths = storageFileHelper.getFilePathsFromStorageFiles(storageFiles);
+
+        // Get storage files already registered with the storage unit.
+        List<String> registeredStorageFilePaths = new ArrayList<>(storageFileEntities.keySet());
+
+        // Check if request contains any of the already registered files.
+        registeredStorageFilePaths.retainAll(requestStorageFilePaths);
+        if (!CollectionUtils.isEmpty(registeredStorageFilePaths))
         {
-            // Get a list of request storage file paths.
-            List<String> requestStorageFilePaths = storageFileHelper.getFilePathsFromStorageFiles(storageFiles);
-
-            // Retrieve all already registered storage files from the storage that start with the directory path.
-            List<String> registeredStorageFilePaths =
-                storageFileDao.getStorageFilesByStorageAndFilePathPrefix(storageUnitEntity.getStorage().getName(), directoryPathWithTrailingSlash);
-
-            // Check if request contains any of the already registered files.
-            registeredStorageFilePaths.retainAll(requestStorageFilePaths);
-            if (!CollectionUtils.isEmpty(registeredStorageFilePaths))
-            {
-                // Retrieve the storage file entity for the first "already registered" storage file.
-                // Since the discovered storage file path exists in the database, we should not get a null back.
-                StorageFileEntity storageFileEntity =
-                    storageFileDao.getStorageFileByStorageNameAndFilePath(storageUnitEntity.getStorage().getName(), registeredStorageFilePaths.get(0));
-
-                // Throw an exception reporting the information on the "already registered" storage file.
-                throw new AlreadyExistsException(String
-                    .format("S3 file \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", registeredStorageFilePaths.get(0),
-                        storageUnitEntity.getStorage().getName(),
-                        businessObjectDataHelper.businessObjectDataEntityAltKeyToString(storageFileEntity.getStorageUnit().getBusinessObjectData())));
-            }
-        }
-        else
-        {
-            // Since directory path is not available, we need to validate each storage file specified in the request individually.
-            for (StorageFile storageFile : storageFiles)
-            {
-                // Ensure that the file is not already registered in this storage by some other business object data.
-                StorageFileEntity storageFileEntity =
-                    storageFileDao.getStorageFileByStorageNameAndFilePath(storageUnitEntity.getStorage().getName(), storageFile.getFilePath());
-                if (storageFileEntity != null)
-                {
-                    throw new AlreadyExistsException(String
-                        .format("S3 file \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", storageFile.getFilePath(),
-                            storageUnitEntity.getStorage().getName(),
-                            businessObjectDataHelper.businessObjectDataEntityAltKeyToString(storageFileEntity.getStorageUnit().getBusinessObjectData())));
-                }
-            }
+            // Throw an exception reporting the information on the "already registered" storage file.
+            throw new AlreadyExistsException(String
+                .format("S3 file \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", registeredStorageFilePaths.get(0),
+                    storageUnitEntity.getStorage().getName(), businessObjectDataKeyAsString));
         }
 
         // Validate file existence.

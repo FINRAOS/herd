@@ -63,13 +63,13 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     public void testValidateSearchIndexSizeValidationFails()
     {
         // Mock the external calls. Please note that we mock index size not to be equal to the business object definition entity list size.
-        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(1L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME)).thenReturn(1L);
 
         // Index all business object definitions defined in the system.
-        boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, 2);
+        boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, 2);
 
         // Verify the external calls.
-        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME);
         verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, indexFunctionsDao, searchIndexDaoHelper);
 
         // Validate the results.
@@ -80,14 +80,14 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     public void testValidateSearchIndexSizeValidationPasses()
     {
         // Mock the external calls. Please note that we mock index size to be equal to the business object definition entity list size.
-        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(2L);
+        when(indexFunctionsDao.getNumberOfTypesInIndex(SEARCH_INDEX_NAME)).thenReturn(2L);
 
 
         // Index all business object definitions defined in the system.
-        boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, 2);
+        boolean response = searchIndexHelperServiceImpl.validateSearchIndexSize(SEARCH_INDEX_NAME, 2);
 
         // Verify the external calls.
-        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE);
+        verify(indexFunctionsDao).getNumberOfTypesInIndex(SEARCH_INDEX_NAME);
         verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, indexFunctionsDao, searchIndexDaoHelper);
 
         // Validate the results.

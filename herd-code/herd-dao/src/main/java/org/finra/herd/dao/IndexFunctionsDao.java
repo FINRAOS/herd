@@ -25,120 +25,127 @@ import org.elasticsearch.index.shard.DocsStats;
 public interface IndexFunctionsDao extends BaseJpaDao
 {
     /**
-     * The index function will take as arguments indexName, documentType, id, json and add the document to the index.
-     * @param indexName  index name
-     * @param documentType document type
+     * The index function will take as arguments indexName, id, json and add the document to the index.
+     *
+     * @param indexName index name
      * @param id id
      * @param json json
      */
-    public void createIndexDocument(String indexName, String documentType, String id, String json);
+    void createIndexDocument(String indexName, String id, String json);
 
     /**
-     * The number of types in index function will take as arguments the index name and the document type and will return the number of documents in the index.
+     * The number of types in index function will take as arguments the index name and will return the number of documents in the index.
+     *
      * @param indexName index name
-     * @param documentType document type
+     *
      * @return number of types in index
      */
-    public long getNumberOfTypesInIndex(String indexName, String documentType);
+    long getNumberOfTypesInIndex(String indexName);
 
     /**
-     * The isValid function will take as arguments indexName, documentType, id, json and validate the document against the index and return true if the document
+     * The isValid function will take as arguments indexName, id, json and validate the document against the index and return true if the document
      * is valid and false otherwise.
+     *
      * @param indexName index name
-     * @param documentType doucment type
      * @param id  id
      * @param json json
+     *
      * @return is valid
      */
-    public boolean isValidDocumentIndex(String indexName, String documentType, String id, String json);
+    boolean isValidDocumentIndex(String indexName, String id, String json);
 
     /**
-     * The create index documents function will take as arguments the index name, document type, and a map of new documents. The document map key is the
+     * The create index documents function will take as arguments the index name, and a map of new documents. The document map key is the
      * document id, and the value is the document as a JSON string.
+     *
      * @param indexName index name
-     * @param documentType document type
      * @param documentMap document map
      */
-    public void createIndexDocuments(String indexName, String documentType, Map<String, String> documentMap);
+    void createIndexDocuments(String indexName, Map<String, String> documentMap);
 
     /**
      * The index exists predicate will take as an argument the index name and will return tree if the index exists and false otherwise.
+     *
      * @param indexName index name
+     *
      * @return is index exist
      */
-    public boolean isIndexExists(String indexName);
+    boolean isIndexExists(String indexName);
 
     /**
      * The delete index function will take as an argument the index name and will delete the index.
+     *
      * @param indexName indexName
      */
-
-    public void deleteIndex(String indexName);
+    void deleteIndex(String indexName);
 
     /**
-     * The validate function will take as arguments indexName, documentType, id, json and validate the document against the index.
+     * The validate function will take as arguments indexName, id, json and validate the document against the index.
+     *
      * @param indexName index name
-     * @param documentType document type
      * @param id id
      * @param json json
      */
-    public void validateDocumentIndex(String indexName, String documentType, String id, String json);
-
+    void validateDocumentIndex(String indexName, String id, String json);
 
      /**
-     * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
-     * @param indexName index name
-     * @param documentType document type
-     * @param mapping mapping
-     * @param settings setting
+      * The create index function will take as arguments the index name, and mapping and will create a new index.
+      * @param indexName index name
+      * @param mapping mapping
+      * @param settings setting
       * @param alias alias
      */
-     public void createIndex(String indexName, String documentType, String mapping, String settings, String alias);
+     void createIndex(String indexName, String mapping, String settings, String alias);
 
     /**
      * The delete document by id function will delete a document in the index by the document id.
+     *
      * @param indexName index name
-     * @param documentType document type
      * @param id id
      */
-    public void deleteDocumentById(String indexName, String documentType, String id);
+    void deleteDocumentById(String indexName, String id);
 
     /**
      * The delete index documents function will delete a list of document in the index by a list of document ids.
-     * @param indexName
-     * @param documentType
-     * @param ids
+     *
+     * @param indexName the name of the index where the document exists.
+     * @param ids the ids of the documents to delete.
      */
-    public void deleteIndexDocuments(String indexName, String documentType, List<Long> ids);
+    void deleteIndexDocuments(String indexName, List<Long> ids);
 
     /**
-     * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.
+     * The ids in index function will take as arguments the index name and will return a list of all the ids in the index.
+     *
      * @param indexName index name
-     * @param documentType document type
+     *
      * @return list of ids
      */
-    public List<String> getIdsInIndex(String indexName, String documentType);
+    List<String> getIdsInIndex(String indexName);
 
     /**
-     * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the
+     * The update index documents function will take as arguments the index name and a map of documents to update. The document map key is the
      * document id, and the value is the document as a JSON string.
+     *
      * @param indexName index name
-     * @param documentType document type
      * @param documentMap document map
      */
-    public void updateIndexDocuments(String indexName, String documentType, Map<String, String> documentMap);
+    void updateIndexDocuments(String indexName, Map<String, String> documentMap);
 
     /**
-     * get the index settings
+     * Get the index settings
+     *
      * @param indexName index name
+     *
      * @return index settings
      */
-    public Settings getIndexSettings(String indexName);
+    Settings getIndexSettings(String indexName);
 
     /**
-     * get docs stats
+     * Get index statistics
+     *
      * @param indexName index name
-     * @return docs stats
+     *
+     * @return index stats
      */
-    public DocsStats getIndexStats(String indexName);
+    DocsStats getIndexStats(String indexName);
 }
