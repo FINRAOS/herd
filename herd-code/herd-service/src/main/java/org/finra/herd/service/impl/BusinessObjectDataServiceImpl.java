@@ -360,7 +360,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                                 if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
                                     !StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
                                 {
-                                    filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+                                    if (StringUtils.equals(filePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                                    {
+                                        filePath = storageUnitEntity.getDirectoryPath() + filePath;
+                                    }
+                                    else
+                                    {
+                                        filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+                                    }
                                 }
 
                                 files.add(new File(filePath));
