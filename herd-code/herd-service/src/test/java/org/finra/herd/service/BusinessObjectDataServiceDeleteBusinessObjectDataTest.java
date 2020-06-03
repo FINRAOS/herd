@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -705,7 +705,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataS3ManagedBucket() throws Exception
     {
         // Create test database entities.
-        createTestDatabaseEntities(StorageEntity.MANAGED_STORAGE, StoragePlatformEntity.S3, testS3KeyPrefix, LOCAL_FILES);
+        createTestDatabaseEntities(StorageEntity.MANAGED_STORAGE, StoragePlatformEntity.S3, testS3KeyPrefix, LOCAL_FILES, false);
 
         // Create and upload to the test S3 storage a set of files.
         businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES);
@@ -740,7 +740,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataS3NonManagedBucketDeletingDirectory() throws Exception
     {
         // Create test database entities.
-        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, new ArrayList<String>());
+        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, new ArrayList<String>(), false);
 
         // Create and upload to the test S3 storage a set of files.
         businessObjectDataServiceTestHelper.prepareTestS3Files(TEST_S3_KEY_PREFIX, localTempPath, LOCAL_FILES);
@@ -774,7 +774,43 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataS3NonManagedBucketDeletingListOfFiles() throws Exception
     {
         // Create test database entities.
-        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, LOCAL_FILES);
+        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, LOCAL_FILES, false);
+
+        // Create and upload to the S3 storage a subset of test files.
+        // Please note that we are only uploading a subset of test files to make sure we do not fail the deletion because of missing (non-existing) S3 files.
+        businessObjectDataServiceTestHelper.prepareTestS3Files(TEST_S3_KEY_PREFIX, localTempPath, LOCAL_FILES_SUBSET);
+
+        // Validate that this business object data exists.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
+        assertNotNull(businessObjectDataEntity);
+
+        // Delete the business object data with delete files flag set to true.
+        BusinessObjectData deletedBusinessObjectData = businessObjectDataService.deleteBusinessObjectData(
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
+
+        // Validate the returned object.
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+
+        // Validate that data files got deleted from S3 - please note that
+        S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
+        params.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
+        assertTrue(s3Dao.listDirectory(params).isEmpty());
+
+        // Ensure that this business object data is no longer there.
+        assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataS3NonManagedBucketDeletingListOfFilesWithFileOnlyPrefix() throws Exception
+    {
+        // Create test database entities.
+        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, LOCAL_FILES, true);
 
         // Create and upload to the S3 storage a subset of test files.
         // Please note that we are only uploading a subset of test files to make sure we do not fail the deletion because of missing (non-existing) S3 files.
@@ -810,7 +846,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataNonS3StoragePlatform() throws Exception
     {
         // Create test database entities including the relative non-S3 storage entities.
-        createTestDatabaseEntities(STORAGE_NAME, STORAGE_PLATFORM_CODE, testS3KeyPrefix, LOCAL_FILES);
+        createTestDatabaseEntities(STORAGE_NAME, STORAGE_PLATFORM_CODE, testS3KeyPrefix, LOCAL_FILES, false);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -840,8 +876,10 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
      * @param storagePlatform the storage platform
      * @param directoryPath the directory path for the storage unit entity
      * @param localFiles the list of local files to create relative storage file entities for
+     * @param isLocalFilePathOnly a boolean flag parameter for using the local file path only
      */
-    private void createTestDatabaseEntities(String storageName, String storagePlatform, String directoryPath, List<String> localFiles) throws Exception
+    private void createTestDatabaseEntities(String storageName, String storagePlatform, String directoryPath, List<String> localFiles,
+        boolean isLocalFilePathOnly) throws Exception
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
@@ -864,8 +902,16 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         // Create relative storage file entities.
         for (String fileLocalPath : localFiles)
         {
-            storageFileDaoTestHelper
-                .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", directoryPath, fileLocalPath), FILE_SIZE_1_KB, ROW_COUNT_1000);
+            if (isLocalFilePathOnly)
+            {
+                storageFileDaoTestHelper
+                    .createStorageFileEntity(storageUnitEntity, fileLocalPath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+            }
+            else
+            {
+                storageFileDaoTestHelper
+                    .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", directoryPath, fileLocalPath), FILE_SIZE_1_KB, ROW_COUNT_1000);
+            }
         }
 
         herdDao.saveAndRefresh(businessObjectDataEntity);
