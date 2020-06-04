@@ -405,7 +405,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     val baseRelation = new HadoopFsRelation(
       fileIndex,
       partitionSchema.getOrElse(new StructType()),
-      herdSchema,
+      herdSchema.asNullable,
       None,
       fileFormat,
       options
