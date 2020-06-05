@@ -49,6 +49,14 @@ public interface S3Service
     void createDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
+     * Creates an S3 object of 0 byte size that represents an empty directory.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 object to be
+     * created.
+     */
+    void createEmptyDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+
+    /**
      * Deletes keys/key versions from specified bucket with matching prefix.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to be

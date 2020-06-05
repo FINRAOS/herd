@@ -54,6 +54,12 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
+    public void createEmptyDirectory(S3FileTransferRequestParamsDto params)
+    {
+        s3Dao.createEmptyDirectory(params);
+    }
+
+    @Override
     public void createDirectory(S3FileTransferRequestParamsDto params)
     {
         s3Dao.createDirectory(params);
