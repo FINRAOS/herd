@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -41,6 +42,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -86,7 +88,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     }
 
     @Test
-    public void testDeleteBusinessObjectData() throws Exception
+    public void testDeleteBusinessObjectData()
     {
         // Create an initial version of a business object data.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
@@ -261,7 +263,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     }
 
     @Test
-    public void testDeleteBusinessObjectDataMissingOptionalParameters() throws Exception
+    public void testDeleteBusinessObjectDataMissingOptionalParameters()
     {
         // Test if we can delete a business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
         for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
@@ -292,7 +294,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 case 1:
                     deletedBusinessObjectData = businessObjectDataService.deleteBusinessObjectData(
                         new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            Arrays.asList(subPartitionValues.get(0)), DATA_VERSION), false);
+                            Lists.newArrayList(subPartitionValues.get(0)), DATA_VERSION), false);
                     break;
                 case 2:
                     deletedBusinessObjectData = businessObjectDataService.deleteBusinessObjectData(
@@ -605,13 +607,17 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
 
             businessObjectDataChildEntity = businessObjectDataDao
-                .getBusinessObjectDataByAltKey(new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
-                    DATA_VERSION));
+                .getBusinessObjectDataByAltKey(
+                    new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                        SUBPARTITION_VALUES,
+                        DATA_VERSION));
             assertEquals(businessObjectDataChildEntity.getBusinessObjectDataParents().size(), 0);
 
             businessObjectDataChildEntity2 = businessObjectDataDao
-                .getBusinessObjectDataByAltKey(new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3, SUBPARTITION_VALUES,
-                    DATA_VERSION));
+                .getBusinessObjectDataByAltKey(
+                    new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                        SUBPARTITION_VALUES,
+                        DATA_VERSION));
             assertEquals(businessObjectDataChildEntity2.getBusinessObjectDataParents().size(), 0);
         }
         catch (IllegalArgumentException e)
@@ -713,7 +719,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                new ArrayList<String>(), INITIAL_DATA_VERSION);
+                new ArrayList<>(), INITIAL_DATA_VERSION);
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
         assertNotNull(businessObjectDataEntity);
 
@@ -740,7 +746,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataS3NonManagedBucketDeletingDirectory() throws Exception
     {
         // Create test database entities.
-        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, new ArrayList<String>(), false);
+        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, new ArrayList<>(), false);
 
         // Create and upload to the test S3 storage a set of files.
         businessObjectDataServiceTestHelper.prepareTestS3Files(TEST_S3_KEY_PREFIX, localTempPath, LOCAL_FILES);
@@ -843,7 +849,44 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     }
 
     @Test
-    public void testDeleteBusinessObjectDataNonS3StoragePlatform() throws Exception
+    public void testDeleteBusinessObjectDataS3NonManagedBucketDeletingListOfFilesWithEmptyPartition() throws Exception
+    {
+        List<String> localFiles = Lists.newArrayList(StorageFileEntity.S3_EMPTY_PARTITION);
+
+        // Create test database entities.
+        createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, localFiles, true);
+
+        // Create and upload to the S3 storage a subset of test files.
+        businessObjectDataServiceTestHelper.prepareTestS3Files(null, TEST_S3_KEY_PREFIX, localTempPath, new ArrayList<>(), localFiles, true);
+
+        // Validate that this business object data exists.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
+        assertNotNull(businessObjectDataEntity);
+
+        // Delete the business object data with delete files flag set to true.
+        BusinessObjectData deletedBusinessObjectData = businessObjectDataService.deleteBusinessObjectData(
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
+
+        // Validate the returned object.
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+
+        // Validate that data files got deleted from S3 - please note that
+        S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
+        params.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
+        assertTrue(s3Dao.listDirectory(params).isEmpty());
+
+        // Ensure that this business object data is no longer there.
+        assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDataNonS3StoragePlatform()
     {
         // Create test database entities including the relative non-S3 storage entities.
         createTestDatabaseEntities(STORAGE_NAME, STORAGE_PLATFORM_CODE, testS3KeyPrefix, LOCAL_FILES, false);
@@ -879,7 +922,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
      * @param isLocalFilePathOnly a boolean flag parameter for using the local file path only
      */
     private void createTestDatabaseEntities(String storageName, String storagePlatform, String directoryPath, List<String> localFiles,
-        boolean isLocalFilePathOnly) throws Exception
+        boolean isLocalFilePathOnly)
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
