@@ -39,6 +39,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.util.QueryExecutionListener
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
+import scala.util.matching.Regex
 
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
@@ -344,7 +345,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
 
-    val allData = api.getBusinessObjectPartitions(
+    var allData = api.getBusinessObjectPartitions(
       params.namespace,
       params.businessObjectName,
       formatUsage,
@@ -352,6 +353,35 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       formatVersion,
       params.partitionFilter
     )
+
+    try {
+      val partitionList = allData.map(_._2)
+      val partitionsFromDDL = api.getBusinessObjectDataPartitions(
+        params.namespace,
+        params.businessObjectName,
+        formatUsage,
+        formatFileType,
+        formatVersion,
+        fmt.getPartitionKey,
+        partitionList,
+        null
+      )
+      val versionPattern = new Regex("/data-v([0-9]+)/")
+      allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map { partition =>
+        (
+          new Integer(formatVersion),
+          if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) "none"
+          else partition.getPartitionColumns.get(0).getPartitionColumnValue,
+          partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
+          versionPattern.findFirstMatchIn(partition.getPartitionLocation) match {
+            case Some(i) => new Integer(i.group(1).toInt)
+            case None => new Integer(0)
+          })
+      }
+    }
+    catch {
+      case e: Throwable => log.info("getBusinessObjectDataPartitions failed for all data " + e.getMessage)
+    }
 
     log.info(s"Got ${allData.size} results")
 
