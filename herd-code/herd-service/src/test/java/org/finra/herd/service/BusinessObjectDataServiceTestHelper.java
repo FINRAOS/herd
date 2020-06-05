@@ -2565,6 +2565,25 @@ public class BusinessObjectDataServiceTestHelper
     public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths)
         throws Exception
     {
+        prepareTestS3Files(bucketName, s3KeyPrefix, localTempPath, localFilePaths, directoryPaths, false);
+    }
+
+    /**
+     * Creates specified list of files in the local temporary directory and uploads them to the test S3 bucket. This method also creates 0 byte S3 directory
+     * markers relative to the s3 key prefix.
+     *
+     * @param bucketName the bucket name in S3 to place the files.
+     * @param s3KeyPrefix the destination S3 key prefix
+     * @param localTempPath the local temporary directory
+     * @param localFilePaths the list of local files that might include sub-directories
+     * @param directoryPaths the list of directory paths to be created in S3 relative to the S3 key prefix
+     * @param isEmptyFolder the boolean flag for creating an empty folder
+     *
+     * @throws Exception
+     */
+    public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths, boolean isEmptyFolder)
+        throws Exception
+    {
         // Create local test files.
         for (String file : localFilePaths)
         {
@@ -2589,8 +2608,16 @@ public class BusinessObjectDataServiceTestHelper
         for (String directoryPath : directoryPaths)
         {
             // Create 0 byte directory marker.
-            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/" + directoryPath);
-            s3Service.createDirectory(s3FileTransferRequestParamsDto);
+            if (isEmptyFolder)
+            {
+                s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + directoryPath);
+                s3Service.createEmptyDirectory(s3FileTransferRequestParamsDto);
+            }
+            else
+            {
+                s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/" + directoryPath);
+                s3Service.createDirectory(s3FileTransferRequestParamsDto);
+            }
         }
 
         // Validate the uploaded S3 files and created directory markers, if any.

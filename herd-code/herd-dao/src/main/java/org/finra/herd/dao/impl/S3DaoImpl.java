@@ -240,36 +240,13 @@ public class S3DaoImpl implements S3Dao
     @Override
     public void createDirectory(final S3FileTransferRequestParamsDto params)
     {
-        // Create metadata for the directory marker and set content-length to 0 bytes.
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(0);
-        prepareMetadata(params, metadata);
+        createDirectory(params, false);
+    }
 
-        // Create empty content.
-        InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
-
-        // Create a PutObjectRequest passing the folder name suffixed by '/'.
-        String directoryName = StringUtils.appendIfMissing(params.getS3KeyPrefix(), "/");
-        PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
-        // KMS key ID is being set through prepareMetadata()
-
-        AmazonS3Client s3Client = getAmazonS3(params);
-
-        try
-        {
-            s3Operations.putObject(putObjectRequest, s3Client);
-        }
-        catch (AmazonServiceException e)
-        {
-            throw new IllegalStateException(String
-                .format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
-                    e.getMessage()), e);
-        }
-        finally
-        {
-            // Shutdown the AmazonS3Client instance to release resources.
-            s3Client.shutdown();
-        }
+    @Override
+    public void createEmptyDirectory(final S3FileTransferRequestParamsDto params)
+    {
+        createDirectory(params, true);
     }
 
     @Override
@@ -933,6 +910,49 @@ public class S3DaoImpl implements S3Dao
     protected boolean isRootKeyPrefix(String s3KeyPrefix)
     {
         return StringUtils.isBlank(s3KeyPrefix) || s3KeyPrefix.equals("/");
+    }
+
+    /**
+     * Creates an S3 object of 0 byte size that represents a directory.
+     *
+     * @param params the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 object to be
+     * created.
+     * @param isEmptyDirectory a boolean flag that will determine if we are creating an empty directory.
+     *
+     */
+    private void createDirectory(final S3FileTransferRequestParamsDto params, final boolean isEmptyDirectory)
+    {
+        // Create metadata for the directory marker and set content-length to 0 bytes.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(0);
+        prepareMetadata(params, metadata);
+
+        // Create empty content.
+        InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
+
+        // Create a PutObjectRequest passing the folder name suffixed by '/'.
+        String suffix = isEmptyDirectory ? "" : "/";
+        String directoryName = StringUtils.appendIfMissing(params.getS3KeyPrefix(), suffix);
+        PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
+        // KMS key ID is being set through prepareMetadata()
+
+        AmazonS3Client s3Client = getAmazonS3(params);
+
+        try
+        {
+            s3Operations.putObject(putObjectRequest, s3Client);
+        }
+        catch (AmazonServiceException e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
+                    e.getMessage()), e);
+        }
+        finally
+        {
+            // Shutdown the AmazonS3Client instance to release resources.
+            s3Client.shutdown();
+        }
     }
 
     /**
