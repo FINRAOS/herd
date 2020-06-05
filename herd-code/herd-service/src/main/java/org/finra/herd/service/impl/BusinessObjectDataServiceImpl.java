@@ -355,7 +355,22 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                             List<File> files = new ArrayList<>();
                             for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
                             {
-                                files.add(new File(storageFileEntity.getPath()));
+                                String filePath = storageFileEntity.getPath();
+
+                                if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
+                                    !StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
+                                {
+                                    if (StringUtils.equals(filePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                                    {
+                                        filePath = storageUnitEntity.getDirectoryPath() + filePath;
+                                    }
+                                    else
+                                    {
+                                        filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+                                    }
+                                }
+
+                                files.add(new File(filePath));
                             }
                             params.setFiles(files);
                             s3Service.deleteFileList(params);
