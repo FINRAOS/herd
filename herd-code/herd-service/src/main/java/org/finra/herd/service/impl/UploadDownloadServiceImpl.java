@@ -526,6 +526,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String s3BucketName = storageHelper.getStorageBucketName(storageUnitEntity.getStorage());
         String s3ObjectKey = IterableUtils.get(storageUnitEntity.getStorageFiles(), 0).getPath();
 
+        // If this is a file only path prepend the missing directory bath.
+        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
+            !StringUtils.startsWith(s3ObjectKey, storageUnitEntity.getDirectoryPath()))
+        {
+            s3ObjectKey = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + s3ObjectKey;
+        }
+
         // Get the temporary credentials
         Credentials downloaderCredentials =
             getExternalDownloaderCredentials(storageUnitEntity.getStorage(), String.valueOf(businessObjectDataEntity.getId()), s3ObjectKey);
