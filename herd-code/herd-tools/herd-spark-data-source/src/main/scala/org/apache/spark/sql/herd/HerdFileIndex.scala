@@ -239,8 +239,8 @@ private object HerdFileIndexBase extends Logging {
     if (partitionKey.equalsIgnoreCase("partition")) {
       // Handling non-partitioned
       for (partition <- generatedPartitions.asScala) {
-        if (storagePathPrefix.equalsIgnoreCase("mnt")) {
-          s3KeyPrefixes += "/mnt/" + partition.getPartitionLocation
+        if (StringUtils.isNotEmpty(storagePathPrefix)) {
+          s3KeyPrefixes += "/" + storagePathPrefix + "/" + partition.getPartitionLocation
         }
         else {
           s3KeyPrefixes += "s3a://" + partition.getPartitionLocation
@@ -266,8 +266,8 @@ private object HerdFileIndexBase extends Logging {
           if (ddlPartitionValue.startsWith(partitionValueTuple._2)) {
             // Replace s3n with databricks mount point mnt
             var filePath = ""
-            if (storagePathPrefix.equalsIgnoreCase("mnt")) {
-              filePath = "/mnt/" + partition.getPartitionLocation
+            if (StringUtils.isNotEmpty(storagePathPrefix)) {
+              s3KeyPrefixes += "/" + storagePathPrefix + "/" + partition.getPartitionLocation
             }
             else {
               filePath = "s3a://" + partition.getPartitionLocation
