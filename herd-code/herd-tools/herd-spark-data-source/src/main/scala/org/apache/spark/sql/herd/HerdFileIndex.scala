@@ -267,7 +267,7 @@ private object HerdFileIndexBase extends Logging {
             // use mount point if storage path prefix is not empty and it does not start with s3a
             var filePath = ""
             if (StringUtils.isNotEmpty(storagePathPrefix) && !storagePathPrefix.toLowerCase().startsWith("s3a")) {
-              s3KeyPrefixes += "/" + storagePathPrefix + "/" + partition.getPartitionLocation
+              filePath = "/" + storagePathPrefix + "/" + partition.getPartitionLocation
             }
             else {
               filePath = "s3a://" + partition.getPartitionLocation
