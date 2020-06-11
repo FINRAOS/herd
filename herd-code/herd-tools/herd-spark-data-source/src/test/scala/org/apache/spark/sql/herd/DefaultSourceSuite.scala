@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import org.apache.commons.io.FileUtils
-import org.apache.spark.sql.{types, _}
+import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.junit.Assert.assertEquals
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
@@ -230,8 +230,17 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
                                                formatVersion: Integer, partitionKey: String,
                                                partitionValues: Seq[String], dataVersion: Integer): BusinessObjectDataPartitions = {
 
-    val businessObjectDataPartitions = new BusinessObjectDataPartitions
-    businessObjectDataPartitions
+    val dataFile = if (partitionValues.length == 1) {
+      partitions((partitionValues(0), ""))
+    } else {
+      partitions((partitionValues(0), partitionValues(1)))
+    }
+
+    val dataJson = Resources.toString(Resources.getResource(s"herd-models/$testCase/$dataFile"), Charsets.UTF_8)
+    val data = mapper.readValue(dataJson, classOf[BusinessObjectDataPartitions])
+
+    data
+
   }
 }
 
@@ -327,7 +336,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load with minimal options") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
     val thrown = intercept[Exception] {
@@ -339,8 +348,8 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load all partitions and filter") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
-      ("2017-01-01", "") -> "businessObjectDataDdl1.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json",
+      ("2017-01-01", "") -> "businessObjectDataPartitions.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
 
@@ -394,7 +403,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("load non-partitioned data") {
-    val parts = Map(("none", "") -> "businessObjectDataDdl.json")
+    val parts = Map(("none", "") -> "businessObjectDataPartitions.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
     val result = df.collect()
@@ -403,7 +412,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("load and filter non-partitioned data") {
-    val parts = Map(("none", "") -> "businessObjectDataDdl.json")
+    val parts = Map(("none", "") -> "businessObjectDataPartitions.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
     val result = df.filter($"symbol" === "A").collect()
@@ -439,8 +448,8 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load ORC files, prune and filter") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
-      ("2017-01-01", "") -> "businessObjectDataDdl1.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json",
+      ("2017-01-01", "") -> "businessObjectDataPartitions1.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
 

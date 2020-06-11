@@ -1,0 +1,31 @@
+{
+  "namespace": "FOO",
+  "businessObjectDefinitionName": "TEST",
+  "businessObjectFormatUsage": "PRC",
+  "businessObjectFormatFileType": "CSV",
+  "businessObjectFormatVersion": 0,
+  "partitionValueFilters": [
+    {
+      "partitionKey": "key",
+      "partitionValues": [
+        "none"
+      ],
+      "partitionValueRange": null,
+      "latestBeforePartitionValue": null,
+      "latestAfterPartitionValue": null
+    }
+  ],
+  "businessObjectDataVersion": 0,
+  "storageNames": null,
+  "partitions": [
+    {
+      "partitionColumns": [
+        {
+          "partitionColumnName": "SDATE",
+          "partitionColumnValue": null
+        }
+      ],
+      "partitionLocation": "src/src/test/resources/test/prc/csv/bar/schm-v0/data-v1/partition=none"
+    }
+  ]
+}
