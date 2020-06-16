@@ -121,6 +121,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "cstm_row_frmt_tx")
     private String customRowFormat;
 
+    @Column(name = "cstm_clstr_by_tx")
+    private String customClusteredBy;
+
     @ManyToOne
     @JoinColumn(name = "prtn_key_group_tx", referencedColumnName = "prtn_key_group_tx")
     private PartitionKeyGroupEntity partitionKeyGroup;
@@ -456,5 +459,15 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setCustomRowFormat(String customRowFormat)
     {
         this.customRowFormat = customRowFormat;
+    }
+
+    public String getCustomClusteredBy()
+    {
+        return customClusteredBy;
+    }
+
+    public void setCustomClusteredBy(String customClusteredBy)
+    {
+        this.customClusteredBy = customClusteredBy;
     }
 }

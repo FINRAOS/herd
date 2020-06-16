@@ -2705,6 +2705,12 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="customClusteredBy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customClusteredBy is used to support Hive "CLUSTERED BY" statement.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="partitionKeyGroup" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The partition key group that this schema's partition or sub-partition key belongs to. This value will be used to identify the

@@ -560,6 +560,12 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(")\n");
         }
 
+        if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()))
+        {
+            // Add custom ClusteredBy defined in business object format schema.
+            sb.append(String.format("CLUSTERED BY %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()));
+        }
+
         if (!StringUtils.isEmpty(businessObjectFormat.getSchema().getCustomRowFormat()))
         {
             // Add custom row format defined in business object format.
