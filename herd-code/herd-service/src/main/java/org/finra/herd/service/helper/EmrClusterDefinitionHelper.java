@@ -115,10 +115,10 @@ public class EmrClusterDefinitionHelper
                 Assert.isTrue((maxEmrInstanceCount >= instancesRequested), "Total number of instances requested can not exceed : " + maxEmrInstanceCount);
             }
         }
-        // Make sure instance fleet minimum ip is non-negative
+        // Make sure instance fleet minimum ip available filter is non-negative
         else if (emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() != null)
         {
-            Assert.isTrue(emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() > 0, "Instance fleet minimum ip must be non-negative");
+            Assert.isTrue(emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() >= 0, "Instance fleet minimum ip must be non-negative");
         }
 
         // Validate node tags including checking for required tags and detecting any duplicate node tag names in case sensitive manner.
