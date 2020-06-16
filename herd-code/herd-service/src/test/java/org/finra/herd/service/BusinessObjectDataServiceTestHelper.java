@@ -111,6 +111,7 @@ import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.service.helper.BusinessObjectDataDdlPartitionsHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -1864,6 +1865,33 @@ public class BusinessObjectDataServiceTestHelper
             Partition partition = new Partition(Arrays.asList(partitionColumn), AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix);
             partitions.add(partition);
         }
+        return partitions;
+    }
+
+    /**
+     * Returns expected non partitioned business object data partitions
+     *
+     * @return expected non partitioned business object data partitions
+     */
+    public List<Partition> getExpectedNonPartitionedBusinessObjectDataPartitions()
+    {
+        List<Partition> partitions = new ArrayList();
+        // Build ddl expected to be generated.
+        StringBuilder ddlBuilder = new StringBuilder();
+
+        // Build an expected S3 key prefix.
+        String expectedS3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
+                AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
+                BusinessObjectDataDdlPartitionsHelper.NO_PARTITIONING_PARTITION_KEY, BusinessObjectDataDdlPartitionsHelper.NO_PARTITIONING_PARTITION_VALUE,
+                null, null, AbstractServiceTest.DATA_VERSION);
+
+        // Add the alter table add partition statement.
+        PartitionColumn partitionColumn = new PartitionColumn(BusinessObjectDataDdlPartitionsHelper.NO_PARTITIONING_PARTITION_KEY,
+            BusinessObjectDataDdlPartitionsHelper.NO_PARTITIONING_PARTITION_VALUE);
+        Partition partition = new Partition(Arrays.asList(partitionColumn), AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix);
+        partitions.add(partition);
+
         return partitions;
     }
 

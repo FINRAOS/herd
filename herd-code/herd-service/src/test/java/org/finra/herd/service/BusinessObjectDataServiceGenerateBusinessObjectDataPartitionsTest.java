@@ -2307,15 +2307,16 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         partitionValueFilter.setPartitionValues(partitionValues);
         request.setPartitionValueFilters(Arrays.asList(partitionValueFilter));
 
-        // Verify Exception is throw for singleton object
+        // Verify Exception is NOT throw for singleton object
         try
         {
-            businessObjectDataService.generateBusinessObjectDataPartitions(request);
-            fail("Should throw an IllegalArgumentException when business object definition name parameter is not specified.");
+            BusinessObjectDataPartitions businessObjectDataPartitions = businessObjectDataService.generateBusinessObjectDataPartitions(request);
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedNonPartitionedBusinessObjectDataPartitions(),
+                businessObjectDataPartitions.getPartitions());
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Generate-partitions request does not support singleton partitions.", e.getMessage());
+            fail("should not throw IllegalArgumentException for singleton object");
         }
     }
 
