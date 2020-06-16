@@ -6093,6 +6093,11 @@
                <xs:documentation>Instance Group Definitions</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="instanceFleetMinimumIpAvailableFilter" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies minimum number of available IPs for the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceFleets" type="emrClusterDefinitionInstanceFleets" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Describes the EC2 instances and instance configurations for clusters that use the instance fleet configuration. The instance

@@ -141,10 +141,17 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
+        // RunJobFlow creates and starts running a new cluster
+        // The RunJobFlow request can contain InstanceFleets parameters or InstanceGroups (InstanceDefinitions) parameters, but not both
         // If instance group definitions are specified, find best price and update definition.
+        // Else instance fleet definitions are specified. If minimum ip filter is greater than 0, find valid subnets and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
         {
             emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        }
+        else if (emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() != null && emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() > 0)
+        {
+            emrPricingHelper.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         }
 
         // The cluster ID record.

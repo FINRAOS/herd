@@ -212,6 +212,57 @@ public class EmrPricingHelper extends AwsHelper
     }
 
     /**
+     * Finds subnets that meet the minimum available ip given in the EMR cluster definition
+     * <p/>
+     * The results of the findings are used to update the given definition.
+     * <p/>
+     * Gets subnet information and compares AvailableIpAddressCount with InstanceFleetMinimumIpAvailableFilter
+     * <p/>
+     * The definition's instanceMaxSearchPrice and instanceOnDemandThreshold will be removed by this operation.
+     *
+     * @param emrClusterAlternateKeyDto EMR cluster alternate key
+     * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
+     */
+    public void updateEmrClusterDefinitionWithValidInstanceFleetSubnets(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition,
+        AwsParamsDto awsParamsDto)
+    {
+        EmrVpcPricingState emrSubnetState = new EmrVpcPricingState();
+
+        // Get total count of instances this definition will attempt to create
+        int totalFleetInstanceCount = emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter();
+
+        // Get the subnet information
+        List<Subnet> subnets = getSubnets(emrClusterDefinition, awsParamsDto);
+        List<String> subnetIds = new ArrayList<>();
+        for (Subnet subnet : subnets)
+        {
+            emrSubnetState.getSubnetAvailableIpAddressCounts().put(subnet.getSubnetId(), subnet.getAvailableIpAddressCount());
+
+            // Filter out subnets with not enough available IPs
+            if (subnet.getAvailableIpAddressCount() >= totalFleetInstanceCount)
+            {
+                subnetIds.add(subnet.getSubnetId());
+            }
+        }
+
+        if (subnetIds.isEmpty())
+        {
+            LOGGER.info(String.format("Insufficient IP availability. namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
+                    "totalRequestedInstanceCount=%s emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
+                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), totalFleetInstanceCount,
+                jsonHelper.objectToJson(emrSubnetState.getSubnetAvailableIpAddressCounts())));
+            throw new ObjectNotFoundException(String.format(
+                "There are no subnets in the current VPC which have sufficient IP addresses available to run your " +
+                    "clusters. requestedInstanceCount=%s%n%s", totalFleetInstanceCount,
+                emrVpcPricingStateFormatter.format(emrSubnetState)));
+        }
+
+        // Pass list of valid subnet ids back to EMR cluster definition
+        emrClusterDefinition.setSubnetId(String.join(",", subnetIds));
+    }
+
+    /**
      * Returns the total number of requested instances. Returns the sum of master, core, and task instance counts. Task instance is optional.
      *
      * @param emrClusterDefinition the EMR cluster definition containing the instance definitions

@@ -361,7 +361,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         EmrClusterDefinition emrClusterDefinition =
             new EmrClusterDefinition("sshKeyPairName", "subnetId", "logBucket", true, true, true, true, "accountId", "serviceIamRole", "ec2NodeIamProfileName",
                 "amiVersion", "releaseLabel", "hadoopVersion", "hiveVersion", "pigVersion", true, Lists.newArrayList(new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(), 0,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet()), Lists.newArrayList(new NodeTag()), "supportedProduct",
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
@@ -372,7 +372,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
             new EmrClusterDefinition("sshKeyPairNameOverride", "subnetIdOverride", "logBucketOverride", false, false, false, false, "accountIdOverride",
                 "serviceIamRoleOverride", "ec2NodeIamProfileNameOverride", "amiVersionOverride", "releaseLabelOverride", "hadoopVersionOverride",
                 "hiveVersionOverride", "pigVersionOverride", false, Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(), 0,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet(), new EmrClusterDefinitionInstanceFleet()),
                 Lists.newArrayList(new NodeTag(), new NodeTag()), "supportedProductOverride",
                 Lists.newArrayList(new EmrClusterDefinitionApplication(), new EmrClusterDefinitionApplication()),
@@ -396,7 +396,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         EmrClusterDefinition emrClusterDefinition =
             new EmrClusterDefinition("sshKeyPairName", "subnetId", "logBucket", true, true, true, true, "accountId", "serviceIamRole", "ec2NodeIamProfileName",
                 "amiVersion", "releaseLabel", "hadoopVersion", "hiveVersion", "pigVersion", true, Lists.newArrayList(new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(), 0,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet()), Lists.newArrayList(new NodeTag()), "supportedProduct",
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
