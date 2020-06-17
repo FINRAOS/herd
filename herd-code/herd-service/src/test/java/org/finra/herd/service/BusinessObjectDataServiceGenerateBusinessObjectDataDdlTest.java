@@ -1412,6 +1412,29 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE, null, null,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl.
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, CUSTOM_ROW_FORMAT, null,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlNoCustomDdlWithCustomClusteredByValue()
+    {
+        // Prepare test data.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        String partitionKey = partitionColumns.get(0).getName();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE, null, null,
             SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N,
             schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 

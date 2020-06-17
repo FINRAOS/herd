@@ -2701,13 +2701,13 @@
          <xs:element name="customRowFormat" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The customRowFormat is used for defining custom Hive format.
-                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements.
+                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="customClusteredBy" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The customClusteredBy is used to support Hive "CLUSTERED BY" statement.
+               <xs:documentation>The customClusteredBy is used to support Hive "CLUSTERED BY" statement
                </xs:documentation>
             </xs:annotation>
          </xs:element>

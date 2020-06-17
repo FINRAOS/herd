@@ -560,6 +560,39 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create the updated format schema having modified custom row format.
         Schema updatedSchema = (Schema) initialSchema.clone();
         updatedSchema.setCustomRowFormat(SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS);
+
+        // Create an initial version of the business object format.
+        BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
+
+        // Create a second version of the business object format with the schema columns having updated schema.
+        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
+            new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
+
+        // Validate the returned object.
+        BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
+        expectedBusinessObjectFormat.setId(resultBusinessObjectFormat.getId());
+        expectedBusinessObjectFormat.setBusinessObjectFormatVersion(SECOND_FORMAT_VERSION);
+        expectedBusinessObjectFormat.setSchema(updatedSchema);
+        assertEquals(expectedBusinessObjectFormat, resultBusinessObjectFormat);
+    }
+
+    @Test
+    public void testCreateBusinessObjectFormatInitialVersionExistsWithSchemaAdditiveSchemaChangesClusteredByValueUpdated()
+    {
+        // Create relative database entities.
+        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
+
+        // Create an initial format schema.
+        Schema initialSchema = new Schema(
+            Arrays.asList(new SchemaColumn(COLUMN_NAME, COLUMN_DATA_TYPE, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION)),
+            Arrays.asList(new SchemaColumn(COLUMN_NAME_2, COLUMN_DATA_TYPE_2, COLUMN_SIZE, NO_COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION_2)),
+            SCHEMA_NULL_VALUE_BACKSLASH_N, SCHEMA_DELIMITER_PIPE, null, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, null, PARTITION_KEY_GROUP);
+
+        // Create the updated format schema having modified custom clustered by value.
+        Schema updatedSchema = (Schema) initialSchema.clone();
         updatedSchema.setCustomClusteredBy(SCHEMA_CUSTOM_CLUSTERED_BY_VALUE);
 
         // Create an initial version of the business object format.
@@ -567,7 +600,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
-        // Create a second version of the business object format with the schema columns having updated descriptions.
+        // Create a second version of the business object format with the schema columns having updated schema.
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));

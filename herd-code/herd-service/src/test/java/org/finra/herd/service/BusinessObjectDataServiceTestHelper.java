@@ -1344,7 +1344,11 @@ public class BusinessObjectDataServiceTestHelper
             }
         }
 
-        sb.append("[Hive Clustered By Value]\n");
+        if (hiveClusteredByValue != null)
+        {
+            sb.append("[Hive Clustered By Value]\n");
+        }
+
         sb.append("[Row Format]\n");
         sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
 
