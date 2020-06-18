@@ -366,6 +366,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
+    public static final String CUSTOM_CLUSTERED_BY_VALUE = "CLUSTERED BY " + SCHEMA_CUSTOM_CLUSTERED_BY_VALUE;
+
     public static final Boolean DELETE_FILES = true;
 
     public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";

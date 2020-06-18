@@ -967,6 +967,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
         "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
             "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
 
+    public static final String SCHEMA_CUSTOM_CLUSTERED_BY_VALUE = "(osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS";
+
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";
 
     public static final String SCHEMA_NULL_VALUE_BACKSLASH_N = "\\N";

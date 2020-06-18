@@ -389,7 +389,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
                 relationalTableRegistrationCreateRequest.getRelationalSchemaName()),
             new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
                 relationalTableRegistrationCreateRequest.getRelationalTableName())));
-        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
 
         // Log the business object format create request.
         LOGGER.info("Registering relational table... businessObjectFormatCreateRequest={}", jsonHelper.objectToJson(businessObjectFormatCreateRequest));
@@ -513,7 +513,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             .setBusinessObjectFormatFileType(relationalTableRegistrationDto.getBusinessObjectFormat().getBusinessObjectFormatFileType());
         businessObjectFormatCreateRequest.setPartitionKey(relationalTableRegistrationDto.getBusinessObjectFormat().getPartitionKey());
         businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
-        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
 
         // Log the relational table registration DTO along with the business object format create request.
         LOGGER.info("Updating relational table schema... relationalTableRegistrationDto={} businessObjectFormatCreateRequest={}",

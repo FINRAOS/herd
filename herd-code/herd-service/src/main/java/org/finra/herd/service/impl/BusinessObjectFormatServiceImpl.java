@@ -1344,6 +1344,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectFormatEntity.setMapKeysDelimiter(schema.getMapKeysDelimiter());
             businessObjectFormatEntity.setEscapeCharacter(schema.getEscapeCharacter());
             businessObjectFormatEntity.setCustomRowFormat(schema.getCustomRowFormat());
+            businessObjectFormatEntity.setCustomClusteredBy(schema.getCustomClusteredBy());
             businessObjectFormatEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
 
             // Create a schema column entities collection, if needed.
@@ -1445,6 +1446,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setMapKeysDelimiter(null);
         businessObjectFormatEntity.setEscapeCharacter(null);
         businessObjectFormatEntity.setCustomRowFormat(null);
+        businessObjectFormatEntity.setCustomClusteredBy(null);
         businessObjectFormatEntity.setPartitionKeyGroup(null);
         businessObjectFormatEntity.getSchemaColumns().clear();
     }
