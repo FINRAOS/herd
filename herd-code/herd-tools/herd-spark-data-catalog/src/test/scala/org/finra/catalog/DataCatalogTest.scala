@@ -33,6 +33,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.finra.herd.sdk.model
 import org.finra.herd.sdk.model._
 
+@RunWith(classOf[JUnitRunner])
 class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach {
 
   private val spark: SparkSession = SparkSession
