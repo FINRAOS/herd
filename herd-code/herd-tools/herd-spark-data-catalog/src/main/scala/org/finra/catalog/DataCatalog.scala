@@ -840,7 +840,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val partitionKey = businessObjectFormat.getPartitionKey
 
     // get the list of partitions
-    val partitions = businessObjectFormat.getSchema.getPartitions.asScala
+    val partitions =
+      if ( businessObjectFormat.getSchema.getPartitions != null)   {
+        businessObjectFormat.getSchema.getPartitions.asScala
+      }
+      else {
+        Nil
+      }
+
 
     // get from the XML the partition columns, map them to a list of StructFields
     val fields = partitions.map { c =>
@@ -1017,8 +1024,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "0"
-    val lastPartValue = "z"
+    val firstPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "0" else "none"
+    val lastPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "z" else ""
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
