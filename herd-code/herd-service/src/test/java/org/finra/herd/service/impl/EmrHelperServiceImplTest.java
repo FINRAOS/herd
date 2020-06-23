@@ -383,7 +383,6 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
-        verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -499,20 +498,17 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
 
         // Call the method under test.
-        boolean exceptionCaught = false;
         try {
             emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+            fail("IllegalArgumentException expected");
         }
         catch(IllegalArgumentException ex) {
-            exceptionCaught = true;
             assertTrue(ex.getMessage().startsWith("There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters."));
             assertTrue(ex.getMessage().contains(NAMESPACE));
             assertTrue(ex.getMessage().contains(EMR_CLUSTER_DEFINITION_NAME));
             assertTrue(ex.getMessage().contains(EMR_CLUSTER_NAME));
             assertTrue(ex.getMessage().contains("{jsonFormattedSubnetsAvailability}"));
         }
-
-        assertTrue("ObjectNotFoundException expected", exceptionCaught);
 
         // Verify the external calls.
         verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
