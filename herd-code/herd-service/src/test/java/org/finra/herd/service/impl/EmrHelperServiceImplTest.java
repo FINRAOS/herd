@@ -407,7 +407,6 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
-        verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
