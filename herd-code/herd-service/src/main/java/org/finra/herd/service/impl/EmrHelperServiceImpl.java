@@ -15,15 +15,13 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import org.finra.herd.service.helper.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +36,6 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
@@ -49,11 +46,6 @@ import org.finra.herd.model.dto.EmrClusterCreateDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.service.EmrHelperService;
-import org.finra.herd.service.helper.AwsServiceHelper;
-import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
-import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
-import org.finra.herd.service.helper.NamespaceDaoHelper;
-import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 
 /**
  * EmrHelperServiceImpl
@@ -95,6 +87,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
     @Autowired
     private XmlHelper xmlHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * {@inheritDoc}
@@ -476,18 +471,18 @@ public class EmrHelperServiceImpl implements EmrHelperService
         Integer instanceFleetMinimumIpAvailableFilter = emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter();
 
         if (instanceFleetMinimumIpAvailableFilter == null || instanceFleetMinimumIpAvailableFilter == 0) return;
-        if (instanceFleetMinimumIpAvailableFilter < 0) throw new IllegalArgumentException( "InstanceFleetMinimumIpAvailableFilter should not contain negative value");
 
         // Get the subnet information
         // Makes AWS EC2 call DescribeSubnets
 
         List<Subnet> subnets  = emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto);
 
-        LOGGER.info("Current IP availability: namespace={}, emrClusterDefinitionName={}, emrClusterName={}, " +
-                        "instanceFleetMinimumIpAvailableFilter={}, subnetAvailableIpAddressCounts={}",
-                emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
-                emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
-                subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount)));
+        String contextInfo = String.format("namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
+                        "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s", emrClusterAlternateKeyDto.getNamespace(),
+                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
+                jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))));
+
+        LOGGER.info("Current IP availability: {}", contextInfo);
 
         List<String> validSubnetIds = subnets.stream()
                 .filter(subnet -> subnet.getAvailableIpAddressCount() >= instanceFleetMinimumIpAvailableFilter)
@@ -495,7 +490,8 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
         if (validSubnetIds.isEmpty())
         {
-            throw new ObjectNotFoundException( "There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters");
+            throw new IllegalArgumentException( "There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters. " +
+                    "Current IP availability: " + contextInfo);
         }
 
         // Pass list of valid subnet ids back to EMR cluster definition

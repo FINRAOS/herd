@@ -21,20 +21,18 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.google.common.collect.Lists;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -68,9 +66,6 @@ import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
-import org.mockito.verification.VerificationMode;
-
-import javax.naming.directory.InvalidAttributesException;
 
 /**
  * This class tests functionality within the EMR helper service implementation.
@@ -379,22 +374,13 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(null);
-
-        // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        // Mock the external calls.
-        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        emrClusterDefinition.setSubnetId("Subnet_Test_1,Subnet_Test_2");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         // Verify correct value
-        assertNull(emrClusterDefinition.getSubnetId());
+        assertEquals("Subnet_Test_1,Subnet_Test_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
         verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
@@ -413,57 +399,21 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(0);
-
-        // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        // Mock the external calls.
-        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        emrClusterDefinition.setSubnetId("Subnet_Test_1,Subnet_Test_2");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         // Verify correct value
-        assertNull(emrClusterDefinition.getSubnetId());
+        assertEquals("Subnet_Test_1,Subnet_Test_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
         verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testUpdateEmrClusterDefinitionWithNegativeFilterValue()
-    {
-        // Create an AWS params DTO
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-
-        // Create an EMR cluster alternate key DTO
-        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
-
-        // Create an EMR cluster definition object
-        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(-20);
-
-        // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        // Mock the external calls.
-        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
-
-        // Call the method under test.
-        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
-    }
-
     @Test
-    public void testUpdateEmrClusterDefinitionWithSingleValidInstanceFleetSubnet()
+    public void testUpdateEmrClusterDefinitionWithAllValidInstanceFleetSubnets()
     {
         // Create an AWS params DTO
         AwsParamsDto awsParamsDto = new AwsParamsDto();
@@ -474,60 +424,14 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(1);
+        emrClusterDefinition.setSubnetId("SUBNET_1,SUBNET_2,SUBNET_3");
 
         // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
+        List<Subnet> subnets = initializeTestSubnets(3);
 
         // Mock the external calls.
         when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
-
-        // Call the method under test.
-        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
-
-        // Verify correct value
-        assertEquals("SUBNET_1", emrClusterDefinition.getSubnetId());
-
-        // Verify the external calls.
-        verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
-        verifyNoMoreInteractionsHelper();
-    }
-
-    @Test
-    public void testUpdateEmrClusterDefinitionWithMultipleValidInstanceFleetSubnet()
-    {
-        // Create an AWS params DTO
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-
-        // Create an EMR cluster alternate key DTO
-        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
-
-        // Create an EMR cluster definition object
-        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(1);
-
-        // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_2");
-        subnet.setAvailableIpAddressCount(20);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_3");
-        subnet.setAvailableIpAddressCount(30);
-        subnets.add(subnet);
-
-        // Mock the external calls.
-        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
@@ -537,11 +441,12 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
         verifyNoMoreInteractionsHelper();
     }
 
     @Test
-    public void testUpdateEmrClusterDefinitionWithMixedInstanceFleetSubnets()
+    public void testUpdateEmrClusterDefinitionWithOneValidInstanceFleetSubnet()
     {
         // Create an AWS params DTO
         AwsParamsDto awsParamsDto = new AwsParamsDto();
@@ -551,41 +456,30 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
 
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(15);
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(25);
+        emrClusterDefinition.setSubnetId("SUBNET_1,SUBNET_2,SUBNET_3");
 
         // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_2");
-        subnet.setAvailableIpAddressCount(20);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_3");
-        subnet.setAvailableIpAddressCount(30);
-        subnets.add(subnet);
+        List<Subnet> subnets = initializeTestSubnets(3);
 
         // Mock the external calls.
         when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         // Verify correct value
-        assertEquals("SUBNET_2,SUBNET_3", emrClusterDefinition.getSubnetId());
+        assertEquals("SUBNET_3", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
         verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
         verifyNoMoreInteractionsHelper();
     }
 
-    @Test(expected = ObjectNotFoundException.class)
-    public void testUpdateEmrClusterDefinitionWithAllInvalidInstanceFleetSubnets()
+    @Test
+    public void testUpdateEmrClusterDefinitionWithNonValidInstanceFleetSubnets()
     {
         // Create an AWS params DTO
         AwsParamsDto awsParamsDto = new AwsParamsDto();
@@ -598,27 +492,45 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(50);
 
         // Create subnet object
-        List<Subnet> subnets = new ArrayList<>();
-        Subnet subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_1");
-        subnet.setAvailableIpAddressCount(10);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_2");
-        subnet.setAvailableIpAddressCount(20);
-        subnets.add(subnet);
-
-        subnet = new Subnet();
-        subnet.setSubnetId("SUBNET_3");
-        subnet.setAvailableIpAddressCount(30);
-        subnets.add(subnet);
+        List<Subnet> subnets = initializeTestSubnets(3);
 
         // Mock the external calls.
         when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
 
         // Call the method under test.
-        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        boolean exceptionCaught = false;
+        try {
+            emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        }
+        catch(IllegalArgumentException ex) {
+            exceptionCaught = true;
+            assertTrue(ex.getMessage().startsWith("There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters."));
+            assertTrue(ex.getMessage().contains(NAMESPACE));
+            assertTrue(ex.getMessage().contains(EMR_CLUSTER_DEFINITION_NAME));
+            assertTrue(ex.getMessage().contains(EMR_CLUSTER_NAME));
+            assertTrue(ex.getMessage().contains("{jsonFormattedSubnetsAvailability}"));
+        }
+
+        assertTrue("ObjectNotFoundException expected", exceptionCaught);
+
+        // Verify the external calls.
+        verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
+        verifyNoMoreInteractionsHelper();
+
+    }
+
+    private List<Subnet> initializeTestSubnets(int n) {
+        List<Subnet> subnets = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            Subnet subnet = new Subnet();
+            subnet.setSubnetId("SUBNET_" + i);
+            subnet.setAvailableIpAddressCount(i * 10);
+            subnets.add(subnet);
+        }
+
+        return subnets;
     }
 
     @Test

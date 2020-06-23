@@ -6095,7 +6095,7 @@
          </xs:element>
          <xs:element name="instanceFleetMinimumIpAvailableFilter" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Specifies minimum number of available IPs for the instance fleet</xs:documentation>
+               <xs:documentation>Specifies minimum number of available IPs required for the instance fleet</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="instanceFleets" type="emrClusterDefinitionInstanceFleets" minOccurs="0">
