@@ -374,13 +374,13 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(null);
-        emrClusterDefinition.setSubnetId("Subnet_Test_1,Subnet_Test_2");
+        emrClusterDefinition.setSubnetId("Test_Subnet_1,Test_Subnet_2");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         // Verify correct value
-        assertEquals("Subnet_Test_1,Subnet_Test_2", emrClusterDefinition.getSubnetId());
+        assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
         verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
@@ -399,13 +399,13 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         // Create an EMR cluster definition object
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(0);
-        emrClusterDefinition.setSubnetId("Subnet_Test_1,Subnet_Test_2");
+        emrClusterDefinition.setSubnetId("Test_Subnet_1,Test_Subnet_2");
 
         // Call the method under test.
         emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         // Verify correct value
-        assertEquals("Subnet_Test_1,Subnet_Test_2", emrClusterDefinition.getSubnetId());
+        assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
 
         // Verify the external calls.
         verify(emrPricingHelper, never()).getSubnets(emrClusterDefinition, awsParamsDto);
