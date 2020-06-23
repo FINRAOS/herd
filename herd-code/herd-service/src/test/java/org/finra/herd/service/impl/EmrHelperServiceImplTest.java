@@ -502,7 +502,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
             fail("IllegalArgumentException expected");
         }
         catch(IllegalArgumentException ex) {
-            assertTrue(ex.getMessage().startsWith("There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters."));
+            assertTrue(ex.getMessage().startsWith("Specified subnets do not have enough available IP addresses required for the instance fleet."));
             assertTrue(ex.getMessage().contains(NAMESPACE));
             assertTrue(ex.getMessage().contains(EMR_CLUSTER_DEFINITION_NAME));
             assertTrue(ex.getMessage().contains(EMR_CLUSTER_NAME));

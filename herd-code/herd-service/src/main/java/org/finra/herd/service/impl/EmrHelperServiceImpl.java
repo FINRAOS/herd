@@ -490,7 +490,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
         if (validSubnetIds.isEmpty())
         {
-            throw new IllegalArgumentException( "There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters. " +
+            throw new IllegalArgumentException( "Specified subnets do not have enough available IP addresses required for the instance fleet. " +
                     "Current IP availability: " + contextInfo);
         }
 
