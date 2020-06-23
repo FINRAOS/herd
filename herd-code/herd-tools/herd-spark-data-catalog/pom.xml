@@ -30,6 +30,7 @@
       <maven.surefire.plugin.version>2.7</maven.surefire.plugin.version>
       <scala.maven.plugin.version>3.2.1</scala.maven.plugin.version>
       <scalatest.maven.plugin.version>1.0</scalatest.maven.plugin.version>
+      <commons.text.version>1.8</commons.text.version>
    </properties>
 
    <dependencies>
@@ -54,6 +55,11 @@
          </exclusions>
       </dependency>
 
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-text</artifactId>
+         <version>${commons.text.version}</version>
+      </dependency>
 
       <dependency>
          <groupId>com.fasterxml.jackson.core</groupId>

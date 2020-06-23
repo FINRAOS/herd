@@ -30,8 +30,8 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import org.apache.commons.lang.StringEscapeUtils
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -760,7 +760,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
    * Returns the parse options
-   * todo: this is a quick fix, use unescape utils to elegantly handle this
    *
    * @param businessObjectFormat the business object format instance
    * @return Map of parse options

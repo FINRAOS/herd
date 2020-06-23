@@ -17,7 +17,7 @@ package org.finra.catalog
 
 import java.util
 
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.herd.{HerdApi, ObjectStatus}
@@ -983,6 +983,38 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     assertEquals(Some(null), parseOutput.get("nullValue"))
     assertEquals(Some(StringEscapeUtils escapeJava "\\"), parseOutput.get("escape"))
     assertEquals(Some(StringEscapeUtils escapeJava "\\\\N"), parseOutput.get("delimiter"))
+  }
+
+  test("delimiter, escape and null value (unicode characters) are unescaped properly when the schema is parsed")
+  {
+    val businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    val partitionColumn = new SchemaColumn
+
+    partitionColumn.setName(partitionKey)
+    partitionColumn.setType("DATE")
+    partitionColumn.setRequired(true)
+
+    s.addPartitionsItem(partitionColumn)
+    s.setDelimiter("\001")
+    s.setEscapeCharacter("\005")
+    s.setNullValue(null)
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+
+    val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
+
+    assertEquals(Some(null), parseOutput.get("nullValue"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\005"), parseOutput.get("escape"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\001"), parseOutput.get("delimiter"))
   }
 
   test("findNamespace searches for the given table in the list of given namespaces")
