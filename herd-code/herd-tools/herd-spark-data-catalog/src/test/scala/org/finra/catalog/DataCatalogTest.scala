@@ -981,8 +981,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
 
     assertEquals(Some(null), parseOutput.get("nullValue"))
-    assertEquals(Some(StringEscapeUtils escapeJava "\\"), parseOutput.get("escape"))
-    assertEquals(Some(StringEscapeUtils escapeJava "\\\\N"), parseOutput.get("delimiter"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\"), parseOutput.get("escape"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\\\N"), parseOutput.get("delimiter"))
   }
 
   test("delimiter, escape and null value (unicode characters) are unescaped properly when the schema is parsed")
