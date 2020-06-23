@@ -545,7 +545,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
             new EmrClusterDefinition("sshKeyPairNameOverride", "subnetIdOverride", "logBucketOverride", false, false, false, false, "accountIdOverride",
                 "serviceIamRoleOverride", "ec2NodeIamProfileNameOverride", "amiVersionOverride", "releaseLabelOverride", "hadoopVersionOverride",
                 "hiveVersionOverride", "pigVersionOverride", false, Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(), 0,
+                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(), 10,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet(), new EmrClusterDefinitionInstanceFleet()),
                 Lists.newArrayList(new NodeTag(), new NodeTag()), "supportedProductOverride",
                 Lists.newArrayList(new EmrClusterDefinitionApplication(), new EmrClusterDefinitionApplication()),
