@@ -116,6 +116,12 @@ public class EmrClusterDefinitionHelper
             }
         }
 
+        // Make sure instance fleet minimum ip available filter is non-negative
+        if (emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() != null)
+        {
+            Assert.isTrue(emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter() >= 0, "Minimum number of available IPs required for the instance fleet must be non-negative");
+        }
+
         // Validate node tags including checking for required tags and detecting any duplicate node tag names in case sensitive manner.
         Assert.notEmpty(emrClusterDefinition.getNodeTags(), "Node tags must be specified.");
         HashSet<String> nodeTagNameValidationSet = new HashSet<>();
