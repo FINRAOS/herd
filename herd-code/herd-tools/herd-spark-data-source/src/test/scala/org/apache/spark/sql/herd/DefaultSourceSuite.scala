@@ -230,17 +230,8 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
                                                formatVersion: Integer, partitionKey: String,
                                                partitionValues: Seq[String], dataVersion: Integer): BusinessObjectDataPartitions = {
 
-    val dataFile = if (partitionValues.length == 1) {
-      partitions((partitionValues(0), ""))
-    } else {
-      partitions((partitionValues(0), partitionValues(1)))
-    }
-
-    val dataJson = Resources.toString(Resources.getResource(s"herd-models/$testCase/$dataFile"), Charsets.UTF_8)
-    val data = mapper.readValue(dataJson, classOf[BusinessObjectDataPartitions])
-
-    data
-
+    val businessObjectDataPartitions = new BusinessObjectDataPartitions
+    businessObjectDataPartitions
   }
 }
 
@@ -336,7 +327,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load with minimal options") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
     val thrown = intercept[Exception] {
@@ -348,8 +339,8 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load all partitions and filter") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json",
-      ("2017-01-01", "") -> "businessObjectDataPartitions.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
+      ("2017-01-01", "") -> "businessObjectDataDdl1.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
 
@@ -403,7 +394,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("load non-partitioned data") {
-    val parts = Map(("none", "") -> "businessObjectDataPartitions.json")
+    val parts = Map(("none", "") -> "businessObjectDataDdl.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
     val result = df.collect()
@@ -412,7 +403,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("load and filter non-partitioned data") {
-    val parts = Map(("none", "") -> "businessObjectDataPartitions.json")
+    val parts = Map(("none", "") -> "businessObjectDataDdl.json")
     val df = getDataFrame(new BaseHerdApi("test-case-2", parts), defaultParams)
 
     val result = df.filter($"symbol" === "A").collect()
@@ -448,8 +439,8 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   test("load ORC files, prune and filter") {
     val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json",
-      ("2017-01-01", "") -> "businessObjectDataPartitions1.json"
+      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json",
+      ("2017-01-01", "") -> "businessObjectDataDdl1.json"
     )
     val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
 
@@ -475,6 +466,24 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     )
 
     writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+  }
+
+  test("save subPartitioned data, one level") {
+    FileUtils.deleteDirectory(new java.io.File("./test-output"))
+
+    val df = spark.createDataFrame(EXPECTED_ROWS.asJava, EXPECTED_SCHEMA)
+      .filter($"sdate" === "2017-01-01")
+      .filter($"symbol" === "A")
+
+    val params = defaultParams + ("partitionValue" -> "2017-01-01") + ("subPartitionKeys" -> "symbol") + ("subPartitionValues" -> "A")
+
+    val parts = Map(
+      ("2017-01-01", "") -> "businessObjectData1.json"
+    )
+
+    noException should be thrownBy {
+      writeDataFrame(new BaseHerdApi("test-case-6", parts), params, df)
+    }
   }
 
   test("save subPartitioned data, one level") {
