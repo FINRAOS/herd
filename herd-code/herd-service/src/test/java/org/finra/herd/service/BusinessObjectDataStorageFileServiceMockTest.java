@@ -40,7 +40,6 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -898,9 +897,6 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         storageUnitEntity.setStorage(storageEntity);
         storageUnitEntity.setDirectoryPath(testS3KeyPrefix);
 
-        BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
-        businessObjectFormat.setId(getRandomLong());
-
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
 
@@ -921,7 +917,6 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         when(storageHelper.getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE, storageEntity, false, true)).thenReturn(true);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE)).thenReturn(S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE);
         when(storageHelper.getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE, storageEntity, false, true)).thenReturn(true);
-        when(businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity)).thenReturn(businessObjectFormat);
         when(storageHelper.getS3BucketAccessParams(storageEntity)).thenReturn(s3FileTransferRequestParamsDto);
         when(s3Service.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(s3ObjectSummaries);
         when(storageFileHelper.getStorageFilesMapFromS3ObjectSummaries(s3ObjectSummaries)).thenReturn(actualS3Keys);
@@ -949,10 +944,9 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(storageHelper).getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE, storageEntity, false, true);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE);
         verify(storageHelper).getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE, storageEntity, false, true);
-        verify(businessObjectFormatHelper).createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
         verify(storageUnitDaoHelper)
-            .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectFormat,
-                BUSINESS_OBJECT_DATA_KEY);
+            .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, BUSINESS_OBJECT_DATA_KEY,
+                testS3KeyPrefix);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper).getS3BucketAccessParams(storageEntity);
         verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);

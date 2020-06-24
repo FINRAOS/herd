@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
@@ -54,7 +54,6 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
@@ -88,9 +87,6 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
 
     @Autowired
     private S3Service s3Service;
-
-    @Autowired
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -352,10 +348,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             }
             catch (IllegalArgumentException ex)
             {
-                throw new IllegalArgumentException(String.format("The archive retrieval option value \"%s\" is invalid. " +
-                    "Valid archive retrieval option values are:%s", archiveRetrievalOption, Stream.of(Tier.values())
-                    .map(Enum::name)
-                    .collect(Collectors.toList())));
+                throw new IllegalArgumentException(String
+                    .format("The archive retrieval option value \"%s\" is invalid. Valid archive retrieval option values are:%s", archiveRetrievalOption,
+                        Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())));
             }
         }
 
@@ -383,7 +378,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
-        storageFileDaoHelper.validateStorageFilesCount(storageName, businessObjectDataKey, s3KeyPrefix, storageFiles.size());
+        storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+            businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
 
         // Set the expiration time for the restored storage unit.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());

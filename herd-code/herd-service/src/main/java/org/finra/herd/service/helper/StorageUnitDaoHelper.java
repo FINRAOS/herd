@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -42,6 +43,9 @@ public class StorageUnitDaoHelper
 {
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
     private MessageNotificationEventService messageNotificationEventService;
@@ -229,5 +233,35 @@ public class StorageUnitDaoHelper
         messageNotificationEventService
             .processStorageUnitStatusChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()),
                 storageUnitEntity.getStorage().getName(), storageUnitStatusEntity.getCode(), oldStatus);
+    }
+
+    /**
+     * Validates that there are no explicitly registered sub-partitions in storage for the business object data. This check is needed to validate that there are
+     * no storage files already registered in this storage by some other business object data that start with the same S3 key prefix.
+     *
+     * @param storageEntity the storage entity
+     * @param businessObjectFormatEntity the business object format entity
+     * @param businessObjectDataKey the business object data key
+     * @param s3KeyPrefix the S3 key prefix for the business object data in this storage
+     */
+    public void validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(StorageEntity storageEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataKey businessObjectDataKey, String s3KeyPrefix)
+    {
+        // Get business object format from the entity.
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
+
+        // Check business object data for any explicitly registered sub-partitions in the specified storage.
+        StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit =
+            findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectFormat,
+                businessObjectDataKey);
+
+        // Throw an exception if explicitly registered sub-partition is found.
+        if (explicitlyRegisteredSubPartitionStorageUnit != null)
+        {
+            throw new AlreadyExistsException(String.format(
+                "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                s3KeyPrefix, storageEntity.getName(),
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
+        }
     }
 }
