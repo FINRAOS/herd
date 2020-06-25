@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
-import org.finra.herd.service.helper.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +45,12 @@ import org.finra.herd.model.dto.EmrClusterCreateDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.service.EmrHelperService;
+import org.finra.herd.service.helper.AwsServiceHelper;
+import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
+import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
+
 
 /**
  * EmrHelperServiceImpl
@@ -384,13 +389,13 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
             }
-            if (emrClusterDefinitionOverride.getInstanceFleets() != null)
-            {
-                emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
-            }
             if (emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter() != null )
             {
                 emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter());
+            }
+            if (emrClusterDefinitionOverride.getInstanceFleets() != null)
+            {
+                emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
             }
             if (emrClusterDefinitionOverride.getNodeTags() != null)
             {
@@ -474,7 +479,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
         // Get total count of instances this definition will attempt to create
         Integer instanceFleetMinimumIpAvailableFilter = emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter();
 
-        if (instanceFleetMinimumIpAvailableFilter == null || instanceFleetMinimumIpAvailableFilter == 0) return;
+        if (instanceFleetMinimumIpAvailableFilter == null || instanceFleetMinimumIpAvailableFilter == 0)
+        {
+            return;
+        }
 
         // Get the subnet information
         // Makes AWS EC2 call DescribeSubnets
