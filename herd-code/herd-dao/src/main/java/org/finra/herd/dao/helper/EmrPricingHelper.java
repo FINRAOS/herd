@@ -658,7 +658,7 @@ public class EmrPricingHelper extends AwsHelper
      *
      * @return the list of subnets
      */
-    private List<Subnet> getSubnets(EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParamsDto)
+    public List<Subnet> getSubnets(EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParamsDto)
     {
         String definitionSubnetId = emrClusterDefinition.getSubnetId();
 

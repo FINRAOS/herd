@@ -15,6 +15,7 @@
 */
 package org.apache.spark.sql.herd
 
+import org.apache.commons.lang3.StringUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.herd.PartitionFilter._
 import scala.collection.JavaConverters._
@@ -609,10 +610,23 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     req.setBusinessObjectFormatFileType(formatFileType)
     val partitionValueFilter = new PartitionValueFilter
     partitionValueFilter.setPartitionKey(partitionKey)
-    val partitionValueRange = new PartitionValueRange()
-    partitionValueRange.setStartPartitionValue(firstPartitionValue)
-    partitionValueRange.setEndPartitionValue(lastPartitionValue)
-    partitionValueFilter.setPartitionValueRange(partitionValueRange)
+    if (StringUtils.isEmpty(lastPartitionValue)) {
+      val latestAfterPartitionValue = new LatestAfterPartitionValue();
+      latestAfterPartitionValue.setPartitionValue(firstPartitionValue)
+      partitionValueFilter.setLatestAfterPartitionValue(latestAfterPartitionValue)
+    }
+    else if (StringUtils.isEmpty(firstPartitionValue)) {
+      val latestBeforePartitionValue = new LatestBeforePartitionValue();
+      latestBeforePartitionValue.setPartitionValue(lastPartitionValue)
+      partitionValueFilter.setLatestBeforePartitionValue(latestBeforePartitionValue)
+    }
+    else {
+      val partitionValueRange = new PartitionValueRange()
+      partitionValueRange.setStartPartitionValue(firstPartitionValue)
+      partitionValueRange.setEndPartitionValue(lastPartitionValue)
+      partitionValueFilter.setPartitionValueRange(partitionValueRange)
+    }
+
     req.setPartitionValueFilter(partitionValueFilter)
 
     withRetry {

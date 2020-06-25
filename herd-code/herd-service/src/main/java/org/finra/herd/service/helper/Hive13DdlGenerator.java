@@ -560,12 +560,18 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(")\n");
         }
 
-        if (!StringUtils.isEmpty(businessObjectFormat.getSchema().getCustomRowFormat()))
+        if (StringUtils.isNotBlank(generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()))
+        {
+            // Add custom ClusteredBy defined in business object format schema.
+            sb.append(String.format("CLUSTERED BY %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()));
+        }
+
+        if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()))
         {
             // Add custom row format defined in business object format.
             // This will override everything after "ROW FORMAT" including delimiter, escape value, null value statements defined in the business object format
             // schema.
-            sb.append(String.format("ROW FORMAT %s\n", businessObjectFormat.getSchema().getCustomRowFormat()));
+            sb.append(String.format("ROW FORMAT %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()));
         }
         else
         {
