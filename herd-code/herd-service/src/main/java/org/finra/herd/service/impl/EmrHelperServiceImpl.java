@@ -388,6 +388,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
             }
+            if (emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter() != null )
+            {
+                emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter());
+            }
             if (emrClusterDefinitionOverride.getNodeTags() != null)
             {
                 emrClusterDefinition.setNodeTags(emrClusterDefinitionOverride.getNodeTags());
