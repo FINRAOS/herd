@@ -31,6 +31,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -759,7 +760,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
    * Returns the parse options
-   * todo: this is a quick fix, use unescape utils to elegantly handle this
    *
    * @param businessObjectFormat the business object format instance
    * @return Map of parse options
@@ -770,35 +770,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val actualDelimiter: Option[String] = Option(businessObjectFormat.getSchema.getDelimiter)
     val actualEscapeCharacter: Option[String] = Option(businessObjectFormat.getSchema.getEscapeCharacter)
 
-    var nullValue = None: Option[String]
-    var delimiter = None: Option[String]
-    var escapeCharacter = None: Option[String]
-
-    actualNullValue match
-    {
-      case Some(x) => if (x equalsIgnoreCase "\\\\") nullValue = Option("\\") else nullValue = Option(x)
-      case None => nullValue = None
-    }
-
-    actualDelimiter match
-    {
-      case Some(x) =>
-        if (x equalsIgnoreCase "\\\\") delimiter = Option("\\")
-        else if (x equalsIgnoreCase "\\") delimiter = Option("\\")
-        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").replace("\\", "").toInt.toChar.toString)
-        else delimiter = Option(x)
-      case None => delimiter = None
-    }
-
-    actualEscapeCharacter match
-    {
-      case Some(x) =>
-        if (x equalsIgnoreCase "\\\\") escapeCharacter = Option("\\")
-        else if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
-        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", ""))
-        else escapeCharacter = Option(x)
-      case None => escapeCharacter = None
-    }
+    val nullValue = unescape(actualNullValue)
+    val delimiter = unescape(actualDelimiter)
+    val escapeCharacter = unescape(actualEscapeCharacter)
 
     var parseOptions = scala.collection.mutable.Map(
       "delimiter" -> delimiter.orNull,
@@ -812,6 +786,23 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     parseOptions.toMap
+  }
+
+  /**
+   * Unescapes a character sequence
+   *
+   * @param escapedSequence the specified char sequence
+   * @return unescaped char sequence
+   */
+  private def unescape(escapedSequence: Option[String]): Option[String] = {
+    var unescapedSeq: Option[String] = None
+
+    escapedSequence match {
+      case Some(x) => unescapedSeq = Option(StringEscapeUtils unescapeJava x)
+      case None => unescapedSeq = None
+    }
+
+    unescapedSeq
   }
 
   /**
@@ -840,7 +831,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val partitionKey = businessObjectFormat.getPartitionKey
 
     // get the list of partitions
-    val partitions = businessObjectFormat.getSchema.getPartitions.asScala
+    val partitions =
+      if ( businessObjectFormat.getSchema.getPartitions != null)   {
+        businessObjectFormat.getSchema.getPartitions.asScala
+      }
+      else {
+        Nil
+      }
+
 
     // get from the XML the partition columns, map them to a list of StructFields
     val fields = partitions.map { c =>
@@ -1017,8 +1015,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "0"
-    val lastPartValue = "z"
+    val firstPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "0" else "none"
+    val lastPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "z" else ""
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }

@@ -133,8 +133,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         ddl.setNamespace(NAMESPACE);
         ddl.setDdl(businessObjectFormatServiceTestHelper
             .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-                FileTypeEntity.TXT_FILE_TYPE, true, true));
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true));
 
         // Retrieve business object format ddl.
         BusinessObjectFormatDdlRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);

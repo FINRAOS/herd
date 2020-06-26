@@ -218,7 +218,6 @@ public class BusinessObjectDataDdlPartitionsHelper
         if (request.getOutputFormat() == null)
         {
             generateDdlRequest.isGeneratePartitionsRequest = true;
-            Assert.isTrue(isPartitioned, "Generate-partitions request does not support singleton partitions.");
         }
         else
         {
@@ -589,19 +588,31 @@ public class BusinessObjectDataDdlPartitionsHelper
             }
             else // This is a non-partitioned table.
             {
-                // Get location for this non-partitioned table.
-                String tableLocation = String.format("s3n://%s/%s", s3BucketName, s3KeyPrefix);
-
-                if (generateDdlRequest.customDdlEntity == null)
+                if (!generateDdlRequest.isGeneratePartitionsRequest)
                 {
-                    // Since custom DDL was not specified and this table is not partitioned, add a LOCATION clause.
-                    // This is the last line in the non-partitioned table DDL.
-                    sb.append(String.format("LOCATION '%s';", tableLocation));
+                    // Get location for this non-partitioned table.
+                    String tableLocation = String.format("s3n://%s/%s", s3BucketName, s3KeyPrefix);
+
+                    if (generateDdlRequest.customDdlEntity == null)
+                    {
+                        // Since custom DDL was not specified and this table is not partitioned, add a LOCATION clause.
+                        // This is the last line in the non-partitioned table DDL.
+                        sb.append(String.format("LOCATION '%s';", tableLocation));
+                    }
+                    else
+                    {
+                        // Since custom DDL was used for a non-partitioned table, substitute the relative custom DDL token with the actual table location.
+                        replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
+                    }
                 }
                 else
                 {
-                    // Since custom DDL was used for a non-partitioned table, substitute the relative custom DDL token with the actual table location.
-                    replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
+                    Partition partition = new Partition();
+                    List<PartitionColumn> partitionColumns = new ArrayList<>();
+                    partition.setPartitionColumns(partitionColumns);
+                    partitionColumns.add(new PartitionColumn(NO_PARTITIONING_PARTITION_KEY, NO_PARTITIONING_PARTITION_VALUE));
+                    partition.setPartitionLocation(String.format("%s/%s", s3BucketName, s3KeyPrefix));
+                    partitions.add(partition);
                 }
             }
         }
