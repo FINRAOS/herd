@@ -15,7 +15,11 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +33,7 @@ import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
@@ -45,6 +50,7 @@ import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
+
 
 /**
  * EmrHelperServiceImpl
@@ -86,6 +92,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
     @Autowired
     private XmlHelper xmlHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * {@inheritDoc}
@@ -141,10 +150,17 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
 
+        // RunJobFlow creates and starts running a new cluster
+        // The RunJobFlow request can contain InstanceFleets parameters or InstanceGroups (InstanceDefinitions) parameters, but not both
         // If instance group definitions are specified, find best price and update definition.
+        // Else instance fleet definitions are specified. If minimum ip filter is greater than 0, find valid subnets and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
         {
             emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        }
+        else
+        {
+            updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         }
 
         // The cluster ID record.
@@ -373,6 +389,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
             }
+            if (emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter() != null )
+            {
+                emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter());
+            }
             if (emrClusterDefinitionOverride.getInstanceFleets() != null)
             {
                 emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
@@ -438,5 +458,55 @@ public class EmrHelperServiceImpl implements EmrHelperService
                 emrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
             }
         }
+    }
+
+    /**
+     * Finds subnets that meet the minimum available IP filter given in the EMR cluster definition
+     * <p/>
+     * The results of the findings are used to update the given definition.
+     * <p/>
+     * Gets subnet information and compares AvailableIpAddressCount with InstanceFleetMinimumIpAvailableFilter
+     * <p/>
+     *
+     * @param emrClusterAlternateKeyDto EMR cluster alternate key
+     * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
+     */
+    void updateEmrClusterDefinitionWithValidInstanceFleetSubnets(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto,
+                                                                 EmrClusterDefinition emrClusterDefinition,
+                                                                 AwsParamsDto awsParamsDto)
+    {
+        // Get total count of instances this definition will attempt to create
+        Integer instanceFleetMinimumIpAvailableFilter = emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter();
+
+        if (instanceFleetMinimumIpAvailableFilter == null || instanceFleetMinimumIpAvailableFilter == 0)
+        {
+            return;
+        }
+
+        // Get the subnet information
+        // Makes AWS EC2 call DescribeSubnets
+
+        List<Subnet> subnets  = emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto);
+
+        String contextInfo = String.format("namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
+                        "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s", emrClusterAlternateKeyDto.getNamespace(),
+                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
+                jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))));
+
+        LOGGER.info("Current IP availability: {}", contextInfo);
+
+        List<String> validSubnetIds = subnets.stream()
+                .filter(subnet -> subnet.getAvailableIpAddressCount() >= instanceFleetMinimumIpAvailableFilter)
+                .map(Subnet::getSubnetId).collect(Collectors.toList());
+
+        if (validSubnetIds.isEmpty())
+        {
+            throw new IllegalArgumentException( "Specified subnets do not have enough available IP addresses required for the instance fleet. " +
+                    "Current IP availability: " + contextInfo);
+        }
+
+        // Pass list of valid subnet ids back to EMR cluster definition
+        emrClusterDefinition.setSubnetId(String.join(",", validSubnetIds));
     }
 }

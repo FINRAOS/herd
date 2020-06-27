@@ -16,13 +16,15 @@
 package org.finra.herd.service.impl;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.google.common.collect.Lists;
@@ -30,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -37,6 +40,7 @@ import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
@@ -103,6 +107,9 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
 
     @Mock
     private XmlHelper xmlHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
 
     @Before
     public void before()
@@ -356,12 +363,178 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
     }
 
     @Test
+    public void testUpdateEmrClusterDefinitionWithNullFilterValue()
+    {
+        // Create an AWS params DTO
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Create an EMR cluster alternate key DTO
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
+
+        // Create an EMR cluster definition object
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(null);
+        emrClusterDefinition.setSubnetId("Test_Subnet_1,Test_Subnet_2");
+
+        // Call the method under test.
+        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+
+        // Verify correct value
+        assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateEmrClusterDefinitionWithZeroFilterValue()
+    {
+        // Create an AWS params DTO
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Create an EMR cluster alternate key DTO
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
+
+        // Create an EMR cluster definition object
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(0);
+        emrClusterDefinition.setSubnetId("Test_Subnet_1,Test_Subnet_2");
+
+        // Call the method under test.
+        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+
+        // Verify correct value
+        assertEquals("Test_Subnet_1,Test_Subnet_2", emrClusterDefinition.getSubnetId());
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateEmrClusterDefinitionWithAllValidInstanceFleetSubnets()
+    {
+        // Create an AWS params DTO
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Create an EMR cluster alternate key DTO
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
+
+        // Create an EMR cluster definition object
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(1);
+        emrClusterDefinition.setSubnetId("SUBNET_1,SUBNET_2,SUBNET_3");
+
+        // Create subnet object
+        List<Subnet> subnets = initializeTestSubnets(3);
+
+        // Mock the external calls.
+        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
+
+        // Call the method under test.
+        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+
+        // Verify correct value
+        assertEquals("SUBNET_1,SUBNET_2,SUBNET_3", emrClusterDefinition.getSubnetId());
+
+        // Verify the external calls.
+        verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateEmrClusterDefinitionWithOneValidInstanceFleetSubnet()
+    {
+        // Create an AWS params DTO
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Create an EMR cluster alternate key DTO
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
+
+        // Create an EMR cluster definition object
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(25);
+        emrClusterDefinition.setSubnetId("SUBNET_1,SUBNET_2,SUBNET_3");
+
+        // Create subnet object
+        List<Subnet> subnets = initializeTestSubnets(3);
+
+        // Mock the external calls.
+        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
+
+        // Call the method under test.
+        emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+
+        // Verify correct value
+        assertEquals("SUBNET_3", emrClusterDefinition.getSubnetId());
+
+        // Verify the external calls.
+        verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testUpdateEmrClusterDefinitionWithNonValidInstanceFleetSubnets()
+    {
+        // Create an AWS params DTO
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Create an EMR cluster alternate key DTO
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
+
+        // Create an EMR cluster definition object
+        EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
+        emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(50);
+
+        // Create subnet object
+        List<Subnet> subnets = initializeTestSubnets(3);
+
+        // Mock the external calls.
+        when(emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto)).thenReturn(subnets);
+        when(jsonHelper.objectToJson(Mockito.any())).thenReturn("{jsonFormattedSubnetsAvailability}");
+
+        // Call the method under test.
+        try {
+            emrHelperServiceImpl.updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+            fail("IllegalArgumentException expected");
+        }
+        catch(IllegalArgumentException ex) {
+            assertTrue(ex.getMessage().startsWith("Specified subnets do not have enough available IP addresses required for the instance fleet."));
+            assertTrue(ex.getMessage().contains(NAMESPACE));
+            assertTrue(ex.getMessage().contains(EMR_CLUSTER_DEFINITION_NAME));
+            assertTrue(ex.getMessage().contains(EMR_CLUSTER_NAME));
+            assertTrue(ex.getMessage().contains("{jsonFormattedSubnetsAvailability}"));
+        }
+
+        // Verify the external calls.
+        verify(emrPricingHelper).getSubnets(emrClusterDefinition, awsParamsDto);
+        verify(jsonHelper).objectToJson(Mockito.any());
+        verifyNoMoreInteractionsHelper();
+
+    }
+
+    private List<Subnet> initializeTestSubnets(int n) {
+        List<Subnet> subnets = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            Subnet subnet = new Subnet();
+            subnet.setSubnetId("SUBNET_" + i);
+            subnet.setAvailableIpAddressCount(i * 10);
+            subnets.add(subnet);
+        }
+
+        return subnets;
+    }
+
+    @Test
     public void testOverrideEmrClusterDefinition()
     {
         EmrClusterDefinition emrClusterDefinition =
             new EmrClusterDefinition("sshKeyPairName", "subnetId", "logBucket", true, true, true, true, "accountId", "serviceIamRole", "ec2NodeIamProfileName",
                 "amiVersion", "releaseLabel", "hadoopVersion", "hiveVersion", "pigVersion", true, Lists.newArrayList(new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(), 0,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet()), Lists.newArrayList(new NodeTag()), "supportedProduct",
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
@@ -372,7 +545,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
             new EmrClusterDefinition("sshKeyPairNameOverride", "subnetIdOverride", "logBucketOverride", false, false, false, false, "accountIdOverride",
                 "serviceIamRoleOverride", "ec2NodeIamProfileNameOverride", "amiVersionOverride", "releaseLabelOverride", "hadoopVersionOverride",
                 "hiveVersionOverride", "pigVersionOverride", false, Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition(), new ScriptDefinition()), "additionalInfoOverride", new InstanceDefinitions(), 10,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet(), new EmrClusterDefinitionInstanceFleet()),
                 Lists.newArrayList(new NodeTag(), new NodeTag()), "supportedProductOverride",
                 Lists.newArrayList(new EmrClusterDefinitionApplication(), new EmrClusterDefinitionApplication()),
@@ -396,7 +569,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
         EmrClusterDefinition emrClusterDefinition =
             new EmrClusterDefinition("sshKeyPairName", "subnetId", "logBucket", true, true, true, true, "accountId", "serviceIamRole", "ec2NodeIamProfileName",
                 "amiVersion", "releaseLabel", "hadoopVersion", "hiveVersion", "pigVersion", true, Lists.newArrayList(new ScriptDefinition()),
-                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(),
+                Lists.newArrayList(new ScriptDefinition()), "additionalInfo", new InstanceDefinitions(), 0,
                 Lists.newArrayList(new EmrClusterDefinitionInstanceFleet()), Lists.newArrayList(new NodeTag()), "supportedProduct",
                 Lists.newArrayList(new EmrClusterDefinitionApplication()), Lists.newArrayList(new EmrClusterDefinitionConfiguration()),
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
@@ -418,6 +591,6 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(awsServiceHelper, configurationHelper, emrClusterDefinitionDaoHelper, emrClusterDefinitionHelper, emrDao, emrHelper,
-            emrPricingHelper, herdDao, namespaceDaoHelper, namespaceIamRoleAuthorizationHelper, xmlHelper);
+            emrPricingHelper, herdDao, namespaceDaoHelper, namespaceIamRoleAuthorizationHelper, xmlHelper, jsonHelper);
     }
 }
