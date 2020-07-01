@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.IndexMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.shard.DocsStats;
 import org.junit.Before;
@@ -224,8 +224,8 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         @SuppressWarnings("unchecked")
         DocsStats mockedDocsStats = mock(DocsStats.class);
 
-        Settings settings = Settings.builder().put(IndexMetaData.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID)
-            .put(IndexMetaData.SETTING_CREATION_DATE,  Long.toString(SEARCH_INDEX_STATISTICS_CREATION_DATE.toGregorianCalendar().getTimeInMillis())).build();
+        Settings settings = Settings.builder().put(IndexMetadata.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID)
+            .put(IndexMetadata.SETTING_CREATION_DATE,  Long.toString(SEARCH_INDEX_STATISTICS_CREATION_DATE.toGregorianCalendar().getTimeInMillis())).build();
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("Search index name", SEARCH_INDEX_NAME)).thenReturn(SEARCH_INDEX_NAME);
         when(searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey)).thenReturn(searchIndexEntity);

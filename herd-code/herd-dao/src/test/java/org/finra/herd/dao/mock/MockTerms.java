@@ -58,7 +58,7 @@ public class MockTerms implements Terms
     }
 
     @Override
-    public Map<String, Object> getMetaData()
+    public Map<String, Object> getMetadata()
     {
         return null;
     }
