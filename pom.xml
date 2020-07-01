@@ -82,7 +82,7 @@
       <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
       <plexus.utils.version>3.1.0</plexus.utils.version>
       <postgresql.driver.version>42.1.4.jre7</postgresql.driver.version>
-      <quartz.scheduler.version>2.3.1</quartz.scheduler.version>
+      <quartz.scheduler.version>2.3.2</quartz.scheduler.version>
       <roaster.version>2.20.4.Final</roaster.version>
       <scala.version>2.11.0</scala.version>
       <scala.tools.version>2.11</scala.tools.version>
