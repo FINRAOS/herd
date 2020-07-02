@@ -144,7 +144,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Create a storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
@@ -343,7 +343,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
             .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
         when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, true))
+            .thenReturn(storageFiles);
         doAnswer(new Answer<Void>()
         {
             public Void answer(InvocationOnMock invocation)
@@ -387,7 +388,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, true);
         verify(storageUnitDaoHelper)
             .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
                 S3_KEY_PREFIX);
