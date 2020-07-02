@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -62,7 +62,6 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
@@ -89,9 +88,6 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
     @Mock
     private S3Service s3Service;
-
-    @Mock
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -392,7 +388,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
         verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
-        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, S3_KEY_PREFIX, storageFileEntities.size());
+        verify(storageUnitDaoHelper)
+            .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
+                S3_KEY_PREFIX);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ENDPOINT);
         verifyNoMoreInteractionsHelper();
@@ -525,7 +523,6 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3KeyPrefixHelper, s3Service,
-            storageFileDaoHelper, storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper,
-            storageUnitHelper);
+            storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
     }
 }

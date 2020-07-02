@@ -35,7 +35,6 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataStorageFilesDto;
@@ -212,23 +211,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         // storage by some other business object data that start with the same S3 key prefix.
         if (StringUtils.isNotBlank(directoryPath))
         {
-            // Get business object format from the entity.
-            BusinessObjectFormat businessObjectFormat =
-                businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
-
-            // Check business object data for any explicitly registered sub-partitions in the specified storage.
-            StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDaoHelper
-                .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
-                    storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey);
-
-            // Throw an exception if explicitly registered sub-partition is found.
-            if (explicitlyRegisteredSubPartitionStorageUnit != null)
-            {
-                throw new AlreadyExistsException(String.format(
-                    "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
-                    directoryPath, storageEntity.getName(),
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
-            }
+            storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey, directoryPath);
         }
 
         // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.
