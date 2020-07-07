@@ -224,6 +224,4 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
         decisionVoters.add(decisionVoter);
         return new AffirmativeBased(decisionVoters);
     }
-
-
 }
