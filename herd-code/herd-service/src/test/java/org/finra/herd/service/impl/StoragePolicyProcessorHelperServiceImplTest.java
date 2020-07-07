@@ -144,7 +144,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Create a storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
