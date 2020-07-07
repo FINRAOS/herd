@@ -162,12 +162,13 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
     }
 
     /**
-     * Gets a default http firewall, default to DefaultHttpFirewall for HttpFirewall to provide backend capability
+     * Gets a default http firewall, default to DefaultHttpFirewall for HttpFirewall to provide backend capability.
      *
      * @return the default http firewall.
      */
     @Bean
-    public HttpFirewall defaultHttpFirewall() {
+    public HttpFirewall defaultHttpFirewall()
+    {
         return new DefaultHttpFirewall();
     }
 
