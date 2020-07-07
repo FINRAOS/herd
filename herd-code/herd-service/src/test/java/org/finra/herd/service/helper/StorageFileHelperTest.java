@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -115,6 +116,42 @@ public class StorageFileHelperTest extends AbstractServiceTest
         // Create storage file from entity when directory path is not matching the beginning of storage file path and storage file represents an empty S3 directory.
         assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + StorageFileEntity.S3_EMPTY_PARTITION, FILE_SIZE_0_BYTE, NO_ROW_COUNT),
             storageFileHelper.createStorageFileFromEntity(emptyDirectoryStorageFileEntity, STORAGE_DIRECTORY_PATH));
+    }
+
+    @Test
+    public void testCreateStorageFileFromEntities()
+    {
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity1 = new StorageFileEntity();
+        storageFileEntity1.setStorageUnit(null);
+        storageFileEntity1.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1");
+        storageFileEntity1.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity1.setRowCount(ROW_COUNT);
+
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity2 = new StorageFileEntity();
+        storageFileEntity2.setStorageUnit(null);
+        storageFileEntity2.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2");
+        storageFileEntity2.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity2.setRowCount(ROW_COUNT);
+
+        List<StorageFile> storageFiles = null;
+
+        // Create storage files from entity when directory path is not specified
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
+
+        // Create storage files from entity when directory path passed as null
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2), null);
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2), STRING_VALUE);
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
     }
 
     @Test

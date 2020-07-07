@@ -189,7 +189,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             .buildS3KeyPrefix(storagePolicyEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
         // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, true);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
