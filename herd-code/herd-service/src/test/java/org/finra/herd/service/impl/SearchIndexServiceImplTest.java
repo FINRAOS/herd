@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.util.concurrent.Future;
 
-import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.IndexMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.shard.DocsStats;
@@ -240,7 +240,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
     {
         // Create a search index get settings response without the index creation date setting.
         ImmutableOpenMap<String, Settings> getIndexResponseSettings = ImmutableOpenMap.<String, Settings>builder()
-            .fPut(SEARCH_INDEX_NAME, Settings.builder().put(IndexMetaData.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID).build()).build();
+            .fPut(SEARCH_INDEX_NAME, Settings.builder().put(IndexMetadata.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID).build()).build();
 
         // Mock an index docs stats object.
         DocsStats mockedDocsStats = mock(DocsStats.class);

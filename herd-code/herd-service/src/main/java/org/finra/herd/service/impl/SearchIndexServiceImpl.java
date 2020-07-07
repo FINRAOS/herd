@@ -17,7 +17,7 @@ package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
 
-import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.IndexMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.shard.DocsStats;
 import org.joda.time.DateTime;
@@ -269,7 +269,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
     {
         SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
 
-        Long creationDate = settings.getAsLong(IndexMetaData.SETTING_CREATION_DATE, -1L);
+        Long creationDate = settings.getAsLong(IndexMetadata.SETTING_CREATION_DATE, -1L);
         if (creationDate != -1L)
         {
             DateTime creationDateTime = new DateTime(creationDate, DateTimeZone.UTC);
@@ -278,7 +278,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
         searchIndexStatistics.setIndexNumberOfActiveDocuments(docsStats.getCount());
         searchIndexStatistics.setIndexNumberOfDeletedDocuments(docsStats.getDeleted());
-        searchIndexStatistics.setIndexUuid(settings.get(IndexMetaData.SETTING_INDEX_UUID));
+        searchIndexStatistics.setIndexUuid(settings.get(IndexMetadata.SETTING_INDEX_UUID));
         searchIndexStatistics.setIndexCount(indexCount);
 
         return searchIndexStatistics;

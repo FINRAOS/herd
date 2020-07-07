@@ -62,7 +62,7 @@ import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.shard.DocsStats;
@@ -468,18 +468,18 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -510,18 +510,18 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -574,17 +574,17 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -642,15 +642,15 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
@@ -684,15 +684,15 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
@@ -728,14 +728,14 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
 
         // Create objects needed for the test.
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         List<Long> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_DOCUMENT_ID);
@@ -888,18 +888,18 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -930,18 +930,18 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
@@ -974,17 +974,17 @@ public class IndexFunctionsDaoTest extends AbstractDaoTest
         GetAliasesResponse getAliasesResponse = mock(GetAliasesResponse.class);
         IndicesClient indicesClient = mock(IndicesClient.class);
         RestHighLevelClient restHighLevelClient = mock(RestHighLevelClient.class);
-        AliasMetaData aliasMetaData = mock(AliasMetaData.class);
+        AliasMetadata AliasMetadata = mock(AliasMetadata.class);
 
         // Create objects needed for the test.
         Map<String, String> documentMap = new HashMap<>();
         documentMap.put(SEARCH_INDEX_DOCUMENT, SEARCH_INDEX_DOCUMENT_JSON);
 
-        Set<AliasMetaData> aliasMetaDataSet = new HashSet<>();
-        aliasMetaDataSet.add(aliasMetaData);
+        Set<AliasMetadata> AliasMetadataSet = new HashSet<>();
+        AliasMetadataSet.add(AliasMetadata);
 
-        Map<String, Set<AliasMetaData>> aliases = new HashMap<>();
-        aliases.put(SEARCH_INDEX_ALIAS_BDEF, aliasMetaDataSet);
+        Map<String, Set<AliasMetadata>> aliases = new HashMap<>();
+        aliases.put(SEARCH_INDEX_ALIAS_BDEF, AliasMetadataSet);
 
         // Mock the calls to external methods
         when(elasticsearchRestHighLevelClientFactory.getRestHighLevelClient()).thenReturn(restHighLevelClient);
