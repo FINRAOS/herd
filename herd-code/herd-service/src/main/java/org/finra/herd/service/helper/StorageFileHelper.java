@@ -63,8 +63,9 @@ public class StorageFileHelper
      * Creates a storage file from the storage file entity. Storage unit directory path might not be specified and also it may or may not contain trailing '/'
      * character.
      *
-     * @param storageFileEntity        the storage file entity
+     * @param storageFileEntity the storage file entity
      * @param storageUnitDirectoryPath the storage unit directory path, maybe null
+     *
      * @return the storage file
      */
     StorageFile createStorageFileFromEntity(StorageFileEntity storageFileEntity, String storageUnitDirectoryPath)
@@ -98,8 +99,9 @@ public class StorageFileHelper
     /**
      * Creates a list of storage files from the collection of storage file entities.
      *
-     * @param storageFileEntities      the collection of storage file entities
+     * @param storageFileEntities the collection of storage file entities
      * @param storageUnitDirectoryPath the storage unit directory path, maybe null
+     *
      * @return the list of storage files
      */
     public List<StorageFile> createStorageFilesFromEntities(Collection<StorageFileEntity> storageFileEntities, String storageUnitDirectoryPath)
@@ -118,6 +120,7 @@ public class StorageFileHelper
      * Creates a list of storage files from the collection of storage file entities with empty storage unit directory path.
      *
      * @param storageFileEntities the collection of storage file entities
+     *
      * @return the list of storage files
      */
     public List<StorageFile> createStorageFilesFromEntities(Collection<StorageFileEntity> storageFileEntities)
@@ -129,6 +132,7 @@ public class StorageFileHelper
      * Creates a list of storage files from the list of S3 object summaries.
      *
      * @param s3ObjectSummaries the list of S3 object summaries
+     *
      * @return the list of storage files
      */
     public List<StorageFile> createStorageFilesFromS3ObjectSummaries(List<S3ObjectSummary> s3ObjectSummaries)
@@ -147,10 +151,11 @@ public class StorageFileHelper
      * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
      * empty and that all storage files match the expected s3 key prefix value.
      *
-     * @param storageUnitEntity     the storage unit entity the storage file paths to be validated
-     * @param s3KeyPrefix           the S3 key prefix that storage file paths are expected to start with
-     * @param storageName           the storage name
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
+     *
      * @return the list of storage files
      */
     public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
@@ -163,11 +168,12 @@ public class StorageFileHelper
      * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
      * empty and that all storage files match the expected s3 key prefix value.
      *
-     * @param storageUnitEntity     the storage unit entity the storage file paths to be validated
-     * @param s3KeyPrefix           the S3 key prefix that storage file paths are expected to start with
-     * @param storageName           the storage name
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
-     * @param restoreDirectoryPath  apply storage unit directory when creating storage files
+     * @param restoreDirectoryPath apply storage unit directory when creating storage files
+     *
      * @return the list of storage files
      */
     public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
@@ -197,10 +203,11 @@ public class StorageFileHelper
      * Retrieves and validates a list of storage files registered with the specified storage unit. This method returns an empty list if storage unit has no
      * storage files.
      *
-     * @param storageUnitEntity     the storage unit entity the storage file paths to be validated
-     * @param s3KeyPrefix           the S3 key prefix that storage file paths are expected to start with
-     * @param storageName           the storage name
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
+     *
      * @return the list of storage files
      */
     public List<StorageFile> getAndValidateStorageFilesIfPresent(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
@@ -214,6 +221,7 @@ public class StorageFileHelper
      * Returns a list of file paths extracted from the specified list of S3 object summaries.
      *
      * @param s3ObjectSummaries the list of of S3 object summaries
+     *
      * @return the list of file paths
      */
     public List<String> getFilePathsFromS3ObjectSummaries(List<S3ObjectSummary> s3ObjectSummaries)
@@ -232,6 +240,7 @@ public class StorageFileHelper
      * Returns a list of file paths extracted from the specified list of storage files.
      *
      * @param storageFiles the list of storage files
+     *
      * @return the list of file paths
      */
     public List<String> getFilePathsFromStorageFiles(List<StorageFile> storageFiles)
@@ -250,6 +259,7 @@ public class StorageFileHelper
      * Returns a list of files extracted from the specified list of storage files.
      *
      * @param storageFiles the list of storage files
+     *
      * @return the list of files
      */
     public List<File> getFiles(List<StorageFile> storageFiles)
@@ -268,6 +278,7 @@ public class StorageFileHelper
      * Returns a map of file paths to the storage file entities build from the list of storage file entities.
      *
      * @param storageFileEntities the collection of storage file entities
+     *
      * @return the map of file paths to storage file entities
      */
     public Map<String, StorageFileEntity> getStorageFileEntitiesMap(Collection<StorageFileEntity> storageFileEntities)
@@ -286,6 +297,7 @@ public class StorageFileHelper
      * Returns a map of file paths to the storage files build from the list of S3 object summaries with map iteration order matching the original list order.
      *
      * @param s3ObjectSummaries the list of S3 object summaries
+     *
      * @return the map of file paths to storage files
      */
     public Map<String, StorageFile> getStorageFilesMapFromS3ObjectSummaries(List<S3ObjectSummary> s3ObjectSummaries)
@@ -336,8 +348,9 @@ public class StorageFileHelper
      * Validate downloaded S3 files per storage unit information.
      *
      * @param baseDirectory the local parent directory path, relative to which the files are expected to be located
-     * @param s3KeyPrefix   the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
-     * @param storageUnit   the storage unit that contains a list of storage files to be validated
+     * @param s3KeyPrefix the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
+     * @param storageUnit the storage unit that contains a list of storage files to be validated
+     *
      * @throws IllegalStateException if files are not valid
      */
     public void validateDownloadedS3Files(String baseDirectory, String s3KeyPrefix, StorageUnit storageUnit) throws IllegalStateException
@@ -349,8 +362,9 @@ public class StorageFileHelper
      * Validate downloaded S3 files per specified list of storage files.
      *
      * @param baseDirectory the local parent directory path, relative to which the files are expected to be located
-     * @param s3KeyPrefix   the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
-     * @param storageFiles  the list of storage files
+     * @param s3KeyPrefix the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
+     * @param storageFiles the list of storage files
+     *
      * @throws IllegalStateException if files are not valid
      */
     public void validateDownloadedS3Files(String baseDirectory, String s3KeyPrefix, List<StorageFile> storageFiles) throws IllegalStateException
@@ -398,9 +412,9 @@ public class StorageFileHelper
     /**
      * Validates registered S3 files per list of expected storage files. The validation ignores (does not fail) when detecting unregistered zero byte S3 files.
      *
-     * @param expectedStorageFiles  the list of expected S3 files represented by storage files
-     * @param s3ObjectSummaries     the list of actual S3 files represented by S3 object summaries
-     * @param storageName           the storage name
+     * @param expectedStorageFiles the list of expected S3 files represented by storage files
+     * @param s3ObjectSummaries the list of actual S3 files represented by S3 object summaries
+     * @param storageName the storage name
      * @param businessObjectDataKey the business object data key
      */
     public void validateRegisteredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> s3ObjectSummaries, String storageName,
@@ -450,9 +464,9 @@ public class StorageFileHelper
     /**
      * Validates storage file against the actual S3 objects reported by S3.
      *
-     * @param storageFile      the storage file to be validated
-     * @param s3BucketName     the S3 bucket name
-     * @param actualS3Keys     the map of storage file paths to storage files as reported by S3
+     * @param storageFile the storage file to be validated
+     * @param s3BucketName the S3 bucket name
+     * @param actualS3Keys the map of storage file paths to storage files as reported by S3
      * @param validateFileSize specifies whether file size validation is required or not
      */
     public void validateStorageFile(StorageFile storageFile, String s3BucketName, Map<String, StorageFile> actualS3Keys, boolean validateFileSize)
@@ -475,9 +489,9 @@ public class StorageFileHelper
      * Validates storage file entity against the actual S3 objects reported by S3.
      *
      * @param storageFileEntity the storage file to be validated
-     * @param s3BucketName      the S3 bucket name
-     * @param actualS3Keys      the map of storage file paths to storage files as reported by S3
-     * @param validateFileSize  specifies whether file size validation is required or not
+     * @param s3BucketName the S3 bucket name
+     * @param actualS3Keys the map of storage file paths to storage files as reported by S3
+     * @param validateFileSize specifies whether file size validation is required or not
      */
     public void validateStorageFileEntity(StorageFileEntity storageFileEntity, String s3BucketName, Map<String, StorageFile> actualS3Keys,
         boolean validateFileSize)
@@ -502,10 +516,10 @@ public class StorageFileHelper
     /**
      * Validates a list of storage file paths. This method makes sure that all storage file paths match the expected s3 key prefix value.
      *
-     * @param storageFilePaths      the storage file paths to be validated
-     * @param s3KeyPrefix           the S3 key prefix that storage file paths are expected to start with
+     * @param storageFilePaths the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
      * @param businessObjectDataKey the business object data key
-     * @param storageName           the name of the storage that storage files are stored in
+     * @param storageName the name of the storage that storage files are stored in
      */
     public void validateStorageFilePaths(Collection<String> storageFilePaths, String s3KeyPrefix, BusinessObjectDataKey businessObjectDataKey,
         String storageName)
@@ -521,9 +535,9 @@ public class StorageFileHelper
     /**
      * Validates S3 files per storage unit information.
      *
-     * @param storageUnit   the storage unit that contains S3 files to be validated
+     * @param storageUnit the storage unit that contains S3 files to be validated
      * @param actualS3Files the list of the actual S3 files
-     * @param s3KeyPrefix   the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
+     * @param s3KeyPrefix the S3 key prefix that was prepended to the S3 file paths, when they were uploaded to S3
      */
     public void validateStorageUnitS3Files(StorageUnit storageUnit, List<String> actualS3Files, String s3KeyPrefix)
     {

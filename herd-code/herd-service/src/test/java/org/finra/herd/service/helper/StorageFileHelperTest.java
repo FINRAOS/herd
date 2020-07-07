@@ -240,8 +240,9 @@ public class StorageFileHelperTest extends AbstractServiceTest
     /**
      * Creates an S3 object summary.
      *
-     * @param filePath        the file path
+     * @param filePath the file path
      * @param fileSizeInBytes the file size in bytes
+     *
      * @return the S3 object summary
      */
     private S3ObjectSummary createS3ObjectSummary(String filePath, long fileSizeInBytes)
@@ -418,7 +419,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
      * Creates test files of the specified size relative to the base directory.
      *
      * @param baseDirectory the local parent directory path, relative to which we want our file to be created
-     * @param size          the file size in bytes
+     * @param size the file size in bytes
      */
     private void createLocalFiles(String baseDirectory, long size) throws IOException
     {
@@ -432,9 +433,10 @@ public class StorageFileHelperTest extends AbstractServiceTest
     /**
      * Creates a storage unit with the specified list of files.
      *
-     * @param s3KeyPrefix   the S3 key prefix.
-     * @param files         the list of files.
+     * @param s3KeyPrefix the S3 key prefix.
+     * @param files the list of files.
      * @param fileSizeBytes the file size in bytes.
+     *
      * @return the storage unit with the list of file paths
      */
     private StorageUnit createStorageUnit(String s3KeyPrefix, List<String> files, Long fileSizeBytes)
