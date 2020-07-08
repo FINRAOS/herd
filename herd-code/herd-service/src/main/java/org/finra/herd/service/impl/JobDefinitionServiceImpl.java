@@ -241,6 +241,9 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         // Ensure the Activiti XML doesn't contain a CDATA wrapper.
         Assert.isTrue(!activitiJobXml.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
 
+        // Ensure the Activiti XML doesn't contain a shell type task defined in it.
+        Assert.isTrue(!activitiJobXml.contains("activiti:type=\"shell\""), "Activiti XML can not contain activti shell type service tasks.");
+
         // Convert Activiti XML into BpmnModel and validate.
         BpmnModel bpmnModel;
         try
