@@ -207,6 +207,12 @@
       <dependency>
          <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk</artifactId>
+         <exclusions>
+             <exclusion>
+                 <groupId>io.netty</groupId>
+                 <artifactId>*</artifactId>
+             </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
