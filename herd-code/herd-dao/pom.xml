@@ -97,6 +97,11 @@
          <artifactId>commons-configuration</artifactId>
       </dependency>
       <dependency>
+         <groupId>dom4j</groupId>
+         <artifactId>dom4j</artifactId>
+         <version>${dom4j.version}</version>
+      </dependency>
+      <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-entitymanager</artifactId>
       </dependency>
