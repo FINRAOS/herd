@@ -41,6 +41,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.firewall.DefaultHttpFirewall;
+import org.springframework.security.web.firewall.HttpFirewall;
 
 import org.finra.herd.app.security.HerdUserDetailsService;
 import org.finra.herd.app.security.HttpHeaderApplicationUserBuilder;
@@ -122,7 +124,7 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
     public FilterChainProxy filterChainProxy(final TrustedUserAuthenticationFilter trustedUserAuthenticationFilter,
         final HttpHeaderAuthenticationFilter httpHeaderAuthenticationFilter)
     {
-        return new FilterChainProxy(new SecurityFilterChain()
+        FilterChainProxy filterChainProxy = new FilterChainProxy(new SecurityFilterChain()
         {
             @Override
             public boolean matches(HttpServletRequest request)
@@ -154,6 +156,20 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
                 return filters;
             }
         });
+        // Use DefaultHttpFirewall to provide backend capability
+        filterChainProxy.setFirewall(new DefaultHttpFirewall());
+        return filterChainProxy;
+    }
+
+    /**
+     * Gets a default http firewall, default to DefaultHttpFirewall for HttpFirewall to provide backend capability.
+     *
+     * @return the default http firewall.
+     */
+    @Bean
+    public HttpFirewall defaultHttpFirewall()
+    {
+        return new DefaultHttpFirewall();
     }
 
     @Bean

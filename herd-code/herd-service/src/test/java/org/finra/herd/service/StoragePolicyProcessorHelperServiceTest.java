@@ -1,27 +1,29 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +32,17 @@ import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
 import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.herd.core.helper.LogLevel;
+import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -630,7 +635,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage unit status is \"%s\", but must be \"%s\" or \"%s\" for storage policy transition to proceed. " +
-                "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.ARCHIVING,
+                    "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.ARCHIVING,
                 STORAGE_NAME, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
         finally
@@ -816,14 +821,29 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
                 Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(StoragePolicyTransitionTypeEntity.GLACIER));
 
-        // Create two business object data keys.
+        // Get a list of partition columns.  We would need at least two partition columns.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        partitionColumns.get(0).setName(PARTITION_KEY);
+        assertTrue(CollectionUtils.size(partitionColumns) > 1);
+
+        // Get a list of regular columns.
+        List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+
+        // Create a business object format that has two partition columns.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES,
+                SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+
+        // Create business object data keys for two business object data with one being an explicit sub-partition for another.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION),
-            new BusinessObjectDataKey(BDEF_NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION));
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Collections.singletonList(SUB_PARTITION_VALUE_1), DATA_VERSION));
 
-        // For the business object data keys, create and persist two storage units.
+        // For the business object data keys, create and persist two storage units in the same storage.
         List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, businessObjectDataKeys.get(0), LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH), storageUnitDaoTestHelper
@@ -835,11 +855,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
-        // To both storage unit add storage files having the same S3 key prefix.
-        List<StorageFileEntity> storageFileEntities = Arrays.asList(storageFileDaoTestHelper
-            .createStorageFileEntity(storageUnitEntities.get(0), expectedS3KeyPrefix + "/" + LOCAL_FILES.get(0), FILE_SIZE_1_KB, ROW_COUNT_1000),
-            storageFileDaoTestHelper
-                .createStorageFileEntity(storageUnitEntities.get(1), expectedS3KeyPrefix + "/" + LOCAL_FILES.get(1), FILE_SIZE_1_KB, ROW_COUNT_1000));
+        // Add storage file to the first business object data.
+        storageFileDaoTestHelper
+            .createStorageFileEntity(storageUnitEntities.get(0), expectedS3KeyPrefix + "/" + LOCAL_FILES.get(0), FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
@@ -864,13 +882,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKey, INITIAL_VERSION));
             fail();
         }
-        catch (IllegalStateException e)
+        catch (AlreadyExistsException e)
         {
-            assertEquals(String
-                .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
-                    "of storage files (%d) registered with the business object data in that storage. " +
-                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", storageFileEntities.size(), 1, STORAGE_NAME, expectedS3KeyPrefix + "/",
-                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKeys.get(0))), e.getMessage());
+            assertEquals(String.format(
+                "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                expectedS3KeyPrefix, STORAGE_NAME, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKeys.get(1))),
+                e.getMessage());
         }
         finally
         {

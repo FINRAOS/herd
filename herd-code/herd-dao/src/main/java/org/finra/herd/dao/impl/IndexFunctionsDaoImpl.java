@@ -50,7 +50,7 @@ import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -554,7 +554,7 @@ public class IndexFunctionsDaoImpl extends AbstractHerdDao implements IndexFunct
         }
 
         // Get the aliases from the response.
-        Map<String, Set<AliasMetaData>> aliases = getAliasesResponse.getAliases();
+        Map<String, Set<AliasMetadata>> aliases = getAliasesResponse.getAliases();
 
         // Return just the aliases.
         return new ArrayList<>(aliases.keySet());
