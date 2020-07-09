@@ -96,6 +96,14 @@ class HerdOptionsSuite extends FunSuite with ShouldMatchers with BeforeAndAfterA
     an [IllegalArgumentException] should be thrownBy HerdOptions(getDefaultHerdOptions + ("subPartitionKeys" -> "a") + ("subPartitionValues" -> "x|y"))(spark)
   }
 
+  test("validate partition value filter") {
+    val herdOptions: HerdOptions = HerdOptions(getDefaultHerdOptions + ("partitionFilter" -> "2019-01-02--2019-01-03"))(spark)
+    val herdOptionsPartitionValueList: HerdOptions = HerdOptions(getDefaultHerdOptions + ("partitionFilter" -> "2019-01-02,2019-01-03"))(spark)
+    herdOptions.partitionFilter shouldBe Some(PartitionRangeFilter("", ("2019-01-02", "2019-01-03")))
+    val herdOptionsPartitionValues: Option[PartitionValuesFilter] = herdOptionsPartitionValueList.partitionFilter.asInstanceOf[Option[PartitionValuesFilter]]
+    herdOptionsPartitionValues.get.values shouldBe Array[String]("2019-01-02", "2019-01-03")
+  }
+
   def getDefaultHerdOptions: Map[String, String] = {
     Map(
       "namespace" -> "someNamespace",

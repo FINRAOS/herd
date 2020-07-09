@@ -1593,19 +1593,24 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     objName: String,
                     usage: String = "PRC",
                     fileFormat: String = "PARQUET",
-                    storagePathPrefix: String = "s3a"): DataFrame = {
+                    storagePathPrefix: String = "s3a",
+                    partitionFilter: String = null): DataFrame = {
+
+    val options = Map(
+      "url" -> baseRestUrl,
+      "username" -> username,
+      "password" -> password,
+      "namespace" -> namespace,
+      "businessObjectName" -> objName,
+      "businessObjectFormatUsage" -> usage,
+      "businessObjectFormatFileType" -> fileFormat,
+      "storagePathPrefix" -> storagePathPrefix,
+      "partitionFilter" -> partitionFilter
+    ).filter(opt => opt._2 != null)
 
     spark.read.format("herd")
-      .option("url", baseRestUrl)
-      .option("username", username)
-      .option("password", password)
-      .option("namespace", namespace)
-      .option("businessObjectName", objName)
-      .option("businessObjectFormatUsage", usage)
-      .option("businessObjectFormatFileType", fileFormat)
-      .option("storagePathPrefix", storagePathPrefix)
+      .options(options)
       .load()
-
   }
 
   /** Registers a new ML Model with Herd

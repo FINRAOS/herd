@@ -118,8 +118,8 @@ private object HerdOptions {
     val partitionKeyGroup = input.get("partitionKeyGroup")
 
     val partitionFilters = input.get("partitionFilter") map {
-      case values if values.contains("-") =>
-        val Array(start, end) = values.split("-").map(_.trim)
+      case values if values.contains("--") =>
+        val Array(start, end) = values.split("--").map(_.trim)
         PartitionRangeFilter("", (start, end))
 
       case values => PartitionValuesFilter("", values.split(",").map(_.trim))
