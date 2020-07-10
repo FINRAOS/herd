@@ -265,8 +265,6 @@ public class SecurityFunctions
 
     public static final String FN_EMR_HIVE_STEPS_POST = "FN_EMR_HIVE_STEPS_POST";
 
-    public static final String FN_EMR_MASTER_SECURITY_GROUPS_POST = "FN_EMR_MASTER_SECURITY_GROUPS_POST";
-
     public static final String FN_EMR_PIG_STEPS_POST = "FN_EMR_PIG_STEPS_POST";
 
     public static final String FN_EMR_SHELL_STEPS_POST = "FN_EMR_SHELL_STEPS_POST";
