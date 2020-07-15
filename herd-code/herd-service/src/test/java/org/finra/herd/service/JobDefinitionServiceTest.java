@@ -194,7 +194,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         // Inject an error by having an invalid Activiti element name in the XML file.
         // Note that XML file structure is correct as per the XML schema. However, there is an invalid Activiti element in the XML file.
         // The line below will be affected in the XML file as per this error injection.
-        // <serviceTask id="servicetask1" name="Test Service Step" activiti:class="org.activiti.engine.impl.test.NoOpServiceTask">
+        // <serviceTask id="servicetask1" name="Test Service Step" activiti:class="org.finra.herd.service.activiti.task.LogVariables">
         request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("serviceTask", "invalidActivitiTask"));
 
         // Try creating the job definition and the Activiti layer mush throw an exception.
@@ -219,7 +219,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
         // Update Activiti XML such that service task is modified to shell type activiti task with all lower case - activiti:type="shell".
         request.setActivitiJobXml(IOUtils.toString(xmlStream)
-            .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"",
+            .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.finra.herd.service.activiti.task.LogVariables\"",
                 "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" activiti:type=\"shell\" activiti:async=\"true\""));
 
         // Try creating the job definition and the Activiti layer must throw an exception.
@@ -247,6 +247,44 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         {
             assertEquals(IllegalArgumentException.class, e.getClass());
             assertEquals("Activiti XML can not contain activiti shell type service tasks.", e.getMessage());
+        }
+    }
+
+    /**
+     * This method tests the scenario when not allowed task class is given. This must throw IllegalArgumentException from the Activiti layer.
+     */
+    @Test
+    public void testCreateJobDefinitionWithNotAllowedTaskClass() throws Exception
+    {
+        // Create the namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Verify Create Job Definition Failed when using NOT allowed task class.
+        validateCreateJobDefinitionWithNotAllowedTaskClass("org.activiti.engine.impl.test.NoOpServiceTask");
+        validateCreateJobDefinitionWithNotAllowedTaskClass("org.activiti.engine.impl.behavior.ShellActivityBehavior");
+    }
+
+    private void validateCreateJobDefinitionWithNotAllowedTaskClass(String notAllowedTaskClass) throws Exception
+    {
+        // Create and persist a valid job definition.
+        JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
+
+        // Read the Activiti XML file so that an error can be injected.
+        InputStream xmlStream = resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream();
+
+        // Update Activiti XML such that service task is modified to use not allowed activiti:class
+        request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("org.finra.herd.service.activiti.task.LogVariables", notAllowedTaskClass));
+
+        // Try creating the job definition and the Activiti layer must throw an exception.
+        try
+        {
+            jobDefinitionService.createJobDefinition(request, false);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Activiti XML has prohibited service task class.", e.getMessage());
         }
     }
 

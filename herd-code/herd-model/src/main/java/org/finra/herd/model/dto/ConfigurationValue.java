@@ -299,6 +299,12 @@ public enum ConfigurationValue
     ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC("activiti.job.definition.assert.async", true),
 
     /**
+     * List of class prefix allowed to use in activiti service task class
+     */
+    ACTIVITI_JOB_DEFINITION_ALLOWED_TASK_CLASS_PREFIX("activiti.job.definition.allowed.task.class.prefix",
+        "org.finra.herd.service.activiti.task|org.finra.dm.service.activiti.task"),
+
+    /**
      * The maximum number of results that will be returned in a jobs query. The default is 1000 results.
      */
     JOBS_QUERY_MAX_RESULTS("jobs.query.max.results", 1000),
