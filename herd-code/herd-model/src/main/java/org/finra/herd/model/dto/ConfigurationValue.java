@@ -302,7 +302,7 @@ public enum ConfigurationValue
      * List of class prefix allowed to use in activiti service task class
      */
     ACTIVITI_JOB_DEFINITION_ALLOWED_TASK_CLASS_PREFIX("activiti.job.definition.allowed.task.class.prefix",
-        "org.finra.herd.service.activiti.task|org.finra.dm.service.activiti.task"),
+        "org.finra.herd.service.activiti.task|org.finra.dm.service.activiti.task|org.activiti.engine.impl.test.NoOpServiceTask"),
 
     /**
      * The maximum number of results that will be returned in a jobs query. The default is 1000 results.
