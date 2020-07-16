@@ -533,58 +533,6 @@ public class EmrServiceImpl implements EmrService
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation starts a new transaction.
-     */
-    @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest request) throws Exception
-    {
-        return addSecurityGroupsToClusterMasterImpl(request);
-    }
-
-    /**
-     * Adds security groups to the master node of an existing EMR Cluster.
-     *
-     * @param request the EMR master security group add request
-     *
-     * @return the added EMR master security groups
-     * @throws Exception if there were any errors adding the security groups to the cluster master.
-     */
-    protected EmrMasterSecurityGroup addSecurityGroupsToClusterMasterImpl(EmrMasterSecurityGroupAddRequest request) throws Exception
-    {
-        // Perform the request validation.
-        validateAddSecurityGroupsToClusterMasterRequest(request);
-
-        // Get account and AwsParamDto
-        String accountId = request.getAccountId();
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
-
-        // Get the EMR cluster definition and ensure it exists.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
-            .getEmrClusterDefinitionEntity(new EmrClusterDefinitionKey(request.getNamespace(), request.getEmrClusterDefinitionName()));
-
-        List<String> groupIds = null;
-        String clusterName = emrHelper
-            .buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName());
-        try
-        {
-            groupIds = emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName, request.getAccountId()),
-                request.getSecurityGroupIds(), awsParamsDto);
-        }
-        catch (AmazonServiceException ex)
-        {
-            awsServiceHelper.handleAmazonException(ex, "An Amazon exception occurred while adding EMR security groups: " +
-                herdStringHelper.buildStringWithDefaultDelimiter(request.getSecurityGroupIds()) + " to cluster: " + clusterName);
-        }
-
-        return createEmrClusterMasterGroupFromRequest(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
-            request.getEmrClusterName(), groupIds);
-    }
-
-    /**
      * Validates the add groups to EMR cluster master create request. This method also trims request parameters.
      *
      * @param request the request.
