@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.List;
@@ -53,7 +53,6 @@ import org.finra.herd.service.StoragePolicyProcessorHelperService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
@@ -87,9 +86,6 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
     @Autowired
     private S3Service s3Service;
-
-    @Autowired
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -193,11 +189,12 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             .buildS3KeyPrefix(storagePolicyEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
         // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, true);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
-        storageFileDaoHelper.validateStorageFilesCount(storageName, businessObjectDataKey, s3KeyPrefix, storageFiles.size());
+        storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+            businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
 
         // Update the storage unit status.
         String reason = StorageUnitStatusEntity.ARCHIVING;
