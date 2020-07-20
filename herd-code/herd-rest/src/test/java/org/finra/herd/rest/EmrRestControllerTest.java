@@ -62,32 +62,6 @@ public class EmrRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testAddGroupsToEmrClusterMaster() throws Exception
-    {
-        // Create an add EMR master security group request.
-        EmrMasterSecurityGroupAddRequest emrMasterSecurityGroupAddRequest =
-            new EmrMasterSecurityGroupAddRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME, Arrays.asList(AWS_SECURITY_GROUP_ID), EMR_CLUSTER_ID,
-                AWS_ACCOUNT_ID);
-
-        // Create an EMR master security group.
-        EmrMasterSecurityGroup emrMasterSecurityGroup =
-            new EmrMasterSecurityGroup(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME, Arrays.asList(AWS_SECURITY_GROUP_ID), EMR_CLUSTER_ID);
-
-        // Mock the external calls.
-        when(emrService.addSecurityGroupsToClusterMaster(emrMasterSecurityGroupAddRequest)).thenReturn(emrMasterSecurityGroup);
-
-        // Call the method under test.
-        EmrMasterSecurityGroup result = emrRestController.addGroupsToEmrClusterMaster(emrMasterSecurityGroupAddRequest);
-
-        // Verify the external calls.
-        verify(emrService).addSecurityGroupsToClusterMaster(emrMasterSecurityGroupAddRequest);
-        verifyNoMoreInteractionsHelper();
-
-        // Validate the results.
-        assertEquals(emrMasterSecurityGroup, result);
-    }
-
-    @Test
     public void testAddHadoopJarStepToEmrCluster() throws Exception
     {
         // Create an add step request.

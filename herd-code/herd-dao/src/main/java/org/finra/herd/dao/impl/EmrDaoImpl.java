@@ -150,28 +150,6 @@ public class EmrDaoImpl implements EmrDao
     private JsonHelper jsonHelper;
 
     @Override
-    public List<String> addEmrMasterSecurityGroups(String clusterId, List<String> securityGroups, AwsParamsDto awsParams) throws Exception
-    {
-        // Get the master EC2 instance
-        ListInstancesRequest listInstancesRequest = new ListInstancesRequest().withClusterId(clusterId).withInstanceGroupTypes(InstanceGroupType.MASTER);
-
-        List<Instance> instances = emrOperations.listClusterInstancesRequest(getEmrClient(awsParams), listInstancesRequest).getInstances();
-
-        // Throw error in case there are no master instances found yet
-        if (instances.size() == 0)
-        {
-            throw new IllegalArgumentException("No master instances found for the cluster \"" + clusterId + "\".");
-        }
-
-        for (Instance instance : instances)
-        {
-            ec2Dao.addSecurityGroupsToEc2Instance(instance.getEc2InstanceId(), securityGroups, awsParams);
-        }
-
-        return securityGroups;
-    }
-
-    @Override
     public String addEmrStep(String clusterId, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception
     {
         List<StepConfig> steps = new ArrayList<>();
