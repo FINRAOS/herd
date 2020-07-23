@@ -31,6 +31,7 @@ import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.tools.common.ToolArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
@@ -51,6 +52,8 @@ public class RetentionExpirationDestroyerApp
     private Option localInputFileOpt;
 
     private Option passwordOpt;
+
+    private Option enableEnvVariablesOpt;
 
     private Option regServerHostOpt;
 
@@ -125,9 +128,10 @@ public class RetentionExpirationDestroyerApp
         }
 
         // Create a DTO to communicate with herd registration server.
+        String password = ToolArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt))
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
 
         // Call the controller with the user specified parameters to perform the upload.
@@ -160,6 +164,9 @@ public class RetentionExpirationDestroyerApp
             Option sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
+            enableEnvVariablesOpt = argParser
+                .addArgument("env", "enableEnvVariables", true, "The enableEnvVariables used for HTTPS client authentication via environment provided var.",
+                    false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
             disableHostnameVerificationOpt =
@@ -195,10 +202,15 @@ public class RetentionExpirationDestroyerApp
             trustSelfSignedCertificate = argParser.getStringValueAsBoolean(trustSelfSignedCertificateOpt, false);
             disableHostnameVerification = argParser.getStringValueAsBoolean(disableHostnameVerificationOpt, false);
 
-            // Username and password are required when useSsl is enabled.
-            if (useSsl && (StringUtils.isBlank(argParser.getStringValue(usernameOpt)) || StringUtils.isBlank(argParser.getStringValue(passwordOpt))))
+            if (useSsl)
             {
-                throw new ParseException("Username and password are required when SSL is enabled.");
+                // Username is required when useSsl is enabled.
+                if (StringUtils.isBlank(argParser.getStringValue(usernameOpt)))
+                {
+                    throw new ParseException("Username is required when SSL is enabled.");
+                }
+                // Password or enableEnvVariables with corresponding env var is required when useSsl is enabled.
+                ToolArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
             }
 
             // Extract all Integer option values here to catch any NumberFormatException exceptions.

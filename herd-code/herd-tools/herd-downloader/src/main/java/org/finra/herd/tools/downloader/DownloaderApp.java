@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationContext;
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.tools.common.ToolArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
 
@@ -74,9 +75,10 @@ public class DownloaderApp extends DataBridgeApp
 
         // Call the controller with the user specified parameters to perform the download.
         DownloaderController controller = applicationContext.getBean(DownloaderController.class);
+        String password = ToolArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(argParser.getStringValue(passwordOpt))
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performDownload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params);
 
