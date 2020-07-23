@@ -34,16 +34,6 @@ import org.finra.herd.model.dto.AwsParamsDto;
  */
 public interface EmrDao
 {
-    /**
-     * Add Security groups to the master node of EMR cluster.
-     *
-     * @param clusterId EMR cluster Id.
-     * @param securityGroups the security groups list.
-     * @param awsParams the proxy details.
-     *
-     * @return the security groups that were added.
-     */
-    public List<String> addEmrMasterSecurityGroups(String clusterId, List<String> securityGroups, AwsParamsDto awsParams) throws Exception;
 
     /**
      * Add an EMR Step. This method adds the step to EMR cluster based on the input.

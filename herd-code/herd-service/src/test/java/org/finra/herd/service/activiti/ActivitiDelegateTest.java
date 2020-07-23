@@ -252,8 +252,9 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     {
         BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_WORKFLOW);
         ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
+        String wrongClass = "org.finra.herd.service.activiti.task.ClassDoesNotExist";
 
-        serviceTask.setImplementation("ClassDoesNotExist");
+        serviceTask.setImplementation(wrongClass);
         serviceTask.getFieldExtensions().clear();
 
         // Run a job with Activiti XML that will start cluster.
@@ -265,7 +266,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         catch (Exception e)
         {
             assertEquals(ActivitiException.class, e.getClass());
-            assertEquals("couldn't instantiate class ClassDoesNotExist", e.getMessage());
+            assertEquals(String.format("couldn't instantiate class %s",wrongClass), e.getMessage());
         }
     }
 }

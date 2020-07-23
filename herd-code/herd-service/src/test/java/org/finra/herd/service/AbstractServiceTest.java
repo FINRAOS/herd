@@ -120,9 +120,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 {
     public static final String ACTIVITI_JOB_DELETE_REASON = "UT_JobDeleteReason" + RANDOM_SUFFIX;
 
-    public static final String ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/activitiWorkflowAddEmrMasterSecurityGroup.bpmn20.xml";
-
     public static final String ACTIVITI_XML_ADD_EMR_STEPS_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowAddEmrStep.bpmn20.xml";
 
     public static final String ACTIVITI_XML_CHECK_CLUSTER_AND_RECEIVE_TASK_WITH_CLASSPATH =

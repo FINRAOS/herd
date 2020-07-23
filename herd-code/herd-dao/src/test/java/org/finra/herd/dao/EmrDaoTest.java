@@ -181,64 +181,6 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void addEmrMasterSecurityGroupsCallsEc2AddSecurityGroup() throws Exception
-    {
-        String clusterName = "clusterName";
-        List<String> securityGroups = Lists.newArrayList("securityGroup");
-        AwsParamsDto awsParams = getAwsParamsDto();
-        String ec2InstanceId = "ec2InstanceId";
-
-        ListClustersResult listClustersResult = new ListClustersResult();
-        listClustersResult.setClusters(new ArrayList<>());
-        ClusterSummary clusterSummary = new ClusterSummary();
-        clusterSummary.setId("clusterId");
-        clusterSummary.setName(clusterName);
-        listClustersResult.getClusters().add(clusterSummary);
-        when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
-
-        ListInstancesResult listInstancesResult = new ListInstancesResult();
-        listInstancesResult.setInstances(new ArrayList<>());
-        Instance instance = new Instance();
-        instance.setEc2InstanceId(ec2InstanceId);
-        listInstancesResult.getInstances().add(instance);
-        when(mockEmrOperations.listClusterInstancesRequest(any(), any())).thenReturn(listInstancesResult);
-
-        emrDao.addEmrMasterSecurityGroups(clusterName, securityGroups, awsParams);
-
-        verify(mockEc2Dao).addSecurityGroupsToEc2Instance(eq(ec2InstanceId), eq(securityGroups), any());
-        verifyNoMoreInteractions(mockEc2Dao);
-    }
-
-    @Test
-    public void addEmrMasterSecurityGroupsThrowWhenNoInstancesFound()
-    {
-        String clusterName = "clusterName";
-        List<String> securityGroups = Lists.newArrayList("securityGroup");
-        AwsParamsDto awsParams = getAwsParamsDto();
-
-        ListClustersResult listClustersResult = new ListClustersResult();
-        listClustersResult.setClusters(new ArrayList<>());
-        ClusterSummary clusterSummary = new ClusterSummary();
-        clusterSummary.setId("clusterId");
-        clusterSummary.setName(clusterName);
-        listClustersResult.getClusters().add(clusterSummary);
-        when(mockEmrOperations.listEmrClusters(any(), any())).thenReturn(listClustersResult);
-
-        when(mockEmrOperations.listClusterInstancesRequest(any(), any())).thenReturn(new ListInstancesResult());
-
-        try
-        {
-            emrDao.addEmrMasterSecurityGroups(clusterName, securityGroups, awsParams);
-            fail();
-        }
-        catch (Exception e)
-        {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("No master instances found for the cluster \"" + clusterName + "\".", e.getMessage());
-        }
-    }
-
-    @Test
     public void getEmrMasterInstanceReturnsInstance() throws Exception
     {
         String clusterId = "clusterId";
