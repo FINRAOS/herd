@@ -20,7 +20,9 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.springframework.context.ApplicationContext;
 
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
@@ -31,6 +33,9 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
  */
 public class UploaderAppTest extends AbstractUploaderTest
 {
+    @Rule
+    public EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     private UploaderApp uploaderApp = new UploaderApp()
     {
         protected ApplicationContext createApplicationContext()
@@ -66,6 +71,40 @@ public class UploaderAppTest extends AbstractUploaderTest
     }
 
     @Test
+    public void testGoEnvPasswordSuccess()
+    {
+        environmentVariables.set("HERD_PASSWORD", "WEB_SERVICE_HTTPS_PASSWORD");
+        String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+            LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+            WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
+            WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "-C", "true", "-d", "true"};
+        assertNull(uploaderApp.parseCommandLineArguments(arguments, applicationContext));
+
+        environmentVariables.clear("HERD_PASSWORD");
+    }
+
+    @Test
+    public void testGoCliAndEnvPasswordSuccess()
+    {
+        // CLI Password being used
+        environmentVariables.set("HERD_PASSWORD", "");
+        String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+            LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+            WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
+            WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-env", "true", "-C", "true", "-d", "true"};
+        assertNull(uploaderApp.parseCommandLineArguments(arguments, applicationContext));
+
+        // ENV Password being used
+        environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
+        String[] argumentsEnvPassword = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+            LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+            WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
+            WEB_SERVICE_HTTPS_USERNAME, "-w", "", "-env", "true", "-C", "true", "-d", "true"};
+        assertNull(uploaderApp.parseCommandLineArguments(argumentsEnvPassword, applicationContext));
+        environmentVariables.clear("HERD_PASSWORD");
+    }
+
+    @Test
     public void testGoInvalidTrustSelfSignedCertificateValue() throws Exception
     {
         String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
@@ -97,7 +136,7 @@ public class UploaderAppTest extends AbstractUploaderTest
     }
 
     @Test
-    public void testParseCommandLineArgumentsInvalidMaxRetryAttempts() throws Exception
+    public void testParseCommandLineArgumentsInvalidMaxRetryAttempts()
     {
         String[] arguments =
             {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",
@@ -107,13 +146,13 @@ public class UploaderAppTest extends AbstractUploaderTest
     }
 
     @Test
-    public void testParseCommandLineArgumentsNone() throws Exception
+    public void testParseCommandLineArgumentsNone()
     {
         assertEquals(DataBridgeApp.ReturnValue.FAILURE, uploaderApp.parseCommandLineArguments(new String[] {}, applicationContext));
     }
 
     @Test
-    public void testParseShortCommandLineArgumentsSuccess() throws Exception
+    public void testParseShortCommandLineArgumentsSuccess()
     {
         String[] arguments =
             {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", STRING_VALUE, "-H",

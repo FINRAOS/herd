@@ -102,6 +102,7 @@
       <jcredstash.version>0.0.4</jcredstash.version>
       <opencsv.version>4.4</opencsv.version>
       <aws-signing-request-interceptor.version>0.0.22</aws-signing-request-interceptor.version>
+      <system-rules.version>1.19.0</system-rules.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.9</jaxb.xew.plugin.version>
@@ -1017,6 +1018,12 @@
                   <artifactId>zookeeper</artifactId>
                </exclusion>
             </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-rules</artifactId>
+            <version>${system-rules.version}</version>
+            <scope>test</scope>
          </dependency>
 
       </dependencies>
