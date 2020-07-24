@@ -28,7 +28,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
-import org.finra.herd.tools.common.ToolArgumentHelper;
+import org.finra.herd.tools.common.ToolsArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
@@ -227,7 +227,7 @@ public abstract class DataBridgeApp
                     throw new ParseException("Username is required when SSL is enabled.");
                 }
                 // Password or enableEnvVariables with corresponding env var is required when useSsl is enabled.
-                ToolArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
+                ToolsArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
             }
 
             // Ensure that both the S3 secret and access keys were specified or both not specified.

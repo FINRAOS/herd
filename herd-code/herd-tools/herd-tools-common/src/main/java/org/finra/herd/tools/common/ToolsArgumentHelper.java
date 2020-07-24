@@ -21,24 +21,24 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.finra.herd.core.ArgumentParser;
 
-public class ToolArgumentHelper
+public class ToolsArgumentHelper
 {
     /**
      * Validate cli option and env parameter
      *
      * @param argParser             argument parser instance
-     * @param option                cli option
+     * @param cliOpt                cli option
      * @param enableEnvVariablesOpt enableEnvVariables cli option
      * @throws ParseException when neither is provided
      */
-    public static void validateCliEnvArgument(ArgumentParser argParser, Option option, Option enableEnvVariablesOpt) throws ParseException
+    public static void validateCliEnvArgument(ArgumentParser argParser, Option cliOpt, Option enableEnvVariablesOpt) throws ParseException
     {
-        String optionName = option.getLongOpt();
-        String envVarName = getEnvVarName(option);
+        String optionName = cliOpt.getLongOpt();
+        String envVarName = getEnvVarName(cliOpt);
         //check password cli input, then env vars if enableEnvVariables is true
-        boolean blankCliOption = StringUtils.isBlank(argParser.getStringValue(option));
+        boolean blankCliOption = StringUtils.isBlank(argParser.getStringValue(cliOpt));
         boolean enableEnvVars = argParser.getStringValueAsBoolean(enableEnvVariablesOpt, false);
-        boolean blankEnvVars = StringUtils.isBlank(ToolArgumentHelper.getEnvValue(option));
+        boolean blankEnvVars = StringUtils.isBlank(ToolsArgumentHelper.getEnvValue(cliOpt));
         if (blankCliOption && !enableEnvVars || blankCliOption && blankEnvVars)
         {
             {
@@ -54,15 +54,15 @@ public class ToolArgumentHelper
      * true
      *
      * @param argParser             argument parser instance
-     * @param cliOption             cli option
+     * @param cliOpt             cli option
      * @param enableEnvVariablesOpt enableEnvVariables cli option
      * @return String for cli provided parameter value or env provided parameter value
      * @throws ParseException if the value of the argument is an invalid boolean value
      */
-    public static String getCliEnvArgumentValue(ArgumentParser argParser, Option cliOption, Option enableEnvVariablesOpt) throws ParseException
+    public static String getCliEnvArgumentValue(ArgumentParser argParser, Option cliOpt, Option enableEnvVariablesOpt) throws ParseException
     {
-        String cliValue = argParser.getStringValue(cliOption);
-        String envValue = getEnvValue(cliOption);
+        String cliValue = argParser.getStringValue(cliOpt);
+        String envValue = getEnvValue(cliOpt);
         boolean enableEnvVars = argParser.getStringValueAsBoolean(enableEnvVariablesOpt, false);
 
         // return CLI provided password if exist

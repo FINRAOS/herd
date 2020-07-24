@@ -31,7 +31,7 @@ import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
-import org.finra.herd.tools.common.ToolArgumentHelper;
+import org.finra.herd.tools.common.ToolsArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
@@ -128,7 +128,7 @@ public class RetentionExpirationDestroyerApp
         }
 
         // Create a DTO to communicate with herd registration server.
-        String password = ToolArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
+        String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
                 .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
@@ -210,7 +210,7 @@ public class RetentionExpirationDestroyerApp
                     throw new ParseException("Username is required when SSL is enabled.");
                 }
                 // Password or enableEnvVariables with corresponding env var is required when useSsl is enabled.
-                ToolArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
+                ToolsArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
             }
 
             // Extract all Integer option values here to catch any NumberFormatException exceptions.
