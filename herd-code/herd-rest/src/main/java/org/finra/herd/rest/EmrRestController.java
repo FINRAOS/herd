@@ -54,20 +54,6 @@ public class EmrRestController extends HerdBaseController
     private EmrService emrService;
 
     /**
-     * Adds security groups to the master node of an existing cluster <p>Requires WRITE permission on namespace</p>
-     *
-     * @param request the information needed to add security groups to master node of the EMR cluster.
-     *
-     * @return the created EMR master groups.
-     */
-    @RequestMapping(value = "/emrMasterSecurityGroups", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_EMR_MASTER_SECURITY_GROUPS_POST)
-    public EmrMasterSecurityGroup addGroupsToEmrClusterMaster(@RequestBody EmrMasterSecurityGroupAddRequest request) throws Exception
-    {
-        return emrService.addSecurityGroupsToClusterMaster(request);
-    }
-
-    /**
      * Adds a Hadoop Jar step to the existing cluster <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add Hadoop Jar step to the EMR cluster.

@@ -489,16 +489,17 @@ public class EmrHelperServiceImpl implements EmrHelperService
 
         List<Subnet> subnets  = emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto);
 
-        String contextInfo = String.format("namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
-                        "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s", emrClusterAlternateKeyDto.getNamespace(),
-                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
-                jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))));
-
-        LOGGER.info("Current IP availability: {}", contextInfo);
-
         List<String> validSubnetIds = subnets.stream()
                 .filter(subnet -> subnet.getAvailableIpAddressCount() >= instanceFleetMinimumIpAvailableFilter)
                 .map(Subnet::getSubnetId).collect(Collectors.toList());
+
+        String contextInfo = String.format("namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
+                "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s validSubnetIds=%s", emrClusterAlternateKeyDto.getNamespace(),
+            emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
+            jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))),
+            validSubnetIds.toString());
+
+        LOGGER.info("Current IP availability: {}", contextInfo);
 
         if (validSubnetIds.isEmpty())
         {
