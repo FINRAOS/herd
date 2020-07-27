@@ -413,9 +413,14 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     )
 
     val useHerdOrcFormat = sparkSession.version < "2.3.0"
+    val sparkV3 = sparkSession.version >= "3.0.0"
 
     val correctedDataSourceFormat = dataSourceFormat match {
       case "orc" if useHerdOrcFormat => "org.apache.spark.sql.hive.orc.HerdOrcFileFormat"
+      case "orc" if sparkV3 && sparkSession.conf.get("spark.sql.catalogImplementation") == "hive" => "org.apache.spark.sql.hive.orc"
+      case "orc" if sparkV3 => "org.apache.spark.sql.execution.datasources.orc"
+      case "csv" if sparkV3 => "com.databricks.spark.csv"
+      case "parquet" if sparkV3 => "org.apache.spark.sql.parquet"
       case _ => dataSourceFormat
     }
 
