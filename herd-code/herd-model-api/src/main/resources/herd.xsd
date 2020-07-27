@@ -6190,6 +6190,11 @@
                <xs:documentation>Attributes for Kerberos configuration when Kerberos authentication is enabled using a security configuration</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="stepConcurrencyLevel" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The step concurrency level of the cluster</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
