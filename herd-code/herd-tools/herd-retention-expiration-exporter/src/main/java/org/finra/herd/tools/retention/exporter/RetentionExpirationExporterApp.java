@@ -185,7 +185,7 @@ public class RetentionExpirationExporterApp
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
             enableEnvVariablesOpt = argParser
-                .addArgument("env", "enableEnvVariables", true, "The enableEnvVariables used for HTTPS client authentication through environment provided var.",
+                .addArgument("E", "enableEnvVariables", true, "The enableEnvVariables used for HTTPS client authentication through environment provided var.",
                     false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);

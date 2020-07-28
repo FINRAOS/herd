@@ -53,7 +53,7 @@ public class ToolsArgumentHelperTest extends AbstractCoreTest
     {
         ArgumentParser argParser = new ArgumentParser("test");
         Option passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-        Option enableEnvVariablesOpt = argParser.addArgument("env", "enableEnvVariables", true,
+        Option enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
             "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
         argParser.parseArguments(args);
         try
@@ -72,7 +72,7 @@ public class ToolsArgumentHelperTest extends AbstractCoreTest
     {
         ArgumentParser argParser = new ArgumentParser("test");
         Option passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-        Option enableEnvVariablesOpt = argParser.addArgument("env", "enableEnvVariables", true,
+        Option enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
             "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
         // CLI password only
         String[] argumentsWithCliOpt = {"-w", "cliPassword"};
@@ -137,7 +137,7 @@ public class ToolsArgumentHelperTest extends AbstractCoreTest
     {
         ArgumentParser argParser = new ArgumentParser("test");
         Option passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-        Option enableEnvVariablesOpt = argParser.addArgument("env", "enableEnvVariables", true,
+        Option enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
             "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
         // CLI password only
         argParser.parseArguments(args);

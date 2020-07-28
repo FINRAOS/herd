@@ -116,7 +116,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         // Set an SSL option with env password variable
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
-                "-env", "true", "-C", "true", "-d", "true"};
+                "-E", "true", "-C", "true", "-d", "true"};
         // We are expecting this to fail with an FileNotFoundException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
         environmentVariables.clear("HERD_PASSWORD");
@@ -129,7 +129,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         // CLI Password being used
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-env", "true", "--trustSelfSignedCertificate", "true",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
         // We are expecting this to fail with an FileNotFoundException.
         runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
@@ -138,7 +138,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         // ENV Password being used
         String[] argumentsUsingEnvPassword =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", "", "-env", "true", "--trustSelfSignedCertificate", "true",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", "", "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
         // We are expecting this to fail with an FileNotFoundException.
         runApplicationAndCheckReturnValue(exporterApp, argumentsUsingEnvPassword, new FileNotFoundException());
@@ -196,7 +196,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
-                "-env", "false", "-C", "true", "-d", "true"};
+                "-E", "false", "-C", "true", "-d", "true"};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 
@@ -206,7 +206,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
-                "-env", "true", "-C", "true", "-d", "true"};
+                "-E", "true", "-C", "true", "-d", "true"};
         assertNull(exporterApp.parseCommandLineArguments(arguments, applicationContext));
     }
 

@@ -179,7 +179,7 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
         String[] argumentsWithEnvPassword = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
             LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
             WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
-            WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
+            WEB_SERVICE_HTTPS_USERNAME, "-E", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(argumentsWithEnvPassword, applicationContext));
 
         // Blank ENV password set
@@ -187,7 +187,7 @@ public class DataBridgeAppTest extends AbstractDataBridgeTest
         String[] argumentsWithBlankEnvPwd = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
             LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
             WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
-            WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
+            WEB_SERVICE_HTTPS_USERNAME, "-E", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
         assertEquals(ReturnValue.FAILURE, dataBridgeApp.parseCommandLineArguments(argumentsWithBlankEnvPwd, applicationContext));
         environmentVariables.clear("HERD_PASSWORD");
     }

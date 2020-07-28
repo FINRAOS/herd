@@ -77,7 +77,7 @@ public class UploaderAppTest extends AbstractUploaderTest
         String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
             LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
             WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
-            WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "-C", "true", "-d", "true"};
+            WEB_SERVICE_HTTPS_USERNAME, "-E", "true", "-C", "true", "-d", "true"};
         assertNull(uploaderApp.parseCommandLineArguments(arguments, applicationContext));
 
         environmentVariables.clear("HERD_PASSWORD");
@@ -91,7 +91,7 @@ public class UploaderAppTest extends AbstractUploaderTest
         String[] arguments = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
             LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
             WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
-            WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-env", "true", "-C", "true", "-d", "true"};
+            WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-E", "true", "-C", "true", "-d", "true"};
         assertNull(uploaderApp.parseCommandLineArguments(arguments, applicationContext));
 
         // ENV Password being used
@@ -99,7 +99,7 @@ public class UploaderAppTest extends AbstractUploaderTest
         String[] argumentsEnvPassword = {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
             LOCAL_TEMP_PATH_INPUT.toString(), "--manifestPath", STRING_VALUE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
             WEB_SERVICE_HTTPS_PORT.toString(), "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString(), "--ssl", "true", "-u",
-            WEB_SERVICE_HTTPS_USERNAME, "-w", "", "-env", "true", "-C", "true", "-d", "true"};
+            WEB_SERVICE_HTTPS_USERNAME, "-w", "", "-E", "true", "-C", "true", "-d", "true"};
         assertNull(uploaderApp.parseCommandLineArguments(argumentsEnvPassword, applicationContext));
         environmentVariables.clear("HERD_PASSWORD");
     }

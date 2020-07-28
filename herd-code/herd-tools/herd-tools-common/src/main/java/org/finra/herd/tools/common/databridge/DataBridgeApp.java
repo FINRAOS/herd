@@ -177,7 +177,7 @@ public abstract class DataBridgeApp
             sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
-            enableEnvVariablesOpt = argParser.addArgument("env", "enableEnvVariables", true,
+            enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
                 "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);

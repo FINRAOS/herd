@@ -99,7 +99,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "--trustSelfSignedCertificate", "true",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
@@ -113,7 +113,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-env", "true", "--trustSelfSignedCertificate", "true",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
@@ -123,7 +123,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
         String[] argumentsUsingEnvPassword =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", "", "-env", "true", "--trustSelfSignedCertificate", "true",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", "", "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
@@ -187,7 +187,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-env", "false", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-E", "false", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification",
                 "true"};
         assertEquals(ToolsCommonConstants.ReturnValue.FAILURE, retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
         environmentVariables.clear("HERD_PASSWORD");
@@ -200,7 +200,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
         String[] arguments =
             {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
                 "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
-                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-env", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-E", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification",
                 "true"};
         assertNull(retentionExpirationExporterApp.parseCommandLineArguments(arguments, applicationContext));
 
