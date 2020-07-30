@@ -1260,6 +1260,9 @@ public class EmrDaoImpl implements EmrDao
         // Assign Kerberos attributes.
         runJobFlowRequest.setKerberosAttributes(getKerberosAttributes(emrClusterDefinition.getKerberosAttributes()));
 
+        // Assign step concurrency level of the cluster
+        runJobFlowRequest.setStepConcurrencyLevel(emrClusterDefinition.getStepConcurrencyLevel());
+
         // Return the object
         return runJobFlowRequest;
     }
