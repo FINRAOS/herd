@@ -242,7 +242,7 @@ public class S3DaoTest extends AbstractDaoTest
             catch (Exception e)
             {
                 assertEquals(AmazonServiceException.class, e.getClass());
-                assertEquals("message (Service: null; Status Code: 0; Error Code: null; Request ID: null)", e.getMessage());
+                assertEquals("message (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", e.getMessage());
             }
         }
         finally
@@ -574,7 +574,7 @@ public class S3DaoTest extends AbstractDaoTest
             {
                 assertEquals(IllegalStateException.class, e.getClass());
                 assertEquals("Failed to create 0 byte S3 object with \"s3KeyPrefix/\" key in bucket \"s3BucketName\". Reason: amazonServiceExceptionMessage " +
-                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null)", e.getMessage());
+                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", e.getMessage());
             }
         }
         finally
@@ -861,7 +861,7 @@ public class S3DaoTest extends AbstractDaoTest
                 assertEquals(IllegalStateException.class, e.getClass());
                 assertEquals(
                     "Failed to delete a list of keys from bucket \"s3BucketName\". Reason: testException (Service: null; Status Code: 0; Error Code: null; " +
-                        "Request ID: null)", e.getMessage());
+                        "Request ID: null; Proxy: null)", e.getMessage());
             }
         }
         finally
@@ -1411,7 +1411,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null; Proxy: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
@@ -1471,7 +1471,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)",
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)",
                 s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
         }
     }
@@ -1496,7 +1496,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null; Proxy: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
@@ -2341,7 +2341,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -2400,7 +2400,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: object is not in Glacier or DeepArchive (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: object is not in Glacier or DeepArchive (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", TARGET_S3_KEY,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -2545,7 +2545,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"null\" version id in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", TARGET_S3_KEY,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)", TARGET_S3_KEY,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
     }
@@ -2636,7 +2636,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", S3_KEY, S3_VERSION_ID,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)", S3_KEY, S3_VERSION_ID,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
     }
@@ -3070,7 +3070,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
