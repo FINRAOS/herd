@@ -457,6 +457,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
             }
+            if (emrClusterDefinitionOverride.getStepConcurrencyLevel() != null)
+            {
+                emrClusterDefinition.setStepConcurrencyLevel(emrClusterDefinitionOverride.getStepConcurrencyLevel());
+            }
         }
     }
 

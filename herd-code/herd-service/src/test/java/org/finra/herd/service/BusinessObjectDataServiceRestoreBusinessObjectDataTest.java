@@ -256,7 +256,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             catch (IllegalStateException e)
             {
                 assertEquals(String.format("Failed to initiate a restore request for \"%s/%s\" key in \"%s\" bucket. " +
-                        "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", s3KeyPrefix,
+                        "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null; Proxy: null)", s3KeyPrefix,
                     MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, S3_BUCKET_NAME), e.getMessage());
             }
 

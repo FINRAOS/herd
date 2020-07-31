@@ -148,7 +148,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         {
             assertEquals(String.format(
                 "Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: One or more objects could not be deleted " +
-                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null)", S3_KEY_PREFIX, S3_BUCKET_NAME),
+                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null)", S3_KEY_PREFIX, S3_BUCKET_NAME),
                 e.getMessage());
         }
 
@@ -198,7 +198,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: Retrieval option is not supported by this storage class (Service: null; Status Code: 0; Error Code: null; Request ID: null)",
+                    "Reason: Retrieval option is not supported by this storage class (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)",
                 TEST_FILE, S3_BUCKET_NAME), e.getMessage());
         }
     }
@@ -291,7 +291,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"null\" version id in \"%s\" bucket. " +
-                "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE), e.getMessage());
+                "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE), e.getMessage());
         }
 
         // Verify the external calls.
@@ -500,7 +500,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
                     "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
-                    "(Service: null; Status Code: %s; Error Code: null; Request ID: null; S3 Extended Request ID: null), S3 Extended Request ID: null",
+                    "(Service: null; Status Code: %s; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null), S3 Extended Request ID: null",
                 TEST_FILE, S3_BUCKET_NAME, exceptionMessage, statusCode), illegalStateException.getMessage());
         }
 
