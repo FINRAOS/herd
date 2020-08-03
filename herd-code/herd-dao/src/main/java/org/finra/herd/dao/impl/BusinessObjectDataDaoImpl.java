@@ -1068,9 +1068,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * Adds registration date range filter to the query predicate.
+     * Adds registration date-time range filter to the query predicate.
      *
-     * @param registrationDateRangeFilter the registration date range filter, not null
+     * @param registrationDateRangeFilter the registration date-time range filter, not null
      * @param businessObjectDataEntity the business object data entity
      * @param builder the query builder
      * @param predicate the query predicate to be updated, not null
@@ -1080,18 +1080,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     private Predicate addRegistrationDateRangeFilterToPredicate(RegistrationDateRangeFilter registrationDateRangeFilter,
         Root<BusinessObjectDataEntity> businessObjectDataEntity, CriteriaBuilder builder, Predicate predicate)
     {
-        // Apply predicate for registration start date and removed the time portion of the date.
+        // Apply predicate for registration start timestamp
         if (registrationDateRangeFilter.getStartRegistrationDate() != null)
         {
             predicate = builder.and(predicate, builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn),
-                HerdDateUtils.resetTimeToMidnight(registrationDateRangeFilter.getStartRegistrationDate())));
+                HerdDateUtils.convertToTimestamp(registrationDateRangeFilter.getStartRegistrationDate())));
         }
 
-        // Apply predicate for registration end date. Removed time portion of the date and added one day to get the result till the end of the day
+        // Apply predicate for registration end timestamp
         if (registrationDateRangeFilter.getEndRegistrationDate() != null)
         {
             predicate = builder.and(predicate, builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn),
-                HerdDateUtils.addDays(HerdDateUtils.resetTimeToMidnight(registrationDateRangeFilter.getEndRegistrationDate()), 1)));
+                HerdDateUtils.convertToTimestamp(registrationDateRangeFilter.getEndRegistrationDate())));
         }
 
         return predicate;
