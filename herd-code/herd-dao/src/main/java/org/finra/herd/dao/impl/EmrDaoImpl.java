@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import static org.finra.herd.dao.config.DaoSpringModuleConfig.EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY;
@@ -109,6 +109,7 @@ import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterCacheKey;
 import org.finra.herd.model.dto.EmrClusterCacheTimestamps;
+import org.finra.herd.model.dto.EmrParamsDto;
 
 /**
  * The EMR DAO implementation.
@@ -164,11 +165,11 @@ public class EmrDaoImpl implements EmrDao
     }
 
     @Override
-    public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
+    public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, EmrParamsDto emrParamsDto)
     {
-        RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition);
+        RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition, emrParamsDto.getTrustingAccountStagingBucketName());
         LOGGER.info("runJobFlowRequest={}", HerdStringUtils.sanitizeLogText(jsonHelper.objectToJson(runJobFlowRequest)));
-        String clusterId = emrOperations.runEmrJobFlow(getEmrClient(awsParams), runJobFlowRequest);
+        String clusterId = emrOperations.runEmrJobFlow(getEmrClient(emrParamsDto), runJobFlowRequest);
         LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
 
         // Add the new cluster name and cluster id to the EMR cluster cache.
@@ -201,8 +202,8 @@ public class EmrDaoImpl implements EmrDao
         // Get the cluster cache using the accountId.
         Map<EmrClusterCacheKey, String> emrClusterCache = getEmrClusterCacheByAccountId(accountId);
 
-        LOGGER.debug("EMR cluster cache retrieved. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"",
-            System.identityHashCode(emrClusterCache), emrClusterCache.toString());
+        LOGGER.debug("EMR cluster cache retrieved. emrClusterCache=\"{}\" emrClusterCacheContents=\"{}\"", System.identityHashCode(emrClusterCache),
+            emrClusterCache.toString());
 
         if (StringUtils.isNotBlank(clusterName))
         {
@@ -270,10 +271,9 @@ public class EmrDaoImpl implements EmrDao
                 // Clear the EMR cluster cache
                 emrClusterCache.clear();
 
-                LOGGER.info(
-                    "EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. " +
-                        "newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"",
-                    newLastFullReload, lastFullReload, System.identityHashCode(emrClusterCache));
+                LOGGER.info("EMR cluster cache cleared. Starting a full reload of the EMR cluster cache. " +
+                        "newLastFullReload=\"{}\" lastFullReload=\"{}\" emrClusterCache=\"{}\"", newLastFullReload, lastFullReload,
+                    System.identityHashCode(emrClusterCache));
             }
             else
             {
@@ -317,8 +317,9 @@ public class EmrDaoImpl implements EmrDao
                 // Loop through all the active clusters returned by AWS
                 for (ClusterSummary clusterInstance : clusterResult.getClusters())
                 {
-                    LOGGER.info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\"",
-                        clusterInstance.getName().toUpperCase(), clusterInstance.getId());
+                    LOGGER
+                        .info("Adding EMR cluster to the EMR Cluster Cache. emrClusterName=\"{}\" emrClusterId=\"{}\"", clusterInstance.getName().toUpperCase(),
+                            clusterInstance.getId());
 
                     // Add this cluster instance to the EMR cluster cache.
                     emrClusterCache.put(new EmrClusterCacheKey(clusterInstance.getName().toUpperCase(), accountId), clusterInstance.getId());
@@ -1001,11 +1002,12 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the bootstrap action configuration List from all the bootstrapping scripts specified.
      *
-     * @param emrClusterDefinition the EMR definition name value.
+     * @param emrClusterDefinition the EMR definition name value
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
      *
      * @return list of bootstrap action configurations that contains all the bootstrap actions for the given configuration.
      */
-    private ArrayList<BootstrapActionConfig> getBootstrapActionConfigList(EmrClusterDefinition emrClusterDefinition)
+    private ArrayList<BootstrapActionConfig> getBootstrapActionConfigList(EmrClusterDefinition emrClusterDefinition, String trustingAccountStagingBucketName)
     {
         // Create the list
         ArrayList<BootstrapActionConfig> bootstrapActions = new ArrayList<>();
@@ -1017,7 +1019,7 @@ public class EmrDaoImpl implements EmrDao
             // We use this encryption script to encrypt all the volumes of all the instances.
             // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
             bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_ENCRYPTION_SCRIPT.getKey(),
-                getBootstrapScriptLocation(configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT))));
+                getBootstrapScriptLocation(configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT), trustingAccountStagingBucketName)));
         }
 
         // Add NSCD script support if the script location is not empty
@@ -1025,8 +1027,8 @@ public class EmrDaoImpl implements EmrDao
         if (StringUtils.isNotEmpty(emrNscdScript))
         {
             // Upon launch, all EMR clusters should have NSCD running to cache DNS host lookups so EMR does not overwhelm DNS servers
-            bootstrapActions
-                .add(getBootstrapActionConfig(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), getBootstrapScriptLocation(emrNscdScript)));
+            bootstrapActions.add(getBootstrapActionConfig(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(),
+                getBootstrapScriptLocation(emrNscdScript, trustingAccountStagingBucketName)));
         }
 
         // Add bootstrap actions.
@@ -1067,11 +1069,15 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Get the bootstrap script location from the bucket name and bootstrap script configuration value.
      *
-     * @return location of the bootstrap script.
+     * @param bootstrapConfigurationValue the relative bootstrap script location retrieved from the configuration
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
+     *
+     * @return location of the bootstrap script
      */
-    private String getBootstrapScriptLocation(String bootstrapConfigurationValue)
+    private String getBootstrapScriptLocation(String bootstrapConfigurationValue, String trustingAccountStagingBucketName)
     {
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) + bootstrapConfigurationValue;
+        return emrHelper.getS3StagingLocation(trustingAccountStagingBucketName) + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            bootstrapConfigurationValue;
     }
 
     /**
@@ -1150,12 +1156,13 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the run job flow request object.
      *
-     * @param emrClusterDefinition the EMR definition name value
      * @param clusterName the EMR cluster name
+     * @param emrClusterDefinition the EMR definition name value
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
      *
      * @return the run job flow request for the given configuration
      */
-    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition)
+    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition, String trustingAccountStagingBucketName)
     {
         // Create the object
         RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition));
@@ -1225,7 +1232,7 @@ public class EmrDaoImpl implements EmrDao
         }
 
         // Set the bootstrap actions
-        List<BootstrapActionConfig> bootstrapActionConfigList = getBootstrapActionConfigList(emrClusterDefinition);
+        List<BootstrapActionConfig> bootstrapActionConfigList = getBootstrapActionConfigList(emrClusterDefinition, trustingAccountStagingBucketName);
         if (!bootstrapActionConfigList.isEmpty())
         {
             runJobFlowRequest.setBootstrapActions(bootstrapActionConfigList);
@@ -1265,19 +1272,6 @@ public class EmrDaoImpl implements EmrDao
 
         // Return the object
         return runJobFlowRequest;
-    }
-
-    /**
-     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
-     *
-     * @return the s3 managed location.
-     */
-    private String getS3StagingLocation()
-    {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
-            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
     /**

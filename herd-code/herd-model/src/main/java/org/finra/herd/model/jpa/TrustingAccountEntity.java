@@ -45,6 +45,12 @@ public class TrustingAccountEntity extends AuditableEntity
     @Column(name = "role_arn", nullable = false)
     private String roleArn;
 
+    /**
+     * Optional S3 staging bucket name to be used in the trusting account.
+     */
+    @Column(name = "stgng_buckt_nm")
+    private String stagingBucketName;
+
     public String getId()
     {
         return id;
@@ -63,5 +69,15 @@ public class TrustingAccountEntity extends AuditableEntity
     public void setRoleArn(String roleArn)
     {
         this.roleArn = roleArn;
+    }
+
+    public String getStagingBucketName()
+    {
+        return stagingBucketName;
+    }
+
+    public void setStagingBucketName(String stagingBucketName)
+    {
+        this.stagingBucketName = stagingBucketName;
     }
 }

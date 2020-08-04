@@ -270,6 +270,21 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="emrClusterDefinition">
+      <xs:annotation>
+         <xs:appinfo>
+            <jaxb:class ref="org.finra.herd.model.api.xml.EmrClusterDefinition"/>
+         </xs:appinfo>
+      </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterPreCreateDto">
+      <xs:sequence>
+         <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
+         <xs:element name="emrParamsDto" type="emrParamsDto" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="emrClusterPriceDto">
       <xs:sequence>
          <xs:element name="availabilityZone" type="xs:string" minOccurs="0"/>
@@ -277,6 +292,16 @@
          <xs:element name="corePrice" type="ec2PriceDto" minOccurs="0"/>
          <xs:element name="taskPrice" type="ec2PriceDto" minOccurs="0"/>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrParamsDto">
+      <xs:complexContent>
+         <xs:extension base="awsParamsDto">
+            <xs:sequence>
+               <xs:element name="trustingAccountStagingBucketName" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
    </xs:complexType>
 
    <xs:simpleType name="facetTypeEnum">

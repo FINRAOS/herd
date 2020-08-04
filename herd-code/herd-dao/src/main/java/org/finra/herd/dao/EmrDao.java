@@ -1,21 +1,19 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
-
-import java.util.List;
 
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
@@ -28,6 +26,7 @@ import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.EmrParamsDto;
 
 /**
  * A DAO for Amazon AWS EMR.
@@ -52,13 +51,13 @@ public interface EmrDao
     /**
      * Create the EMR cluster.
      *
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
+     * @param emrParamsDto the AWS related parameters required to create and/or access EMR cluster.
      * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
      * @param clusterName the cluster name value.
      *
      * @return the cluster Id.
      */
-    public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams);
+    public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, EmrParamsDto emrParamsDto);
 
     /**
      * Get an Active EMR cluster by the cluster name and account id. Cluster only in following states are returned: ClusterState.BOOTSTRAPPING,
