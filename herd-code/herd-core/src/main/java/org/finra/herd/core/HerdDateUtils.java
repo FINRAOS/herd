@@ -226,4 +226,16 @@ public class HerdDateUtils extends DateUtils
     {
         return new Timestamp(xmlGregorianCalendar.toGregorianCalendar().getTimeInMillis());
     }
+
+    /**
+     * Determines if a provided {@link XMLGregorianCalendar} calendar instant contains a time portion
+     *
+     * @param xmlGregorianCalendar the specified instant
+     * @return true if the specified calendar instant contains a time portion, otherwise false
+     */
+    public static Boolean containsTimePortion(XMLGregorianCalendar xmlGregorianCalendar)
+    {
+        Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
+        return DateUtils.truncate(date, Calendar.DAY_OF_MONTH).equals(date);
+    }
 }

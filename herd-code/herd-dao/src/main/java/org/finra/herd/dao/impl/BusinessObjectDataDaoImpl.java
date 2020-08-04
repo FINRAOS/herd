@@ -1090,8 +1090,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Apply predicate for registration end timestamp
         if (registrationDateRangeFilter.getEndRegistrationDate() != null)
         {
-            predicate = builder.and(predicate, builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn),
-                HerdDateUtils.convertToTimestamp(registrationDateRangeFilter.getEndRegistrationDate())));
+            Date endDate;
+
+            // Determine if registration end date contains a time portion; if not, assume end of day.
+            if (!HerdDateUtils.containsTimePortion(registrationDateRangeFilter.getEndRegistrationDate()))
+            {
+                endDate = DateUtils.addDays(HerdDateUtils.convertToTimestamp(registrationDateRangeFilter.getEndRegistrationDate()), 1);
+            }
+            else
+            {
+                endDate = HerdDateUtils.convertToTimestamp(registrationDateRangeFilter.getEndRegistrationDate());
+            }
+
+            predicate = builder.and(predicate, builder.lessThan(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn), endDate));
         }
 
         return predicate;
