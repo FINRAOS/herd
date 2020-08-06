@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 public class EmrShellStepHelper extends EmrStepHelper
 {
     @Override
-    public Object buildResponseFromRequest(Object stepRequest)
+    public Object buildResponseFromRequest(Object stepRequest, String trustingAccountStagingBucketName)
     {
         EmrShellStepAddRequest emrShellStepAddRequest = (EmrShellStepAddRequest) stepRequest;
         EmrShellStep step = new EmrShellStep();
@@ -45,7 +45,8 @@ public class EmrShellStepHelper extends EmrStepHelper
         step.setEmrClusterName(emrShellStepAddRequest.getEmrClusterName());
 
         step.setStepName(emrShellStepAddRequest.getStepName().trim());
-        step.setScriptLocation(emrShellStepAddRequest.getScriptLocation().trim().replaceAll(getS3ManagedReplaceString(), emrHelper.getS3StagingLocation()));
+        step.setScriptLocation(emrShellStepAddRequest.getScriptLocation().trim()
+            .replaceAll(getS3ManagedReplaceString(), emrHelper.getS3StagingLocation(trustingAccountStagingBucketName)));
         // Add the script arguments
         if (!CollectionUtils.isEmpty(emrShellStepAddRequest.getScriptArguments()))
         {

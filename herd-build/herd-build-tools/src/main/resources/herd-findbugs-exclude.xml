@@ -78,7 +78,10 @@
          <Class name="~org.finra.herd.model.dto.EmrClusterCacheKey"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterCacheTimestamps"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterCreateDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrClusterPreCreateDto"/>
          <Class name="~org.finra.herd.model.dto.EmrClusterPriceDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.EmrParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.FacetTypeEnum"/>
          <Class name="~org.finra.herd.model.dto.HivePartitionDto"/>
          <Class name="~org.finra.herd.model.dto.IndexSearchHighlightField"/>

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -71,7 +71,6 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
 import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
 import org.finra.herd.model.api.xml.EmrHiveStepAddRequest;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrPigStepAddRequest;
 import org.finra.herd.model.api.xml.EmrShellStep;
@@ -83,9 +82,9 @@ import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.ScriptDefinition;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
+import org.finra.herd.model.dto.EmrParamsDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity_;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
@@ -725,6 +724,11 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setNodeTags(nodeTags);
         request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
 
+        // The empty list for "hadoopConfigurations" gets converted to null during additional marshaling followed by
+        // unmarshalling steps that we perform to replace S3 managed location variables in EMR cluster definition XML.
+        expectedEmrClusterDefinition.setHadoopConfigurations(null);
+
+        // Call the method under test.
         EmrCluster emrCluster = emrService.createCluster(request);
 
         // Validate the returned object against the input.
@@ -1958,8 +1962,8 @@ public class EmrServiceTest extends AbstractServiceTest
         emrClusterAlternateKeyDto.setEmrClusterDefinitionName(emrClusterDefinitionName);
         emrClusterAlternateKeyDto.setEmrClusterName(emrClusterName);
 
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        when(mockEmrHelper.getAwsParamsDtoByAccountId(any())).thenReturn(awsParamsDto);
+        EmrParamsDto emrParamsDto = new EmrParamsDto();
+        when(mockEmrHelper.getEmrParamsDtoByAccountId(any())).thenReturn(emrParamsDto);
 
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = new EmrClusterDefinitionEntity();
@@ -1983,8 +1987,8 @@ public class EmrServiceTest extends AbstractServiceTest
         verify(mockEmrHelper)
             .buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
         verify(mockEmrHelper).getActiveEmrClusterId(emrClusterId, buildEmrClusterNameResult, null);
-        verify(mockEmrDao).terminateEmrCluster(buildEmrClusterNameResult, overrideTerminationProtection, awsParamsDto);
-        verify(mockEmrDao).getEmrClusterStatusById(buildEmrClusterNameResult, awsParamsDto);
+        verify(mockEmrDao).terminateEmrCluster(buildEmrClusterNameResult, overrideTerminationProtection, emrParamsDto);
+        verify(mockEmrDao).getEmrClusterStatusById(buildEmrClusterNameResult, emrParamsDto);
         //verifyNoMoreInteractions(mockEmrHelper, mockNamespaceDaoHelper, mockEmrClusterDefinitionDaoHelper, mockEmrDao);
     }
 
