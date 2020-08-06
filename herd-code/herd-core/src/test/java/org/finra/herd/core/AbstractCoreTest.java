@@ -27,9 +27,11 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -364,5 +366,24 @@ public abstract class AbstractCoreTest
 
         // Return the new mixed case string
         return output.toString();
+    }
+
+    /**
+     * Utility method to iterate over 2 {@link Collection} items simultaneously
+     *
+     * @param tCollection first collection
+     * @param uCollection second collection
+     * @param consumer a {@link BiConsumer} which accepts iterators over both provided collections
+     * @param <T> Generic first collection
+     * @param <U> Generic second collection
+     */
+    protected static <T, U> void zipIterator(Collection<T> tCollection, Collection<U> uCollection, BiConsumer<T, U> consumer)
+    {
+        Iterator<T> tIterator = tCollection.iterator();
+        Iterator<U> uIterator = uCollection.iterator();
+        while (tIterator.hasNext() && uIterator.hasNext())
+        {
+            consumer.accept(tIterator.next(), uIterator.next());
+        }
     }
 }
