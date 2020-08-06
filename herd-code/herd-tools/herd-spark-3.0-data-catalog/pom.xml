@@ -14,7 +14,7 @@
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-spark-3.0-data-catalog</artifactId>
-   <version>0.125.0-SNAPSHOT</version>
+   <version>0.126.0-SNAPSHOT</version>
 
    <!-- build the data source for spark version 3.0.0 -->
    <properties>
