@@ -216,6 +216,26 @@ public class HerdDateUtils extends DateUtils
     }
 
     /**
+     * Removes time portion of a given {@link XMLGregorianCalendar} instance.
+     *
+     * @param xmlGregorianCalendar the given {@link XMLGregorianCalendar} instant, not null
+     * @return a new {@link XMLGregorianCalendar} instance with the time portion removed
+     */
+    public static XMLGregorianCalendar resetToMidnight(final XMLGregorianCalendar xmlGregorianCalendar) throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar gregorianCalendarResetToMidnight =
+            DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendar.toGregorianCalendar());
+
+        // reset time fields
+        gregorianCalendarResetToMidnight.setHour(0);
+        gregorianCalendarResetToMidnight.setMinute(0);
+        gregorianCalendarResetToMidnight.setSecond(0);
+        gregorianCalendarResetToMidnight.setMillisecond(0);
+
+        return gregorianCalendarResetToMidnight;
+    }
+
+    /**
      * Converts a provided {@link XMLGregorianCalendar} calendar instant to a {@link Timestamp} instant
      *
      * @param xmlGregorianCalendar the specified instant
