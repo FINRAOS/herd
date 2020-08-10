@@ -215,15 +215,4 @@ public class HerdDateUtils extends DateUtils
         Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
         return new Timestamp(DateUtils.truncate(date, Calendar.DATE).getTime());
     }
-
-    /**
-     * Converts a provided {@link XMLGregorianCalendar} calendar instant to a {@link Timestamp} instant
-     *
-     * @param xmlGregorianCalendar the specified instant
-     * @return the converted {@link Timestamp} instant
-     */
-    public static Timestamp convertToTimestamp(XMLGregorianCalendar xmlGregorianCalendar)
-    {
-        return new Timestamp(xmlGregorianCalendar.toGregorianCalendar().getTimeInMillis());
-    }
 }
