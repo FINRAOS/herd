@@ -4198,12 +4198,12 @@
 
    <xs:complexType name="registrationDateRangeFilter">
       <xs:all>
-         <xs:element name="startRegistrationDate" type="xs:dateTime" minOccurs="0">
+         <xs:element name="startRegistrationDate" type="xs:date" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The start date for the registration date range in YYYY-MM-DD format</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="endRegistrationDate" type="xs:dateTime" minOccurs="0">
+         <xs:element name="endRegistrationDate" type="xs:date" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The end date for the registration date range in YYYY-MM-DD format</xs:documentation>
             </xs:annotation>
