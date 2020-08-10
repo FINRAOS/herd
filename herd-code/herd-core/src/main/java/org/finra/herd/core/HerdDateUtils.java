@@ -152,6 +152,7 @@ public class HerdDateUtils extends DateUtils
      * Gets an instance of XMLGregorianCalendar class initialized per the specified java.util.Date value. Returns the current date/time if date is null.
      *
      * @param date the java.util.Date value to be converted into XMLGregorianCalendar.
+     *
      * @return the XMLGregorianCalendar instance initialized per specified date value
      */
     public static XMLGregorianCalendar getXMLGregorianCalendarValue(Date date)
@@ -213,28 +214,5 @@ public class HerdDateUtils extends DateUtils
     {
         Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
         return new Timestamp(DateUtils.truncate(date, Calendar.DATE).getTime());
-    }
-
-    /**
-     * Converts a provided {@link XMLGregorianCalendar} calendar instant to a {@link Timestamp} instant
-     *
-     * @param xmlGregorianCalendar the specified instant
-     * @return the converted {@link Timestamp} instant
-     */
-    public static Timestamp convertToTimestamp(XMLGregorianCalendar xmlGregorianCalendar)
-    {
-        return new Timestamp(xmlGregorianCalendar.toGregorianCalendar().getTimeInMillis());
-    }
-
-    /**
-     * Determines if a provided {@link XMLGregorianCalendar} calendar instant contains a time portion
-     *
-     * @param xmlGregorianCalendar the specified instant
-     * @return true if the specified calendar instant contains a time portion, otherwise false
-     */
-    public static Boolean containsTimePortion(XMLGregorianCalendar xmlGregorianCalendar)
-    {
-        Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
-        return !DateUtils.truncate(date, Calendar.DAY_OF_MONTH).equals(date);
     }
 }
