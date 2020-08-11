@@ -1271,7 +1271,7 @@ public class BusinessObjectDataServiceTestHelper
     {
         return getExpectedBusinessObjectDataDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveFileFormat,
             businessObjectFormatFileType, partitionColumnPosition, partitionValues, subPartitionValues, replaceUnderscoresWithHyphens, isDropStatementIncluded,
-            isIfNotExistsOptionIncluded, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS);
+            isIfNotExistsOptionIncluded, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS, AbstractServiceTest.INCLUDE_ROW_FORMAT_STATEMENT);
     }
 
     /**
@@ -1291,13 +1291,14 @@ public class BusinessObjectDataServiceTestHelper
      * location path
      * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
      * @param isDropPartitionsStatementsIncluded specifies if expected DDL should include the relative drop partition statements
+     * @param isRowFormatStatementIncluded specifies if expected DDL should include a ROW FORMAT statement
      *
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectDataDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
         String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
         List<String> subPartitionValues, boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded,
-        boolean isDropPartitionsStatementsIncluded)
+        boolean isDropPartitionsStatementsIncluded, boolean isRowFormatStatementIncluded)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -1350,7 +1351,11 @@ public class BusinessObjectDataServiceTestHelper
             sb.append("[Hive Clustered By Value]\n");
         }
 
-        sb.append("[Row Format]\n");
+        if (isRowFormatStatementIncluded)
+        {
+            sb.append("[Row Format]\n");
+        }
+
         sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
 
         if (partitionLevels > 0)
@@ -2633,8 +2638,8 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @throws Exception
      */
-    public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths, boolean isEmptyFolder)
-        throws Exception
+    public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths,
+        boolean isEmptyFolder) throws Exception
     {
         // Create local test files.
         for (String file : localFilePaths)
