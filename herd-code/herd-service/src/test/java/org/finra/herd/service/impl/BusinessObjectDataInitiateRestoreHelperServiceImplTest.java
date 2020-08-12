@@ -531,7 +531,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             .thenReturn(S3_BUCKET_NAME);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey))
             .thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, true)).thenReturn(storageFiles);
         when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
         when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
@@ -618,7 +618,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             .thenReturn(S3_BUCKET_NAME);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey))
             .thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, true)).thenReturn(storageFiles);
         when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
         when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
@@ -645,7 +645,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME);
         verify(storageHelper).getStorageAttributeValueByName((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
-        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, true);
         verify(storageUnitDaoHelper)
             .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
                 S3_KEY_PREFIX);

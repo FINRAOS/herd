@@ -138,6 +138,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
 
+    public static final String AWS_ACCOUNT_ID_2 = "UT_AwsAccountId_2_" + RANDOM_SUFFIX;
+
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
 
     public static final String AWS_ASSUMED_ROLE_ACCESS_KEY_2 = "UT_AwsAssumedRoleAccessKey_2_" + RANDOM_SUFFIX;
@@ -642,6 +644,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
+    public static final XMLGregorianCalendar NO_AS_OF_TIME = null;
+
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
 
     public static final List<AttributeDefinition> NO_ATTRIBUTE_DEFINITIONS = new ArrayList<>();
@@ -649,6 +653,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<AttributeValueFilter> NO_ATTRIBUTE_VALUE_FILTERS = new ArrayList<>();
 
     public static final String NO_AWS_ACCESS_KEY = null;
+
+    public static final String NO_AWS_ACCOUNT_ID = null;
 
     public static final String NO_AWS_KMS_KEY_ID = null;
 
@@ -778,6 +784,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
+    public static final Boolean NO_PUBLISH_FOR_FILTER = false;
+
     public static final RegistrationDateRangeFilter NO_REGISTRATION_DATE_RANGE_FILTER = null;
 
     public static final XMLGregorianCalendar NO_RESTORE_EXPIRATION_ON = null;
@@ -787,6 +795,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final AmazonS3 NO_S3_CLIENT = null;
 
     public static final String NO_S3_ENDPOINT = null;
+
+    public static final String NO_S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
@@ -842,7 +852,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
 
-    public static final   List<Attribute> NULL_AS_ATTRIBUTES = null;
+    public static final List<Attribute> NULL_AS_ATTRIBUTES = null;
 
     public static final List<BusinessObjectDataKey> NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN = null;
 
@@ -881,8 +891,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean PUBLISH_FOR_FILTER = true;
 
-    public static final Boolean NO_PUBLISH_FOR_FILTER = false;
-
     public static final Integer READ_TIMEOUT = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
     public static final String REALM = "UT_Realm_" + RANDOM_SUFFIX;
@@ -902,12 +910,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
-
-    public static final String S3_URL_PROTOCOL = "UT_S3_URL_PROTOCOL" + RANDOM_SUFFIX;
-
-    public static final String S3_URL_PATH_DELIMITER = "UT_S3_PATH_DELIMITER" + RANDOM_SUFFIX;
-
-    public static final String S3_STAGING_RESOURCE_BASE = "UT_S3_STAGING_RESOURCE_BASE" + RANDOM_SUFFIX;
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
@@ -935,7 +937,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
 
+    public static final String S3_STAGING_BUCKET_NAME = "UT_S3_Staging_Bucket_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_STAGING_RESOURCE_BASE = "UT_S3_STAGING_RESOURCE_BASE" + RANDOM_SUFFIX;
+
+    public static final String S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME = "UT_S3_Trusting_Account_Staging_Bucket_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_URL_PATH_DELIMITER = "UT_S3_PATH_DELIMITER" + RANDOM_SUFFIX;
+
+    public static final String S3_URL_PROTOCOL = "UT_S3_URL_PROTOCOL" + RANDOM_SUFFIX;
+
     public static final String S3_VERSION_ID = "UT_S3_Version_ID_" + RANDOM_SUFFIX;
+
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA = ",";
+
+    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_PIPE = "|";
 
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
@@ -947,19 +963,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_COLUMN_NAME_PREFIX = "Clmn-Name";
 
-    public static final String SCHEMA_DELIMITER_COMMA = ",";
-
-    public static final String SCHEMA_DELIMITER_PIPE = "|";
-
-    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA = ",";
-
-    public static final String SCHEMA_COLLECTION_ITEMS_DELIMITER_PIPE = "|";
-
-    public static final String SCHEMA_MAP_KEYS_DELIMITER_EQUALS = "=";
-
-    public static final String SCHEMA_MAP_KEYS_DELIMITER_HASH = "#";
-
-    public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
+    public static final String SCHEMA_CUSTOM_CLUSTERED_BY_VALUE = "(osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS";
 
     public static final String SCHEMA_CUSTOM_ROW_FORMAT = "SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'";
 
@@ -967,9 +971,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
         "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
             "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
 
-    public static final String SCHEMA_CUSTOM_CLUSTERED_BY_VALUE = "(osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS";
+    public static final String SCHEMA_DELIMITER_COMMA = ",";
+
+    public static final String SCHEMA_DELIMITER_PIPE = "|";
+
+    public static final String SCHEMA_ESCAPE_CHARACTER_BACKSLASH = "\\";
 
     public static final String SCHEMA_ESCAPE_CHARACTER_TILDE = "~";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_EQUALS = "=";
+
+    public static final String SCHEMA_MAP_KEYS_DELIMITER_HASH = "#";
 
     public static final String SCHEMA_NULL_VALUE_BACKSLASH_N = "\\N";
 
@@ -1050,8 +1062,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
-    public static final XMLGregorianCalendar NO_AS_OF_TIME = null;
-
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
 
     public static final String SHORT_DESCRIPTION = "UT_ShortDescription" + RANDOM_SUFFIX;
@@ -1059,6 +1069,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
+
+    public static final List<String> SINGLE_STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX);
 
     public static final Integer SIZE_IN_GB = getRandomInteger();
 
@@ -1083,8 +1095,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String STORAGE_DIRECTORY_PATH = "UT_Storage_Directory/Some_Path/" + RANDOM_SUFFIX;
 
     public static final String STORAGE_NAME = "UT_Storage_1_" + RANDOM_SUFFIX;
-
-    public static final List<String> SINGLE_STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX);
 
     public static final List<String> STORAGE_NAMES = Arrays.asList("UT_Storage_1_" + RANDOM_SUFFIX, "UT_Storage_2_" + RANDOM_SUFFIX);
 

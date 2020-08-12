@@ -89,14 +89,6 @@ public class EmrHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetS3StagingLocation()
-    {
-        String s3StagingLocation = emrHelper.getS3StagingLocation();
-
-        assertNotNull("s3 staging location is null", s3StagingLocation);
-    }
-
-    @Test
     public void testIsActiveEmrState()
     {
         boolean isActive = emrHelper.isActiveEmrState("RUNNING");

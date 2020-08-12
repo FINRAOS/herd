@@ -72,6 +72,10 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-test</artifactId>
       </dependency>
+      <dependency>
+         <groupId>com.github.stefanbirkner</groupId>
+         <artifactId>system-rules</artifactId>
+      </dependency>
    </dependencies>
 
    <build>

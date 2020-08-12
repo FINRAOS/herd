@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
@@ -38,10 +38,11 @@ public abstract class EmrStepHelper
      * This method builds the Step object for the given Step request.
      *
      * @param stepRequest the step request object
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
      *
      * @return the step object
      */
-    public abstract Object buildResponseFromRequest(Object stepRequest);
+    public abstract Object buildResponseFromRequest(Object stepRequest, String trustingAccountStagingBucketName);
 
     /**
      * This method gets the StepConfig object for the given Step.
@@ -222,7 +223,7 @@ public abstract class EmrStepHelper
             throw new IllegalArgumentException("Script location must be specified.");
         }
     }
-    
+
     /**
      * Gets Request accountId
      *
@@ -231,7 +232,7 @@ public abstract class EmrStepHelper
      * @return The Request account Id
      */
     public abstract String getRequestAccountId(Object stepRequest);
-    
+
     /**
      * Sets Request accountID.
      *
