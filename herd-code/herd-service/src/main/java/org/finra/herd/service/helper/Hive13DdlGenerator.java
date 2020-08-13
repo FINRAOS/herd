@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.nio.charset.StandardCharsets;
@@ -566,43 +566,48 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(String.format("CLUSTERED BY %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()));
         }
 
-        if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()))
+        // Get Hive file format.
+        String hiveFileFormat = getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity());
+
+        // Add ROW FORMAT statement only if Hive file format is not ORC or PARQUET as they have their own structure defined in their specification.
+        if (!StringUtils.equals(hiveFileFormat, ORC_HIVE_FILE_FORMAT) && !StringUtils.equals(hiveFileFormat, PARQUET_HIVE_FILE_FORMAT))
         {
-            // Add custom row format defined in business object format.
-            // This will override everything after "ROW FORMAT" including delimiter, escape value, null value statements defined in the business object format
-            // schema.
-            sb.append(String.format("ROW FORMAT %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()));
-        }
-        else
-        {
-            // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
-            // in the business object format schema.
-            sb.append("ROW FORMAT DELIMITED");
-            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()))
             {
-                // Note that the escape character is only output when the delimiter is present.
-                sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
-                    StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
+                // Add custom row format defined in business object format. This will override everything after "ROW FORMAT"
+                // including delimiter, escape value, null value statements defined in the business object format schema.
+                sb.append(String.format("ROW FORMAT %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()));
             }
-            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
+            else
             {
-                sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter(), true))));
+                // We output delimiter character, collection items delimiter, map keys delimiter, escape character,
+                // and null value only when they are defined in the business object format schema.
+                sb.append("ROW FORMAT DELIMITED");
+                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
+                {
+                    // Note that the escape character is only output when the delimiter is present.
+                    sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
+                        StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
+                            escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
+                }
+                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
+                {
+                    sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter(), true))));
+                }
+                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter()))
+                {
+                    sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter(), true))));
+                }
+                sb.append(String.format(" NULL DEFINED AS '%s'\n",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
             }
-            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter()))
-            {
-                sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter(), true))));
-            }
-            sb.append(String.format(" NULL DEFINED AS '%s'\n",
-                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
         }
 
         // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
-        sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
-            generateDdlRequest.getPartitioned() ? ";\n" : ""));
+        sb.append(String.format("STORED AS %s%s\n", hiveFileFormat, generateDdlRequest.getPartitioned() ? ";\n" : ""));
     }
 
     /**
@@ -612,6 +617,7 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormatEntity the business object format entity that schema column belongs to
      *
      * @return the Hive data type
+     *
      * @throws IllegalArgumentException if schema column data type is not supported
      */
     private String getHiveDataType(SchemaColumn schemaColumn, BusinessObjectFormatEntity businessObjectFormatEntity)
@@ -682,6 +688,7 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormatEntity the business object format entity that schema column belongs to
      *
      * @return the Hive file format
+     *
      * @throws IllegalArgumentException if business object format file type is not supported
      */
     private String getHiveFileFormat(BusinessObjectFormatEntity businessObjectFormatEntity)
