@@ -32,8 +32,8 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <revision>0.128.0-SNAPSHOT</revision>
-      <herd-ui.version>0.98.0</herd-ui.version>
+      <revision>0.129.0-SNAPSHOT</revision>
+      <herd-ui.version>0.99.0</herd-ui.version>
 
       <!-- NOTE: Only increment version if there are updates to herd python tools -->
       <herd.python.version>0.114.0</herd.python.version>
