@@ -52,6 +52,8 @@ public class RegistrationDateAdapter extends XmlAdapter<String, XMLGregorianCale
         }
         catch (IllegalArgumentException e)
         {
+            // Since the original exception carries an error message which gives away 'too much information', we are having it
+            // swallowed and instead returning a generic error message.
             throw new IllegalArgumentException("Failed to parse 'startRegistrationDate' and/or 'endRegistrationDate'.");
         }
     }
