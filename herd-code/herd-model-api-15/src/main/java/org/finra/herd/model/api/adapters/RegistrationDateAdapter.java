@@ -44,9 +44,9 @@ public class RegistrationDateAdapter extends XmlAdapter<String, XMLGregorianCale
                     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ssZ").getParser()
                 };
 
-            DateTimeFormatter parser = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+            DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
-            DateTime dateTime = parser.withZoneUTC().parseDateTime(v.trim());
+            DateTime dateTime = dateTimeFormatter.withZoneUTC().parseDateTime(v.trim());
 
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(dateTime.toGregorianCalendar());
         }
