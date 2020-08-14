@@ -257,7 +257,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
             s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
 
         // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, true);
+        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
