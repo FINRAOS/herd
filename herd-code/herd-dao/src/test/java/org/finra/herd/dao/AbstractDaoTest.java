@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import java.math.BigDecimal;
@@ -92,9 +92,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AGGREGATION_NAME = "UT_AggregationName_" + RANDOM_SUFFIX;
 
+    public static final String ALLOCATION_STRATEGY_1 = "UT_TimeoutAction_1_" + RANDOM_SUFFIX;
+
+    public static final String ALLOCATION_STRATEGY_2 = "UT_TimeoutAction_2_" + RANDOM_SUFFIX;
+
     public static final String ALLOWED_ATTRIBUTE_VALUE = "UT_ALLOWED_ATTRIBUTE_VALUE" + RANDOM_SUFFIX;
 
     public static final Boolean ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = true;
+
+    public static final String ARCHIVE_RETRIEVAL_OPTION = null;
 
     public static final String ATTRIBUTE_NAME = "UT_AttributeName_1_" + RANDOM_SUFFIX;
 
@@ -240,6 +246,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final BigDecimal BID_PRICE = getRandomBigDecimal();
 
+    public static final Integer BLOCK_DURATION_MINUTES = getRandomInteger();
+
+    public static final String BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG =
+        "One or more business object definition column fields start with a prohibited character.";
+
     public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
 
     public static final String BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME = "UT_BusinessObjectDefinitionSearchIndexName_" + RANDOM_SUFFIX;
@@ -252,11 +263,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String COLUMN_DATA_TYPE_2 = "UT_Column_Data_Type_2_" + RANDOM_SUFFIX;
 
+    public static final String COLUMN_DATA_TYPE_CHAR = "CHAR";
+
     public static final String COLUMN_DATA_TYPE_STARTS_WITH_EQUALS_TO = "=UT_Column_Data_Type_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE_STARTS_WITH_WHITESPACES_THEN_EQUALS_TO = "  =UT_Column_Data_Type_" + RANDOM_SUFFIX;
-
-    public static final String COLUMN_DATA_TYPE_CHAR = "CHAR";
 
     public static final String COLUMN_DEFAULT_VALUE = "UT_Column_Default_Value" + RANDOM_SUFFIX;
 
@@ -369,6 +380,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMPTY_S3_BUCKET_NAME = "";
 
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_NAME = "UT_EMR_CLUSTER_DAEMON_CONFIG_NAME" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_DAEMON_CONFIG_VALUE = "UT_EMR_CLUSTER_DAEMON_CONFIG_VALUE" + RANDOM_SUFFIX;
+
     public static final String EMR_CLUSTER_DEFINITION_NAME = "UT_EmrClusterDefinitionName_1_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_DEFINITION_NAME_2 = "UT_EmrClusterDefinitionName_2_" + RANDOM_SUFFIX;
@@ -381,23 +396,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
-    public static final String EMR_CLUSTER_DAEMON_CONFIG_NAME = "UT_EMR_CLUSTER_DAEMON_CONFIG_NAME" + RANDOM_SUFFIX;
+    public static final String EMR_CONFIGURE_DAEMON = "UT_EMR_CONFIGURE_DAEMON_" + RANDOM_SUFFIX;
 
-    public static final String EMR_CLUSTER_DAEMON_CONFIG_VALUE = "UT_EMR_CLUSTER_DAEMON_CONFIG_VALUE" + RANDOM_SUFFIX;
+    public static final String EMR_INVALID_STATE = "UT_EMR_InValidState_" + RANDOM_SUFFIX;
 
     public static final String EMR_MASTER_SECURITY_GROUP = "UT_EMR_MASTER_SECURITY_GROUP" + RANDOM_SUFFIX;
+
+    public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
     public static final String EMR_SERVICE_ACCESS_SECURITY_GROUP = "UT_EMR_SERVICE_ACCESS_SECURITY_GROUP" + RANDOM_SUFFIX;
 
     public static final String EMR_SLAVE_SECURITY_GROUP = "UT_EMR_SLAVE_SECURITY_GROUP" + RANDOM_SUFFIX;
 
-    public static final String EMR_CONFIGURE_DAEMON = "UT_EMR_CONFIGURE_DAEMON_" + RANDOM_SUFFIX;
-
     public static final String EMR_VALID_STATE = "UT_EMR_ValidState_" + RANDOM_SUFFIX;
-
-    public static final String EMR_INVALID_STATE = "UT_EMR_InValidState_" + RANDOM_SUFFIX;
-
-    public static final String EMR_NSCD_SCRIPT = "UT_EMR_NscdScript_" + RANDOM_SUFFIX;
 
     public static final boolean ENABLE_COLUMN_FIELDS = true;
 
@@ -410,10 +421,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
 
     public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
-
-    public static final String ARCHIVE_RETRIEVAL_OPTION = null;
-
-    public static final String INVALID_ARCHIVE_RETRIEVAL_OPTION = "UT_RETRIEVAL_OPTION_INVALID";
 
     public static final String EXTERNAL_INTERFACE = "UT_ExternalInterface_1_" + RANDOM_SUFFIX;
 
@@ -513,6 +520,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INSTANCE_COUNT = getRandomInteger();
 
+    public static final String INVALID_ARCHIVE_RETRIEVAL_OPTION = "UT_RETRIEVAL_OPTION_INVALID";
+
     public static final Integer INVALID_DATA_VERSION = -1 * DATA_VERSION;
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
@@ -575,9 +584,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> LOCAL_FILES = Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");
 
-    public static final List<String> LOCAL_FILES_SUBSET = Arrays.asList("Foo2.dat", "FOO3.DAT", "folder/foo2.dat");
-
     public static final List<String> LOCAL_FILES_2 = Arrays.asList("bar1.dat", "Bar2.dat", "BAR3.DAT", "folder/bar3.dat", "folder/bar2.dat", "folder/bar1.dat");
+
+    public static final List<String> LOCAL_FILES_SUBSET = Arrays.asList("Foo2.dat", "FOO3.DAT", "folder/foo2.dat");
 
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
@@ -961,6 +970,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_COLUMNS_NAME_FIELD = "schemaColumns.name";
 
+    public static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
+
     public static final String SCHEMA_COLUMN_NAME_PREFIX = "Clmn-Name";
 
     public static final String SCHEMA_CUSTOM_CLUSTERED_BY_VALUE = "(osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS";
@@ -1258,6 +1269,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer THIRD_VERSION = 2;
 
+    public static final String TIMEOUT_ACTION = "UT_TimeoutAction_" + RANDOM_SUFFIX;
+
+    public static final Integer TIMEOUT_DURATION_MINUTES = getRandomInteger();
+
     public static final Long TOTAL_INDEX_SEARCH_RESULTS = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
@@ -1296,11 +1311,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String VOLUME_TYPE = "UT_VolumeType_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
-
-    public static final String SCHEMA_COLUMN_CSV_INJECTION_ERROR_MSG = "One or more schema column fields start with a prohibited character.";
-
-    public static final String BUSINESS_OBJECT_DEFINITION_COLUMN_CSV_INJECTION_ERROR_MSG =
-        "One or more business object definition column fields start with a prohibited character.";
 
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the
