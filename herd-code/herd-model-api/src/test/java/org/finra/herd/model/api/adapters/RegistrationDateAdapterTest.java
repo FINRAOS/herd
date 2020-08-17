@@ -85,7 +85,7 @@ public class RegistrationDateAdapterTest
         catch (Exception e)
         {
             assertTrue(e instanceof IllegalArgumentException);
-            assertTrue(e.getMessage().contains("Failed to parse 'startRegistrationDate' and/or 'endRegistrationDate'."));
+            assertTrue(e.getMessage().contains("Valid date or date and time format must be used when specifying values for start/end registration dates."));
         }
 
         try
@@ -95,7 +95,7 @@ public class RegistrationDateAdapterTest
         catch (Exception e)
         {
             assertTrue(e instanceof IllegalArgumentException);
-            assertTrue(e.getMessage().contains("Failed to parse 'startRegistrationDate' and/or 'endRegistrationDate'."));
+            assertTrue(e.getMessage().contains("Valid date or date and time format must be used when specifying values for start/end registration dates."));
         }
     }
 
