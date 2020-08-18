@@ -442,7 +442,7 @@
                   <artifactId>jboss-logging</artifactId>
                </exclusion>
                <exclusion>
-                  <groupId>org.dom4j</groupId>
+                  <groupId>dom4j</groupId>
                   <artifactId>dom4j</artifactId>
                </exclusion>
             </exclusions>
