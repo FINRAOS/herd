@@ -4200,37 +4200,29 @@
       <xs:all>
          <xs:element name="startRegistrationDate" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
+               <xs:documentation xml:space="preserve">
                   Business object data registration start datetime. The following formats are supported:
-                  &lt;/p&gt;
-                  &lt;br/&gt;
-                  &lt;ul&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd&quot; eg. 2018-01-21&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm&quot; eg. 2015-12-25T00:01&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mmZ&quot; eg. 2015-12-25T00:01+04:00&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm:ss&quot; eg. 2018-02-03T10:00:02&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm:ssZ&quot; eg. 2018-02-03T10:00:02+04:00&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd HH:mm:ss&quot; eg. 2018-02-03 10:00:02&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd HH:mm:ssZ&quot; eg. 2018-03-03 10:00:02+05:30&lt;/li&gt;
-                  &lt;/ul&gt;
+                  "yyyy-MM-dd" eg. 2018-01-21
+                  "yyyy-MM-dd'T'HH:mm" eg. 2015-12-25T00:01
+                  "yyyy-MM-dd'T'HH:mmZ" eg. 2015-12-25T00:01+04:00
+                  "yyyy-MM-dd'T'HH:mm:ss" eg. 2018-02-03T10:00:02
+                  "yyyy-MM-dd'T'HH:mm:ssZ" eg. 2018-02-03T10:00:02+04:00
+                  "yyyy-MM-dd HH:mm:ss" eg. 2018-02-03 10:00:02
+                  "yyyy-MM-dd HH:mm:ssZ" eg. 2018-03-03 10:00:02+05:30
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endRegistrationDate" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
+               <xs:documentation xml:space="preserve">
                   Business object data registration end datetime. The following formats are supported:
-                  &lt;/p&gt;
-                  &lt;br/&gt;
-                  &lt;ul&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd&quot; eg. 2018-01-21&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm&quot; eg. 2015-12-25T00:01&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mmZ&quot; eg. 2015-12-25T00:01+04:00&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm:ss&quot; eg. 2018-02-03T10:00:02&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd'T'HH:mm:ssZ&quot; eg. 2018-02-03T10:00:02+04:00&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd HH:mm:ss&quot; eg. 2018-02-03 10:00:02&lt;/li&gt;
-                  &lt;li&gt;&quot;yyyy-MM-dd HH:mm:ssZ&quot; eg. 2018-03-03 10:00:02+05:30&lt;/li&gt;
-                  &lt;/ul&gt;
+                  "yyyy-MM-dd" eg. 2018-01-21
+                  "yyyy-MM-dd'T'HH:mm" eg. 2015-12-25T00:01
+                  "yyyy-MM-dd'T'HH:mmZ" eg. 2015-12-25T00:01+04:00
+                  "yyyy-MM-dd'T'HH:mm:ss" eg. 2018-02-03T10:00:02
+                  "yyyy-MM-dd'T'HH:mm:ssZ" eg. 2018-02-03T10:00:02+04:00
+                  "yyyy-MM-dd HH:mm:ss" eg. 2018-02-03 10:00:02
+                  "yyyy-MM-dd HH:mm:ssZ" eg. 2018-03-03 10:00:02+05:30
                </xs:documentation>
             </xs:annotation>
          </xs:element>

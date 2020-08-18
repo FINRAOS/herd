@@ -50,7 +50,7 @@ public class HerdSchemaValidationEventHandler extends ValidationEventCollector i
 
         if (event.getSeverity() == ValidationEvent.ERROR || event.getSeverity() == ValidationEvent.FATAL_ERROR)
         {
-            throw new IllegalArgumentException("A schema validation failure event occurred.", event.getLinkedException());
+            throw new IllegalArgumentException(event.getMessage(), event.getLinkedException());
         }
 
         return false;
