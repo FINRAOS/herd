@@ -44,7 +44,6 @@ import scala.util.matching.Regex
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
 import org.finra.herd.sdk.model._
 
-
 /** A custom data source that integrates with Herd for metadata management
     *
     * It delegates to the built-in Spark file formats (PARQUET, CSV, ORC) for the actual reading and writing of data.
@@ -737,7 +736,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case DateType => col.setType("DATE")
       case d: DecimalType =>
         col.setType("DECIMAL")
-        col.setSize(if (d.precision != null) d.precision.toString else "10" + "," + (if (d.scale != null) d.scale.toString else "0"))
+        println("\n d.precision" + d.precision + "\n")
+        println("\n d.scale" + d.scale + "\n")
+        col.setSize( (if (d.precision.toString != null) d.precision.toString else "10") + "," + (if (d.scale.toString != null) d.scale.toString else "0"))
       case TimestampType => col.setType("TIMESTAMP")
       case BooleanType => col.setType("BOOLEAN")
       case _ => col.setType(toComplexHerdType(column))
@@ -770,12 +771,17 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case "DOUBLE" => DoubleType
       case "DATE" => DateType
       case "DECIMAL" =>
-        var size = "10,0"
-        if(col.getSize != null) {
-          size = col.getSize()
+        if (col.getSize() != null) {
+          println("\ndecimal size:" + col.getSize() + "\n")
+          val size = col.getSize()
+          val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
+          println("\nprecision: " + precision + "\n")
+          println("\nscale: " + scale + "\n")
+          DecimalType(precision, scale)
         }
-        val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
-        DecimalType(precision, scale)
+        else {
+          DecimalType(10, 0)
+        }
       case "TIMESTAMP" => TimestampType
       case "BOOLEAN" => BooleanType
       case _ => toComplexSparkType(col)
