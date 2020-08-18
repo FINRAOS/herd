@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -48,8 +47,6 @@ import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrStep;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StatusChangeReason;
@@ -540,60 +537,6 @@ public class EmrServiceImpl implements EmrService
         stepHelper.setRequestNamespace(request, namespace.trim());
         stepHelper.setRequestEmrClusterDefinitionName(request, clusterDefinitionName.trim());
         stepHelper.setRequestEmrClusterName(request, clusterName.trim());
-    }
-
-    /**
-     * Validates the add groups to EMR cluster master create request. This method also trims request parameters.
-     *
-     * @param request the request.
-     *
-     * @throws IllegalArgumentException if any validation errors were found.
-     */
-    private void validateAddSecurityGroupsToClusterMasterRequest(EmrMasterSecurityGroupAddRequest request) throws IllegalArgumentException
-    {
-        // Validate required elements
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(request.getEmrClusterDefinitionName(), "An EMR cluster definition name must be specified.");
-        Assert.hasText(request.getEmrClusterName(), "An EMR cluster name must be specified.");
-
-        Assert.notEmpty(request.getSecurityGroupIds(), "At least one security group must be specified.");
-        for (String securityGroup : request.getSecurityGroupIds())
-        {
-            Assert.hasText(securityGroup, "A security group value must be specified.");
-        }
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setEmrClusterDefinitionName(request.getEmrClusterDefinitionName().trim());
-        request.setEmrClusterName(request.getEmrClusterName().trim());
-        for (int i = 0; i < request.getSecurityGroupIds().size(); i++)
-        {
-            String element = request.getSecurityGroupIds().get(i);
-            request.getSecurityGroupIds().set(i, element.trim());
-        }
-    }
-
-    /**
-     * Creates a new EMR master group object from request.
-     *
-     * @param namespaceCd, the namespace Code
-     * @param clusterDefinitionName, the cluster definition name
-     * @param clusterName, the cluster name
-     * @param groupIds, the List of groupId
-     *
-     * @return the created EMR master group object
-     */
-    private EmrMasterSecurityGroup createEmrClusterMasterGroupFromRequest(String namespaceCd, String clusterDefinitionName, String clusterName,
-        List<String> groupIds)
-    {
-        // Create the EMR cluster.
-        EmrMasterSecurityGroup emrMasterSecurityGroup = new EmrMasterSecurityGroup();
-        emrMasterSecurityGroup.setNamespace(namespaceCd);
-        emrMasterSecurityGroup.setEmrClusterDefinitionName(clusterDefinitionName);
-        emrMasterSecurityGroup.setEmrClusterName(clusterName);
-        emrMasterSecurityGroup.setSecurityGroupIds(groupIds);
-
-        return emrMasterSecurityGroup;
     }
 
     /**

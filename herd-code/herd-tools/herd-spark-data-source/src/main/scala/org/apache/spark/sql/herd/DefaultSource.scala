@@ -737,7 +737,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case DateType => col.setType("DATE")
       case d: DecimalType =>
         col.setType("DECIMAL")
-        col.setSize(d.precision + "," + d.scale)
+        col.setSize(if (d.precision != null) d.precision.toString else "10" + "," + (if (d.scale != null) d.scale.toString else "0"))
       case TimestampType => col.setType("TIMESTAMP")
       case BooleanType => col.setType("BOOLEAN")
       case _ => col.setType(toComplexHerdType(column))
@@ -770,7 +770,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case "DOUBLE" => DoubleType
       case "DATE" => DateType
       case "DECIMAL" =>
-        val size = col.getSize
+        var size = "10,0"
+        if(col.getSize != null) {
+          size = col.getSize()
+        }
         val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
         DecimalType(precision, scale)
       case "TIMESTAMP" => TimestampType

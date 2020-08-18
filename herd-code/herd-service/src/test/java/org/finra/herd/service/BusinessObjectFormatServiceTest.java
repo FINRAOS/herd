@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -349,8 +349,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create the business object format with publish for filter attribute definition.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema());
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions,
+                businessObjectFormatServiceTestHelper.getTestSchema());
 
         // Call the method under test.
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request);
@@ -359,8 +359,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions,
-                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -372,14 +372,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             AbstractServiceTest.PUBLISH_FOR_FILTER));
 
         // Add a second publish for filter attribute in the same format.
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.PUBLISH_FOR_FILTER));
+        attributeDefinitions
+            .add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.PUBLISH_FOR_FILTER));
 
         // Create the business object format with publish for filter attribute definition.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema());
+                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions,
+                businessObjectFormatServiceTestHelper.getTestSchema());
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
@@ -2604,8 +2604,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the results.
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, businessObjectFormatServiceTestHelper
             .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
-                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
+                FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
     }
 
     @Test
@@ -2705,8 +2705,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Validate the results.
         String expectedDdl = businessObjectFormatServiceTestHelper
-            .getExpectedBusinessObjectFormatDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
-                CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, false, false);
+            .getExpectedBusinessObjectFormatDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, false, false);
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl("", expectedDdl, resultDdl);
     }
 
@@ -2847,11 +2847,17 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             request.setBusinessObjectFormatFileType(businessObjectFormatFileType);
             BusinessObjectFormatDdl resultDdl = businessObjectFormatService.generateBusinessObjectFormatDdl(request);
 
-            // Validate the results.
+            // Get the expected Hive file format.
             String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
+
+            // Include ROW FORMAT statement in the expected DDL only if Hive file format is not ORC or PARQUET.
+            boolean includeRowFormatStatement = !expectedHiveFileFormat.equals(Hive13DdlGenerator.ORC_HIVE_FILE_FORMAT) &&
+                !expectedHiveFileFormat.equals(Hive13DdlGenerator.PARQUET_HIVE_FILE_FORMAT);
+
+            // Validate the results.
             String expectedDdl = businessObjectFormatServiceTestHelper
                 .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
-                    expectedHiveFileFormat, businessObjectFormatFileType, true, true);
+                    expectedHiveFileFormat, businessObjectFormatFileType, true, true, includeRowFormatStatement);
             businessObjectFormatServiceTestHelper
                 .validateBusinessObjectFormatDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION,
                     BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, null, expectedDdl, resultDdl);
@@ -3104,8 +3110,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Validate the results.
         String expectedDdl = businessObjectFormatServiceTestHelper
-            .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), "ORGNL_PRTN_CLMN001", "DATE", ROW_FORMAT,
-                CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
+            .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), "ORGNL_PRTN_CLMN001", "DATE", ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(null, expectedDdl, resultDdl);
     }
 
@@ -3126,8 +3132,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Validate the results.
         String expectedDdl = businessObjectFormatServiceTestHelper
-            .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
-                CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
+            .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(null, expectedDdl, resultDdl);
     }
 
@@ -3176,8 +3182,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Validate the results.
         String expectedDdl = businessObjectFormatServiceTestHelper
-            .getExpectedBusinessObjectFormatDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
-                CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, false, true);
+            .getExpectedBusinessObjectFormatDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, false, true);
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, expectedDdl, resultDdl);
     }
 
@@ -3219,8 +3225,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the results.
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, businessObjectFormatServiceTestHelper
             .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
-                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
+                FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
     }
 
     @Test
@@ -3241,8 +3247,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Validate the results.
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, businessObjectFormatServiceTestHelper
             .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
-                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
+                FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
     }
 
     /**
@@ -5114,8 +5120,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Trim should work on required parameter
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
-        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
@@ -5139,8 +5147,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Upper case and lower case
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
         List<AttributeDefinition> validateAttributeDefinitions = new ArrayList<>();
-        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        validateAttributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(" " + AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE + " ", AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition to null.
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -5156,8 +5166,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // upper case and lower case
         attributeDefinitions = new ArrayList<>();
         // List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), AbstractServiceTest.PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         // Perform an update by changing the attribute definition with an empty list.
         request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
 
@@ -5181,7 +5193,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         List<AttributeDefinition> attributeDefinitions = businessObjectFormatServiceTestHelper.getTestAttributeDefinitions2();
         // Check for the duplicate attribute definition.
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
+            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
         BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
         try
         {
