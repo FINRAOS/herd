@@ -73,7 +73,7 @@ public class SecuredScriptingEngines extends ScriptingEngines
             }
         }, Arrays.asList(new RuntimePermission("accessDeclaredMembers"),
             // Grants the permission to serialize/deserialize xml data type inside scripting engine
-            new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"),
+            new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"), new RuntimePermission("nashorn.setConfig"),
             new ReflectPermission("suppressAccessChecks")));
     }
 
