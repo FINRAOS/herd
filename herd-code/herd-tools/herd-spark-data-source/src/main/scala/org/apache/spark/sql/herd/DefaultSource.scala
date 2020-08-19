@@ -46,45 +46,45 @@ import org.finra.herd.sdk.model._
 
 
 /** A custom data source that integrates with Herd for metadata management
- *
- * It delegates to the built-in Spark file formats (PARQUET, CSV, ORC) for the actual reading and writing of data.
- *
- * ==Options==
- * `url` - The URL of the Herd service to connect to
- *
- * `namespace` - The namespace in Herd to query
- *
- * `businessObjectName` - The business object which to query
- *
- * `businessObjectFormatUsage` - The business object format usage to query (optional, default `PRC`)
- *
- * `businessObjectFormatFileType` - A list of preferred file types to use (optional, default `PARQUET, ORC, BZ`)
- *
- * `username` - The username to authenticate with (optional)
- *
- * `password` - The password to authenticate with (optional)
- *
- * `credName` - The CredStash credential name to use for authentication (optional)
- *
- * `credAGS` - The CredStash AGS to use (optional, default `DATABRICKS`)
- *
- * `credSDLC` - The CredStash SDLC to use (optional, default `prody`)
- *
- * If `username` and `password` are defined those will be used for authentication. If `credName` is specified
- * then that will be used. If no credentials are specified, then anonymous authentication will be used.
- *
- * ==Example==
- * {{{
- * val df = spark.read.format("herd")
- *   .option("url", "http://localhost:8998/herd-app/rest")
- *   .option("namespace", "mynamespace")
- *   .option("businessObjectName", "myobject")
- *   .load()
- * }}}
- *
- */
+    *
+    * It delegates to the built-in Spark file formats (PARQUET, CSV, ORC) for the actual reading and writing of data.
+    *
+    * ==Options==
+    * `url` - The URL of the Herd service to connect to
+    *
+    * `namespace` - The namespace in Herd to query
+    *
+    * `businessObjectName` - The business object which to query
+    *
+    * `businessObjectFormatUsage` - The business object format usage to query (optional, default `PRC`)
+    *
+    * `businessObjectFormatFileType` - A list of preferred file types to use (optional, default `PARQUET, ORC, BZ`)
+    *
+    * `username` - The username to authenticate with (optional)
+    *
+    * `password` - The password to authenticate with (optional)
+    *
+    * `credName` - The CredStash credential name to use for authentication (optional)
+    *
+    * `credAGS` - The CredStash AGS to use (optional, default `DATABRICKS`)
+    *
+    * `credSDLC` - The CredStash SDLC to use (optional, default `prody`)
+    *
+    * If `username` and `password` are defined those will be used for authentication. If `credName` is specified
+    * then that will be used. If no credentials are specified, then anonymous authentication will be used.
+    *
+    * ==Example==
+    * {{{
+    * val df = spark.read.format("herd")
+    *   .option("url", "http://localhost:8998/herd-app/rest")
+    *   .option("namespace", "mynamespace")
+    *   .option("businessObjectName", "myobject")
+    *   .load()
+    * }}}
+    *
+  */
 class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) => HerdApi)
-  extends RelationProvider
+    extends RelationProvider
     with CreatableRelationProvider
     with DataSourceRegister
     with Logging {
@@ -195,12 +195,12 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
   }
 
   private def getFormatUsageAndFileType(
-                                         api: HerdApi,
-                                         params: HerdOptions,
-                                         data: Option[DataFrame] = None,
-                                         registerIfNotPresent: Boolean = false,
-                                         actualParams: Map[String, String] = null
-                                       ): (String, String, Int) = {
+    api: HerdApi,
+    params: HerdOptions,
+    data: Option[DataFrame] = None,
+    registerIfNotPresent: Boolean = false,
+    actualParams: Map[String, String] = null
+  ): (String, String, Int) = {
 
     log.info("checking if herd format exist")
     val formats = api.getBusinessObjectFormats(params.namespace, params.businessObjectName)
@@ -676,9 +676,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
               eValue
             }
             else
-            {
-              schema.getEscapeCharacter
-            }
+              {
+                schema.getEscapeCharacter
+              }
           }
 
         ) ++ compression ++ options)
@@ -749,11 +749,11 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   def toComplexHerdType(column: StructField): String = {
 
-    val typeString = if (column.metadata.contains(HIVE_TYPE_STRING)) {
-      column.metadata.getString(HIVE_TYPE_STRING)
-    } else {
-      column.dataType.catalogString
-    }
+      val typeString = if (column.metadata.contains(HIVE_TYPE_STRING)) {
+        column.metadata.getString(HIVE_TYPE_STRING)
+      } else {
+        column.dataType.catalogString
+      }
 
     return typeString;
 
