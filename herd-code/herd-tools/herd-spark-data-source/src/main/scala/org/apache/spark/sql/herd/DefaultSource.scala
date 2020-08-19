@@ -679,7 +679,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
               {
                 schema.getEscapeCharacter
               }
-          }
+            }
 
         ) ++ compression ++ options)
       case "parquet" =>
