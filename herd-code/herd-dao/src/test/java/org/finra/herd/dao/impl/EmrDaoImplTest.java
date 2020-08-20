@@ -59,6 +59,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.OnDemandProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
@@ -87,6 +88,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionOnDemandSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.InstanceDefinition;
@@ -641,7 +643,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final Integer targetOnDemandCapacity = INTEGER_VALUE;
         final Integer targetSpotCapacity = INTEGER_VALUE_2;
         final List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = null;
-        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications = null;
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
+        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
+            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
         final EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet =
             new EmrClusterDefinitionInstanceFleet(name, instanceFleetType, targetOnDemandCapacity, targetSpotCapacity, emrClusterDefinitionInstanceTypeConfigs,
                 emrClusterDefinitionLaunchSpecifications);
@@ -656,7 +663,11 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
         assertEquals(Lists.newArrayList(
             new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
-                .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)), result);
+                .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(
+                new InstanceFleetProvisioningSpecifications().withSpotSpecification(
+                    new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
+                        .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
+                    .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)))), result);
     }
 
     @Test
@@ -674,6 +685,19 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
+    public void testGetInstanceFleetsWhenEmrClusterDefinitionInstanceFleetsListIsNull()
+    {
+        // Call the method under test.
+        List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test
@@ -823,9 +847,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testGetLaunchSpecifications()
     {
         // Create objects required for testing.
-        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification = null;
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
-            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification);
+            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
 
         // Call the method under test.
         InstanceFleetProvisioningSpecifications result = emrDaoImpl.getLaunchSpecifications(emrClusterDefinitionLaunchSpecifications);
@@ -834,7 +861,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(null), result);
+        assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(
+            new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
+                .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
+            .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)), result);
+    }
+
+    @Test
+    public void testGetLaunchSpecificationsWhenEmrClusterDefinitionSpotSpecificationIsNull()
+    {
+        // Call the method under test.
+        InstanceFleetProvisioningSpecifications result = emrDaoImpl.getLaunchSpecifications(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test
@@ -912,21 +955,61 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testGetSpotSpecification()
     {
         // Create objects required for testing.
-        final Integer timeoutDurationMinutes = INTEGER_VALUE;
-        final String timeoutAction = STRING_VALUE;
-        final Integer blockDurationMinutes = INTEGER_VALUE_2;
-        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification1 =
-            new EmrClusterDefinitionSpotSpecification(timeoutDurationMinutes, timeoutAction, blockDurationMinutes);
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
 
         // Call the method under test.
-        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(emrClusterDefinitionSpotSpecification1);
+        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(emrClusterDefinitionSpotSpecification);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new SpotProvisioningSpecification().withTimeoutDurationMinutes(timeoutDurationMinutes).withTimeoutAction(timeoutAction)
-            .withBlockDurationMinutes(blockDurationMinutes), result);
+        assertEquals(new SpotProvisioningSpecification().withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES).withTimeoutAction(TIMEOUT_ACTION)
+            .withBlockDurationMinutes(BLOCK_DURATION_MINUTES).withAllocationStrategy(ALLOCATION_STRATEGY_1), result);
+    }
+
+    @Test
+    public void testGetSpotSpecificationWhenEmrClusterDefinitionSpotSpecificationIsNull()
+    {
+        // Call the method under test.
+        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetOnDemandSpecification()
+    {
+        // Create objects required for testing.
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1);
+
+        // Call the method under test.
+        OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(emrClusterDefinitionOnDemandSpecification);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1), result);
+    }
+
+    @Test
+    public void testGetOnDemandSpecificationWhenEmrClusterDefinitionOnDemandSpecificationIsNull()
+    {
+        // Call the method under test.
+        OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test

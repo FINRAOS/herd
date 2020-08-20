@@ -59,6 +59,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.OnDemandProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.ScriptBootstrapActionConfig;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
@@ -96,6 +97,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKerberosAttributes;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionOnDemandSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.HadoopJarStep;
@@ -117,11 +119,11 @@ import org.finra.herd.model.dto.EmrParamsDto;
 @Repository
 public class EmrDaoImpl implements EmrDao
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EmrDaoImpl.class);
-
     private static final int DELTA_UPDATE_BUFFER_IN_MINUTES = 1;
 
     private static final int FULL_RELOAD_CACHE_TIME_PERIOD_IN_MINUTES = 10;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrDaoImpl.class);
 
     @Autowired
     private AwsClientFactory awsClientFactory;
@@ -776,6 +778,8 @@ public class EmrDaoImpl implements EmrDao
         {
             instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
             instanceFleetProvisioningSpecifications.setSpotSpecification(getSpotSpecification(emrClusterDefinitionLaunchSpecifications.getSpotSpecification()));
+            instanceFleetProvisioningSpecifications
+                .setOnDemandSpecification(getOnDemandSpecification(emrClusterDefinitionLaunchSpecifications.getOnDemandSpecification()));
         }
 
         return instanceFleetProvisioningSpecifications;
@@ -809,6 +813,26 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
+     * Creates an instance of {@link OnDemandProvisioningSpecification} from a given instance of {@link EmrClusterDefinitionOnDemandSpecification}.
+     *
+     * @param emrClusterDefinitionOnDemandSpecification the instance of {@link EmrClusterDefinitionOnDemandSpecification}
+     *
+     * @return the instance of {@link OnDemandProvisioningSpecification}
+     */
+    protected OnDemandProvisioningSpecification getOnDemandSpecification(EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification)
+    {
+        OnDemandProvisioningSpecification onDemandProvisioningSpecification = null;
+
+        if (emrClusterDefinitionOnDemandSpecification != null)
+        {
+            onDemandProvisioningSpecification = new OnDemandProvisioningSpecification();
+            onDemandProvisioningSpecification.setAllocationStrategy(emrClusterDefinitionOnDemandSpecification.getAllocationStrategy());
+        }
+
+        return onDemandProvisioningSpecification;
+    }
+
+    /**
      * Creates an instance of {@link SpotProvisioningSpecification} from a given instance of {@link EmrClusterDefinitionSpotSpecification}.
      *
      * @param emrClusterDefinitionSpotSpecification the instance of {@link EmrClusterDefinitionSpotSpecification}
@@ -825,6 +849,7 @@ public class EmrDaoImpl implements EmrDao
             spotProvisioningSpecification.setTimeoutDurationMinutes(emrClusterDefinitionSpotSpecification.getTimeoutDurationMinutes());
             spotProvisioningSpecification.setTimeoutAction(emrClusterDefinitionSpotSpecification.getTimeoutAction());
             spotProvisioningSpecification.setBlockDurationMinutes(emrClusterDefinitionSpotSpecification.getBlockDurationMinutes());
+            spotProvisioningSpecification.setAllocationStrategy(emrClusterDefinitionSpotSpecification.getAllocationStrategy());
         }
 
         return spotProvisioningSpecification;
@@ -1042,6 +1067,20 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
+     * Get the bootstrap script location from the bucket name and bootstrap script configuration value.
+     *
+     * @param bootstrapConfigurationValue the relative bootstrap script location retrieved from the configuration
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
+     *
+     * @return location of the bootstrap script
+     */
+    private String getBootstrapScriptLocation(String bootstrapConfigurationValue, String trustingAccountStagingBucketName)
+    {
+        return emrHelper.getS3StagingLocation(trustingAccountStagingBucketName) + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            bootstrapConfigurationValue;
+    }
+
+    /**
      * Create the tag list for the EMR nodes.
      *
      * @param emrClusterDefinition the EMR definition name value.
@@ -1064,20 +1103,6 @@ public class EmrDaoImpl implements EmrDao
 
         // Return the object
         return tags;
-    }
-
-    /**
-     * Get the bootstrap script location from the bucket name and bootstrap script configuration value.
-     *
-     * @param bootstrapConfigurationValue the relative bootstrap script location retrieved from the configuration
-     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
-     *
-     * @return location of the bootstrap script
-     */
-    private String getBootstrapScriptLocation(String bootstrapConfigurationValue, String trustingAccountStagingBucketName)
-    {
-        return emrHelper.getS3StagingLocation(trustingAccountStagingBucketName) + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            bootstrapConfigurationValue;
     }
 
     /**
