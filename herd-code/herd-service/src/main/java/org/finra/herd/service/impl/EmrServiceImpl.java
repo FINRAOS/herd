@@ -1,22 +1,21 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -48,15 +47,14 @@ import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrStep;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StatusChangeReason;
 import org.finra.herd.model.api.xml.StatusTimeline;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.dto.EmrClusterCreateDto;
+import org.finra.herd.model.dto.EmrClusterPreCreateDto;
+import org.finra.herd.model.dto.EmrParamsDto;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.service.EmrService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
@@ -134,7 +132,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
         String accountId, Boolean retrieveInstanceFleets)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
+        EmrParamsDto emrParamsDto = emrHelper.getEmrParamsDtoByAccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -152,7 +150,7 @@ public class EmrServiceImpl implements EmrService
             // Get Cluster status if clusterId is specified
             if (StringUtils.isNotBlank(emrClusterId))
             {
-                Cluster cluster = emrDao.getEmrClusterById(emrClusterId.trim(), awsParamsDto);
+                Cluster cluster = emrDao.getEmrClusterById(emrClusterId.trim(), emrParamsDto);
 
                 // Validate that, Cluster exists
                 Assert.notNull(cluster, "An EMR cluster must exists with the cluster ID \"" + emrClusterId + "\".");
@@ -165,7 +163,7 @@ public class EmrServiceImpl implements EmrService
             }
             else
             {
-                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
+                ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, emrParamsDto);
 
                 // Validate that, Cluster exists with the name
                 Assert.notNull(clusterSummary, "An EMR cluster must exists with the name \"" + clusterName + "\".");
@@ -177,7 +175,7 @@ public class EmrServiceImpl implements EmrService
             // Get active step details
             if (emrHelper.isActiveEmrState(emrCluster.getStatus()))
             {
-                StepSummary stepSummary = emrDao.getClusterActiveStep(emrCluster.getId(), awsParamsDto);
+                StepSummary stepSummary = emrDao.getClusterActiveStep(emrCluster.getId(), emrParamsDto);
                 if (stepSummary != null)
                 {
                     EmrStep activeStep;
@@ -198,7 +196,7 @@ public class EmrServiceImpl implements EmrService
             // Get requested step details
             if (StringUtils.isNotBlank(emrStepId))
             {
-                Step step = emrDao.getClusterStep(emrCluster.getId(), emrStepId.trim(), awsParamsDto);
+                Step step = emrDao.getClusterStep(emrCluster.getId(), emrStepId.trim(), emrParamsDto);
 
                 emrCluster.setStep(buildEmrStepFromAwsStep(step, verbose));
             }
@@ -206,7 +204,7 @@ public class EmrServiceImpl implements EmrService
             // Get instance fleet if true
             if (BooleanUtils.isTrue(retrieveInstanceFleets))
             {
-                ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), awsParamsDto);
+                ListInstanceFleetsResult listInstanceFleetsResult = emrDao.getListInstanceFleetsResult(emrCluster.getId(), emrParamsDto);
                 emrCluster.setInstanceFleets(emrHelper.buildEmrClusterInstanceFleetFromAwsResult(listInstanceFleetsResult));
             }
         }
@@ -293,24 +291,26 @@ public class EmrServiceImpl implements EmrService
     }
 
     /**
-     * <p> Creates a new EMR cluster based on the given request if the cluster with the given name does not already exist. If the cluster already exist, returns
-     * the information about the existing cluster. </p> <p> The request must contain: </p> <ul> <li>A namespace and definition name which refer to an existing
-     * EMR cluster definition.</li> <li>A valid cluster name to create.</li> </ul> <p> The request may optionally contain: </p> <ul> <li>A "dry run" flag, which
-     * when set to {@code true}, no calls to AWS will occur, but validations and override will. Defaults to {@code false}.</li> <li>An override parameter, which
-     * when set, overrides the given parameters in the cluster definition before creating the cluster. Defaults to no override. </li> </ul> <p> A successful
-     * response will contain: </p> <ul> <li>The ID of the cluster that was created, or if the cluster already exists, the ID of the cluster that exists. This
-     * field will be {@code null} when dry run flag is {@code true}.</li> <li>The status of the cluster that was created or already exists. The status will
-     * normally be "Starting" on successful creations. This field will be {@code null} when dry run flag is {@code true}</li> <li>The namespace, definition
-     * name, and cluster name of the cluster.</li> <li>The dry run flag, if given in the request.</li> <li>An indicator whether the cluster was created or not.
-     * If the cluster already exists, the cluster will not be created and this flag will be set to {@code false}.</li> <li>The definition which was used to
-     * create the cluster. If any overrides were given, this definition's values will be the values after the override. This field will be {@code null} if the
-     * cluster was not created.</li> </ul> <p> Notes: </p> <ul> <li>At any point of the execution, if there are validation errors, the method will immediately
-     * throw an exception.</li> <li>Even if the validations pass, AWS may still reject the request, which will cause this method to throw an exception.</li>
+     * <p> Creates a new EMR cluster based on the given request if the cluster with the given name does not already exist. If the cluster already exist,
+     * returns the information about the existing cluster. </p> <p> The request must contain: </p> <ul> <li>A namespace and definition name which refer to an
+     * existing EMR cluster definition.</li> <li>A valid cluster name to create.</li> </ul> <p> The request may optionally contain: </p> <ul> <li>A "dry run"
+     * flag, which when set to {@code true}, no calls to AWS will occur, but validations and override will. Defaults to {@code false}.</li> <li>An override
+     * parameter, which when set, overrides the given parameters in the cluster definition before creating the cluster. Defaults to no override. </li> </ul> <p>
+     * A successful response will contain: </p> <ul> <li>The ID of the cluster that was created, or if the cluster already exists, the ID of the cluster that
+     * exists. This field will be {@code null} when dry run flag is {@code true}.</li> <li>The status of the cluster that was created or already exists. The
+     * status will normally be "Starting" on successful creations. This field will be {@code null} when dry run flag is {@code true}</li> <li>The namespace,
+     * definition name, and cluster name of the cluster.</li> <li>The dry run flag, if given in the request.</li> <li>An indicator whether the cluster was
+     * created or not. If the cluster already exists, the cluster will not be created and this flag will be set to {@code false}.</li> <li>The definition which
+     * was used to create the cluster. If any overrides were given, this definition's values will be the values after the override. This field will be {@code
+     * null} if the cluster was not created.</li> </ul> <p> Notes: </p> <ul> <li>At any point of the execution, if there are validation errors, the method will
+     * immediately throw an exception.</li> <li>Even if the validations pass, AWS may still reject the request, which will cause this method to throw an
+     * exception.</li>
      * <li>Dry runs do not make any calls to AWS, therefore AWS may still reject the creation request even when a dry run succeeds.</li> </ul>
      *
      * @param request - {@link EmrClusterCreateRequest} The EMR cluster create request
      *
      * @return {@link EmrCluster} the created EMR cluster object
+     *
      * @throws Exception when the original EMR cluster definition XML is malformed
      */
     protected EmrCluster createClusterImpl(EmrClusterCreateRequest request) throws Exception
@@ -321,12 +321,18 @@ public class EmrServiceImpl implements EmrService
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
 
-        EmrClusterDefinition emrClusterDefinition = emrHelperServiceImpl.emrPreCreateClusterSteps(emrClusterAlternateKeyDto, request);
+        // Execute EMR cluster pre-creation steps, so we can close the transaction when calling AWS specific steps below.
+        EmrClusterPreCreateDto emrClusterPreCreateDto = emrHelperServiceImpl.emrPreCreateClusterSteps(emrClusterAlternateKeyDto, request);
 
+        // Get EMR cluster definition and other information from the EMR cluster pre-creation DTO.
+        EmrClusterDefinition emrClusterDefinition = emrClusterPreCreateDto.getEmrClusterDefinition();
+
+        // Get AWS account ID for the trusting account, if it is specified.
         String accountId = emrClusterDefinition.getAccountId();
 
-        EmrClusterCreateDto emrClusterCreateDto =
-            emrHelperServiceImpl.emrCreateClusterAwsSpecificSteps(request, emrClusterDefinition, emrClusterAlternateKeyDto);
+        // Execute AWS specific steps related to EMR cluster creation.
+        EmrClusterCreateDto emrClusterCreateDto = emrHelperServiceImpl
+            .emrCreateClusterAwsSpecificSteps(request, emrClusterDefinition, emrClusterAlternateKeyDto, emrClusterPreCreateDto.getEmrParamsDto());
 
         if (emrClusterCreateDto.isEmrClusterCreated())
         {
@@ -371,7 +377,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster terminateClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId)
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
+        EmrParamsDto emrParamsDto = emrHelper.getEmrParamsDtoByAccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -386,7 +392,7 @@ public class EmrServiceImpl implements EmrService
         try
         {
             clusterId = emrHelper.getActiveEmrClusterId(emrClusterId, clusterName, accountId);
-            emrDao.terminateEmrCluster(clusterId, overrideTerminationProtection, awsParamsDto);
+            emrDao.terminateEmrCluster(clusterId, overrideTerminationProtection, emrParamsDto);
         }
         catch (AmazonServiceException ex)
         {
@@ -394,7 +400,7 @@ public class EmrServiceImpl implements EmrService
         }
 
         return createEmrClusterFromRequest(clusterId, emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
-            emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
+            emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrDao.getEmrClusterStatusById(clusterId, emrParamsDto), null, null, null);
     }
 
     /**
@@ -462,6 +468,7 @@ public class EmrServiceImpl implements EmrService
      * @param request the EMR steps add request
      *
      * @return the EMR step add object with added steps
+     *
      * @throws Exception if there were any errors while adding a step to the cluster.
      */
     protected Object addStepToClusterImpl(Object request) throws Exception
@@ -476,7 +483,7 @@ public class EmrServiceImpl implements EmrService
 
         //get accountId and awsParamDto
         String accountId = stepHelper.getRequestAccountId(request);
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
+        EmrParamsDto emrParamsDto = emrHelper.getEmrParamsDtoByAccountId(accountId);
 
         // Get the EMR cluster definition and ensure it exists.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
@@ -488,14 +495,14 @@ public class EmrServiceImpl implements EmrService
 
         String clusterName = emrHelper.buildEmrClusterName(emrClusterDefinitionEntity.getNamespace().getCode(), emrClusterDefinitionEntity.getName(),
             stepHelper.getRequestEmrClusterName(request));
-        Object emrStep = stepHelper.buildResponseFromRequest(request);
+        Object emrStep = stepHelper.buildResponseFromRequest(request, emrParamsDto.getTrustingAccountStagingBucketName());
 
         try
         {
             String clusterId =
                 emrHelper.getActiveEmrClusterId(stepHelper.getRequestEmrClusterId(request), clusterName, stepHelper.getRequestAccountId(request));
             stepHelper.setRequestEmrClusterId(request, clusterId);
-            String stepId = emrDao.addEmrStep(clusterId, stepHelper.getEmrStepConfig(emrStep), awsParamsDto);
+            String stepId = emrDao.addEmrStep(clusterId, stepHelper.getEmrStepConfig(emrStep), emrParamsDto);
             stepHelper.setStepId(emrStep, stepId);
         }
         catch (AmazonServiceException ex)
@@ -530,60 +537,6 @@ public class EmrServiceImpl implements EmrService
         stepHelper.setRequestNamespace(request, namespace.trim());
         stepHelper.setRequestEmrClusterDefinitionName(request, clusterDefinitionName.trim());
         stepHelper.setRequestEmrClusterName(request, clusterName.trim());
-    }
-
-    /**
-     * Validates the add groups to EMR cluster master create request. This method also trims request parameters.
-     *
-     * @param request the request.
-     *
-     * @throws IllegalArgumentException if any validation errors were found.
-     */
-    private void validateAddSecurityGroupsToClusterMasterRequest(EmrMasterSecurityGroupAddRequest request) throws IllegalArgumentException
-    {
-        // Validate required elements
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(request.getEmrClusterDefinitionName(), "An EMR cluster definition name must be specified.");
-        Assert.hasText(request.getEmrClusterName(), "An EMR cluster name must be specified.");
-
-        Assert.notEmpty(request.getSecurityGroupIds(), "At least one security group must be specified.");
-        for (String securityGroup : request.getSecurityGroupIds())
-        {
-            Assert.hasText(securityGroup, "A security group value must be specified.");
-        }
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setEmrClusterDefinitionName(request.getEmrClusterDefinitionName().trim());
-        request.setEmrClusterName(request.getEmrClusterName().trim());
-        for (int i = 0; i < request.getSecurityGroupIds().size(); i++)
-        {
-            String element = request.getSecurityGroupIds().get(i);
-            request.getSecurityGroupIds().set(i, element.trim());
-        }
-    }
-
-    /**
-     * Creates a new EMR master group object from request.
-     *
-     * @param namespaceCd, the namespace Code
-     * @param clusterDefinitionName, the cluster definition name
-     * @param clusterName, the cluster name
-     * @param groupIds, the List of groupId
-     *
-     * @return the created EMR master group object
-     */
-    private EmrMasterSecurityGroup createEmrClusterMasterGroupFromRequest(String namespaceCd, String clusterDefinitionName, String clusterName,
-        List<String> groupIds)
-    {
-        // Create the EMR cluster.
-        EmrMasterSecurityGroup emrMasterSecurityGroup = new EmrMasterSecurityGroup();
-        emrMasterSecurityGroup.setNamespace(namespaceCd);
-        emrMasterSecurityGroup.setEmrClusterDefinitionName(clusterDefinitionName);
-        emrMasterSecurityGroup.setEmrClusterName(clusterName);
-        emrMasterSecurityGroup.setSecurityGroupIds(groupIds);
-
-        return emrMasterSecurityGroup;
     }
 
     /**

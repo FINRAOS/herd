@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import static org.finra.herd.dao.config.DaoSpringModuleConfig.EMR_CLUSTER_CACHE_MAP_DEFAULT_AWS_ACCOUNT_ID_KEY;
@@ -59,6 +59,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.OnDemandProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
@@ -87,6 +88,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionOnDemandSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.InstanceDefinition;
@@ -97,6 +99,7 @@ import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterCacheKey;
 import org.finra.herd.model.dto.EmrClusterCacheTimestamps;
+import org.finra.herd.model.dto.EmrParamsDto;
 
 /**
  * This class tests functionality within the EMR DAO implementation.
@@ -148,19 +151,18 @@ public class EmrDaoImplTest extends AbstractDaoTest
     @Test
     public void testCreateEmrClusterWithNscdBootstrapScript()
     {
-        // Create an AWS parameters DTO.
-        final AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                AWS_REGION_NAME_US_EAST_1);
+        // Create an EMR parameters DTO.
+        final EmrParamsDto emrParamsDto =
+            new EmrParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1, S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Collections.emptyList());
         when(configurationHelper.getProperty(ConfigurationValue.EMR_NSCD_SCRIPT)).thenReturn(EMR_NSCD_SCRIPT);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL)).thenReturn(S3_URL_PROTOCOL);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME)).thenReturn(S3_BUCKET_NAME);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE)).thenReturn(S3_STAGING_RESOURCE_BASE);
+        when(emrHelper.getS3StagingLocation(S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME))
+            .thenReturn(String.format("%s%s%s%s", S3_URL_PROTOCOL, S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE));
         when(configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER)).thenReturn(S3_URL_PATH_DELIMITER);
         when(configurationHelper.getProperty(ConfigurationValue.EMR_CONFIGURE_DAEMON)).thenReturn(EMR_CONFIGURE_DAEMON);
         List<Parameter> daemonConfigs = new ArrayList<>();
@@ -170,25 +172,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
         daemonConfigs.add(daemonConfig);
 
         emrClusterDefinition.setDaemonConfigurations(daemonConfigs);
-        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(awsParamsDto.getAwsRegionName())
-            .build();
-        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
-        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(emrParamsDto.getAwsRegionName()).build();
+        when(awsClientFactory.getEmrClient(emrParamsDto)).thenReturn(amazonElasticMapReduce);
+        when(awsClientFactory.getEmrClient(emrParamsDto)).thenReturn(amazonElasticMapReduce);
         when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
             .thenReturn(EMR_CLUSTER_ID);
 
         // Create the cluster
-        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
+        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, emrParamsDto);
 
         // Verifications
         RunJobFlowRequest runJobFlowRequest = runJobFlowRequestArgumentCaptor.getValue();
         assertEquals(clusterId, EMR_CLUSTER_ID);
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
-        verify(configurationHelper).getProperty(ConfigurationValue.S3_URL_PROTOCOL);
-        verify(configurationHelper).getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME);
-        verify(configurationHelper).getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+        verify(emrHelper).getS3StagingLocation(S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER);
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_CONFIGURE_DAEMON);
-        verify(awsClientFactory).getEmrClient(awsParamsDto);
+        verify(awsClientFactory).getEmrClient(emrParamsDto);
         verify(emrOperations).runEmrJobFlow((AmazonElasticMapReduceClient) amazonElasticMapReduce, runJobFlowRequest);
         List<BootstrapActionConfig> bootstrapActionConfigs = runJobFlowRequest.getBootstrapActions();
 
@@ -197,9 +197,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Verify NSCD bootstrap action
         assertEquals(ConfigurationValue.EMR_NSCD_SCRIPT.getKey(), bootstrapActionConfigs.get(0).getName());
-        assertEquals(String
-                .format("%s%s%s%s%s%s", S3_URL_PROTOCOL, S3_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE, S3_URL_PATH_DELIMITER, EMR_NSCD_SCRIPT),
-            bootstrapActionConfigs.get(0).getScriptBootstrapAction().getPath());
+        assertEquals(String.format("%s%s%s%s%s%s", S3_URL_PROTOCOL, S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME, S3_URL_PATH_DELIMITER, S3_STAGING_RESOURCE_BASE,
+            S3_URL_PATH_DELIMITER, EMR_NSCD_SCRIPT), bootstrapActionConfigs.get(0).getScriptBootstrapAction().getPath());
 
         // Verify EMR configure daemon bootstrap action
         assertEquals(ConfigurationValue.EMR_CONFIGURE_DAEMON.getKey(), bootstrapActionConfigs.get(1).getName());
@@ -212,28 +211,27 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testCreateEmrClusterNoNscdBootstrapScript()
     {
         // Create an AWS parameters DTO.
-        final AwsParamsDto awsParamsDto =
-            new AwsParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
-                AWS_REGION_NAME_US_EAST_1);
+        final EmrParamsDto emrParamsDto =
+            new EmrParamsDto(AWS_ASSUMED_ROLE_ACCESS_KEY, AWS_ASSUMED_ROLE_SECRET_KEY, AWS_ASSUMED_ROLE_SESSION_TOKEN, HTTP_PROXY_HOST, HTTP_PROXY_PORT,
+                AWS_REGION_NAME_US_EAST_1, NO_S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME);
         EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
         final InstanceDefinitions instanceDefinitions =
             new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
         emrClusterDefinition.setNodeTags(Collections.emptyList());
 
-        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(awsParamsDto.getAwsRegionName())
-            .build();
-        when(awsClientFactory.getEmrClient(awsParamsDto)).thenReturn(amazonElasticMapReduce);
+        AmazonElasticMapReduce amazonElasticMapReduce = AmazonElasticMapReduceClientBuilder.standard().withRegion(emrParamsDto.getAwsRegionName()).build();
+        when(awsClientFactory.getEmrClient(emrParamsDto)).thenReturn(amazonElasticMapReduce);
         when(emrOperations.runEmrJobFlow(amazonElasticMapReduceClientArgumentCaptor.capture(), runJobFlowRequestArgumentCaptor.capture()))
             .thenReturn(EMR_CLUSTER_ID);
 
         // Create the cluster without NSCD script configuration
-        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, awsParamsDto);
+        String clusterId = emrDaoImpl.createEmrCluster(EMR_CLUSTER_NAME, emrClusterDefinition, emrParamsDto);
 
         // Verifications
         assertEquals(clusterId, EMR_CLUSTER_ID);
         verify(configurationHelper).getProperty(ConfigurationValue.EMR_NSCD_SCRIPT);
-        verify(awsClientFactory).getEmrClient(awsParamsDto);
+        verify(awsClientFactory).getEmrClient(emrParamsDto);
         verify(emrOperations).runEmrJobFlow(any(), any());
         RunJobFlowRequest runJobFlowRequest = runJobFlowRequestArgumentCaptor.getValue();
         List<BootstrapActionConfig> bootstrapActionConfigs = runJobFlowRequest.getBootstrapActions();
@@ -645,7 +643,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final Integer targetOnDemandCapacity = INTEGER_VALUE;
         final Integer targetSpotCapacity = INTEGER_VALUE_2;
         final List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = null;
-        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications = null;
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
+        final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
+            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
         final EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet =
             new EmrClusterDefinitionInstanceFleet(name, instanceFleetType, targetOnDemandCapacity, targetSpotCapacity, emrClusterDefinitionInstanceTypeConfigs,
                 emrClusterDefinitionLaunchSpecifications);
@@ -660,7 +663,11 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
         assertEquals(Lists.newArrayList(
             new InstanceFleetConfig().withName(name).withInstanceFleetType(instanceFleetType).withTargetOnDemandCapacity(targetOnDemandCapacity)
-                .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(null)), result);
+                .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(
+                new InstanceFleetProvisioningSpecifications().withSpotSpecification(
+                    new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
+                        .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
+                    .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)))), result);
     }
 
     @Test
@@ -678,6 +685,19 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
+    public void testGetInstanceFleetsWhenEmrClusterDefinitionInstanceFleetsListIsNull()
+    {
+        // Call the method under test.
+        List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test
@@ -827,9 +847,12 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testGetLaunchSpecifications()
     {
         // Create objects required for testing.
-        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification = null;
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
-            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification);
+            new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
 
         // Call the method under test.
         InstanceFleetProvisioningSpecifications result = emrDaoImpl.getLaunchSpecifications(emrClusterDefinitionLaunchSpecifications);
@@ -838,7 +861,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(null), result);
+        assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(
+            new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
+                .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
+            .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)), result);
+    }
+
+    @Test
+    public void testGetLaunchSpecificationsWhenEmrClusterDefinitionSpotSpecificationIsNull()
+    {
+        // Call the method under test.
+        InstanceFleetProvisioningSpecifications result = emrDaoImpl.getLaunchSpecifications(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test
@@ -916,21 +955,61 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testGetSpotSpecification()
     {
         // Create objects required for testing.
-        final Integer timeoutDurationMinutes = INTEGER_VALUE;
-        final String timeoutAction = STRING_VALUE;
-        final Integer blockDurationMinutes = INTEGER_VALUE_2;
-        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification1 =
-            new EmrClusterDefinitionSpotSpecification(timeoutDurationMinutes, timeoutAction, blockDurationMinutes);
+        final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
+            new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
 
         // Call the method under test.
-        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(emrClusterDefinitionSpotSpecification1);
+        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(emrClusterDefinitionSpotSpecification);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new SpotProvisioningSpecification().withTimeoutDurationMinutes(timeoutDurationMinutes).withTimeoutAction(timeoutAction)
-            .withBlockDurationMinutes(blockDurationMinutes), result);
+        assertEquals(new SpotProvisioningSpecification().withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES).withTimeoutAction(TIMEOUT_ACTION)
+            .withBlockDurationMinutes(BLOCK_DURATION_MINUTES).withAllocationStrategy(ALLOCATION_STRATEGY_1), result);
+    }
+
+    @Test
+    public void testGetSpotSpecificationWhenEmrClusterDefinitionSpotSpecificationIsNull()
+    {
+        // Call the method under test.
+        SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetOnDemandSpecification()
+    {
+        // Create objects required for testing.
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1);
+
+        // Call the method under test.
+        OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(emrClusterDefinitionOnDemandSpecification);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1), result);
+    }
+
+    @Test
+    public void testGetOnDemandSpecificationWhenEmrClusterDefinitionOnDemandSpecificationIsNull()
+    {
+        // Call the method under test.
+        OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test

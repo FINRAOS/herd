@@ -383,7 +383,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String EC2_PRODUCT_KEY_2 = "UT_EC2_ProductKey_2_" + RANDOM_SUFFIX;
 
-    public static final String EMR_CLUSTER_CONFIGURATION = "UT_EMR_Cluster_Configuration_" + RANDOM_SUFFIX;
+    public static final String EMR_CLUSTER_CONFIGURATION_XML_1 = "UT_EMR_Cluster_Configuration_1_" + RANDOM_SUFFIX;
+
+    public static final String EMR_CLUSTER_CONFIGURATION_XML_2 = "UT_EMR_Cluster_Configuration_2_" + RANDOM_SUFFIX;
 
     public static final String EMR_CLUSTER_ID = "UT_EMR_Cluster_ID_" + RANDOM_SUFFIX;
 
@@ -461,6 +463,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
+
+    public static final Boolean INCLUDE_ROW_FORMAT_STATEMENT = true;
 
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
 
@@ -573,6 +577,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_INCLUDE_DROP_TABLE_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
+
+    public static final Boolean NO_INCLUDE_ROW_FORMAT_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 

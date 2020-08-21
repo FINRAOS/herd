@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
@@ -96,6 +96,7 @@ import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.ScriptDefinition;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrParamsDto;
 
 public class EmrDaoTest extends AbstractDaoTest
 {
@@ -291,7 +292,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getEmrParamsDto()));
     }
 
     @Test
@@ -352,7 +353,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getEmrParamsDto()));
     }
 
     @Test
@@ -579,7 +580,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getEmrParamsDto()));
     }
 
     @Test
@@ -616,7 +617,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getEmrParamsDto()));
     }
 
     @Test
@@ -653,7 +654,7 @@ public class EmrDaoTest extends AbstractDaoTest
             }
         });
 
-        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getAwsParamsDto()));
+        assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, getEmrParamsDto()));
     }
 
     @Test
@@ -992,5 +993,16 @@ public class EmrDaoTest extends AbstractDaoTest
     private AwsParamsDto getAwsParamsDto()
     {
         return new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
+    }
+
+    /**
+     * Returns EMR parameters DTO initialized with US East AWS region.
+     *
+     * @return the EMR parameters DTO
+     */
+    private EmrParamsDto getEmrParamsDto()
+    {
+        return new EmrParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1,
+            NO_S3_TRUSTING_ACCOUNT_STAGING_BUCKET_NAME);
     }
 }

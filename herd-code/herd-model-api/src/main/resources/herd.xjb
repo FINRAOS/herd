@@ -195,5 +195,11 @@
       <jaxb:bindings node="//xs:complexType[@name='configurationEntry']//xs:element[@name='configurationEntryValueClob']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='registrationDateRangeFilter']//xs:element[@name='startRegistrationDate']">
+         <xjc:javaType name="javax.xml.datatype.XMLGregorianCalendar" adapter="org.finra.herd.model.api.adapters.RegistrationDateAdapter" />
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='registrationDateRangeFilter']//xs:element[@name='endRegistrationDate']">
+         <xjc:javaType name="javax.xml.datatype.XMLGregorianCalendar" adapter="org.finra.herd.model.api.adapters.RegistrationDateAdapter" />
+      </jaxb:bindings>
    </jaxb:bindings>
 </jaxb:bindings>

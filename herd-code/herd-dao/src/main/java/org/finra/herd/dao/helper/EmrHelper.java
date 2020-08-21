@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.helper;
 
 import java.util.ArrayList;
@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrParamsDto;
 import org.finra.herd.model.jpa.TrustingAccountEntity;
 
 /**
@@ -142,7 +143,7 @@ public class EmrHelper extends AwsHelper
         boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
 
         Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
-        AwsParamsDto awsParamsDto = getAwsParamsDtoByAccountId(accountId);
+        EmrParamsDto emrParamsDto = getEmrParamsDtoByAccountId(accountId);
 
         // Get cluster by ID first
         if (emrClusterIdSpecified)
@@ -150,7 +151,7 @@ public class EmrHelper extends AwsHelper
             String emrClusterIdTrimmed = emrClusterId.trim();
 
             // Assert cluster exists
-            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
+            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, emrParamsDto);
             Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
 
             // Assert the cluster's state is active
@@ -173,28 +174,33 @@ public class EmrHelper extends AwsHelper
         else
         {
             String emrClusterNameTrimmed = emrClusterName.trim();
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(emrClusterNameTrimmed, accountId, awsParamsDto);
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(emrClusterNameTrimmed, accountId, emrParamsDto);
             Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
             return clusterSummary.getId();
         }
     }
 
     /**
-     * Get the AWS Params DTO for the account Id if no account id is specified, use the default
+     * Get the EMR parameters Params DTO for the account Id if no account id is specified, use the default
      *
      * @param accountId account Id
      *
      * @return AwsParamsDto
      */
-    public AwsParamsDto getAwsParamsDtoByAccountId(String accountId)
+    public EmrParamsDto getEmrParamsDtoByAccountId(String accountId)
     {
         AwsParamsDto awsParamsDto = getAwsParamsDto();
+
+        EmrParamsDto emrParamsDto =
+            new EmrParamsDto(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken(), awsParamsDto.getHttpProxyHost(),
+                awsParamsDto.getHttpProxyPort(), awsParamsDto.getAwsRegionName(), null);
+
         if (StringUtils.isNotBlank(accountId))
         {
-            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
+            updateEmrParamsForCrossAccountAccess(emrParamsDto, accountId.trim());
         }
 
-        return awsParamsDto;
+        return emrParamsDto;
     }
 
     public EmrDao getEmrDao()
@@ -248,12 +254,19 @@ public class EmrHelper extends AwsHelper
     /**
      * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
      *
+     * @param trustingAccountStagingBucketName the optional S3 staging bucket name to be used in the trusting account, maybe null or empty
+     *
      * @return the s3 managed location.
      */
-    public String getS3StagingLocation()
+    public String getS3StagingLocation(String trustingAccountStagingBucketName)
     {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
+        // If we have S3 staging bucket name specified to be used in the trusting account, then use it.
+        // Otherwise, use primary S3 staging bucket configured in the system.
+        String s3StagingBucketName = StringUtils.isNotBlank(trustingAccountStagingBucketName) ? trustingAccountStagingBucketName :
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME);
+
+        // Build and return the full path for the staging location that consists of protocol, bucket name, delimiter, and resource base prefix.
+        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) + s3StagingBucketName +
             configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
             configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
@@ -290,24 +303,27 @@ public class EmrHelper extends AwsHelper
     }
 
     /*
-     * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
+     * Updates the EMR parameters DTO with the temporary credentials for the cross-account access along with other trusting account specific configuration.
      *
-     * @param awsParamsDto the AWS connection parameters
+     * @param emrParamsDto the EMR parameter DTO
      * @param accountId the AWS account number
      */
-    private void updateAwsParamsForCrossAccountAccess(AwsParamsDto awsParamsDto, String accountId)
+    private void updateEmrParamsForCrossAccountAccess(EmrParamsDto emrParamsDto, String accountId)
     {
         // Retrieve the role ARN and make sure it exists.
         TrustingAccountEntity trustingAccountEntity = trustingAccountDaoHelper.getTrustingAccountEntity(accountId.trim());
         String roleArn = trustingAccountEntity.getRoleArn();
 
         // Assume the role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, null);
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(emrParamsDto, UUID.randomUUID().toString(), roleArn, 3600, null);
 
         // Update the AWS parameters DTO with the temporary credentials.
-        awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
-        awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
-        awsParamsDto.setSessionToken(credentials.getSessionToken());
+        emrParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
+        emrParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
+        emrParamsDto.setSessionToken(credentials.getSessionToken());
+
+        // Update the AWS parameters with an optional S3 staging bucket name to be used in the trusting account.
+        emrParamsDto.setTrustingAccountStagingBucketName(trustingAccountEntity.getStagingBucketName());
     }
 
     /**
