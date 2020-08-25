@@ -29,7 +29,7 @@ import org.joda.time.format.DateTimeParser;
 public class RegistrationDateAdapter extends XmlAdapter<String, XMLGregorianCalendar>
 {
     @Override
-    public XMLGregorianCalendar unmarshal(String v) throws Exception
+    public XMLGregorianCalendar unmarshal(String datetime) throws Exception
     {
         try
         {
@@ -46,7 +46,7 @@ public class RegistrationDateAdapter extends XmlAdapter<String, XMLGregorianCale
 
             DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
-            DateTime dateTime = dateTimeFormatter.withZoneUTC().parseDateTime(v.trim());
+            DateTime dateTime = dateTimeFormatter.withZoneUTC().parseDateTime(datetime.trim());
 
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(dateTime.toGregorianCalendar());
         }
@@ -59,9 +59,9 @@ public class RegistrationDateAdapter extends XmlAdapter<String, XMLGregorianCale
     }
 
     @Override
-    public String marshal(XMLGregorianCalendar v)
+    public String marshal(XMLGregorianCalendar xmlGregorianCalendar)
     {
         // ISO datetime format
-        return v.toGregorianCalendar().toInstant().toString();
+        return xmlGregorianCalendar.toGregorianCalendar().toInstant().toString();
     }
 }

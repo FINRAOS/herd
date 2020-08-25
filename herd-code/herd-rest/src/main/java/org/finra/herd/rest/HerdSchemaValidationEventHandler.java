@@ -18,7 +18,6 @@ package org.finra.herd.rest;
 
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.util.ValidationEventCollector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * event handler allows us to expose validation errors which herd's error handler: {@link org.finra.herd.service.helper.HerdErrorInformationExceptionHandler}
  * can then process.
  */
-public class HerdSchemaValidationEventHandler extends ValidationEventCollector implements ValidationEventHandler
+public class HerdSchemaValidationEventHandler implements ValidationEventHandler
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HerdSchemaValidationEventHandler.class);
 
