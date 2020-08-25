@@ -770,7 +770,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case "DOUBLE" => DoubleType
       case "DATE" => DateType
       case "DECIMAL" =>
-        val size = col.getSize
+        var size = "10,0"
+        if(col.getSize != null) {
+          size = col.getSize()
+        }
         val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
         DecimalType(precision, scale)
       case "TIMESTAMP" => TimestampType
