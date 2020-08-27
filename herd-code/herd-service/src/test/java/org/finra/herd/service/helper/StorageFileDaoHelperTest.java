@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.finra.herd.dao.AbstractDaoTest.BDEF_NAME;
@@ -27,7 +27,6 @@ import static org.finra.herd.dao.AbstractDaoTest.STORAGE_NAME;
 import static org.finra.herd.dao.AbstractDaoTest.SUBPARTITION_VALUES;
 import static org.finra.herd.dao.AbstractDaoTest.TEST_S3_KEY_PREFIX;
 import static org.finra.herd.service.AbstractServiceTest.DIRECTORY_PATH;
-import static org.finra.herd.service.AbstractServiceTest.EXPECTED_STORAGE_FILES_COUNT;
 import static org.finra.herd.service.AbstractServiceTest.FILE_NAME;
 import static org.finra.herd.service.AbstractServiceTest.FILE_NAME_2;
 import static org.finra.herd.service.AbstractServiceTest.FILE_SIZE;
@@ -310,60 +309,6 @@ public class StorageFileDaoHelperTest
 
         // Verify the external calls.
         verify(storageFileDao).getStorageFileByStorageUnitEntityAndFilePath(storageUnitEntity, filePath);
-        verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
-        verifyNoMoreInteractionsHelper();
-    }
-
-    @Test
-    public void testValidateStorageFilesCount()
-    {
-        // Create a new business object data key
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Mock the external calls.
-        when(storageFileDao.getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/")).thenReturn(Long.valueOf(EXPECTED_STORAGE_FILES_COUNT));
-
-        // Call the method under test.
-        storageFileDaoHelper.validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, TEST_S3_KEY_PREFIX, EXPECTED_STORAGE_FILES_COUNT);
-
-        // Verify the external calls.
-        verify(storageFileDao).getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/");
-        verifyNoMoreInteractionsHelper();
-    }
-
-    @Test
-    public void testValidateStorageFilesCountWithUnexpectedStorageFileCount()
-    {
-        // Create a new business object data key
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Mock the external calls.
-        when(storageFileDao.getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/")).thenReturn(Long.valueOf(EXPECTED_STORAGE_FILES_COUNT + 1));
-
-        try
-        {
-            // Call the method under test.
-            storageFileDaoHelper.validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, TEST_S3_KEY_PREFIX, EXPECTED_STORAGE_FILES_COUNT);
-            fail();
-        }
-        catch (IllegalStateException illegalStateException)
-        {
-            String exceptionMessage = String.format(
-                "Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
-                    "of storage files (%d) registered with the business object data in that storage. " +
-                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", EXPECTED_STORAGE_FILES_COUNT + 1, EXPECTED_STORAGE_FILES_COUNT, STORAGE_NAME,
-                TEST_S3_KEY_PREFIX + "/", businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey));
-
-            // Validate the exception message.
-            assertThat("Exception message not equal to expected exception message.", illegalStateException.getMessage(), is(exceptionMessage));
-        }
-
-        // Verify the external calls.
-        verify(storageFileDao).getStorageFileCount(STORAGE_NAME, TEST_S3_KEY_PREFIX + "/");
         verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
         verifyNoMoreInteractionsHelper();
     }
