@@ -127,32 +127,6 @@ public class StorageFileDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageFileCount()
-    {
-        // Create relative database entities.
-        createDatabaseEntitiesForStorageFilesTesting();
-
-        // Validate that we can get correct count for each file.
-        for (String file : LOCAL_FILES)
-        {
-            assertEquals(Long.valueOf(1L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE, file));
-        }
-
-        // Validate that we can get correct file count using upper and lower storage name.
-        assertEquals(Long.valueOf(1L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE.toUpperCase(), LOCAL_FILES.get(0)));
-        assertEquals(Long.valueOf(1L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE.toLowerCase(), LOCAL_FILES.get(0)));
-
-        // Get 0 file count by specifying non-existing storage.
-        assertEquals(Long.valueOf(0L), storageFileDao.getStorageFileCount("I_DO_NOT_EXIST", LOCAL_FILES.get(0)));
-
-        // Get 0 file count by specifying non-existing file path prefix.
-        assertEquals(Long.valueOf(0L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST"));
-
-        // Validate that we can get correct count of files from the LOCAL_FILES list that match "folder" file path prefix.
-        assertEquals(Long.valueOf(3L), storageFileDao.getStorageFileCount(StorageEntity.MANAGED_STORAGE, "folder"));
-    }
-
-    @Test
     public void testGetStorageFilePathsByStorageUnitIdsChunkSizeOne() throws Exception
     {
         validateGetStoragePathsByStorageUnitIds(1, null);

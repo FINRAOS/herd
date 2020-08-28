@@ -45,16 +45,6 @@ public interface StorageFileDao extends BaseJpaDao
     StorageFileEntity getStorageFileByStorageUnitEntityAndFilePath(StorageUnitEntity storageUnitEntity, String filePath);
 
     /**
-     * Counts all storage files matching the file path prefix in the specified storage.
-     *
-     * @param storageName the storage name (case-insensitive)
-     * @param filePathPrefix the file path prefix that file paths should match
-     *
-     * @return the storage file count
-     */
-    Long getStorageFileCount(String storageName, String filePathPrefix);
-
-    /**
      * Retrieves a map of storage unit ids to their corresponding storage file paths.
      *
      * @param storageUnitIds the list of storage unit identifiers

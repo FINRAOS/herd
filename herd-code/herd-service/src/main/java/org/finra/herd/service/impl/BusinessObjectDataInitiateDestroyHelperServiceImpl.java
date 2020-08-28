@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
@@ -25,8 +25,6 @@ import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -43,7 +41,6 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -61,7 +58,6 @@ import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
@@ -69,8 +65,6 @@ import org.finra.herd.service.helper.StorageUnitDaoHelper;
 @Service
 public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements BusinessObjectDataInitiateDestroyHelperService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataInitiateDestroyHelperServiceImpl.class);
-
     /**
      * List of storage unit statuses that are supported by business object data destroy feature.
      */
@@ -104,9 +98,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
 
     @Autowired
     private S3Service s3Service;
-
-    @Autowired
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -349,13 +340,13 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Get the storage name.
         String storageName = storageEntity.getName();
 
-        // Retrieve and validate storage files registered with the storage unit, if they exist.
-        List<StorageFile> storageFiles =
-            storageFileHelper.getAndValidateStorageFilesIfPresent(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        // Validate storage files registered with the storage unit, if they exist.
+        storageFileHelper.getAndValidateStorageFilesIfPresent(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
-        storageFileDaoHelper.validateStorageFilesCount(storageName, businessObjectDataKey, s3KeyPrefix, storageFiles.size());
+        storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+            businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
 
         // Change the storage unit status to DISABLING and update the DTO.
         String reason = StorageUnitStatusEntity.DISABLING;
