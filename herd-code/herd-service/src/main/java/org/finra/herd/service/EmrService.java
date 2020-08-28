@@ -27,16 +27,6 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 public interface EmrService
 {
     /**
-     * Adds security groups to the master node of an existing EMR Cluster.
-     *
-     * @param request the EMR master security group add request
-     *
-     * @return the added EMR master security groups
-     * @throws Exception if there were any errors adding the security groups to the cluster master
-     */
-    public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest request) throws Exception;
-
-    /**
      * Adds step to an existing EMR Cluster.
      * <p/>
      * There are four serializable objects supported currently. They are 1: ShellStep - For shell scripts 2: HiveStep - For hive scripts 3: HadoopJarStep - For

@@ -214,10 +214,10 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     @Test
     public void testLoggingPasswordMasked()
     {
-        String message = "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"test-123\"," +
+        String message = "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.PASSWORD\":\"test-123\"," +
             "\"hive.server3.keystore.password\":\"TEST$2!1\"," + "\"hive.server2.keystore.name\":\"testname1\"";
         String expectedMessage =
-            "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," +
+            "\"hive.server2.keystore.name\":\"testname1\"," + "\"hive.server2.keystore.PASSWORD\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," +
                 "\"hive.server3.keystore.password\":\"" + HerdStringUtils.HIDDEN_TEXT + "\"," + "\"hive.server2.keystore.name\":\"testname1\"";
         String sanitizedMessage = HerdStringUtils.sanitizeLogText(message);
         assertEquals(expectedMessage, sanitizedMessage);
@@ -256,5 +256,18 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         String expectedMessage7 = "";
         String sanitizedMessage7 = HerdStringUtils.sanitizeLogText(message7);
         assertEquals(expectedMessage7, sanitizedMessage7);
+
+        String otherText =
+            "To become registered, securities professionals are required to pass qualification exams to demonstrate competence in their particular securities " +
+                "activities. The information below can help guide you through the membership and registration process.";
+        StringBuilder messageSB =
+            new StringBuilder(message).append(" ").append(messsage2).append(" ").append(message3).append(" ").append(message4).append(otherText);
+        String message8 = messageSB.toString();
+        StringBuilder expectedMessageSB =
+            new StringBuilder(expectedMessage).append(" ").append(expectedMessage2).append(" ").append(expectedMessage3).append(" ").append(expectedMessage4)
+                .append(otherText);
+        String expectedMessage8 = expectedMessageSB.toString();
+        String sanitizedMessage8 = HerdStringUtils.sanitizeLogText(message8);
+        assertEquals(expectedMessage8, sanitizedMessage8);
     }
 }

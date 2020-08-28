@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static junit.framework.TestCase.fail;
@@ -55,6 +55,7 @@ import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
@@ -64,7 +65,6 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
@@ -101,9 +101,6 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
     @Mock
     private S3Service s3Service;
-
-    @Mock
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -566,8 +563,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Specify the expected exception.
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(is(String.format(String.format("The archive retrieval option value \"%s\" is invalid. " +
-                "Valid archive retrieval option values are:%s", INVALID_ARCHIVE_RETRIEVAL_OPTION,
+        expectedException.expectMessage(is(String.format(String
+            .format("The archive retrieval option value \"%s\" is invalid. Valid archive retrieval option values are:%s", INVALID_ARCHIVE_RETRIEVAL_OPTION,
                 Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())))));
 
         businessObjectDataInitiateRestoreHelperServiceImpl
@@ -580,6 +577,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
     /**
      * Validate the method PrepareToInitiateRestore. The archive retrieval option needs to be valid.
+     *
      * @param archiveRetrievalOption the valid archive retrieval option
      */
     private void validatePrepareToInitiateRestoreWithValidArchiveRetrievalOption(String archiveRetrievalOption)
@@ -589,9 +587,14 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
-        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        // Create a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
 
-        // Create a single storage unit
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+
+        // Create a single storage unit.
         StorageEntity storageEntity = new StorageEntity();
         storageEntity.setName(STORAGE_NAME);
         StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
@@ -609,17 +612,20 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
             .thenReturn(storageUnitEntities);
-        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
-        when(storageHelper.getStorageAttributeValueByName((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true)).thenReturn(S3_BUCKET_NAME);
-        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME))
+            .thenReturn((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue());
+        when(storageHelper.getStorageAttributeValueByName((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true))
+            .thenReturn(S3_BUCKET_NAME);
+        when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey))
+            .thenReturn(S3_KEY_PREFIX);
         when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey)).thenReturn(storageFiles);
         when(storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING)).thenReturn(newStorageUnitStatusEntity);
         when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
 
         // Make the archive retrieval option null
-        BusinessObjectDataRestoreDto
-            businessObjectDataRestoreDto = businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, archiveRetrievalOption);
 
         // Validate the businessObjectDataRestoreDto
         assertEquals(businessObjectDataKey, businessObjectDataRestoreDto.getBusinessObjectDataKey());
@@ -637,10 +643,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(storageUnitDao).getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity);
         verify(configurationHelper).getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME);
-        verify(storageHelper).getStorageAttributeValueByName((String)ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true);
+        verify(storageHelper).getStorageAttributeValueByName((String) ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME.getDefaultValue(), storageEntity, true);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
         verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
-        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, S3_KEY_PREFIX, storageFiles.size());
+        verify(storageUnitDaoHelper)
+            .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
+                S3_KEY_PREFIX);
         verify(storageUnitStatusDaoHelper).getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, newStorageUnitStatusEntity, StorageUnitStatusEntity.RESTORING);
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
@@ -654,6 +662,6 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, herdStringHelper, jsonHelper, s3KeyPrefixHelper,
-            s3Service, storageFileDaoHelper, storageFileHelper, storageHelper, storageUnitDao, storageUnitDaoHelper, storageUnitStatusDaoHelper);
+            s3Service, storageFileHelper, storageHelper, storageUnitDao, storageUnitDaoHelper, storageUnitStatusDaoHelper);
     }
 }

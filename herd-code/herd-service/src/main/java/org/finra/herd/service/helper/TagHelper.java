@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
-import org.finra.herd.service.functional.QuadConsumer;
+import org.finra.herd.service.functional.TriConsumer;
 
 /**
  * A helper class for Tag related code
@@ -47,12 +47,11 @@ public class TagHelper
      * Executes a function for tag entities.
      *
      * @param indexName the name of the index
-     * @param documentType the document type
      * @param tagEntities the list of tag entities
      * @param function the function to apply to all tags
      */
-    public void executeFunctionForTagEntities(final String indexName, final String documentType, final List<TagEntity> tagEntities,
-        final QuadConsumer<String, String, String, String> function)
+    public void executeFunctionForTagEntities(final String indexName, final List<TagEntity> tagEntities,
+        final TriConsumer<String, String, String> function)
     {
         // For each tag apply the passed in function
         tagEntities.forEach(tagEntity -> {
@@ -67,12 +66,11 @@ public class TagHelper
                 // Call the function that will process each tag entity against the index
                 try
                 {
-                    function.accept(indexName, documentType, tagEntity.getId().toString(), jsonString);
+                    function.accept(indexName, tagEntity.getId().toString(), jsonString);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}, {}", ex, indexName, documentType,
-                        tagEntity.getId().toString(), jsonString);
+                    LOGGER.warn("Index operation exception is logged {} for {}, {}, {}", ex, indexName, tagEntity.getId().toString(), jsonString);
                 }
             }
         });

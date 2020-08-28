@@ -113,7 +113,7 @@
             <!-- Use our custom rule set which is built as part of build-tools. -->
             <configuration>
                <!-- Exclude auto-generated files. -->
-               <excludes>org/finra/herd/model/xml/**</excludes>
+               <excludes>org/finra/herd/model/xml/**,org/finra/herd/dao/helper/ElasticsearchClientImpl.java</excludes>
                <configLocation>herd-cs.xml</configLocation>
                <headerLocation>apache-license-header.txt</headerLocation>
                <!-- Display the Checkstyle errors on the build output. -->

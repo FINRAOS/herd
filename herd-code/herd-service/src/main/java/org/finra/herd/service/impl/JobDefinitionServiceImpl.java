@@ -27,6 +27,7 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.bpmn.model.Process;
 import org.activiti.bpmn.model.SequenceFlow;
+import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.Deployment;
@@ -42,6 +43,7 @@ import org.springframework.util.CollectionUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.JobDefinition;
@@ -80,6 +82,9 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private HerdStringHelper herdStringHelper;
 
     @Autowired
     private JobDefinitionDao jobDefinitionDao;
@@ -241,6 +246,9 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         // Ensure the Activiti XML doesn't contain a CDATA wrapper.
         Assert.isTrue(!activitiJobXml.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
 
+        // Ensure the Activiti XML doesn't contain a shell type task defined in it.
+        Assert.isTrue(!activitiJobXml.toLowerCase().contains("activiti:type=\"shell\""), "Activiti XML can not contain activiti shell type service tasks.");
+
         // Convert Activiti XML into BpmnModel and validate.
         BpmnModel bpmnModel;
         try
@@ -268,6 +276,26 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
             validationErrors.append('\n').append(validationError.getDefaultDescription());
         }
         Assert.isTrue(activitiModelErrors.isEmpty(), "Activiti XML is not valid, Errors: " + validationErrors);
+
+        //Validate service task activiti class
+        List<String> allowedTaskClassPrefix = herdStringHelper
+            .splitStringWithDefaultDelimiter(configurationHelper.getPropertyAsString(ConfigurationValue.ACTIVITI_JOB_DEFINITION_ALLOWED_TASK_CLASS_PREFIX));
+        List<Process> processesList = bpmnModel.getProcesses();
+        for (Process process : processesList)
+        {
+            for (FlowElement flowElement : process.getFlowElements())
+            {
+                if (flowElement instanceof ServiceTask)
+                {
+                    ServiceTask serviceTask = (ServiceTask) flowElement;
+                    if (serviceTask.getImplementationType() != null && serviceTask.getImplementationType().equals("class"))
+                    {
+                        Assert.isTrue(allowedTaskClassPrefix.stream().anyMatch(serviceTask.getImplementation()::startsWith),
+                            "Activiti XML has prohibited service task class.");
+                    }
+                }
+            }
+        }
 
         // Validate that parameter names are there and not duplicate.
         Map<String, String> parameterNameMap = new HashMap<>();

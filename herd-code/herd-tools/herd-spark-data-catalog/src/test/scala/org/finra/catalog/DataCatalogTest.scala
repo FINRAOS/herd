@@ -17,6 +17,7 @@ package org.finra.catalog
 
 import java.util
 
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.herd.{HerdApi, ObjectStatus}
@@ -283,6 +284,178 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     val expectedDF = List((namespace, objectName, formatUsage, partitionKey, "0", "0", "object1", "2019-01-01"),
       (namespace, objectName, formatUsage, partitionKey, "0", "0", "object2", "2019-02-01"))
       .toDF("Namespace", "ObjectName", "Usage", "FileFormat", "FormatVersion", "DataVersion", "Reason", "")
+
+    assertEquals(dataAvailabilityDataFrame.except(expectedDF).count, 0)
+
+  }
+
+  test("getDataAvailabilityRange with subPartitions should return data availability") {
+
+    val businesObjectDataAvailability = new BusinessObjectDataAvailability
+    businesObjectDataAvailability.setNamespace(namespace)
+    businesObjectDataAvailability.setBusinessObjectDefinitionName(objectName)
+    businesObjectDataAvailability.setBusinessObjectFormatUsage(formatUsage)
+    businesObjectDataAvailability.setBusinessObjectFormatFileType(partitionKey)
+
+    val businessObjectDataStatusList = new util.ArrayList[BusinessObjectDataStatus]
+    businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
+
+    var businessObjectDataStatus1 = new BusinessObjectDataStatus
+    businessObjectDataStatus1.setBusinessObjectDataVersion(0)
+    businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
+    businessObjectDataStatus1.setReason("object1")
+    businessObjectDataStatus1.setPartitionValue("2019-01-01")
+    businessObjectDataStatus1.setSubPartitionValues(java.util.Arrays.asList("N"))
+
+    var businessObjectDataStatus2 = new BusinessObjectDataStatus
+    businessObjectDataStatus2.setBusinessObjectDataVersion(0)
+    businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
+    businessObjectDataStatus2.setReason("object2")
+    businessObjectDataStatus2.partitionValue("2019-02-01")
+    businessObjectDataStatus2.setSubPartitionValues(java.util.Arrays.asList("A"))
+
+    businessObjectDataStatusList.add(businessObjectDataStatus1)
+    businessObjectDataStatusList.add(businessObjectDataStatus2)
+
+    businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
+
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    s.setDelimiter("|")
+    s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
+    val schemaColumn = new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+    schemaColumn.setSize("10")
+
+    s.addColumnsItem(schemaColumn)
+    var schemaColumns = new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
+    val partitionColumn = new SchemaColumn
+    s.addPartitionsItem(partitionColumn)
+    partitionColumn.setName("partition")
+    partitionColumn.setType("String")
+    partitionColumn.setRequired(true)
+    partitionColumn.setDescription("partition column")
+    partitionColumn.setSize("10")
+
+    val subPartitionColumn = new SchemaColumn
+    s.addPartitionsItem(subPartitionColumn)
+    subPartitionColumn.setName("subPartition")
+    subPartitionColumn.setType("String")
+    subPartitionColumn.setRequired(true)
+    subPartitionColumn.setDescription("subpartition column")
+    subPartitionColumn.setSize("10")
+
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+    when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31"))
+      .thenReturn(businesObjectDataAvailability)
+
+    val dataAvailabilityDataFrame = dataCatalog
+      .getDataAvailabilityRange(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31", formatVersion)
+    dataAvailabilityDataFrame.show
+    import spark.implicits._
+    val expectedDF = List((namespace, objectName, formatUsage, partitionKey, "0", "0", "object1", "2019-01-01", "N"),
+      (namespace, objectName, formatUsage, partitionKey, "0", "0", "object2", "2019-02-01", "A"))
+      .toDF("Namespace", "ObjectName", "Usage", "FileFormat", "FormatVersion", "DataVersion", "Reason", "partition", "subpartition")
+
+    assertEquals(dataAvailabilityDataFrame.except(expectedDF).count, 0)
+
+  }
+
+  test("getDataAvailabilityRange with unregistered subPartitions should return data availability") {
+
+    val businesObjectDataAvailability = new BusinessObjectDataAvailability
+    businesObjectDataAvailability.setNamespace(namespace)
+    businesObjectDataAvailability.setBusinessObjectDefinitionName(objectName)
+    businesObjectDataAvailability.setBusinessObjectFormatUsage(formatUsage)
+    businesObjectDataAvailability.setBusinessObjectFormatFileType(partitionKey)
+
+    val businessObjectDataStatusList = new util.ArrayList[BusinessObjectDataStatus]
+    businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
+
+    var businessObjectDataStatus1 = new BusinessObjectDataStatus
+    businessObjectDataStatus1.setBusinessObjectDataVersion(0)
+    businessObjectDataStatus1.setBusinessObjectFormatVersion(0)
+    businessObjectDataStatus1.setReason("object1")
+    businessObjectDataStatus1.setPartitionValue("2019-01-01")
+
+    var businessObjectDataStatus2 = new BusinessObjectDataStatus
+    businessObjectDataStatus2.setBusinessObjectDataVersion(0)
+    businessObjectDataStatus2.setBusinessObjectFormatVersion(0)
+    businessObjectDataStatus2.setReason("object2")
+    businessObjectDataStatus2.partitionValue("2019-02-01")
+
+    businessObjectDataStatusList.add(businessObjectDataStatus1)
+    businessObjectDataStatusList.add(businessObjectDataStatus2)
+
+    businesObjectDataAvailability.setAvailableStatuses(businessObjectDataStatusList)
+
+    var businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    s.setDelimiter("|")
+    s.setEscapeCharacter("\\")
+    s.setNullValue("\\N")
+    val schemaColumn = new SchemaColumn
+    schemaColumn.setName("name")
+    schemaColumn.setType("String")
+    schemaColumn.setRequired(true)
+    schemaColumn.setDescription("name column")
+    schemaColumn.setSize("10")
+
+    s.addColumnsItem(schemaColumn)
+    var schemaColumns = new util.ArrayList[SchemaColumn]()
+    schemaColumns.add(schemaColumn)
+
+    val partitionColumn = new SchemaColumn
+    s.addPartitionsItem(partitionColumn)
+    partitionColumn.setName("partition")
+    partitionColumn.setType("String")
+    partitionColumn.setRequired(true)
+    partitionColumn.setDescription("partition column")
+    partitionColumn.setSize("10")
+
+    val subPartitionColumn = new SchemaColumn
+    s.addPartitionsItem(subPartitionColumn)
+    subPartitionColumn.setName("subPartition")
+    subPartitionColumn.setType("String")
+    subPartitionColumn.setRequired(true)
+    subPartitionColumn.setDescription("subpartition column")
+    subPartitionColumn.setSize("10")
+
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+    when(mockHerdApi.getBusinessObjectDataAvailability(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31"))
+      .thenReturn(businesObjectDataAvailability)
+
+    val dataAvailabilityDataFrame = dataCatalog
+      .getDataAvailabilityRange(namespace, objectName, formatUsage, formatType, partitionKey, "2019-01-01", "2099-12-31", formatVersion)
+    dataAvailabilityDataFrame.show
+    import spark.implicits._
+    val expectedDF = List((namespace, objectName, formatUsage, partitionKey, "0", "0", "object1", "2019-01-01", ""),
+      (namespace, objectName, formatUsage, partitionKey, "0", "0", "object2", "2019-02-01", ""))
+      .toDF("Namespace", "ObjectName", "Usage", "FileFormat", "FormatVersion", "DataVersion", "Reason", "partition", "subpartition")
 
     assertEquals(dataAvailabilityDataFrame.except(expectedDF).count, 0)
 
@@ -706,7 +879,11 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
 
-    assertEquals("Map(nullValue -> \\N, escape -> \\, dateFormat -> yyyy-MM-dd, mode -> PERMISSIVE, delimiter -> ,)", parseOutput.toString())
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\N"), parseOutput.get("nullValue"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\"), parseOutput.get("escape"))
+    assertEquals(Some(StringEscapeUtils unescapeJava ","), parseOutput.get("delimiter"))
+    assertEquals(Some("yyyy-MM-dd"), parseOutput.get("dateFormat"))
+    assertEquals(Some("PERMISSIVE"), parseOutput.get("mode"))
 
   }
 
@@ -774,6 +951,70 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     assertEquals(Some(null), parseOutput.get("nullValue"))
     assertEquals(Some(null), parseOutput.get("escape"))
     assertEquals(Some(null), parseOutput.get("delimiter"))
+  }
+
+  test("delimiter, escape and null value are unescaped properly when the schema is parsed")
+  {
+    val businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    val partitionColumn = new SchemaColumn
+
+    partitionColumn.setName(partitionKey)
+    partitionColumn.setType("DATE")
+    partitionColumn.setRequired(true)
+
+    s.addPartitionsItem(partitionColumn)
+    s.setDelimiter("\\\\N")
+    s.setEscapeCharacter("\\")
+    s.setNullValue(null)
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+
+    val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
+
+    assertEquals(Some(null), parseOutput.get("nullValue"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\"), parseOutput.get("escape"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\\\\N"), parseOutput.get("delimiter"))
+  }
+
+  test("delimiter, escape and null value (unicode characters) are unescaped properly when the schema is parsed")
+  {
+    val businessObjectFormat = new org.finra.herd.sdk.model.BusinessObjectFormat
+    businessObjectFormat.setNamespace(namespace)
+    businessObjectFormat.setBusinessObjectDefinitionName(objectName)
+    businessObjectFormat.setBusinessObjectFormatUsage(formatUsage)
+    businessObjectFormat.setBusinessObjectFormatFileType(formatType)
+    businessObjectFormat.setBusinessObjectFormatVersion(formatVersion)
+
+    val s = new Schema
+    val partitionColumn = new SchemaColumn
+
+    partitionColumn.setName(partitionKey)
+    partitionColumn.setType("DATE")
+    partitionColumn.setRequired(true)
+
+    s.addPartitionsItem(partitionColumn)
+    s.setDelimiter("\001")
+    s.setEscapeCharacter("\005")
+    s.setNullValue(null)
+    businessObjectFormat.setSchema(s)
+
+    when(mockHerdApiWrapper.getHerdApi()).thenReturn(mockHerdApi)
+    when(mockHerdApi.getBusinessObjectFormat(namespace, objectName, formatUsage, formatType, formatVersion)).thenReturn(businessObjectFormat)
+
+    val parseOutput = dataCatalog.getParseOptions(namespace, objectName, formatUsage, formatType, formatVersion)
+
+    assertEquals(Some(null), parseOutput.get("nullValue"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\005"), parseOutput.get("escape"))
+    assertEquals(Some(StringEscapeUtils unescapeJava "\001"), parseOutput.get("delimiter"))
   }
 
   test("findNamespace searches for the given table in the list of given namespaces")

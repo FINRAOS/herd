@@ -2701,7 +2701,13 @@
          <xs:element name="customRowFormat" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The customRowFormat is used for defining custom Hive format.
-                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements.
+                  This will override everything after "ROW FORMAT" in DDL including delimiter, escape value, null value statements
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="customClusteredBy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customClusteredBy is used to support Hive "CLUSTERED BY" statement
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4192,17 +4198,36 @@
 
    <xs:complexType name="registrationDateRangeFilter">
       <xs:all>
-         <xs:element name="startRegistrationDate" type="xs:date" minOccurs="0">
+         <xs:element name="startRegistrationDate" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The start date for the registration date range in YYYY-MM-DD format</xs:documentation>
+               <xs:documentation xml:space="preserve">
+                  Business object data registration start datetime. The following formats are supported:
+                  "yyyy-MM-dd" eg. 2018-01-21
+                  "yyyy-MM-dd'T'HH:mm" eg. 2015-12-25T00:01
+                  "yyyy-MM-dd'T'HH:mmZ" eg. 2015-12-25T00:01+04:00
+                  "yyyy-MM-dd'T'HH:mm:ss" eg. 2018-02-03T10:00:02
+                  "yyyy-MM-dd'T'HH:mm:ssZ" eg. 2018-02-03T10:00:02+04:00
+                  "yyyy-MM-dd HH:mm:ss" eg. 2018-02-03 10:00:02
+                  "yyyy-MM-dd HH:mm:ssZ" eg. 2018-03-03 10:00:02+05:30
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="endRegistrationDate" type="xs:date" minOccurs="0">
+         <xs:element name="endRegistrationDate" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The end date for the registration date range in YYYY-MM-DD format</xs:documentation>
+               <xs:documentation xml:space="preserve">
+                  Business object data registration end datetime. The following formats are supported:
+                  "yyyy-MM-dd" eg. 2018-01-21
+                  "yyyy-MM-dd'T'HH:mm" eg. 2015-12-25T00:01
+                  "yyyy-MM-dd'T'HH:mmZ" eg. 2015-12-25T00:01+04:00
+                  "yyyy-MM-dd'T'HH:mm:ss" eg. 2018-02-03T10:00:02
+                  "yyyy-MM-dd'T'HH:mm:ssZ" eg. 2018-02-03T10:00:02+04:00
+                  "yyyy-MM-dd HH:mm:ss" eg. 2018-02-03 10:00:02
+                  "yyyy-MM-dd HH:mm:ssZ" eg. 2018-03-03 10:00:02+05:30
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
+
    </xs:complexType>
 
    <xs:complexType name="storageNames">
@@ -5151,6 +5176,7 @@
          <xs:element name="awsAccessKey" type="xs:string"/>
          <xs:element name="awsSecretKey" type="xs:string"/>
          <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsKmsKeyId" type="xs:string" minOccurs="0"/>
          <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
          <xs:element name="preSignedUrl" type="xs:string"/>
       </xs:sequence>
@@ -5313,6 +5339,7 @@
          <xs:element name="awsAccessKey" type="xs:string"/>
          <xs:element name="awsSecretKey" type="xs:string"/>
          <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsKmsKeyId" type="xs:string" minOccurs="0"/>
          <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
       </xs:all>
    </xs:complexType>
@@ -6091,6 +6118,11 @@
                <xs:documentation>Instance Group Definitions</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="instanceFleetMinimumIpAvailableFilter" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies minimum number of available IPs required for the instance fleet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="instanceFleets" type="emrClusterDefinitionInstanceFleets" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Describes the EC2 instances and instance configurations for clusters that use the instance fleet configuration. The instance
@@ -6175,6 +6207,11 @@
          <xs:element name="kerberosAttributes" type="emrClusterDefinitionKerberosAttributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Attributes for Kerberos configuration when Kerberos authentication is enabled using a security configuration</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="stepConcurrencyLevel" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The step concurrency level of the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6935,8 +6972,14 @@
       <xs:all>
          <xs:element name="spotSpecification" type="emrClusterDefinitionSpotSpecification" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The launch specification for Spot instances in the fleet, which determines the defined duration and provisioning timeout
-                  behavior
+               <xs:documentation>The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior,
+                  and allocation strategy
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="onDemandSpecification" type="emrClusterDefinitionOnDemandSpecification" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6968,6 +7011,25 @@
                   300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the
                   Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it
                   terminates
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allocationStrategy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the strategy to use in launching Spot instance fleets. Currently, the only option is "capacity-optimized" (the
+                  default), which launches instances from Spot instance pools with optimal capacity for the number of instances that are launching
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionOnDemandSpecification">
+      <xs:all>
+         <xs:element name="allocationStrategy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is "lowest-price" (the
+                  default), which launches the lowest price first
                </xs:documentation>
             </xs:annotation>
          </xs:element>

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static junit.framework.Assert.fail;
@@ -49,7 +49,6 @@ import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -68,7 +67,6 @@ import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
-import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitDaoHelper;
@@ -104,9 +102,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
     @Mock
     private S3Service s3Service;
-
-    @Mock
-    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -522,7 +517,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         storageEntity.setName(STORAGE_NAME);
 
         // Create a list of storage file entities.
-        List<StorageFileEntity> storageFileEntities = Arrays.asList(new StorageFileEntity());
+        List<StorageFileEntity> storageFileEntities = Collections.singletonList(new StorageFileEntity());
 
         // Create a storage unit status entity.
         StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
@@ -534,9 +529,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
         storageUnitEntity.setStorageFiles(storageFileEntities);
         storageUnitEntity.setStatus(storageUnitStatusEntity);
-
-        // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Create a current timestamp.
         Timestamp currentTimestamp = new Timestamp(new Date().getTime());
@@ -557,14 +549,12 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         when(businessObjectDataHelper.getDateFromString(PARTITION_VALUE)).thenReturn(primaryPartitionValueDate);
         when(herdDao.getCurrentTimestamp()).thenReturn(currentTimestamp);
         when(storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(StoragePlatformEntity.S3, businessObjectDataEntity))
-            .thenReturn(Arrays.asList(storageUnitEntity));
+            .thenReturn(Collections.singletonList(storageUnitEntity));
         when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX)).thenReturn(S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX);
         when(storageHelper.getBooleanStorageAttributeValueByName(S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX, storageEntity, false, true)).thenReturn(true);
         when(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME)).thenReturn(S3_ATTRIBUTE_NAME_BUCKET_NAME);
         when(storageHelper.getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true)).thenReturn(S3_BUCKET_NAME);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(TEST_S3_KEY_PREFIX);
-        when(storageFileHelper.getAndValidateStorageFilesIfPresent(storageUnitEntity, TEST_S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey))
-            .thenReturn(storageFiles);
         doAnswer(new Answer<Void>()
         {
             public Void answer(InvocationOnMock invocation)
@@ -624,7 +614,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         verify(storageHelper).getStorageAttributeValueByName(S3_ATTRIBUTE_NAME_BUCKET_NAME, storageEntity, true);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
         verify(storageFileHelper).getAndValidateStorageFilesIfPresent(storageUnitEntity, TEST_S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
-        verify(storageFileDaoHelper).validateStorageFilesCount(STORAGE_NAME, businessObjectDataKey, TEST_S3_KEY_PREFIX, storageFileEntities.size());
+        verify(storageUnitDaoHelper)
+            .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
+                TEST_S3_KEY_PREFIX);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.DISABLING);
         verify(businessObjectDataDaoHelper).updateBusinessObjectDataStatus(businessObjectDataEntity, BusinessObjectDataStatusEntity.DELETED);
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
@@ -1046,7 +1038,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectFormatDao, businessObjectFormatHelper,
-            configurationHelper, herdDao, herdStringHelper, s3KeyPrefixHelper, s3Service, storageFileDaoHelper, storageFileHelper, storageHelper,
-            storageUnitDao, storageUnitDaoHelper);
+            configurationHelper, herdDao, herdStringHelper, s3KeyPrefixHelper, s3Service, storageFileHelper, storageHelper, storageUnitDao,
+            storageUnitDaoHelper);
     }
 }

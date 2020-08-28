@@ -144,6 +144,7 @@ public class BusinessObjectFormatHelper
             schema.setMapKeysDelimiter(businessObjectFormatEntity.getMapKeysDelimiter());
             schema.setEscapeCharacter(businessObjectFormatEntity.getEscapeCharacter());
             schema.setCustomRowFormat(businessObjectFormatEntity.getCustomRowFormat());
+            schema.setCustomClusteredBy(businessObjectFormatEntity.getCustomClusteredBy());
             schema.setPartitionKeyGroup(
                 businessObjectFormatEntity.getPartitionKeyGroup() != null ? businessObjectFormatEntity.getPartitionKeyGroup().getPartitionKeyGroupName() :
                     null);

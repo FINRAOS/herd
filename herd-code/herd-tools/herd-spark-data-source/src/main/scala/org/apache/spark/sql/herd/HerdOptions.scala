@@ -19,6 +19,7 @@ import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
 import org.apache.spark.sql.SparkSession
+import org.slf4j.LoggerFactory
 
 import org.finra.herd.sdk.model.{PartitionValueFilter, PartitionValueRange}
 
@@ -75,13 +76,21 @@ private case class HerdOptions(
   storagePathPrefix: String
 )
 
+// todo: massive clean up needed here, remove defaults
 private object HerdOptions {
-  def apply(input: Map[String, String])(sparkSession: SparkSession): HerdOptions = {
-    val namespace = input.get("namespace")
-      .getOrElse(sys.error("Must specify `namespace` option"))
 
-    val businessObjectName = input.get("businessObjectName")
-      .getOrElse(sys.error("Must specify `businessObjectName`"))
+  private val logger = LoggerFactory.getLogger(getClass)
+
+  def apply(input: Map[String, String])(sparkSession: SparkSession): HerdOptions = {
+    val namespace = input.getOrElse("namespace", {
+      logger.error("Namespace is a required field")
+      throw new IllegalArgumentException("Namespace is a required field")
+    })
+
+    val businessObjectName = input.getOrElse("businessObjectName", {
+      logger.error("businessObjectName is a required field")
+      throw new IllegalArgumentException("businessObjectName is a required field")
+    })
 
     val dataProvider = input.get("dataProvider")
       .orElse(sparkSession.conf.getOption("spark.herd.default.dataProvider"))
@@ -108,12 +117,9 @@ private object HerdOptions {
 
     val partitionKeyGroup = input.get("partitionKeyGroup")
 
-    val subPartitionKeys = input.get("subPartitionKeys")
-      .map(_.split(",").map(_.trim)).getOrElse(Array.empty)
-
     val partitionFilters = input.get("partitionFilter") map {
-      case values if values.contains("-") =>
-        val Array(start, end) = values.split("-").map(_.trim)
+      case values if values.contains("--") =>
+        val Array(start, end) = values.split("--").map(_.trim)
         PartitionRangeFilter("", (start, end))
 
       case values => PartitionValuesFilter("", values.split(",").map(_.trim))
@@ -121,13 +127,31 @@ private object HerdOptions {
 
     val partitionValue = input.get("partitionValue")
 
+    val subPartitionKeys = input.get("subPartitionKeys") match {
+      case Some(value) => value.split("\\|").map(_.trim).filter(_.nonEmpty)
+      case None => Array.empty[String]
+    }
+
     val subPartitions = input.get("subPartitionValues") match {
-      case Some(value) => value.split(",").map(_.trim)
+      case Some(value) => value.split("\\|").map(_.trim).filter(_.nonEmpty)
       case None => Array.empty[String]
     }
 
     if (partitionValue.isEmpty && !subPartitions.isEmpty) {
-      sys.error("Cannot specify `subPartitions` without `partitionValue`")
+      logger.error("partitionValue is required when specifying subPartitionValues")
+      throw new IllegalArgumentException("partitionValue is required when specifying subPartitionValues")
+    }
+
+    if (subPartitionKeys.isEmpty ^ subPartitions.isEmpty) {
+      logger.error("subPartitionKeys and subPartitionValues are both required when either one is specified")
+      throw new IllegalArgumentException("subPartitionKeys and subPartitionValues are both required when either one is specified")
+    }
+
+    if (subPartitionKeys.length != subPartitions.length) {
+      logger.error("An equal number of subPartitionKeys and subPartitionValues should be specified. \n" +
+        s"subPartitionKeys: $subPartitionKeys, subPartitionValues: $subPartitions")
+      throw new IllegalArgumentException("An equal number of subPartitionKeys and subPartitionValues should be specified. \n" +
+        s"subPartitionKeys: $subPartitionKeys, subPartitionValues: $subPartitions")
     }
 
     val storageName = input.get("storage")

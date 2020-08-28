@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.Date;
@@ -329,20 +329,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).withKms(awsKmsKeyId, KmsActions.DECRYPT).build();
     }
 
-    /**
-     * Creates a restricted policy JSON string which only allows GetObject to the given bucket name and object key, and allows Decrypt for the given key ID.
-     *
-     * @param s3BucketName - The S3 bucket name to restrict uploads to
-     * @param s3Key - The S3 object key to restrict the uploads to
-     *
-     * @return the policy JSON string
-     */
-    @SuppressWarnings("PMD.CloseResource") // These are not SQL statements so they don't need to be closed.
-    private Policy createDownloaderPolicy(String s3BucketName, String s3Key)
-    {
-        return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).build();
-    }
-
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
@@ -540,6 +526,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String s3BucketName = storageHelper.getStorageBucketName(storageUnitEntity.getStorage());
         String s3ObjectKey = IterableUtils.get(storageUnitEntity.getStorageFiles(), 0).getPath();
 
+        // If this is a file only path prepend the missing directory bath.
+        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
+            !StringUtils.startsWith(s3ObjectKey, storageUnitEntity.getDirectoryPath()))
+        {
+            s3ObjectKey = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + s3ObjectKey;
+        }
+
         // Get the temporary credentials
         Credentials downloaderCredentials =
             getExternalDownloaderCredentials(storageUnitEntity.getStorage(), String.valueOf(businessObjectDataEntity.getId()), s3ObjectKey);
@@ -547,6 +540,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Construct and return the response
@@ -660,22 +660,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      *
      * @param storageEntity The storage entity of the external storage.
      * @param sessionName The session name to use for the temporary credentials.
-     * @param s3ObjectKey The S3 object key of the path to the data in the bucket.
-     *
-     * @return {@link Credentials} temporary session token
-     */
-    private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
-    {
-        return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class),
-            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
-    }
-
-    /**
-     * Gets a temporary session token that is only good for downloading the specified object key from the given bucket for a limited amount of time.
-     *
-     * @param storageEntity The storage entity of the external storage.
-     * @param sessionName The session name to use for the temporary credentials.
      * @param awsPolicyBuilder The AWS policy builder.
      *
      * @return {@link Credentials} temporary session token
@@ -752,14 +736,34 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         StorageEntity storageEntity = businessObjectDefinitionSampleDataFileEntity.getStorage();
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false);
 
         String sessionID = UUID.randomUUID().toString();
-        // Get the temporary credentials.
-        Credentials downloaderCredentials = getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
+
+        // Create an AWS policy builder.
+        AwsPolicyBuilder awsPolicyBuilder = new AwsPolicyBuilder().withS3(s3BucketName, s3ObjectKey, S3Actions.GetObject);
+
+        /*
+         * Only add KMS policies if the storage specifies a KMS ID.
+         */
+        if (storageKmsKeyId != null)
+        {
+            awsPolicyBuilder.withKms(storageKmsKeyId.trim(), KmsActions.DECRYPT);
+        }
+
+        Credentials downloaderCredentials = getDownloaderCredentials(storageEntity, sessionID, awsPolicyBuilder);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Create the download business object definition sample data file single initiation response.
@@ -772,6 +776,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
         response.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
         response.setAwsSessionToken(downloaderCredentials.getSessionToken());
+        response.setAwsKmsKeyId(storageKmsKeyId);
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
         response.setPreSignedUrl(presignedUrl);
 
@@ -877,23 +882,36 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3EndPoint = storageHelper.getS3BucketAccessParams(storageEntity).getS3Endpoint();
         String awsRoleArn = getStorageUploadRoleArn(storageEntity);
+        String storageKmsKeyId = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity, false);
+
         String sessionID = UUID.randomUUID().toString();
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
         s3KeyPrefix = StringUtils.appendIfMissing(s3KeyPrefix, "/");
         //need to add star for aws authorization
         String s3Path = s3KeyPrefix + "*";
 
+        Policy policy = createUploaderPolicyNoKmsKey(s3BucketName, s3Path);
+
+        /*
+         * Only apply KMS policies if the storage specifies a KMS ID
+         */
+        if (storageKmsKeyId != null)
+        {
+            policy = createUploaderPolicy(s3BucketName, s3Path, storageKmsKeyId);
+        }
+
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
             .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
-                createUploaderPolicyNoKmsKey(s3BucketName, s3Path));
+                policy);
 
         response.setAwsAccessKey(assumedSessionCredentials.getAccessKeyId());
         response.setAwsSecretKey(assumedSessionCredentials.getSecretAccessKey());
         response.setAwsSessionToken(assumedSessionCredentials.getSessionToken());
+        response.setAwsKmsKeyId(storageKmsKeyId);
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(assumedSessionCredentials.getExpiration()));
-
         response.setAwsS3BucketName(s3BucketName);
         response.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         response.setS3Endpoint(s3EndPoint);
@@ -958,11 +976,25 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+
+        // Use downloader role credentials.
+        s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
+        s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        s3BucketAccessParams.setSessionToken(downloaderCredentials.getSessionToken());
+
+        // Generate pre-signed url using the above credentials.
         String preSignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Convert the business object format entity to the business object format model object
         BusinessObjectFormat businessObjectFormat =
             businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
+
+        String filePath = storageFileEntity.getPath();
+
+        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) && !StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
+        {
+            filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+        }
 
         // Create a business object data storage file key for the download business object data storage file single initiation response.
         BusinessObjectDataStorageFileKey businessObjectDataStorageFileKeyForResponse =
@@ -970,7 +1002,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
                 businessObjectFormat.getBusinessObjectFormatVersion(), businessObjectDataEntity.getPartitionValue(),
                 businessObjectDataHelper.getSubPartitionValues(businessObjectDataEntity), businessObjectDataEntity.getVersion(),
-                storageUnitEntity.getStorageName(), storageFileEntity.getPath());
+                storageUnitEntity.getStorageName(), filePath);
 
         // Create the download business object data storage file single initiation response.
         DownloadBusinessObjectDataStorageFileSingleInitiationResponse downloadBusinessObjectDataStorageFileSingleInitiationResponse =

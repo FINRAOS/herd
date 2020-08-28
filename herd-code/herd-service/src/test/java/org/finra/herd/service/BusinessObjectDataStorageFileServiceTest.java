@@ -1,21 +1,22 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -36,7 +38,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -109,8 +113,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                    NO_DISCOVER_STORAGE_FILES));
+                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME,
+                    Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -248,7 +252,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_2, null, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_2, null, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage file size is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -279,7 +284,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, -1L)), NO_DISCOVER_STORAGE_FILES));
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, -1L)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage file has an invalid row count number.");
         }
         catch (IllegalArgumentException e)
@@ -319,7 +325,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Storage file path \"incorrect/path/%s\" does not match the storage directory path \"some/path/\".", FILE_PATH_2),
+            assertEquals(
+                String.format("Specified storage file path \"incorrect/path/%s\" does not match the storage unit directory path \"some/path/\".", FILE_PATH_2),
                 e.getMessage());
         }
     }
@@ -383,7 +390,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    null, DATA_VERSION, "I_DO_NOT_EXIST", Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
+                    null, DATA_VERSION, "I_DO_NOT_EXIST", Lists.newArrayList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an ObjectNotFoundException when using non-existing storage.");
         }
         catch (ObjectNotFoundException e)
@@ -416,8 +424,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                    NO_DISCOVER_STORAGE_FILES));
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME,
+                    Lists.newArrayList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when adding files to storage with file existence validation enabled without file size validation.");
         }
         catch (IllegalArgumentException e)
@@ -676,35 +684,70 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void testCreateBusinessObjectDataStorageFilesAutoDiscoveryStorageDirectoryPathMatchesAnotherBdataStorageFiles()
+    public void testCreateBusinessObjectDataStorageFilesAutoDiscoveryExplicitlyRegisteredSubPartitionExists()
     {
-        // Create test data.
-        createData(testS3KeyPrefix, true, Lists.newArrayList(testS3KeyPrefix + "/" + FILE_PATH_1));
+        // Get a list of two partition columns that is larger than number of partitions supported by business object data registration.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        assertTrue(CollectionUtils.size(partitionColumns) > BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1);
 
-        // Create and persist a storage unit entity for another business object data that would also have a storage file starting with the test S3 key prefix.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE_2, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
-                StorageUnitStatusEntity.ENABLED, testS3KeyPrefix);
+        // Get a list of regular columns.
+        List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
 
-        // Create and persist a storage file for the second business object data that is also starting with the test S3 key prefix.
-        StorageFileEntity storageFileEntity =
-            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        storageUnitEntity.getStorageFiles().add(storageFileEntity);
+        // Create a business object format with schema that has one more partition column than supported by business object data registration.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), NO_PARTITION_KEY_GROUP,
+                NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns,
+                partitionColumns);
 
-        // Try to discover storage files when another business object data have a storage file starting with the test S3 key prefix.
+        // Create business object data registered using four partition values (primary and three sub-partition values).
+        List<String> subPartitionValues = Lists.newArrayList(SUB_PARTITION_VALUE_1, SUB_PARTITION_VALUE_2, SUB_PARTITION_VALUE_3);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
+                DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create storage unit and storage file entity for the business object data.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDao.getStorageByName(StorageEntity.MANAGED_STORAGE), businessObjectDataEntity, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Create business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
+                DATA_VERSION);
+
+        // Create business object data registered using three partition values (primary and two sub-partition values) in UPLOADING state.
+        List<String> higherLevelSubPartitionValues = Lists.newArrayList(SUB_PARTITION_VALUE_1, SUB_PARTITION_VALUE_2);
+        BusinessObjectDataEntity higherLevelBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                higherLevelSubPartitionValues, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
+
+        // Get expected S3 key prefix for the higher level business object data.
+        String higherLevelS3KeyPrefix =
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                partitionColumns.get(0).getName(), PARTITION_VALUE, Lists.newArrayList(partitionColumns.subList(1, 3)).toArray(new SchemaColumn[0]),
+                higherLevelSubPartitionValues.toArray(new String[0]), DATA_VERSION);
+
+        // Create storage unit for the higher level business object data.
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageDao.getStorageByName(StorageEntity.MANAGED_STORAGE), higherLevelBusinessObjectDataEntity,
+            StorageUnitStatusEntity.ENABLED, higherLevelS3KeyPrefix);
+
+        // Try to discover storage files for the business object data with an expected S3 key prefix
+        // that overlaps with the business object data already registered in the same storage.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, NO_STORAGE_FILES, DISCOVER_STORAGE_FILES));
-            fail("Should throw an IllegalArgumentException when another business object data have a storage file starting with the test S3 key prefix.");
+                    higherLevelSubPartitionValues, DATA_VERSION, StorageEntity.MANAGED_STORAGE, NO_STORAGE_FILES, DISCOVER_STORAGE_FILES));
+            fail();
         }
-        catch (IllegalArgumentException e)
+        catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Number of storage files (1) already registered for the business object data in \"%s\" storage is not equal " +
-                    "to the number of registered storage files (2) matching \"%s/\" S3 key prefix in the same storage.", StorageEntity.MANAGED_STORAGE,
-                testS3KeyPrefix), e.getMessage());
+            assertEquals(String.format(
+                "Found another business object data matching \"%s\" S3 key prefix that is also registered in \"%s\" storage. Business object data: {%s}",
+                higherLevelS3KeyPrefix, StorageEntity.MANAGED_STORAGE,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -871,8 +914,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
                 new BusinessObjectDataStorageFilesCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Lists.newArrayList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)),
-                    NO_DISCOVER_STORAGE_FILES));
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME,
+                    Lists.newArrayList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when adding files to storage unit with status that is not ENABLED.");
         }
         catch (IllegalArgumentException e)

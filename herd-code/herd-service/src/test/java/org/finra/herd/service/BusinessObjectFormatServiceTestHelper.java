@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -210,8 +210,8 @@ public class BusinessObjectFormatServiceTestHelper
      *
      * @return the created business object format create request
      */
-    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema,
-        String documentSchemaUrl, List<Attribute> attributes, Schema schema)
+    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema, String documentSchemaUrl,
+        List<Attribute> attributes, Schema schema)
     {
         BusinessObjectFormatUpdateRequest businessObjectFormatUpdateRequest = new BusinessObjectFormatUpdateRequest();
 
@@ -248,7 +248,7 @@ public class BusinessObjectFormatServiceTestHelper
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
     }
 
     /**
@@ -259,16 +259,16 @@ public class BusinessObjectFormatServiceTestHelper
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
             AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), AbstractServiceTest.CUSTOM_DDL_NAME);
+            AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), AbstractServiceTest.CUSTOM_DDL_NAME);
     }
 
     /**
      * Creates relative database entities required for the unit tests.
      */
     public void createDatabaseEntitiesForBusinessObjectFormatDdlTesting(String businessObjectFormatFileType, String partitionKey, String schemaDelimiter,
-        String schemaCollectionItemsDelimiter, String mapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat, String schemaNullValue, List<SchemaColumn> schemaColumns,
-        List<SchemaColumn> partitionColumns, String customDdlName)
+        String schemaCollectionItemsDelimiter, String mapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
+        String schemaCustomCusteredByValue, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, String customDdlName)
     {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -281,7 +281,8 @@ public class BusinessObjectFormatServiceTestHelper
                     businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
                     AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                     partitionKey, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiter,
-                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, null, schemaNullValue, schemaColumns, partitionColumns);
+                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomCusteredByValue,
+                    schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -375,6 +376,7 @@ public class BusinessObjectFormatServiceTestHelper
         ddlBuilder.append("    `" + AbstractServiceTest.COLUMN_NAME + "` DECIMAL(" + AbstractServiceTest.COLUMN_SIZE + ") COMMENT '" +
             AbstractServiceTest.COLUMN_DESCRIPTION + "')\n");
         ddlBuilder.append("PARTITIONED BY (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "` DATE)\n");
+        ddlBuilder.append("CLUSTERED BY (osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS\n");
         ddlBuilder.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' MAP KEYS TERMINATED BY '#' " +
             "NULL DEFINED AS '\\N'\n");
         ddlBuilder.append("STORED AS TEXTFILE;");
@@ -389,6 +391,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @param firstColumnName the name of the first schema column
      * @param firstColumnDataType the data type of the first schema column
      * @param hiveRowFormat the Hive row format
+     * @param hiveClusteredByValue the Hive ClusteredBy Value
      * @param hiveFileFormat the Hive file format
      * @param businessObjectFormatFileType the business object format file type
      * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
@@ -396,7 +399,31 @@ public class BusinessObjectFormatServiceTestHelper
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectFormatDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
+        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded,
+        boolean isIfNotExistsOptionIncluded)
+    {
+        return getExpectedBusinessObjectFormatDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveFileFormat,
+            businessObjectFormatFileType, isDropStatementIncluded, isIfNotExistsOptionIncluded, AbstractServiceTest.INCLUDE_ROW_FORMAT_STATEMENT);
+    }
+
+    /**
+     * Returns Hive DDL that is expected to be produced by a unit test based on specified parameters and hard-coded test values.
+     *
+     * @param partitionLevels the number of partition levels
+     * @param firstColumnName the name of the first schema column
+     * @param firstColumnDataType the data type of the first schema column
+     * @param hiveRowFormat the Hive row format
+     * @param hiveClusteredByValue the Hive ClusteredBy Value
+     * @param hiveFileFormat the Hive file format
+     * @param businessObjectFormatFileType the business object format file type
+     * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
+     * @param isRowFormatStatementIncluded specifies if expected DDL should include a ROW FORMAT statement
+     *
+     * @return the Hive DDL
+     */
+    public String getExpectedBusinessObjectFormatDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
+        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded,
+        boolean isIfNotExistsOptionIncluded, boolean isRowFormatStatementIncluded)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -444,7 +471,13 @@ public class BusinessObjectFormatServiceTestHelper
             }
         }
 
-        sb.append("[Row Format]\n");
+        sb.append("[Hive Clustered By Value]\n");
+
+        if (isRowFormatStatementIncluded)
+        {
+            sb.append("[Row Format]\n");
+        }
+
         sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
 
         if (partitionLevels == 0)
@@ -463,6 +496,7 @@ public class BusinessObjectFormatServiceTestHelper
         replacements.put("Random Suffix", AbstractServiceTest.RANDOM_SUFFIX);
         replacements.put("Format Version", String.valueOf(AbstractServiceTest.FORMAT_VERSION));
         replacements.put("Data Version", String.valueOf(AbstractServiceTest.DATA_VERSION));
+        replacements.put("Hive Clustered By Value", hiveClusteredByValue);
         replacements.put("Row Format", hiveRowFormat);
         replacements.put("Hive File Format", hiveFileFormat);
         replacements.put("Format File Type", businessObjectFormatFileType.toLowerCase());
@@ -591,10 +625,10 @@ public class BusinessObjectFormatServiceTestHelper
 
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
             AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(
+            new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(
+            new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }

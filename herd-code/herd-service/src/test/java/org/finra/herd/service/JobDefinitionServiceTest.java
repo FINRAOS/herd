@@ -202,6 +202,87 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     }
 
     /**
+     * This method tests the scenario when shell type activiti task is given. This must throw IllegalArgumentException from the Activiti layer.
+     * It also validates case insensitivity of the actitviti shell task type.
+     */
+    @Test
+    public void testCreateJobDefinitionWithShellTypeServiceTask() throws Exception
+    {
+        // Create the namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Create and persist a valid job definition.
+        JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
+
+        // Read the Activiti XML file so that an error can be injected.
+        InputStream xmlStream = resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream();
+
+        // Update Activiti XML such that service task is modified to shell type activiti task with all lower case - activiti:type="shell".
+        request.setActivitiJobXml(IOUtils.toString(xmlStream)
+            .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"",
+                "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" activiti:type=\"shell\" activiti:async=\"true\""));
+
+        // Try creating the job definition and the Activiti layer must throw an exception.
+        try
+        {
+            jobDefinitionService.createJobDefinition(request, false);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Activiti XML can not contain activiti shell type service tasks.", e.getMessage());
+        }
+
+        // Update Activiti XML such that service task is modified to shell type activiti task with all upper case - ACTIVITI:TYPE="SHELL".
+        request.setActivitiJobXml(request.getActivitiJobXml().replaceAll("activiti:type=\"shell\"", "ACTIVITI:TYPE=\"SHELL\""));
+
+        // Try creating the job definition and the Activiti layer must throw an exception.
+        try
+        {
+            jobDefinitionService.createJobDefinition(request, false);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Activiti XML can not contain activiti shell type service tasks.", e.getMessage());
+        }
+    }
+
+    /**
+     * This method tests the scenario when not allowed task class is given. This must throw IllegalArgumentException from the Activiti layer.
+     */
+    @Test
+    public void testCreateJobDefinitionWithNotAllowedTaskClass() throws Exception
+    {
+        // Create the namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Create and persist a valid job definition.
+        JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
+
+        // Read the Activiti XML file so that an error can be injected.
+        InputStream xmlStream = resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream();
+
+        // Update Activiti XML such that service task is modified to use not allowed activiti:class
+        request.setActivitiJobXml(
+            IOUtils.toString(xmlStream).replaceAll("org.activiti.engine.impl.test.NoOpServiceTask", "org.activiti.engine.impl.behavior.ShellActivityBehavior"));
+
+        // Try creating the job definition and the Activiti layer must throw an exception.
+        try
+        {
+            jobDefinitionService.createJobDefinition(request, false);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Activiti XML has prohibited service task class.", e.getMessage());
+        }
+    }
+
+    /**
      * Asserts that when a job definition is created using {@link S3PropertiesLocation}, the S3 location information is persisted.
      *
      * @throws Exception

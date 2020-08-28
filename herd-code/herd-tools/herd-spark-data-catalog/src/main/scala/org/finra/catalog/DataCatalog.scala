@@ -30,6 +30,9 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
+import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
@@ -473,20 +476,26 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param path        full path to read, can be parent directory
    * @return
    */
-  private[catalog] def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String): DataFrame = {
+  private[catalog] def createDataFrame(readFormat: String, readOptions: Map[String, String], readSchema: StructType, path: String,
+                                       storagePathPrefix: String = null): DataFrame = {
 
     val df =
     {
+      var prefix = "s3a://"
+      // replace s3a with storage path prefix
+      if (storagePathPrefix != null && storagePathPrefix.trim.nonEmpty) {
+        prefix = StringUtils.appendIfMissing(StringUtils.prependIfMissing(storagePathPrefix, "/"), "/")
+      }
       // If readSchema was not null, we've already got it, so use it (for non-orc files). If not, try to get it from the file itself (for orc files).
       // If we can't get a schema from the file, try to read it without supplying the schema. This is the least efficient choice but better than nothing.
       if (readSchema != null && !readFormat.equals("orc")) {
-        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path.replaceAll("s3n://", "s3a://"))
+        spark.sqlContext.read.format(readFormat).options(readOptions).schema(readSchema).load(path.replaceAll("s3n://", prefix))
       }
 
       else {
         // This is here as a sort of worst case fallback, but this should never get executed. If the file is ORC, we will read schema from file,
         // and if it's bz, txt, or csv, use parseSchema.
-        spark.sqlContext.read.format(readFormat).options(readOptions).load(path.replaceAll("s3n://", "s3a://"))
+        spark.sqlContext.read.format(readFormat).options(readOptions).load(path.replaceAll("s3n://", prefix))
       }
     }
     df
@@ -542,6 +551,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     // return all s3 prefixes
     s3KeyPrefixes.map("s3n://" + _).toList
   }
+
   /**
    * Get available namespaces
    *
@@ -750,7 +760,6 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
   /**
    * Returns the parse options
-   * todo: this is a quick fix, use unescape utils to elegantly handle this
    *
    * @param businessObjectFormat the business object format instance
    * @return Map of parse options
@@ -761,35 +770,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val actualDelimiter: Option[String] = Option(businessObjectFormat.getSchema.getDelimiter)
     val actualEscapeCharacter: Option[String] = Option(businessObjectFormat.getSchema.getEscapeCharacter)
 
-    var nullValue = None: Option[String]
-    var delimiter = None: Option[String]
-    var escapeCharacter = None: Option[String]
-
-    actualNullValue match
-    {
-      case Some(x) => if (x equalsIgnoreCase "\\\\") nullValue = Option("\\") else nullValue = Option(x)
-      case None => nullValue = None
-    }
-
-    actualDelimiter match
-    {
-      case Some(x) =>
-        if (x equalsIgnoreCase "\\\\") delimiter = Option("\\")
-        else if (x equalsIgnoreCase "\\") delimiter = Option("\\")
-        else if (x contains "\\") delimiter = Option(x.replace("\\u", "").replace("\\", "").toInt.toChar.toString)
-        else delimiter = Option(x)
-      case None => delimiter = None
-    }
-
-    actualEscapeCharacter match
-    {
-      case Some(x) =>
-        if (x equalsIgnoreCase "\\\\") escapeCharacter = Option("\\")
-        else if (x equalsIgnoreCase "\\") escapeCharacter = Option("\\")
-        else if (x contains "\\") escapeCharacter = Option(x.replace("\\u", "\\").replace("\\", ""))
-        else escapeCharacter = Option(x)
-      case None => escapeCharacter = None
-    }
+    val nullValue = unescape(actualNullValue)
+    val delimiter = unescape(actualDelimiter)
+    val escapeCharacter = unescape(actualEscapeCharacter)
 
     var parseOptions = scala.collection.mutable.Map(
       "delimiter" -> delimiter.orNull,
@@ -803,6 +786,23 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     }
 
     parseOptions.toMap
+  }
+
+  /**
+   * Unescapes a character sequence
+   *
+   * @param escapedSequence the specified char sequence
+   * @return unescaped char sequence
+   */
+  private def unescape(escapedSequence: Option[String]): Option[String] = {
+    var unescapedSeq: Option[String] = None
+
+    escapedSequence match {
+      case Some(x) => unescapedSeq = Option(StringEscapeUtils unescapeJava x)
+      case None => unescapedSeq = None
+    }
+
+    unescapedSeq
   }
 
   /**
@@ -831,7 +831,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     val partitionKey = businessObjectFormat.getPartitionKey
 
     // get the list of partitions
-    val partitions = businessObjectFormat.getSchema.getPartitions.asScala
+    val partitions =
+      if ( businessObjectFormat.getSchema.getPartitions != null)   {
+        businessObjectFormat.getSchema.getPartitions.asScala
+      }
+      else {
+        Nil
+      }
+
 
     // get from the XML the partition columns, map them to a list of StructFields
     val fields = partitions.map { c =>
@@ -910,6 +917,29 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   }
 
   /**
+   * Get partition values, which include all subPartitions
+   * @param businessObjectDataAvailableStatus  business object data available status
+   * @param partitions partition key list
+   * @return  all partitions
+   */
+  private def getPartitionValues(businessObjectDataAvailableStatus: BusinessObjectDataStatus, partitions: StructType): Array[String] = {
+    val partitionValues = new java.util.ArrayList[String]()
+    partitionValues.add(businessObjectDataAvailableStatus.getPartitionValue)
+
+    if (businessObjectDataAvailableStatus.getSubPartitionValues != null) {
+      partitionValues.addAll(businessObjectDataAvailableStatus.getSubPartitionValues)
+    }
+
+    val missingPartitionsCount = partitions.size - partitionValues.size
+    var x = 0
+    while (x < missingPartitionsCount) {
+      partitionValues.add("")
+      x = x + 1
+    }
+    partitionValues.toArray(new Array[String](0))
+  }
+
+  /**
    * Returns data availability
    *
    * @param namespace    DM namespace
@@ -944,11 +974,11 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val availData = (
       for (businessObjectDataAvailableStatus <- businessObjectDataAvailableStatuses.asScala)
-      yield Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
-      businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
-      businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
-      businessObjectDataAvailableStatus.getReason, businessObjectDataAvailableStatus.getPartitionValue,
-      businessObjectDataAvailableStatus.getSubPartitionValues))
+        yield
+          Row.fromSeq(Seq(businessObjectDataAvailability.getNamespace, businessObjectDataAvailability.getBusinessObjectDefinitionName,
+            businessObjectDataAvailability.getBusinessObjectFormatUsage, businessObjectDataAvailability.getBusinessObjectFormatFileType,
+            businessObjectDataAvailableStatus.getBusinessObjectFormatVersion.toString, businessObjectDataAvailableStatus.getBusinessObjectDataVersion.toString,
+            businessObjectDataAvailableStatus.getReason) ++ getPartitionValues(businessObjectDataAvailableStatus, parts))
     ).toList
 
     // make list an RDD
@@ -985,8 +1015,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     val partitionKey = parts.head.name
 
-    val firstPartValue = "2000-01-01"
-    val lastPartValue = "2099-12-31"
+    val firstPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "0" else "none"
+    val lastPartValue = if (!"partition".equalsIgnoreCase(partitionKey))  "z" else ""
 
     getDataAvailabilityRange(namespace, objectName, usage, fileFormat, partitionKey, firstPartValue, lastPartValue, schemaVersion)
   }
@@ -1005,7 +1035,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    */
   // noinspection SimplifyBoolean
   def getDataFrame(namespace: String, objectName: String, usage: String, fileFormat: String, partitionValues: List[Partition], schemaVersion: Integer = null,
-                   dataVersion: Integer = null): DataFrame = {
+                   dataVersion: Integer = null, storagePathPrefix: String = null): DataFrame = {
 
     // get the fileReading format. We treat ORC differently from the others..
     val sparkReader = fileFormat.toUpperCase match {
@@ -1056,7 +1086,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // Multiple directories MAY mean we have multiple partitions
     for (aPath <- s3Paths) {
-      var aDF = createDataFrame(sparkReader, readOptions, readSchema, aPath)
+      var aDF = createDataFrame(sparkReader, readOptions, readSchema, aPath, storagePathPrefix)
 
       // Convert dataframe to right schema
       if (csvBug) {
@@ -1092,6 +1122,82 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     retDF
   }
+
+   /**
+    * Get dataframes using the given dataframe for schema/data version and partitions along with storagePathPrefix
+    *
+    * storagePathPrefix and input DataFrame is expected to be returned from the getDataAvailability call
+    *
+    * returned dataframe created will be a unioned schema of all the DataFrames created
+    *
+    * Expected Columns:
+    * FormatVersion: schema version
+    * DataVersion: version of the data
+    * [partitionName]: other columns are the partitions for the object
+    *
+    * @param availableData Dataframe from getDataAvailability call, which data to use
+    * @return Spark DataFrame of data
+    *
+    */
+  def getDataFrame(availableData: DataFrame, storagePathPrefix: String): DataFrame = {
+
+    require(storagePathPrefix != null && storagePathPrefix.trim.nonEmpty,
+            "storagePathPrefix is a required parameter, eg. mnt")
+
+    val formatVersionCol = "FormatVersion"
+    val dataVersionCol = "DataVersion"
+    val reasonCol = "Reason"
+    val namespaceCol = "Namespace"
+    val objectNameCol = "ObjectName"
+    val usageCol = "Usage"
+    val fileFormatCol = "FileFormat"
+
+    val baseCols = formatVersionCol ::
+      dataVersionCol ::
+      reasonCol ::
+      namespaceCol ::
+      objectNameCol ::
+      usageCol ::
+      fileFormatCol ::
+      Nil
+
+    // check that schema is as expected
+    require (baseCols.intersect(availableData.schema.fieldNames).length == baseCols.length,
+              "Unexpected schema, does not contain $baseCols")
+
+    // other cols are the partition names
+    val partitionCols = availableData.schema.fieldNames.diff(baseCols)
+
+    // the dataframe to create and return
+    var retDF: DataFrame = null
+
+    for (aRow <- availableData.filter(col(reasonCol) === "VALID").collect()) {
+      // construct the partitions collection
+      val parts = partitionCols.map { aPart =>
+        Partition(aPart, aRow.get(aRow.fieldIndex(aPart)).toString)
+      }.toList
+
+      // get the schema and data versions
+      val schemaVersion = aRow.getAs[Int](formatVersionCol)
+      val dataVersion = aRow.getAs[Int](dataVersionCol)
+      val namespace = aRow.getAs[String](namespaceCol)
+      val objectName = aRow.getAs[String](objectNameCol)
+      val usage = aRow.getAs[String](usageCol)
+      val fileFormat = aRow.getAs[String](fileFormatCol)
+
+      // create the dataframe
+      val aDF = getDataFrame(namespace, objectName, usage, fileFormat, parts, schemaVersion, dataVersion, storagePathPrefix)
+      if (retDF == null) {
+        retDF = aDF
+      } else {
+        // union the dataframes, using the union of their schemas
+        retDF = unionUnionSchema(retDF, aDF)
+      }
+    }
+
+    retDF
+  }
+
 
   /**
    * Get dataframes using the given dataframe for schema/data version and partitions
@@ -1437,7 +1543,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     // @todo Change the corresponding Herd data source function to pass null: Integer
     // @todo Then use Herd data source's function instead of Herd SDK here
-    val retrivedObject = api.businessObjectDataGetBusinessObjectData(
+    val retrievedObject = api.businessObjectDataGetBusinessObjectData(
       nameSpace,
       objectName,
       usage,
@@ -1451,7 +1557,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       false,
       false)
 
-    retrivedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
+    retrievedObject.getStorageUnits.asScala.flatMap(getFilePaths).head
   }
 
   /** Register a new formatVersion
@@ -1487,22 +1593,130 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
                     objName: String,
                     usage: String = "PRC",
                     fileFormat: String = "PARQUET",
-                    storagePathPrefix: String = "s3a"): DataFrame = {
+                    storagePathPrefix: String = "s3a",
+                    partitionFilter: String = null): DataFrame = {
+
+    val options = Map(
+      "url" -> baseRestUrl,
+      "username" -> username,
+      "password" -> password,
+      "namespace" -> namespace,
+      "businessObjectName" -> objName,
+      "businessObjectFormatUsage" -> usage,
+      "businessObjectFormatFileType" -> fileFormat,
+      "storagePathPrefix" -> storagePathPrefix,
+      "partitionFilter" -> partitionFilter
+    ).filter(opt => opt._2 != null)
 
     spark.read.format("herd")
-      .option("url", baseRestUrl)
-      .option("username", username)
-      .option("password", password)
-      .option("namespace", namespace)
-      .option("businessObjectName", objName)
-      .option("businessObjectFormatUsage", usage)
-      .option("businessObjectFormatFileType", fileFormat)
-      .option("storagePathPrefix", storagePathPrefix)
+      .options(options)
       .load()
-
   }
 
-  /** saves a DataFrame and register with DM
+  /** Registers a new ML Model with Herd
+   *
+   *
+   * @param model               ML Model being registered
+   * @param mountPoint          Mount Point of where to register the ML Model  (eg. /mnt/{{bucket-name}})
+   * @param nameSpace           Model Namespace (eg. myNamespace)
+   * @param modelName           Model Name (eg. myMmodel )
+   * @param partitionKey        Partition Key (default partition = none)
+   * @param partitionValue      Partition Value (default partition = none)
+   * @param isNewFormatVersion  Boolean indicating if a new format version (ie. schema version) is being created for an existing registered model
+   * @param formatVersion       Format Version (default -1 which translates to latest version)
+   *
+   * @return  Returns the path to the registered model
+   *
+   * Example Usage:
+   * {{{
+   *
+   *   // Example 1: Register new model
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 2: Re-register existing model (parameters remain the same and Herd increments data version)
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = false
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   *
+   *   // Example 3: Re-register existing model with a new format version. This usage may be for cases where, for example, new
+   *   //            feature columns have been added/removed and have impact to the model training.
+   *
+   *   val mountPoint = "/mnt/{{bucket-name}}"
+   *   val modelNamespace = "myNamespace"
+   *   val modelName = "myModel"
+   *   val partitionKey = "date"
+   *   val partitionValue = "JAN2019"
+   *   val isNewFormatVersion = true   <-- set to true for new format version
+   *
+   *   dataCatalog.registerMLModel(model, mountPoint, modelNamespace, modelName, modelPartKey, modelPartValue, isNewFormatVersion)
+   *
+   * }}}
+   */
+  def registerMLModel(model: PipelineModel,
+                      mountPoint: String,
+                      nameSpace: String,
+                      modelName: String,
+                      partitionKey: String = "partition",
+                      partitionValue: String = "none",
+                      isNewFormatVersion: Boolean = false,
+                      formatVersion: Int = -1): String = {
+
+    // short-circuit execution if a mount-point is not specified
+    require(mountPoint != null && mountPoint.trim.nonEmpty, "mountPoint is a required parameter, eg. \"/mnt/{bucket-name}\" or \"s3a://{bucket-name}\"")
+
+    if (isNewFormatVersion) {
+      // check if model exists and register new format version
+      Try(herdApiWrapper.getHerdApi().getBusinessObjectByName(nameSpace, modelName)) match {
+        case Success(_) => registerNewFormat(nameSpace, modelName, partitionKey, partitionValue)
+        case Failure(ex) =>
+          logger.info("A new format version cannot be created for a model being registered for the first time. Proceeding to initialize registration.", ex)
+      }
+    }
+
+    val (modelFormatVersion, dataVersion, path) = preRegisterBusinessObjectPath(nameSpace, modelName, formatVersion, partitionKey, partitionValue)
+
+    val registrationPath = if (!mountPoint.endsWith("/")) {
+      mountPoint + "/" + path
+    } else mountPoint + path
+
+    Try (model.write.overwrite().save(registrationPath)) match {
+      case Success(_) =>
+        // Model successfully registered - Mark status as VALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion)
+      case Failure(ex) =>
+        // Model registration failed - Mark status as INVALID
+        completeRegisterBusinessObjectPath(nameSpace, modelName, modelFormatVersion, partitionKey, partitionValue, dataVersion,
+          org.apache.spark.sql.herd.ObjectStatus.INVALID)
+        logger.error("Failed to register model.", ex)
+        throw ex
+    }
+
+    // return registered path
+    getBusinessObjectPath(nameSpace,
+      modelName,
+      modelFormatVersion,
+      partitionKey,
+      partitionValue,
+      dataVersion)
+  }
+
+  /** saves a DataFrame and registers with Herd.
    *
    * @param df                a DataFrame
    * @param namespace         a logical name of the namespace
@@ -1513,6 +1727,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param usage             DM supported format usage (e.g., "PRC")
    * @param fileFormat        DM supported file format (e.g., "BZ", "PARQUET", etc)
    */
+  @deprecated("Use saveDataFrame(df: DataFrame, baseHerdOptions: BaseHerdOptions)", "0.121.0")
   def saveDataFrame(df: DataFrame,
                     namespace: String,
                     objName: String,
@@ -1545,10 +1760,53 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     ).filter(opt => opt._2.nonEmpty)
 
     // add optional parameters if specified by user
-    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get) )
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
+
+    // write out the data
+    baseWriteOptions.save()
+  }
+
+  /**
+   * Saves a DataFrame and registers with Herd.
+   *
+   * @param dataFrame       DataFrame to save and register
+   * @param baseHerdOptions herd options
+   */
+  def saveDataFrame(dataFrame: DataFrame, baseHerdOptions: BaseHerdOptions): Unit = {
+
+    require(!baseHerdOptions.namespace.isEmpty, "'namespace' is required!")
+    require(!baseHerdOptions.objectName.isEmpty, "'objectName' is required!")
+    require(!baseHerdOptions.usage.isEmpty, "'usage' is required!")
+    require(!baseHerdOptions.fileType.isEmpty, "'fileType' is required!")
+    require(!baseHerdOptions.partitionKey.isEmpty, "'partitionKey' is required!")
+    require(!baseHerdOptions.partitionValue.isEmpty, "'partitionValue' is required!")
+    require(!baseHerdOptions.partitionKeyGroup.isEmpty, "'partitionKeyGroup' is required!")
+
+    var baseWriteOptions = dataFrame.write.format("herd")
+      .option("url", baseRestUrl)
+      .option("username", username)
+      .option("password", password)
+      .option("namespace", baseHerdOptions.namespace)
+      .option("businessObjectName", baseHerdOptions.objectName)
+      .option("businessObjectFormatUsage", baseHerdOptions.usage)
+      .option("businessObjectFormatFileType", baseHerdOptions.fileType)
+      .option("partitionKey", baseHerdOptions.partitionKey)
+      .option("partitionValue", baseHerdOptions.partitionValue)
+      .option("partitionKeyGroup", baseHerdOptions.partitionKeyGroup)
+      .option("registerNewFormat", "true")
+
+    val options = Map(
+      "subPartitionKeys" -> Option(baseHerdOptions.subPartitionKeys),
+      "subPartitionValues" -> Option(baseHerdOptions.subPartitionValues),
+      "delimiter" -> Option(baseHerdOptions.delimiter),
+      "escape" -> Option(baseHerdOptions.escapeChar),
+      "nullValue" -> Option(baseHerdOptions.nullValue)
+    ).filter(opt => opt._2.nonEmpty)
+
+    // add optional parameters if specified by user
+    baseWriteOptions = options.foldLeft(baseWriteOptions)((df, opts) => df.option(opts._1, opts._2.get))
 
     // write out the data
     baseWriteOptions.save()
   }
 }
-

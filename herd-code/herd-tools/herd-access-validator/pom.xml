@@ -91,6 +91,10 @@
          <artifactId>json</artifactId>
          <version>${json.version}</version>
       </dependency>
+      <dependency>
+         <groupId>com.google.code.gson</groupId>
+         <artifactId>gson</artifactId>
+      </dependency>
 
       <!-- Dependencies for unit tests -->
       <dependency>

@@ -135,7 +135,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -163,7 +163,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).getObjectMetadata(any(), any(), any());
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
         verifyNoMoreInteractionsHelper();
@@ -202,7 +202,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -224,7 +224,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).getObjectMetadata(any(), any(), any());
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
         verifyNoMoreInteractionsHelper();
@@ -264,7 +264,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(null), eq(null), eq(null),
-                eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -292,7 +292,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(null), eq(null), eq(null),
-                eq(null), eq(false), eq(false));
+                eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).getObjectMetadata(any(), any(), any());
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
         verifyNoMoreInteractionsHelper();
@@ -322,7 +322,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -356,7 +356,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -405,7 +405,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.listObjects(any(ListObjectsRequest.class), any(AmazonS3.class))).thenReturn(objectListing);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -433,7 +433,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).listObjects(any(ListObjectsRequest.class), any(AmazonS3.class));
         verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
         verifyNoMoreInteractionsHelper();
@@ -466,7 +466,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -500,7 +500,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -529,7 +529,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -563,7 +563,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -612,7 +612,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.listObjects(any(ListObjectsRequest.class), any(AmazonS3.class))).thenReturn(objectListing);
 
         // Call the method under test with message flag set to "false".
@@ -639,7 +639,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).listObjects(any(ListObjectsRequest.class), any(AmazonS3.class));
         verifyNoMoreInteractionsHelper();
     }
@@ -668,7 +668,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -702,7 +702,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -730,7 +730,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -764,7 +764,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -795,7 +795,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
 
         // Call the method under test with message flag set to "false".
@@ -822,7 +822,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(herdApiClientOperations)
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false));
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
         verify(s3Operations).getObjectMetadata(any(), any(), any());
         verifyNoMoreInteractionsHelper();
     }

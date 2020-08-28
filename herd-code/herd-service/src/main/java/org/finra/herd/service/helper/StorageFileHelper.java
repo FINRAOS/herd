@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.io.File;
@@ -27,14 +27,15 @@ import java.util.Map;
 import java.util.Set;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -59,25 +60,64 @@ public class StorageFileHelper
     private JsonHelper jsonHelper;
 
     /**
-     * Creates a storage file from the storage file entity.
+     * Creates a storage file from the storage file entity. Storage unit directory path might not be specified and also it may or may not contain trailing '/'
+     * character.
      *
      * @param storageFileEntity the storage file entity
+     * @param storageUnitDirectoryPath the storage unit directory path, maybe null
      *
      * @return the storage file
      */
-    public StorageFile createStorageFileFromEntity(StorageFileEntity storageFileEntity)
+    StorageFile createStorageFileFromEntity(StorageFileEntity storageFileEntity, String storageUnitDirectoryPath)
     {
-        StorageFile storageFile = new StorageFile();
+        // Get storage file path from the entity.
+        String storageFilePath = storageFileEntity.getPath();
 
-        storageFile.setFilePath(storageFileEntity.getPath());
-        storageFile.setFileSizeBytes(storageFileEntity.getFileSizeBytes());
-        storageFile.setRowCount(storageFileEntity.getRowCount());
+        // If storage directory path is specified, prepend it to the storage file path, if not already there.
+        if (StringUtils.isNotBlank(storageUnitDirectoryPath))
+        {
+            // If storage file path does not start with storage unit directory path:
+            // - For the empty folder S3 marker prepend storage unit directory path as is
+            // - For all other storage files, prepend storage unit directory path with slash
+            if (!StringUtils.startsWith(storageFilePath, storageUnitDirectoryPath))
+            {
+                if (StringUtils.equals(storageFilePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                {
+                    storageFilePath = storageUnitDirectoryPath + storageFilePath;
+                }
+                else
+                {
+                    storageFilePath = StringUtils.appendIfMissing(storageUnitDirectoryPath, "/") + storageFilePath;
+                }
+            }
+        }
 
-        return storageFile;
+        // Create and return storage file.
+        return new StorageFile(storageFilePath, storageFileEntity.getFileSizeBytes(), storageFileEntity.getRowCount());
     }
 
     /**
      * Creates a list of storage files from the collection of storage file entities.
+     *
+     * @param storageFileEntities the collection of storage file entities
+     * @param storageUnitDirectoryPath the storage unit directory path, maybe null
+     *
+     * @return the list of storage files
+     */
+    public List<StorageFile> createStorageFilesFromEntities(Collection<StorageFileEntity> storageFileEntities, String storageUnitDirectoryPath)
+    {
+        List<StorageFile> storageFiles = new ArrayList<>();
+
+        for (StorageFileEntity storageFileEntity : storageFileEntities)
+        {
+            storageFiles.add(createStorageFileFromEntity(storageFileEntity, storageUnitDirectoryPath));
+        }
+
+        return storageFiles;
+    }
+
+    /**
+     * Creates a list of storage files from the collection of storage file entities with empty storage unit directory path.
      *
      * @param storageFileEntities the collection of storage file entities
      *
@@ -85,14 +125,7 @@ public class StorageFileHelper
      */
     public List<StorageFile> createStorageFilesFromEntities(Collection<StorageFileEntity> storageFileEntities)
     {
-        List<StorageFile> storageFiles = new ArrayList<>();
-
-        for (StorageFileEntity storageFileEntity : storageFileEntities)
-        {
-            storageFiles.add(createStorageFileFromEntity(storageFileEntity));
-        }
-
-        return storageFiles;
+        return createStorageFilesFromEntities(storageFileEntities, null);
     }
 
     /**
@@ -137,7 +170,7 @@ public class StorageFileHelper
         }
 
         // Retrieve storage files.
-        List<StorageFile> storageFiles = createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
+        List<StorageFile> storageFiles = createStorageFilesFromEntities(storageUnitEntity.getStorageFiles(), storageUnitEntity.getDirectoryPath());
 
         // Validate storage file paths registered with this business object data in the specified storage.
         validateStorageFilePaths(getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, businessObjectDataKey, storageName);

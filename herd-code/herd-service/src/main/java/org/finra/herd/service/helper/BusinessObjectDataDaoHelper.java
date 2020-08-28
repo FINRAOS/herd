@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
@@ -35,7 +35,6 @@ import org.springframework.util.Assert;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.ExpectedPartitionValueDao;
-import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -123,9 +122,6 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
-
-    @Autowired
-    private StorageFileDao storageFileDao;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -264,7 +260,7 @@ public class BusinessObjectDataDaoHelper
             .format("Partition key \"%s\" doesn't match configured business object format partition key \"%s\".", request.getPartitionKey(),
                 businessObjectFormatEntity.getPartitionKey()));
 
-        // Get the latest format version for this business object data, if it exists.
+        // Get the latest version for this business object data, if it exists.
         BusinessObjectDataEntity existingBusinessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(
             new BusinessObjectDataKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion(), request.getPartitionValue(),
@@ -365,11 +361,19 @@ public class BusinessObjectDataDaoHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), storageEntity,
                 false);
 
+        // Get business object format from the entity.
+        BusinessObjectFormat businessObjectFormat =
+            businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Get business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // If the storage has any validation configured, get the expected S3 key prefix.
         if (StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate))
         {
-            // If the storage has any validation configured, get the expected S3 key prefix.
-            expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectDataEntity.getBusinessObjectFormat(),
-                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), storageEntity.getName());
+            expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(s3KeyPrefixVelocityTemplate,
+                businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getDataProvider().getName(), businessObjectFormat,
+                businessObjectDataKey, storageEntity.getName());
         }
 
         if ((validatePathPrefix || validateFileExistence) && isS3StoragePlatform)
@@ -421,7 +425,8 @@ public class BusinessObjectDataDaoHelper
 
         // Create the storage file entities.
         createStorageFileEntitiesFromStorageFiles(resultStorageFiles, storageEntity, BooleanUtils.isTrue(isDiscoverStorageFiles), expectedS3KeyPrefix,
-            storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform);
+            storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform, businessObjectFormat,
+            businessObjectDataKey);
 
         return storageUnitEntity;
     }
@@ -751,12 +756,15 @@ public class BusinessObjectDataDaoHelper
      * @param validateFileExistence specifies whether the storage has file existence enabled
      * @param validateFileSize specifies whether the storage has file validation enabled
      * @param isS3StoragePlatform specifies whether the storage platform type is S3
+     * @param businessObjectFormat the business object format
+     * @param businessObjectDataKey the business object data key
      *
      * @return the list of storage file entities
      */
     private List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(List<StorageFile> storageFiles, StorageEntity storageEntity,
         boolean storageFilesDiscovered, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity, String directoryPath, boolean validatePathPrefix,
-        boolean validateFileExistence, boolean validateFileSize, boolean isS3StoragePlatform)
+        boolean validateFileExistence, boolean validateFileSize, boolean isS3StoragePlatform, BusinessObjectFormat businessObjectFormat,
+        BusinessObjectDataKey businessObjectDataKey)
     {
         List<StorageFileEntity> storageFileEntities = null;
 
@@ -782,14 +790,18 @@ public class BusinessObjectDataDaoHelper
             // storage by some other business object data that start with the expected S3 key prefix.
             if (validatePathPrefix && isS3StoragePlatform)
             {
-                // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-                String expectedS3KeyPrefixWithTrailingSlash = expectedS3KeyPrefix + "/";
-                Long registeredStorageFileCount = storageFileDao.getStorageFileCount(storageEntity.getName(), expectedS3KeyPrefixWithTrailingSlash);
-                if (registeredStorageFileCount > 0)
+                // Check business object data for any explicitly registered sub-partitions in the specified storage.
+                StorageUnitEntity explicitlyRegisteredSubPartitionStorageUnit = storageUnitDaoHelper
+                    .findExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                        storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectFormat, businessObjectDataKey);
+
+                // Throw an exception if explicitly registered sub-partition is found.
+                if (explicitlyRegisteredSubPartitionStorageUnit != null)
                 {
-                    throw new AlreadyExistsException(String.format(
-                        "Found %d storage file(s) matching \"%s\" S3 key prefix in \"%s\" " + "storage that is registered with another business object data.",
-                        registeredStorageFileCount, expectedS3KeyPrefix, storageEntity.getName()));
+                    throw new AlreadyExistsException(String
+                        .format("Business object data matching \"%s\" S3 key prefix is already registered in \"%s\" storage. Business object data: {%s}",
+                            expectedS3KeyPrefix, storageEntity.getName(), businessObjectDataHelper
+                                .businessObjectDataEntityAltKeyToString(explicitlyRegisteredSubPartitionStorageUnit.getBusinessObjectData())));
                 }
             }
 
@@ -936,6 +948,7 @@ public class BusinessObjectDataDaoHelper
      * @param validatePathPrefix the validate path prefix flag.
      *
      * @return the parameters.
+     *
      * @throws IllegalArgumentException if the "validate path prefix" flag is not present and no directory is configured on the storage entity.
      */
     private S3FileTransferRequestParamsDto getFileValidationParams(StorageEntity storageEntity, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity,
@@ -995,6 +1008,7 @@ public class BusinessObjectDataDaoHelper
      * @param businessObjectFormatEntity, the business object format entity
      *
      * @return the partition key column position
+     *
      * @throws IllegalArgumentException if partition key is not found in schema
      */
     private int getPartitionColumnPosition(String partitionKey, BusinessObjectFormatEntity businessObjectFormatEntity)

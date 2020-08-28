@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
@@ -24,21 +24,23 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -67,7 +69,93 @@ public class StorageFileHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testValidateRegisteredS3Files() throws IOException
+    public void testCreateStorageFileFromEntity()
+    {
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity = new StorageFileEntity();
+        storageFileEntity.setStorageUnit(null);
+        storageFileEntity.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME);
+        storageFileEntity.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity.setRowCount(ROW_COUNT);
+
+        // Create storage file from entity when directory path is not specified (passed as null).
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, NO_STORAGE_DIRECTORY_PATH));
+
+        // Create storage file from entity when directory path is passed as blank text.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, BLANK_TEXT));
+
+        // Create storage file from entity when directory path is matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STORAGE_DIRECTORY_PATH));
+
+        // Create storage file from entity when directory path is matching
+        // the beginning of storage file path and directory path has '/' trailing character.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STORAGE_DIRECTORY_PATH + "/"));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STRING_VALUE));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has '/' trailing character.
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(storageFileEntity, STRING_VALUE + "/"));
+
+        // Create a storage file entity with storage file representing an empty S3 directory.
+        StorageFileEntity emptyDirectoryStorageFileEntity = new StorageFileEntity();
+        emptyDirectoryStorageFileEntity.setStorageUnit(null);
+        emptyDirectoryStorageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+        emptyDirectoryStorageFileEntity.setFileSizeBytes(FILE_SIZE_0_BYTE);
+        emptyDirectoryStorageFileEntity.setRowCount(NO_ROW_COUNT);
+
+        // Create storage file from entity when directory path is not matching the beginning of storage file path and storage file represents an empty S3 directory.
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + StorageFileEntity.S3_EMPTY_PARTITION, FILE_SIZE_0_BYTE, NO_ROW_COUNT),
+            storageFileHelper.createStorageFileFromEntity(emptyDirectoryStorageFileEntity, STORAGE_DIRECTORY_PATH));
+    }
+
+    @Test
+    public void testCreateStorageFileFromEntities()
+    {
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity1 = new StorageFileEntity();
+        storageFileEntity1.setStorageUnit(null);
+        storageFileEntity1.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1");
+        storageFileEntity1.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity1.setRowCount(ROW_COUNT);
+
+        // Create a storage file entity.
+        StorageFileEntity storageFileEntity2 = new StorageFileEntity();
+        storageFileEntity2.setStorageUnit(null);
+        storageFileEntity2.setPath(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2");
+        storageFileEntity2.setFileSizeBytes(FILE_SIZE);
+        storageFileEntity2.setRowCount(ROW_COUNT);
+
+        List<StorageFile> storageFiles = null;
+
+        // Create storage files from entity when directory path is not specified
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
+
+        // Create storage files from entity when directory path passed as null
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2), null);
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
+
+        // Create storage file from entity when directory path is not matching
+        // the beginning of storage file path and directory path has no '/' trailing character.
+        storageFiles = storageFileHelper.createStorageFilesFromEntities(Arrays.asList(storageFileEntity1, storageFileEntity2), STRING_VALUE);
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "1", FILE_SIZE, ROW_COUNT), storageFiles.get(0));
+        assertEquals(new StorageFile(STRING_VALUE + "/" + STORAGE_DIRECTORY_PATH + "/" + FILE_NAME + "2", FILE_SIZE, ROW_COUNT), storageFiles.get(1));
+    }
+
+    @Test
+    public void testValidateRegisteredS3Files()
     {
         // Create two lists of expected and actual storage files.
         // Please note we use different row count values to confirm that row count match is not validated.

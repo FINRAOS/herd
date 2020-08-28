@@ -299,6 +299,12 @@ public enum ConfigurationValue
     ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC("activiti.job.definition.assert.async", true),
 
     /**
+     * List of class prefix allowed to use in activiti service task class
+     */
+    ACTIVITI_JOB_DEFINITION_ALLOWED_TASK_CLASS_PREFIX("activiti.job.definition.allowed.task.class.prefix",
+        "org.finra.herd.service.activiti.task|org.finra.dm.service.activiti.task|org.activiti.engine.impl.test.NoOpServiceTask"),
+
+    /**
      * The maximum number of results that will be returned in a jobs query. The default is 1000 results.
      */
     JOBS_QUERY_MAX_RESULTS("jobs.query.max.results", 1000),
@@ -747,35 +753,25 @@ public enum ConfigurationValue
     ELASTICSEARCH_TAG_INDEX_NAME("elasticsearch.tag.index.name", "tag"),
 
     /**
-     * The elasticsearch document type
+     * The elasticsearch business object definition mappings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON_V2("elasticsearch.bdef.mappings.json.v2", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
-     * The elasticsearch document type
+     * The elasticsearch business object definition settings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_TAG_DOCUMENT_TYPE("elasticsearch.tag.document.type", "doc"),
-
-    /**
-     * The elasticsearch business object definition mappings JSON
-     */
-    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
-
-    /**
-     * The elasticsearch business object definition settings JSON
-     */
-    ELASTICSEARCH_BDEF_SETTINGS_JSON("elasticsearch.bdef.settings.json",
+    ELASTICSEARCH_BDEF_SETTINGS_JSON_V2("elasticsearch.bdef.settings.json.v2",
         "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
-     * The elasticsearch tag mappings JSON
+     * The elasticsearch tag mappings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+    ELASTICSEARCH_TAG_MAPPINGS_JSON_V2("elasticsearch.tag.mappings.json.v2", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
-     * The elasticsearch tag settings JSON
+     * The elasticsearch tag settings JSON version 2 to be used with upgraded Elasticsearch domain
      */
-    ELASTICSEARCH_TAG_SETTINGS_JSON("elasticsearch.tag.settings.json",
+    ELASTICSEARCH_TAG_SETTINGS_JSON_V2("elasticsearch.tag.settings.json.v2",
         "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
@@ -859,6 +855,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME("elasticsearch.domain.rest.client.hostname", "localhost"),
 
     /**
+     * The elasticsearch search domain rest client hostname version 2
+     */
+    ELASTICSEARCH_DOMAIN_REST_CLIENT_HOSTNAME_V2("elasticsearch.domain.rest.client.hostname.v2", "localhost"),
+
+    /**
      * The elasticsearch search domain rest client port number
      */
     ELASTICSEARCH_DOMAIN_REST_CLIENT_PORT("elasticsearch.domain.rest.client.port", 443),
@@ -877,6 +878,16 @@ public enum ConfigurationValue
      * The elasticsearch search rest client read timeout
      */
     ELASTICSEARCH_REST_CLIENT_READ_TIMEOUT("elasticsearch.rest.client.read.timeout", 60000),
+
+    /*
+     * The Elasticsearch search rest client connection timeout in milliseconds.
+     */
+    ELASTICSEARCH_REST_HIGH_LEVEL_CLIENT_CONNECTION_TIMEOUT("elasticsearch.rest.high.level.client.connection.timeout", 5000),
+
+    /*
+     * The Elasticsearch search rest client socket timeout in milliseconds.
+     */
+    ELASTICSEARCH_REST_HIGH_LEVEL_CLIENT_SOCKET_TIMEOUT("elasticsearch.rest.high.level.client.socket.timeout", 600000),
 
     /**
      * The search index update queue name
