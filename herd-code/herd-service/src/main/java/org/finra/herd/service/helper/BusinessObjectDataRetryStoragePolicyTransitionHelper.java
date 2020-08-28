@@ -1,20 +1,21 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SqsDao;
-import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
@@ -67,9 +67,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelper
     private SqsDao sqsDao;
 
     @Autowired
-    private StorageFileDao storageFileDao;
-
-    @Autowired
     private StoragePolicyDaoHelper storagePolicyDaoHelper;
 
     @Autowired
@@ -77,6 +74,9 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelper
 
     @Autowired
     private StorageUnitDao storageUnitDao;
+
+    @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
 
     /**
      * Executes a retry of the storage policy transition and return the business object data information.
@@ -122,28 +122,15 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelper
         String s3KeyPrefix = s3KeyPrefixHelper
             .buildS3KeyPrefix(storagePolicyEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
-        // Retrieve storage files registered with this business object data in the  storage.
-        int storageFilesCount = storageUnitEntity.getStorageFiles().size();
-
         // Validate that we have storage files registered in the storage.
-        Assert.isTrue(storageFilesCount > 0, String.format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}",
-            storageUnitEntity.getStorage().getName(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        Assert.isTrue(CollectionUtils.isNotEmpty(storageUnitEntity.getStorageFiles()), String
+            .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}",
+                storageUnitEntity.getStorage().getName(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
-        // Retrieve all registered storage files from the storage that start with the S3 key prefix.
-        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        String s3KeyPrefixWithTrailingSlash = StringUtils.appendIfMissing(s3KeyPrefix, "/");
-        Long registeredStorageFilesMatchingS3KeyPrefixCount =
-            storageFileDao.getStorageFileCount(storageUnitEntity.getStorage().getName(), s3KeyPrefixWithTrailingSlash);
-
-        // Sanity check for the S3 key prefix.
-        if (registeredStorageFilesMatchingS3KeyPrefixCount.intValue() != storageFilesCount)
-        {
-            throw new IllegalArgumentException(String.format(
-                "Number of storage files (%d) registered for the business object data in \"%s\" storage is not equal to " +
-                    "the number of registered storage files (%d) matching \"%s\" S3 key prefix in the same storage. Business object data: {%s}",
-                storageFilesCount, storageUnitEntity.getStorage().getName(), registeredStorageFilesMatchingS3KeyPrefixCount, s3KeyPrefixWithTrailingSlash,
-                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-        }
+        // Validate that this storage does not have any other registered storage files that
+        // start with the S3 key prefix, but belong to other business object data instances.
+        storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+            businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
 
         // Get the SQS queue name from the system configuration.
         String sqsQueueName = configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME);
