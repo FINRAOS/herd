@@ -16,9 +16,9 @@
 package org.apache.spark.sql.herd
 
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{BeforeAndAfterAll, FunSuite, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 
-class HerdOptionsSuite extends FunSuite with ShouldMatchers with BeforeAndAfterAll {
+class HerdOptionsSuite extends FunSuite with Matchers with BeforeAndAfterAll {
 
   private var spark: SparkSession = _
 
