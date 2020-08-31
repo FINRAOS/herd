@@ -737,7 +737,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       case DateType => col.setType("DATE")
       case d: DecimalType =>
         col.setType("DECIMAL")
-        col.setSize(if (d.precision != null) d.precision.toString else "10" + "," + (if (d.scale != null) d.scale.toString else "0"))
+        col.setSize(d.precision + "," + d.scale)
       case TimestampType => col.setType("TIMESTAMP")
       case BooleanType => col.setType("BOOLEAN")
       case _ => col.setType(toComplexHerdType(column))

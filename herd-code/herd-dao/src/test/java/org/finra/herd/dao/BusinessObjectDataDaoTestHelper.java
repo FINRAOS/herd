@@ -20,6 +20,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -309,6 +313,26 @@ public class BusinessObjectDataDaoTestHelper
         return createBusinessObjectDataEntity(businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(false),
             new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK).format(System.currentTimeMillis()), AbstractDaoTest.SUBPARTITION_VALUES,
             AbstractDaoTest.INITIAL_DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
+    }
+
+    /**
+     * Removes time portion of a given {@link XMLGregorianCalendar} instance.
+     *
+     * @param xmlGregorianCalendar the given {@link XMLGregorianCalendar} instant, not null
+     * @return a new {@link XMLGregorianCalendar} instance with the time portion removed
+     */
+    public static XMLGregorianCalendar resetToMidnight(final XMLGregorianCalendar xmlGregorianCalendar) throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar gregorianCalendarResetToMidnight =
+            DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendar.toGregorianCalendar());
+
+        // reset time fields
+        gregorianCalendarResetToMidnight.setHour(0);
+        gregorianCalendarResetToMidnight.setMinute(0);
+        gregorianCalendarResetToMidnight.setSecond(0);
+        gregorianCalendarResetToMidnight.setMillisecond(0);
+
+        return gregorianCalendarResetToMidnight;
     }
 
     /**
