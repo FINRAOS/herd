@@ -15,6 +15,8 @@
 */
 package org.apache.spark.sql.herd
 
+import java.util.TimeZone
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, Path}
@@ -74,7 +76,7 @@ private[sql] abstract class HerdFileIndexBase(
             case (rawValue, index) =>
               val field = herdPartitionSchema(index)
 
-              Cast(Literal.create(unescapePathName(rawValue), StringType), field.dataType).eval()
+              Cast(Literal.create(unescapePathName(rawValue), StringType), field.dataType, Option(TimeZone.getDefault.getID)).eval()
           }
 
           InternalRow.fromSeq(values)
