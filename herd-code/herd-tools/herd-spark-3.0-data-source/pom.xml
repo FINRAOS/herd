@@ -25,20 +25,24 @@
       <version>${revision}</version>
    </parent>
 
-   <name>herd spark data source</name>
+   <name>herd spark 3.0 data source</name>
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
-   <artifactId>herd-spark-data-source</artifactId>
+   <artifactId>herd-spark-3.0-data-source</artifactId>
    <version>0.127.0-SNAPSHOT</version>
 
-   <!-- build the data source for spark version 2.3.0 -->
+   <!-- build the data source for spark version 2.2.0 -->
    <properties>
-      <spark.version>2.4.4</spark.version>
+      <spark.version>3.0.0</spark.version>
       <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
       <herd.sdk.version>0.119.0</herd.sdk.version>
       <scalatest.maven.plugin.version>1.0</scalatest.maven.plugin.version>
       <commons.text.version>1.8</commons.text.version>
       <mockito.scala.version>1.14.0</mockito.scala.version>
+      <scala.version>2.12.10</scala.version>
+      <scala.tools.version>2.12</scala.tools.version>
+      <scalatest.version>3.0.8</scalatest.version>
+      <apache.spark.jackson.version>2.11.0</apache.spark.jackson.version>
    </properties>
 
    <dependencies>
@@ -69,7 +73,7 @@
 
       <dependency>
          <groupId>com.fasterxml.jackson.module</groupId>
-         <artifactId>jackson-module-scala_2.11</artifactId>
+         <artifactId>jackson-module-scala_${scala.tools.version}</artifactId>
          <version>${apache.spark.jackson.version}</version>
       </dependency>
 
@@ -136,7 +140,6 @@
             </exclusion>
          </exclusions>
       </dependency>
-
       <dependency>
          <groupId>org.bouncycastle</groupId>
          <artifactId>bcprov-jdk15on</artifactId>
@@ -153,8 +156,7 @@
 
       <dependency>
          <groupId>org.mockito</groupId>
-         <artifactId>mockito-scala_${scala.tools.version}</artifactId>
-         <version>${mockito.scala.version}</version>
+         <artifactId>mockito-core</artifactId>
          <scope>test</scope>
       </dependency>
 
@@ -162,6 +164,40 @@
 
    <build>
       <plugins>
+         <!-- Provide customized clean plugin so the source directory can be removed. This module copies all the source files from the module
+         herd-spark-data-catalog during build phase -->
+         <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <configuration>
+               <filesets>
+                  <fileset>
+                     <directory>./src</directory>
+                  </fileset>
+               </filesets>
+            </configuration>
+         </plugin>
+         <!-- Copy all the source code from the module herd-spark-data-source -->
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>copy-source-code</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>./src</outputDirectory>
+                     <overwrite>true</overwrite>
+                     <resources>
+                        <resource>
+                           <directory>../herd-spark-data-source/src/</directory>
+                        </resource>
+                     </resources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
          <plugin>
             <!-- see http://davidb.github.com/scala-maven-plugin -->
             <groupId>net.alchim31.maven</groupId>
@@ -222,44 +258,6 @@
             <configuration>
                <skipTests>true</skipTests>
             </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest-maven-plugin</artifactId>
-            <version>${scalatest.maven.plugin.version}</version>
-            <configuration>
-               <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-               <junitxml>.</junitxml>
-               <filereports>WDF TestSuite.txt</filereports>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>test</id>
-                  <goals>
-                     <goal>test</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.scoverage</groupId>
-            <artifactId>scoverage-maven-plugin</artifactId>
-            <version>${scoverage.plugin.version}</version>
-            <configuration>
-               <scalaVersion>${scala.version}</scalaVersion>
-               <aggregate>true</aggregate>
-               <highlighting>true</highlighting>
-               <!-- other parameters -->
-            </configuration>
-            <executions>
-               <execution>
-                  <id>coverage</id>
-                  <phase>test</phase>
-                  <goals>
-                     <goal>integration-report</goal>
-                  </goals>
-               </execution>
-            </executions>
          </plugin>
          <plugin>
             <groupId>org.scalastyle</groupId>
@@ -330,5 +328,4 @@
          </plugin>
       </plugins>
    </build>
-
 </project>
