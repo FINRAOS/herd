@@ -215,4 +215,27 @@ public class HerdDateUtils extends DateUtils
         Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
         return new Timestamp(DateUtils.truncate(date, Calendar.DATE).getTime());
     }
+
+    /**
+     * Converts a provided {@link XMLGregorianCalendar} calendar object to a {@link Timestamp} object
+     *
+     * @param xmlGregorianCalendar the specified {@link XMLGregorianCalendar} object
+     * @return the converted {@link Timestamp} object
+     */
+    public static Timestamp convertToTimestamp(XMLGregorianCalendar xmlGregorianCalendar)
+    {
+        return new Timestamp(xmlGregorianCalendar.toGregorianCalendar().getTimeInMillis());
+    }
+
+    /**
+     * Determines if a provided {@link XMLGregorianCalendar} calendar object contains a time portion
+     *
+     * @param xmlGregorianCalendar the specified {@link XMLGregorianCalendar} object
+     * @return true if the specified calendar object contains a time portion, otherwise false
+     */
+    public static Boolean containsTimePortion(XMLGregorianCalendar xmlGregorianCalendar)
+    {
+        Date date = xmlGregorianCalendar.toGregorianCalendar().getTime();
+        return !DateUtils.truncate(date, Calendar.DAY_OF_MONTH).equals(date);
+    }
 }

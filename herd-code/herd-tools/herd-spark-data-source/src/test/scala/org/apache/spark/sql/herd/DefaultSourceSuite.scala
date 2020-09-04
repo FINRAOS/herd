@@ -701,6 +701,6 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       val result = df.selectExpr("min(sdate)", "max(sdate)").collect()
     }
 
-    assertEquals(true, thrown.getMessage().contains("key not found"))
+    assertEquals(true, thrown.getCause().getMessage().contains("key not found"))
   }
 }

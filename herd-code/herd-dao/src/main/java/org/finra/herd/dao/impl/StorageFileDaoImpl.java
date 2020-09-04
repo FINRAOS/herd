@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import java.sql.BatchUpdateException;
@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,9 +27,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -112,33 +109,6 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
 
         return executeSingleResultQuery(criteria, String
             .format("Found more than one storage file with parameters {storageUnitId=\"%s\"," + " filePath=\"%s\"}.", storageUnitEntity.getId(), filePath));
-    }
-
-    @Override
-    public Long getStorageFileCount(String storageName, String filePathPrefix)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
-
-        // The criteria root is the storage files.
-        Root<StorageFileEntity> storageFileEntity = criteria.from(StorageFileEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<StorageFileEntity, StorageUnitEntity> storageUnitEntity = storageFileEntity.join(StorageFileEntity_.storageUnit);
-        Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
-
-        // Create path.
-        Expression<Long> storageFileCount = builder.count(storageFileEntity.get(StorageFileEntity_.id));
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate storageNameRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
-        Predicate filePathRestriction = builder.like(storageFileEntity.get(StorageFileEntity_.path), String.format("%s%%", filePathPrefix));
-
-        // Add the clauses for the query.
-        criteria.select(storageFileCount).where(builder.and(storageNameRestriction, filePathRestriction));
-
-        return entityManager.createQuery(criteria).getSingleResult();
     }
 
     @Override
@@ -228,9 +198,9 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         String currentUserId = herdDaoSecurityHelper.getCurrentUsername();
 
         // Create the insert into storage file table sql.
-        final String INSERT_INTO_STORAGE_FILE_TABLE_SQL = "INSERT INTO strge_file " +
-            "(strge_file_id, fully_qlfd_file_nm, file_size_in_bytes_nb, row_ct, strge_unit_id, creat_ts, creat_user_id) " +
-            "VALUES (nextval('strge_file_seq'), ?, ?, ?, ?, current_timestamp, '" + currentUserId + "')";
+        final String INSERT_INTO_STORAGE_FILE_TABLE_SQL =
+            "INSERT INTO strge_file " + "(strge_file_id, fully_qlfd_file_nm, file_size_in_bytes_nb, row_ct, strge_unit_id, creat_ts, creat_user_id) " +
+                "VALUES (nextval('strge_file_seq'), ?, ?, ?, ?, current_timestamp, '" + currentUserId + "')";
 
         // Obtain the datasource.
         final DataSource dataSource = jdbcTemplate.getDataSource();
@@ -305,15 +275,15 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         }
         catch (final BatchUpdateException batchUpdateException)
         {
-            LOGGER.error("Caught batch update exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\", updateCounts={}",
-                batchUpdateException.getSQLState(), batchUpdateException.getMessage(), batchUpdateException.getErrorCode(),
-                Arrays.toString(batchUpdateException.getUpdateCounts()));
+            LOGGER
+                .error("Caught batch update exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\", updateCounts={}", batchUpdateException.getSQLState(),
+                    batchUpdateException.getMessage(), batchUpdateException.getErrorCode(), Arrays.toString(batchUpdateException.getUpdateCounts()));
             throw new PersistenceException(batchUpdateException);
         }
         catch (final SQLException sqlException)
         {
-            LOGGER.error("Caught SQL exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\"",
-                sqlException.getSQLState(), sqlException.getMessage(), sqlException.getErrorCode());
+            LOGGER.error("Caught SQL exception. SQLState=\"{}\", Message=\"{}\", ErrorCode=\"{}\"", sqlException.getSQLState(), sqlException.getMessage(),
+                sqlException.getErrorCode());
             throw new PersistenceException(sqlException);
         }
     }
