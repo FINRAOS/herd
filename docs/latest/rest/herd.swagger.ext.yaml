@@ -6,13 +6,13 @@ info:
 basePath: "/herd-app/rest"
 tags:
 - name: "Expected Partition Value"
+- name: "Business Object Format"
+- name: "Business Object Definition"
+- name: "Namespace"
 - name: "Partition Key Group"
 - name: "Current User"
 - name: "Business Object Data"
 - name: "Storage"
-- name: "Business Object Definition"
-- name: "Namespace"
-- name: "Business Object Format"
 paths:
   /businessObjectData/availability:
     post:
