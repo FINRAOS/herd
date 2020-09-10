@@ -46,10 +46,12 @@ public class StorageFileDaoHelper
      *
      * @param storageUnitEntity the storage unit entity
      * @param storageFiles the list of storage files
+     * @param directoryPath the directory path for the storage file
      *
      * @return the list storage file entities
      */
-    public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles)
+    public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles,
+        String directoryPath)
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
 
@@ -58,7 +60,14 @@ public class StorageFileDaoHelper
             StorageFileEntity storageFileEntity = new StorageFileEntity();
             storageFileEntities.add(storageFileEntity);
             storageFileEntity.setStorageUnit(storageUnitEntity);
-            storageFileEntity.setPath(storageFile.getFilePath());
+            if (StringUtils.isNotBlank(directoryPath))
+            {
+                storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPath, ""));
+            }
+            else
+            {
+                storageFileEntity.setPath(storageFile.getFilePath());
+            }
             storageFileEntity.setFileSizeBytes(storageFile.getFileSizeBytes());
             storageFileEntity.setRowCount(storageFile.getRowCount());
         }

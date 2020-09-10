@@ -243,7 +243,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
                 validateFileExistence, validateFileSize, businessObjectDataKeyAsString);
         }
 
-        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity);
+        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity, directoryPathWithTrailingSlash);
     }
 
     /**
@@ -260,7 +260,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         List<StorageFile> storageFiles = businessObjectDataStorageFilesDto.getStorageFiles();
 
         // Add new storage files to the storage unit.
-        storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles);
+        storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPath());
 
         // Construct and return the response.
         return createBusinessObjectDataStorageFilesCreateResponse(storageUnitEntity.getStorage(), businessObjectDataEntity, storageFiles);

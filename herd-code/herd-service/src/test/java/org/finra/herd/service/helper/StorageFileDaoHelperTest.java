@@ -91,7 +91,7 @@ public class StorageFileDaoHelperTest
             Lists.newArrayList(new StorageFile(FILE_NAME, FILE_SIZE, ROW_COUNT), new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2));
 
         // Call the method under test.
-        List<StorageFileEntity> result = storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles);
+        List<StorageFileEntity> result = storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, DIRECTORY_PATH);
 
         // Validate the results.
         assertThat("Result size not equal to two.", result.size(), is(2));
