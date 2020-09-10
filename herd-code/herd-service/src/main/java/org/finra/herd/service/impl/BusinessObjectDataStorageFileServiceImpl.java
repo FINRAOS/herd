@@ -260,7 +260,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         List<StorageFile> storageFiles = businessObjectDataStorageFilesDto.getStorageFiles();
 
         // Add new storage files to the storage unit.
-        storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPath());
+        storageFileDaoHelper
+            .createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPathWithTrailingSlash());
 
         // Construct and return the response.
         return createBusinessObjectDataStorageFilesCreateResponse(storageUnitEntity.getStorage(), businessObjectDataEntity, storageFiles);

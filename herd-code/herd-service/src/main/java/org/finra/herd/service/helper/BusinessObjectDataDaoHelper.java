@@ -850,13 +850,10 @@ public class BusinessObjectDataDaoHelper
                     storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(
                         StringUtils.appendIfMissing(StringUtils.prependIfMissing(directoryPath, "/"), "/"), ""));
                 }
-                else if(validatePathPrefix)
+                else if (validatePathPrefix)
                 {
                     // Minimize the file path.
-                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(expectedS3KeyPrefix, ""));
-
-                    // Record the expected S3 Key prefix so that we can restore the full path when needed.
-                    storageUnitEntity.setDirectoryPath(expectedS3KeyPrefix);
+                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(StringUtils.appendIfMissing(expectedS3KeyPrefix, "/"), ""));
                 }
             }
         }

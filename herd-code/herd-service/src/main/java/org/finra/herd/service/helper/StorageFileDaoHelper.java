@@ -46,12 +46,12 @@ public class StorageFileDaoHelper
      *
      * @param storageUnitEntity the storage unit entity
      * @param storageFiles the list of storage files
-     * @param directoryPath the directory path for the storage file
+     * @param directoryPathWithTrailingSlash the directory path for the storage file
      *
      * @return the list storage file entities
      */
     public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles,
-        String directoryPath)
+        String directoryPathWithTrailingSlash)
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
 
@@ -60,9 +60,9 @@ public class StorageFileDaoHelper
             StorageFileEntity storageFileEntity = new StorageFileEntity();
             storageFileEntities.add(storageFileEntity);
             storageFileEntity.setStorageUnit(storageUnitEntity);
-            if (StringUtils.isNotBlank(directoryPath))
+            if (StringUtils.isNotBlank(directoryPathWithTrailingSlash))
             {
-                storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPath, ""));
+                storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
             }
             else
             {
