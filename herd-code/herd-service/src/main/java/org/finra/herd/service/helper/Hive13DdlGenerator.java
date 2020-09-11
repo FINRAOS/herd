@@ -566,48 +566,43 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(String.format("CLUSTERED BY %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomClusteredBy()));
         }
 
-        // Get Hive file format.
-        String hiveFileFormat = getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity());
-
-        // Add ROW FORMAT statement only if Hive file format is not ORC or PARQUET as they have their own structure defined in their specification.
-        if (!StringUtils.equals(hiveFileFormat, ORC_HIVE_FILE_FORMAT) && !StringUtils.equals(hiveFileFormat, PARQUET_HIVE_FILE_FORMAT))
+        if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()))
         {
-            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()))
+            // Add custom row format defined in business object format.
+            // This will override everything after "ROW FORMAT" including delimiter, escape value, null value statements defined in the business object format
+            // schema.
+            sb.append(String.format("ROW FORMAT %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()));
+        }
+        else
+        {
+            // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
+            // in the business object format schema.
+            sb.append("ROW FORMAT DELIMITED");
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
             {
-                // Add custom row format defined in business object format. This will override everything after "ROW FORMAT"
-                // including delimiter, escape value, null value statements defined in the business object format schema.
-                sb.append(String.format("ROW FORMAT %s\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomRowFormat()));
+                // Note that the escape character is only output when the delimiter is present.
+                sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
+                    StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
+                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
             }
-            else
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
             {
-                // We output delimiter character, collection items delimiter, map keys delimiter, escape character,
-                // and null value only when they are defined in the business object format schema.
-                sb.append("ROW FORMAT DELIMITED");
-                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
-                {
-                    // Note that the escape character is only output when the delimiter is present.
-                    sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
-                        StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
-                            escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
-                }
-                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
-                {
-                    sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter(), true))));
-                }
-                if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter()))
-                {
-                    sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter(), true))));
-                }
-                sb.append(String.format(" NULL DEFINED AS '%s'\n",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
+                sb.append(String.format(" COLLECTION ITEMS TERMINATED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter(), true))));
             }
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter()))
+            {
+                sb.append(String.format(" MAP KEYS TERMINATED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getMapKeysDelimiter(), true))));
+            }
+            sb.append(String.format(" NULL DEFINED AS '%s'\n",
+                escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
         }
 
         // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
-        sb.append(String.format("STORED AS %s%s\n", hiveFileFormat, generateDdlRequest.getPartitioned() ? ";\n" : ""));
+        sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
+            generateDdlRequest.getPartitioned() ? ";\n" : ""));
     }
 
     /**
