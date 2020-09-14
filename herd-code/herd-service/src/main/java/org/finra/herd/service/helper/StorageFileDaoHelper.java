@@ -46,28 +46,38 @@ public class StorageFileDaoHelper
      *
      * @param storageUnitEntity the storage unit entity
      * @param storageFiles the list of storage files
-     * @param directoryPathWithTrailingSlash the directory path for the storage file
+     * @param directoryPath the directory path for the storage file
      *
      * @return the list storage file entities
      */
     public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles,
-        String directoryPathWithTrailingSlash)
+        String directoryPath)
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
+
+        // If not already there, append slash to directory path, since it represents a directory.
+        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
 
         for (StorageFile storageFile : storageFiles)
         {
             StorageFileEntity storageFileEntity = new StorageFileEntity();
             storageFileEntities.add(storageFileEntity);
             storageFileEntity.setStorageUnit(storageUnitEntity);
-            if (StringUtils.isNotBlank(directoryPathWithTrailingSlash))
+
+            if (StringUtils.isNotBlank(directoryPath))
             {
-                storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
+                // Handle empty folder S3 marker as a special case.
+                if (StringUtils.equals(storageFile.getFilePath(), directoryPath + StorageFileEntity.S3_EMPTY_PARTITION))
+                {
+                    storageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+                }
+                // Otherwise, minimize the file path.
+                else
+                {
+                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
+                }
             }
-            else
-            {
-                storageFileEntity.setPath(storageFile.getFilePath());
-            }
+
             storageFileEntity.setFileSizeBytes(storageFile.getFileSizeBytes());
             storageFileEntity.setRowCount(storageFile.getRowCount());
         }

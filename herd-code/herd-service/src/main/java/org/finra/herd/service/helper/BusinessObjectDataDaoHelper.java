@@ -408,7 +408,9 @@ public class BusinessObjectDataDaoHelper
                 }
             }
         }
-        else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()))
+        // We will minimize the storage file path if the prefix validation is configured.
+        // In which case it is necessary to store the expectedS3KeyPrefix in the storage unit directory path.
+        else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()) || validatePathPrefix)
         {
             directoryPath = expectedS3KeyPrefix;
         }
@@ -844,16 +846,22 @@ public class BusinessObjectDataDaoHelper
                 // Minimize the file path occurs if
                 //     (a) directory path is specified in the request or
                 //     (b) prefix path template is present in Storage and prefix validation is configured.
-                if (directoryPath != null)
+                if (StringUtils.isNotBlank(directoryPath))
                 {
-                    // Minimize the file path.
-                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(
-                        StringUtils.appendIfMissing(StringUtils.prependIfMissing(directoryPath, "/"), "/"), ""));
-                }
-                else if (validatePathPrefix)
-                {
-                    // Minimize the file path.
-                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(StringUtils.appendIfMissing(expectedS3KeyPrefix, "/"), ""));
+                    // Handle empty folder S3 marker as a special case.
+                    if (StringUtils.equals(storageFile.getFilePath(), directoryPath + StorageFileEntity.S3_EMPTY_PARTITION))
+                    {
+                        storageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+                    }
+                    // Otherwise, minimize the file path.
+                    else
+                    {
+                        // If not already there, append slash to directory path, since it represents a directory.
+                        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
+
+                        // Minimize the file path.
+                        storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
+                    }
                 }
             }
         }

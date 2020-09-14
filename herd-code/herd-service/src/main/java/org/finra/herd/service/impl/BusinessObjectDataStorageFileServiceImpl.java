@@ -205,6 +205,9 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             directoryPath = s3KeyPrefixHelper
                 .buildS3KeyPrefix(storageUnitEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
             usingExpectedS3keyPrefix = true;
+
+            // We intend to minimize the file path, so store the expected S3 key prefix in the storage unit directory path.
+            storageUnitEntity.setDirectoryPath(directoryPath);
         }
 
         // If we know the directory path, ensure that there are no storage files already registered in this
@@ -243,7 +246,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
                 validateFileExistence, validateFileSize, businessObjectDataKeyAsString);
         }
 
-        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity, directoryPathWithTrailingSlash);
+        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity, directoryPath);
     }
 
     /**
@@ -261,7 +264,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
 
         // Add new storage files to the storage unit.
         storageFileDaoHelper
-            .createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPathWithTrailingSlash());
+            .createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPath());
 
         // Construct and return the response.
         return createBusinessObjectDataStorageFilesCreateResponse(storageUnitEntity.getStorage(), businessObjectDataEntity, storageFiles);
