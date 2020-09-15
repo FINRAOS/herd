@@ -138,7 +138,7 @@ public class BusinessObjectDataStorageUnitServiceImpl implements BusinessObjectD
         // Create a storage unit entity.
         StorageUnitEntity storageUnitEntity = businessObjectDataDaoHelper
             .createStorageUnitEntity(businessObjectDataEntity, storageEntity, request.getStorageDirectory(), request.getStorageFiles(),
-                request.isDiscoverStorageFiles());
+                request.isDiscoverStorageFiles(), true);
 
         // Persist the newly created storage unit entity.
         storageUnitDao.saveAndRefresh(storageUnitEntity);

@@ -132,7 +132,7 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
         when(storageDaoHelper.getStorageEntity(STORAGE_NAME)).thenReturn(storageEntity);
         when(businessObjectDataDaoHelper
-            .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES))
+            .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES, MINIMIZE_FILE_PATH))
             .thenReturn(storageUnitEntity);
         when(businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
         when(storageUnitHelper.createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME)).thenReturn(businessObjectDataStorageUnitKey);
@@ -148,7 +148,7 @@ public class BusinessObjectDataStorageUnitServiceImplTest extends AbstractServic
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(storageDaoHelper).getStorageEntity(STORAGE_NAME);
         verify(businessObjectDataDaoHelper)
-            .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES);
+            .createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageDirectory, storageFiles, NO_DISCOVER_STORAGE_FILES, MINIMIZE_FILE_PATH);
         verify(businessObjectDataHelper).createBusinessObjectDataKeyFromEntity(businessObjectDataEntity);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageFileHelper).createStorageFilesFromEntities(storageFileEntities);

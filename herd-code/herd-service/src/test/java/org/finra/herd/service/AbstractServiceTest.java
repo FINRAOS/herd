@@ -502,6 +502,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String METHOD_NAME_2 = "UT_MethodName_2_" + RANDOM_SUFFIX;
 
+    public static final Boolean MINIMIZE_FILE_PATH = true;
+
     public static final String NEGATIVE_COLUMN_SIZE = "-1" + RANDOM_SUFFIX;
 
     public static final String NO_ACTIVITI_JOB_NAME = null;
@@ -587,6 +589,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
+
+    public static final Boolean NO_MINIMIZE_FILE_PATH = false;
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
 
