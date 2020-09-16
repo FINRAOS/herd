@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.JobDefinitionDao;
@@ -247,7 +249,13 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         Assert.isTrue(!activitiJobXml.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
 
         // Ensure the Activiti XML doesn't contain a shell type task defined in it.
-        Assert.isTrue(!activitiJobXml.toLowerCase().contains("activiti:type=\"shell\""), "Activiti XML can not contain activiti shell type service tasks.");
+        Assert.isTrue(!StringUtils.trimAllWhitespace(activitiJobXml).toLowerCase().contains("activiti:type=\"shell\""),
+            "Activiti XML can not contain activiti shell type service tasks.");
+
+        // Ensure the Activiti XML doesn't contain reflection in immediate/deferred expression.
+        List<String> prohibitedExpressionList = Arrays.asList("${''.class.", "#{''.class.", "${\"\".class.", "#{\"\".class.");
+        Assert.isTrue(prohibitedExpressionList.stream().noneMatch(StringUtils.trimAllWhitespace(activitiJobXml)::contains),
+            "Activiti XML has prohibited expression.");
 
         // Convert Activiti XML into BpmnModel and validate.
         BpmnModel bpmnModel;

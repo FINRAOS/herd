@@ -464,8 +464,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
 
-    public static final Boolean INCLUDE_ROW_FORMAT_STATEMENT = true;
-
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
 
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
@@ -579,8 +577,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_INCLUDE_DROP_TABLE_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
-
-    public static final Boolean NO_INCLUDE_ROW_FORMAT_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 

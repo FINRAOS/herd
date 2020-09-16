@@ -1744,19 +1744,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             request.setBusinessObjectFormatFileType(businessObjectFormatFileType);
             BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
 
-            // Get the expected Hive file format.
-            String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
-
-            // Include ROW FORMAT statement in the expected DDL only if Hive file format is not ORC or PARQUET.
-            boolean includeRowFormatStatement = !expectedHiveFileFormat.equals(Hive13DdlGenerator.ORC_HIVE_FILE_FORMAT) &&
-                !expectedHiveFileFormat.equals(Hive13DdlGenerator.PARQUET_HIVE_FILE_FORMAT);
-
             // Validate the results.
+            String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
             String expectedDdl = businessObjectDataServiceTestHelper
                 .getExpectedBusinessObjectDataDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
                     expectedHiveFileFormat, businessObjectFormatFileType, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                    STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT,
-                    AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS, includeRowFormatStatement);
+                    STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true);
             businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
         }
     }
@@ -1958,7 +1951,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             String expectedDdl = businessObjectDataServiceTestHelper
                 .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
                     Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, i + 1, STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES,
-                    false, true, true, INCLUDE_DROP_PARTITIONS, INCLUDE_ROW_FORMAT_STATEMENT);
+                    false, true, true, INCLUDE_DROP_PARTITIONS);
             businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
         }
     }
