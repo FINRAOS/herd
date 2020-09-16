@@ -218,7 +218,7 @@ public class BusinessObjectDataDaoHelper
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request)
     {
         // By default, fileSize value is required.
-        return createBusinessObjectData(request, true, true);
+        return createBusinessObjectData(request, true, false);
     }
 
     /**
@@ -226,11 +226,11 @@ public class BusinessObjectDataDaoHelper
      *
      * @param request the request
      * @param fileSizeRequired specifies if fileSizeBytes value is required or not
-     * @param minimizeFilePath specifies if we will minimize the file path or not
+     * @param useFullFilePath specifies if a full file path is used
      *
      * @return the newly created and persisted business object data
      */
-    public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request, boolean fileSizeRequired, boolean minimizeFilePath)
+    public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request, boolean fileSizeRequired, boolean useFullFilePath)
     {
         if (StringUtils.isBlank(request.getStatus()))
         {
@@ -289,7 +289,7 @@ public class BusinessObjectDataDaoHelper
         Integer businessObjectDataVersion = existingBusinessObjectDataEntity == null ? BusinessObjectDataEntity.BUSINESS_OBJECT_DATA_INITIAL_VERSION :
             existingBusinessObjectDataEntity.getVersion() + 1;
         BusinessObjectDataEntity newVersionBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(request, businessObjectFormatEntity, businessObjectDataVersion, businessObjectDataStatusEntity, minimizeFilePath);
+            createBusinessObjectDataEntity(request, businessObjectFormatEntity, businessObjectDataVersion, businessObjectDataStatusEntity, useFullFilePath);
 
         // Update the existing latest business object data version entity, so it would not be flagged as the latest version anymore.
         if (existingBusinessObjectDataEntity != null)
@@ -326,12 +326,12 @@ public class BusinessObjectDataDaoHelper
      * @param storageDirectory the storage directory
      * @param storageFiles the list of storage files
      * @param isDiscoverStorageFiles specifies if we will discover storage files
-     * @param isMinimizeFilePath specifies if we will minimize the file path
+     * @param isUseFullFilePath specifies if we use the full file path
      *
      * @return the newly created storage unit entity
      */
     public StorageUnitEntity createStorageUnitEntity(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity,
-        StorageDirectory storageDirectory, List<StorageFile> storageFiles, Boolean isDiscoverStorageFiles, Boolean isMinimizeFilePath)
+        StorageDirectory storageDirectory, List<StorageFile> storageFiles, Boolean isDiscoverStorageFiles, Boolean isUseFullFilePath)
     {
         // Get the storage unit status entity for the ENABLED status.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
@@ -430,7 +430,7 @@ public class BusinessObjectDataDaoHelper
         // Create the storage file entities.
         createStorageFileEntitiesFromStorageFiles(resultStorageFiles, storageEntity, BooleanUtils.isTrue(isDiscoverStorageFiles), expectedS3KeyPrefix,
             storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform, businessObjectFormat,
-            businessObjectDataKey, isMinimizeFilePath);
+            businessObjectDataKey, isUseFullFilePath);
 
         return storageUnitEntity;
     }
@@ -685,13 +685,13 @@ public class BusinessObjectDataDaoHelper
      * @param request the request.
      * @param businessObjectFormatEntity the business object format entity.
      * @param businessObjectDataVersion the business object data version.
-     * @param isMinimizeFilePath specifies if we will minimize the file path.
+     * @param isUseFullFilePath specifies if we will use the full file path.
      *
      * @return the newly created business object data entity.
      */
     private BusinessObjectDataEntity createBusinessObjectDataEntity(BusinessObjectDataCreateRequest request,
         BusinessObjectFormatEntity businessObjectFormatEntity, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
-        boolean isMinimizeFilePath)
+        boolean isUseFullFilePath)
     {
         // Create a new entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
@@ -708,7 +708,7 @@ public class BusinessObjectDataDaoHelper
 
         // Create the storage unit entities.
         businessObjectDataEntity
-            .setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectDataEntity, isMinimizeFilePath));
+            .setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectDataEntity, isUseFullFilePath));
 
         // Create the attributes.
         List<BusinessObjectDataAttributeEntity> attributeEntities = new ArrayList<>();
@@ -765,14 +765,14 @@ public class BusinessObjectDataDaoHelper
      * @param isS3StoragePlatform specifies whether the storage platform type is S3
      * @param businessObjectFormat the business object format
      * @param businessObjectDataKey the business object data key
-     * @param isMinimizeFilePath specifies if we will minimize the file path
+     * @param isUseFullFilePath specifies if we will use the full file path
      *
      * @return the list of storage file entities
      */
     private List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(List<StorageFile> storageFiles, StorageEntity storageEntity,
         boolean storageFilesDiscovered, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity, String directoryPath, boolean validatePathPrefix,
         boolean validateFileExistence, boolean validateFileSize, boolean isS3StoragePlatform, BusinessObjectFormat businessObjectFormat,
-        BusinessObjectDataKey businessObjectDataKey, boolean isMinimizeFilePath)
+        BusinessObjectDataKey businessObjectDataKey, boolean isUseFullFilePath)
     {
         List<StorageFileEntity> storageFileEntities = null;
 
@@ -852,7 +852,7 @@ public class BusinessObjectDataDaoHelper
                 // Minimize the file path occurs if
                 //     (a) directory path is specified in the request or
                 //     (b) prefix path template is present in Storage and prefix validation is configured.
-                if (isMinimizeFilePath && StringUtils.isNotBlank(directoryPath))
+                if (!isUseFullFilePath && StringUtils.isNotBlank(directoryPath))
                 {
                     // Handle empty folder S3 marker as a special case.
                     if (StringUtils.equals(storageFile.getFilePath(), directoryPath + StorageFileEntity.S3_EMPTY_PARTITION))
@@ -880,12 +880,12 @@ public class BusinessObjectDataDaoHelper
      *
      * @param storageUnitCreateRequests the storage unit create requests
      * @param businessObjectDataEntity the business object data entity
-     * @param isMinimizeFilePath specifies if we will minimize the file path
+     * @param isUseFullFilePath specifies if we will use the full file path
      *
      * @return the list of storage unit entities.
      */
     private List<StorageUnitEntity> createStorageUnitEntitiesFromStorageUnits(List<StorageUnitCreateRequest> storageUnitCreateRequests,
-        BusinessObjectDataEntity businessObjectDataEntity, boolean isMinimizeFilePath)
+        BusinessObjectDataEntity businessObjectDataEntity, boolean isUseFullFilePath)
     {
         // Create the storage units for the data.
         List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
@@ -898,7 +898,7 @@ public class BusinessObjectDataDaoHelper
             // Create storage unit and add it to the result list.
             storageUnitEntities.add(
                 createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageUnit.getStorageDirectory(), storageUnit.getStorageFiles(),
-                    storageUnit.isDiscoverStorageFiles(), isMinimizeFilePath));
+                    storageUnit.isDiscoverStorageFiles(), isUseFullFilePath));
         }
 
         return storageUnitEntities;

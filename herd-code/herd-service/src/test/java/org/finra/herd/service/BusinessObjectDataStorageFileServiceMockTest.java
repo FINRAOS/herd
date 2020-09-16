@@ -206,7 +206,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -294,7 +294,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -382,7 +382,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -470,7 +470,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -556,7 +556,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES_WITH_NULL_ROW_COUNT);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES_WITH_NULL_ROW_COUNT, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES_WITH_NULL_ROW_COUNT, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES_WITH_NULL_ROW_COUNT);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -642,7 +642,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(STORAGE_FILES_WITH_PATH);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES_WITH_PATH, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, STORAGE_FILES_WITH_PATH, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(STORAGE_FILES_WITH_PATH);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -728,7 +728,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
         verify(businessObjectDataHelper).businessObjectDataKeyToString(BUSINESS_OBJECT_DATA_KEY);
         verify(storageFileHelper).getFilePathsFromStorageFiles(TEST_S3_STORAGE_FILES);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, TEST_S3_STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, TEST_S3_STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(storageFileHelper).validateCreateRequestStorageFiles(TEST_S3_STORAGE_FILES);
         verify(storageFileHelper).getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
         verify(storageHelper, times(3))
@@ -847,7 +847,7 @@ public class BusinessObjectDataStorageFileServiceMockTest extends AbstractServic
         verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(storageFileHelper).getStorageFilesMapFromS3ObjectSummaries(s3ObjectSummaries);
         verify(storageFileHelper).validateStorageFile(TEST_S3_STORAGE_FILES.get(0), S3_BUCKET_NAME, actualS3Keys, true);
-        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, TEST_S3_STORAGE_FILES, null);
+        verify(storageFileDaoHelper).createStorageFileEntitiesFromStorageFiles(storageUnitEntity, TEST_S3_STORAGE_FILES, NO_DIRECTORY_PATH);
         verify(businessObjectDataHelper).getSubPartitionValues(businessObjectDataEntity);
         verifyNoMoreInteractionsHelper();
     }

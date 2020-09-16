@@ -502,8 +502,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String METHOD_NAME_2 = "UT_MethodName_2_" + RANDOM_SUFFIX;
 
-    public static final Boolean MINIMIZE_FILE_PATH = true;
-
     public static final String NEGATIVE_COLUMN_SIZE = "-1" + RANDOM_SUFFIX;
 
     public static final String NO_ACTIVITI_JOB_NAME = null;
@@ -554,6 +552,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
 
+    public static final String NO_DIRECTORY_PATH = null;
+
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
     public static final Boolean NO_DRY_RUN = false;
@@ -589,8 +589,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
-
-    public static final Boolean NO_MINIMIZE_FILE_PATH = false;
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
 
@@ -645,6 +643,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
+
+    public static final Boolean NO_USE_FULL_FILE_PATH = false;
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
@@ -827,6 +827,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "      <transmission-id>$uuid</transmission-id>\n" +
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
+
+    public static final Boolean USE_FULL_FILE_PATH = true;
 
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 
