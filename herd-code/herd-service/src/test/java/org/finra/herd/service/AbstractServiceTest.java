@@ -444,6 +444,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Boolean FILE_SIZE_REQUIRED = true;
+
     public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
 
     public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
