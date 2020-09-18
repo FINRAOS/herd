@@ -22,12 +22,14 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
+import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -529,5 +531,28 @@ public class BusinessObjectDataDaoHelperTest extends AbstractServiceTest
             businessObjectDataDaoHelper.createBusinessObjectData(businessObjectDataCreateRequest, FILE_SIZE_REQUIRED, NO_USE_FULL_FILE_PATH);
 
         assertEquals("foo", businessObjectData.getStorageUnits().get(0).getStorageDirectory().getDirectoryPath());
+    }
+
+    @Test
+    public void
+    testCreateBusinessObjectDataWithS3EmptyPartitionWithMinimizedFilePath()
+    {
+        // Create the initial version of the business object data without specifying storage files.
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
+
+        String directoryPath = request.getStorageUnits().get(0).getStorageDirectory().getDirectoryPath();
+
+        List<StorageFile> storageFiles = request.getStorageUnits().get(0).getStorageFiles();
+
+        for (StorageFile storageFile : storageFiles)
+        {
+            storageFile.setFilePath(directoryPath + StorageFileEntity.S3_EMPTY_PARTITION);
+        }
+
+        // Call the method under test to create a business object data object.
+        BusinessObjectData resultBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(request, FILE_SIZE_REQUIRED, NO_USE_FULL_FILE_PATH);
+
+        // Verify the results.
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
     }
 }
