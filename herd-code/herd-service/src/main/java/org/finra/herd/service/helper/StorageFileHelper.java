@@ -161,24 +161,6 @@ public class StorageFileHelper
     public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
         BusinessObjectDataKey businessObjectDataKey)
     {
-        return getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, false);
-    }
-
-    /**
-     * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
-     * empty and that all storage files match the expected s3 key prefix value.
-     *
-     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
-     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     * @param restoreDirectoryPath apply storage unit directory when creating storage files
-     *
-     * @return the list of storage files
-     */
-    public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
-        BusinessObjectDataKey businessObjectDataKey, boolean restoreDirectoryPath)
-    {
         // Check if the list of storage files is not empty.
         if (CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()))
         {
@@ -188,9 +170,7 @@ public class StorageFileHelper
         }
 
         // Retrieve storage files.
-        List<StorageFile> storageFiles =
-            restoreDirectoryPath ? createStorageFilesFromEntities(storageUnitEntity.getStorageFiles(), storageUnitEntity.getDirectoryPath()) :
-                createStorageFilesFromEntities(storageUnitEntity.getStorageFiles());
+        List<StorageFile> storageFiles = createStorageFilesFromEntities(storageUnitEntity.getStorageFiles(), storageUnitEntity.getDirectoryPath());
 
         // Validate storage file paths registered with this business object data in the specified storage.
         validateStorageFilePaths(getFilePathsFromStorageFiles(storageFiles), s3KeyPrefix, businessObjectDataKey, storageName);

@@ -32,35 +32,6 @@ import org.finra.herd.service.helper.EmrStepHelper;
  */
 public class EmrServiceWithAccountIdTest extends EmrServiceTest
 {
-    /**
-     * This method tests the happy path scenario for adding security groups.
-     */
-    @Test
-    public void testAddSecurityGroup() throws Exception
-    {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
-        // Create a trusting AWS account.
-        trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
-
-        EmrClusterCreateRequest request = getNewEmrClusterCreateRequestWithAccountId();
-        emrService.createCluster(request);
-
-        // Create the Add security group.
-        EmrMasterSecurityGroupAddRequest emrMasterSecurityGroupAddRequest = getNewEmrAddSecurityGroupMasterRequestWithAccountId(request.getEmrClusterName());
-        EmrMasterSecurityGroup emrMasterSecurityGroup = emrService.addSecurityGroupsToClusterMaster(emrMasterSecurityGroupAddRequest);
-
-        // Validate the returned object against the input.
-        assertNotNull(emrMasterSecurityGroup);
-        assertTrue(emrMasterSecurityGroup.getNamespace().equals(request.getNamespace()));
-        assertTrue(emrMasterSecurityGroup.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
-        assertTrue(emrMasterSecurityGroup.getEmrClusterName().equals(request.getEmrClusterName()));
-    }
-
     @Test
     public void testCreateEmrClusterWithAccountId() throws Exception
     {

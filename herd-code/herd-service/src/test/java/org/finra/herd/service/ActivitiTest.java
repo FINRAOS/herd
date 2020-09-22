@@ -38,7 +38,7 @@ public class ActivitiTest extends AbstractServiceTest
     private RuntimeService runtimeService;
 
     @Test
-    public void testDeploySubmitAndDeleteWorkflow() throws Exception
+    public void testDeploySubmitAndDeleteWorkflow()
     {
         // Deploy test workflow.
         String deploymentId = deployWorkflow();
@@ -50,21 +50,21 @@ public class ActivitiTest extends AbstractServiceTest
         deleteWorkflow(deploymentId);
     }
 
-    private String deployWorkflow() throws Exception
+    private String deployWorkflow()
     {
         Deployment deployment = repositoryService.createDeployment().addClasspathResource(ACTIVITI_XML_HERD_WORKFLOW).deploy();
         assertNotNull(deployment.getId());
         return deployment.getId();
     }
 
-    private String submitJob() throws Exception
+    private String submitJob()
     {
         String processInstanceId = runtimeService.startProcessInstanceByKey(TEST_ACTIVITY_WORKFLOW_ID).getId();
         assertNotNull(processInstanceId);
         return processInstanceId;
     }
 
-    private void deleteWorkflow(String deploymentId) throws Exception
+    private void deleteWorkflow(String deploymentId)
     {
         repositoryService.deleteDeployment(deploymentId);
         List<String> deployResources = repositoryService.getDeploymentResourceNames(deploymentId);

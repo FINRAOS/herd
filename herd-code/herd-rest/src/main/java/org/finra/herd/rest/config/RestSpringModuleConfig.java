@@ -45,6 +45,7 @@ import org.springframework.web.util.UrlPathHelper;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.HerdCharacterEscapeHandler;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.rest.HerdSchemaValidationEventHandler;
 
 /**
  * REST Spring module configuration. This configuration doesn't use the @EnableWebMvc annotation and instead extends WebMvcConfigurationSupport so we have the
@@ -136,6 +137,18 @@ public class RestSpringModuleConfig extends WebMvcConfigurationSupport
     }
 
     /**
+     * Gets a new {@link HerdSchemaValidationEventHandler} that handles JAXB validation events which can then be
+     * attached to Herd's JAXB marshaller/unmarshaller
+     *
+     * @return the newly created validation event handler
+     */
+    @Bean
+    public HerdSchemaValidationEventHandler herdSchemaValidationEventHandler()
+    {
+        return new HerdSchemaValidationEventHandler();
+    }
+
+    /**
      * Gets a new JAXB marshaller that is aware of our XSD and can perform schema validation. It is also aware of all our auto-generated classes that are in the
      * org.finra.herd.model.api.xml package. Note that REST endpoints that use Java objects which are not in this package will not use this marshaller and will
      * not get schema validated which is good since they don't have an XSD.
@@ -149,7 +162,9 @@ public class RestSpringModuleConfig extends WebMvcConfigurationSupport
         {
             // Create the marshaller that is aware of our Java XSD and it's auto-generated classes.
             Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-            marshaller.setPackagesToScan("org.finra.herd.model.api.xml");
+            // Set schema validation handler
+            marshaller.setValidationEventHandler(herdSchemaValidationEventHandler());
+            marshaller.setPackagesToScan("org.finra.herd.model.api.xml", "org.finra.herd.model.api.adapters");
             marshaller.setSchemas(resourceResolver.getResources("classpath:herd.xsd"));
 
             // Get the JAXB XML headers from the environment.

@@ -35,6 +35,8 @@ public final class ToolsCommonConstants
      */
     public static final String LOG4J_CONFIG_LOCATION = "classpath:herd-console-info-log4j2.xml";
 
+    public static final String ENV_VAR_PREFIX = "HERD_";
+
     private ToolsCommonConstants()
     {
         // Prevent classes from instantiating.

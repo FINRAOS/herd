@@ -34,16 +34,6 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 @Primary
 public class TestEmrServiceImpl extends EmrServiceImpl
 {
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Overwrite the base class method to change transactional attributes.
-     */
-    @Override
-    public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest request) throws Exception
-    {
-        return addSecurityGroupsToClusterMasterImpl(request);
-    }
 
     /**
      * {@inheritDoc}

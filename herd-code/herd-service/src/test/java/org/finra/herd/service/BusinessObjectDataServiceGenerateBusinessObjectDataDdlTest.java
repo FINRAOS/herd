@@ -1412,8 +1412,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         String partitionKey = partitionColumns.get(0).getName();
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE, null, null,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, null, SCHEMA_NULL_VALUE_BACKSLASH_N,
-            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, null, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);

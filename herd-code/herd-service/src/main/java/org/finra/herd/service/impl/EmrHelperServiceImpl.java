@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.List;
@@ -42,6 +42,8 @@ import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.dto.EmrClusterCreateDto;
+import org.finra.herd.model.dto.EmrClusterPreCreateDto;
+import org.finra.herd.model.dto.EmrParamsDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.service.EmrHelperService;
@@ -50,7 +52,6 @@ import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
-
 
 /**
  * EmrHelperServiceImpl
@@ -85,6 +86,9 @@ public class EmrHelperServiceImpl implements EmrHelperService
     private HerdDao herdDao;
 
     @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
@@ -93,9 +97,6 @@ public class EmrHelperServiceImpl implements EmrHelperService
     @Autowired
     private XmlHelper xmlHelper;
 
-    @Autowired
-    private JsonHelper jsonHelper;
-
     /**
      * {@inheritDoc}
      * <p/>
@@ -103,10 +104,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
      */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public EmrClusterCreateDto emrCreateClusterAwsSpecificSteps(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
-        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
+    public EmrClusterCreateDto emrCreateClusterAwsSpecificSteps(EmrClusterCreateRequest emrClusterCreateRequest, EmrClusterDefinition emrClusterDefinition,
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrParamsDto emrParamsDto)
     {
-        return emrCreateClusterAwsSpecificStepsImpl(request, emrClusterDefinition, emrClusterAlternateKeyDto);
+        return emrCreateClusterAwsSpecificStepsImpl(emrClusterCreateRequest, emrClusterDefinition, emrClusterAlternateKeyDto, emrParamsDto);
     }
 
     /**
@@ -116,9 +117,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EmrClusterDefinition emrPreCreateClusterSteps(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest request) throws Exception
+    public EmrClusterPreCreateDto emrPreCreateClusterSteps(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest emrClusterCreateRequest)
+        throws Exception
     {
-        return emrPreCreateClusterStepsImpl(emrClusterAlternateKeyDto, request);
+        return emrPreCreateClusterStepsImpl(emrClusterAlternateKeyDto, emrClusterCreateRequest);
     }
 
     /**
@@ -140,27 +142,24 @@ public class EmrHelperServiceImpl implements EmrHelperService
      * @param request the EMR cluster create request
      * @param emrClusterDefinition the EMR cluster definition object
      * @param emrClusterAlternateKeyDto the EMR cluster alternate key data transfer object
+     * @param emrParamsDto the AWS parameters DTO
      *
      * @return the EMR cluster create data transfer object
      */
     EmrClusterCreateDto emrCreateClusterAwsSpecificStepsImpl(EmrClusterCreateRequest request, EmrClusterDefinition emrClusterDefinition,
-        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto)
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrParamsDto emrParamsDto)
     {
-        String accountId = emrClusterDefinition.getAccountId();
-
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAccountId(accountId);
-
         // RunJobFlow creates and starts running a new cluster
         // The RunJobFlow request can contain InstanceFleets parameters or InstanceGroups (InstanceDefinitions) parameters, but not both
         // If instance group definitions are specified, find best price and update definition.
         // Else instance fleet definitions are specified. If minimum ip filter is greater than 0, find valid subnets and update definition.
         if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
         {
-            emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+            emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, emrParamsDto);
         }
         else
         {
-            updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+            updateEmrClusterDefinitionWithValidInstanceFleetSubnets(emrClusterAlternateKeyDto, emrClusterDefinition, emrParamsDto);
         }
 
         // The cluster ID record.
@@ -195,14 +194,15 @@ public class EmrHelperServiceImpl implements EmrHelperService
                     LOGGER.info("Entering synchronized block.");
 
                     // Try to get an active EMR cluster by its name.
-                    ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, accountId, awsParamsDto);
+                    ClusterSummary clusterSummary =
+                        emrDao.getActiveEmrClusterByNameAndAccountId(clusterName, emrClusterDefinition.getAccountId(), emrParamsDto);
 
                     // If cluster does not already exist.
                     if (clusterSummary == null)
                     {
-                        clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
+                        clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, emrParamsDto);
                         emrClusterCreated = true;
-                        emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, awsParamsDto);
+                        emrClusterStatus = emrDao.getEmrClusterStatusById(clusterId, emrParamsDto);
 
                     }
                     // If the cluster already exists.
@@ -239,24 +239,36 @@ public class EmrHelperServiceImpl implements EmrHelperService
      * @param emrClusterAlternateKeyDto the EMR cluster alternate key data transfer object
      * @param request the EMR cluster create request
      *
-     * @return the EMR cluster definition
+     * @return the EMR cluster pre-create DTO with cluster definition and AWS parameters
+     *
      * @throws Exception Exception when the original EMR cluster definition XML is malformed
      */
-    EmrClusterDefinition emrPreCreateClusterStepsImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest request) throws Exception
+    EmrClusterPreCreateDto emrPreCreateClusterStepsImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterCreateRequest request) throws Exception
     {
         // Get the EMR cluster definition and ensure it exists.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(
             new EmrClusterDefinitionKey(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName()));
 
-        // Replace all S3 managed location variables in xml
-        String toReplace = getS3ManagedReplaceString();
-        String replacedConfigXml = emrClusterDefinitionEntity.getConfiguration().replaceAll(toReplace, emrHelper.getS3StagingLocation());
+        // Get EMR cluster definition XML stored in the database.
+        String originalClusterDefinitionXml = emrClusterDefinitionEntity.getConfiguration();
 
         // Unmarshal definition xml into JAXB object.
-        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, replacedConfigXml);
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, originalClusterDefinitionXml);
 
         // Perform override if override is set.
         overrideEmrClusterDefinition(emrClusterDefinition, request.getEmrClusterDefinitionOverride());
+
+        // Get account ID.
+        String accountId = emrClusterDefinition.getAccountId();
+
+        // Get AWS parameters.
+        EmrParamsDto emrParamsDto = emrHelper.getEmrParamsDtoByAccountId(accountId);
+
+        // Replace all S3 managed location variables in EMR cluster definition XML.
+        String overriddenEmrClusterDefinitionXml = xmlHelper.objectToXml(emrClusterDefinition);
+        String replacedEmrClusterDefinitionXml = overriddenEmrClusterDefinitionXml
+            .replaceAll(getS3ManagedReplaceString(), emrHelper.getS3StagingLocation(emrParamsDto.getTrustingAccountStagingBucketName()));
+        emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, replacedEmrClusterDefinitionXml);
 
         // Perform the EMR cluster definition configuration validation.
         emrClusterDefinitionHelper.validateEmrClusterDefinitionConfiguration(emrClusterDefinition);
@@ -265,7 +277,8 @@ public class EmrHelperServiceImpl implements EmrHelperService
         namespaceIamRoleAuthorizationHelper.checkPermissions(emrClusterDefinitionEntity.getNamespace(), emrClusterDefinition.getServiceIamRole(),
             emrClusterDefinition.getEc2NodeIamProfileName());
 
-        return emrClusterDefinition;
+        // Create and return EMR cluster pre-create DTO.
+        return new EmrClusterPreCreateDto(emrClusterDefinition, emrParamsDto);
     }
 
     /**
@@ -389,7 +402,7 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
             }
-            if (emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter() != null )
+            if (emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter() != null)
             {
                 emrClusterDefinition.setInstanceFleetMinimumIpAvailableFilter(emrClusterDefinitionOverride.getInstanceFleetMinimumIpAvailableFilter());
             }
@@ -457,6 +470,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setKerberosAttributes(emrClusterDefinitionOverride.getKerberosAttributes());
             }
+            if (emrClusterDefinitionOverride.getStepConcurrencyLevel() != null)
+            {
+                emrClusterDefinition.setStepConcurrencyLevel(emrClusterDefinitionOverride.getStepConcurrencyLevel());
+            }
         }
     }
 
@@ -472,9 +489,8 @@ public class EmrHelperServiceImpl implements EmrHelperService
      * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated
      * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
      */
-    void updateEmrClusterDefinitionWithValidInstanceFleetSubnets(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto,
-                                                                 EmrClusterDefinition emrClusterDefinition,
-                                                                 AwsParamsDto awsParamsDto)
+    void updateEmrClusterDefinitionWithValidInstanceFleetSubnets(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition,
+        AwsParamsDto awsParamsDto)
     {
         // Get total count of instances this definition will attempt to create
         Integer instanceFleetMinimumIpAvailableFilter = emrClusterDefinition.getInstanceFleetMinimumIpAvailableFilter();
@@ -487,23 +503,24 @@ public class EmrHelperServiceImpl implements EmrHelperService
         // Get the subnet information
         // Makes AWS EC2 call DescribeSubnets
 
-        List<Subnet> subnets  = emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto);
+        List<Subnet> subnets = emrPricingHelper.getSubnets(emrClusterDefinition, awsParamsDto);
+
+        List<String> validSubnetIds =
+            subnets.stream().filter(subnet -> subnet.getAvailableIpAddressCount() >= instanceFleetMinimumIpAvailableFilter).map(Subnet::getSubnetId)
+                .collect(Collectors.toList());
 
         String contextInfo = String.format("namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
-                        "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s", emrClusterAlternateKeyDto.getNamespace(),
-                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
-                jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))));
+                "instanceFleetMinimumIpAvailableFilter=%s subnetAvailableIpAddressCounts=%s validSubnetIds=%s", emrClusterAlternateKeyDto.getNamespace(),
+            emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), instanceFleetMinimumIpAvailableFilter,
+            jsonHelper.objectToJson(subnets.stream().collect(Collectors.toMap(Subnet::getSubnetId, Subnet::getAvailableIpAddressCount))),
+            validSubnetIds.toString());
 
         LOGGER.info("Current IP availability: {}", contextInfo);
 
-        List<String> validSubnetIds = subnets.stream()
-                .filter(subnet -> subnet.getAvailableIpAddressCount() >= instanceFleetMinimumIpAvailableFilter)
-                .map(Subnet::getSubnetId).collect(Collectors.toList());
-
         if (validSubnetIds.isEmpty())
         {
-            throw new IllegalArgumentException( "Specified subnets do not have enough available IP addresses required for the instance fleet. " +
-                    "Current IP availability: " + contextInfo);
+            throw new IllegalArgumentException(
+                "Specified subnets do not have enough available IP addresses required for the instance fleet. " + "Current IP availability: " + contextInfo);
         }
 
         // Pass list of valid subnet ids back to EMR cluster definition

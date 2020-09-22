@@ -2633,8 +2633,8 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @throws Exception
      */
-    public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths, boolean isEmptyFolder)
-        throws Exception
+    public void prepareTestS3Files(String bucketName, String s3KeyPrefix, Path localTempPath, List<String> localFilePaths, List<String> directoryPaths,
+        boolean isEmptyFolder) throws Exception
     {
         // Create local test files.
         for (String file : localFilePaths)

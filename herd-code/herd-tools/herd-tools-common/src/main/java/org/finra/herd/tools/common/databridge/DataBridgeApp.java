@@ -28,6 +28,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
+import org.finra.herd.tools.common.ToolsArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
@@ -66,6 +67,8 @@ public abstract class DataBridgeApp
     protected Option usernameOpt;
 
     protected Option passwordOpt;
+
+    protected Option enableEnvVariablesOpt;
 
     protected Option trustSelfSignedCertificateOpt;
 
@@ -174,6 +177,8 @@ public abstract class DataBridgeApp
             sslOpt = argParser.addArgument("s", "ssl", true, "Enable or disable SSL (HTTPS).", false);
             usernameOpt = argParser.addArgument("u", "username", true, "The username for HTTPS client authentication.", false);
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
+            enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
+                "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
             disableHostnameVerificationOpt =
@@ -214,10 +219,15 @@ public abstract class DataBridgeApp
             trustSelfSignedCertificate = argParser.getStringValueAsBoolean(trustSelfSignedCertificateOpt, false);
             disableHostnameVerification = argParser.getStringValueAsBoolean(disableHostnameVerificationOpt, false);
 
-            // Username and password are required when useSsl is enabled.
-            if (useSsl && (StringUtils.isBlank(argParser.getStringValue(usernameOpt)) || StringUtils.isBlank(argParser.getStringValue(passwordOpt))))
+            if (useSsl)
             {
-                throw new ParseException("Username and password are required when SSL is enabled.");
+                // Username is required when useSsl is enabled.
+                if (StringUtils.isBlank(argParser.getStringValue(usernameOpt)))
+                {
+                    throw new ParseException("Username is required when SSL is enabled.");
+                }
+                // Password or enableEnvVariables with corresponding env var is required when useSsl is enabled.
+                ToolsArgumentHelper.validateCliEnvArgument(argParser, passwordOpt, enableEnvVariablesOpt);
             }
 
             // Ensure that both the S3 secret and access keys were specified or both not specified.

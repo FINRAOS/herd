@@ -18,7 +18,9 @@ package org.finra.herd.tools.downloader;
 import java.io.File;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.springframework.context.ApplicationContext;
 
 import org.finra.herd.tools.common.databridge.DataBridgeApp;
@@ -29,6 +31,9 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
  */
 public class DownloaderAppTest extends AbstractDownloaderTest
 {
+    @Rule
+    public EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     private DownloaderApp downloaderApp = new DownloaderApp()
     {
         protected ApplicationContext createApplicationContext()
@@ -199,6 +204,61 @@ public class DownloaderAppTest extends AbstractDownloaderTest
 
         // We are expecting this to fail since SSL is enabled and username is not passed.
         runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.FAILURE);
+    }
+
+    @Test
+    public void testDownloaderAppSslEnabledEnvPassword() throws Exception
+    {
+        environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
+        // Create the downloader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
+
+        final String[] args =
+            new String[] {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+                LOCAL_TEMP_PATH_OUTPUT.toString(), "--manifestPath", manifestFile.getPath(), "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+                WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--enableEnvVariables", "true",
+                "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true", "--httpProxyHost", HTTP_PROXY_HOST, "--httpProxyPort",
+                HTTP_PROXY_PORT.toString()};
+
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+
+        environmentVariables.clear("HERD_PASSWORD");
+    }
+
+    @Test
+    public void testDownloaderAppSslEnabledCliAndEnvPasswordCliPasswordUsed() throws Exception
+    {
+        // Create the downloader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
+
+        // CLI Password being used
+        environmentVariables.set("HERD_PASSWORD", "");
+        final String[] args =
+            new String[] {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+                LOCAL_TEMP_PATH_OUTPUT.toString(), "--manifestPath", manifestFile.getPath(), "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+                WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD,
+                "--enableEnvVariables", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true", "--httpProxyHost",
+                HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString()};
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+        environmentVariables.clear("HERD_PASSWORD");
+    }
+
+    @Test
+    public void testDownloaderAppSslEnabledCliAndEnvPasswordEnvPasswordUsed() throws Exception
+    {
+        // Create the downloader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
+
+        // ENV Password being used
+        environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
+        final String[] argsWithEnvPassword =
+            new String[] {"--s3AccessKey", S3_ACCESS_KEY, "--s3SecretKey", S3_SECRET_KEY, "--s3Endpoint", S3_ENDPOINT_US_STANDARD, "--localPath",
+                LOCAL_TEMP_PATH_OUTPUT.toString(), "--manifestPath", manifestFile.getPath(), "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort",
+                WEB_SERVICE_HTTPS_PORT.toString(), "--ssl", "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD,
+                "--enableEnvVariables", "true", "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true", "--httpProxyHost",
+                HTTP_PROXY_HOST, "--httpProxyPort", HTTP_PROXY_PORT.toString()};
+        runDataBridgeAndCheckReturnValue(downloaderApp, argsWithEnvPassword, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+        environmentVariables.clear("HERD_PASSWORD");
     }
 
     @Test

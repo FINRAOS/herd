@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.util.introspection.SecureUberspector;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,6 +39,7 @@ public class VelocityHelper
     public VelocityHelper()
     {
         Velocity.setProperty(RuntimeConstants.RUNTIME_REFERENCES_STRICT, true);
+        Velocity.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         Velocity.init();
     }
 

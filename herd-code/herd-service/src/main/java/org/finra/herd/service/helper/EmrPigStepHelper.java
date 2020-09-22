@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import org.finra.herd.model.api.xml.EmrPigStepAddRequest;
 public class EmrPigStepHelper extends EmrStepHelper
 {
     @Override
-    public Object buildResponseFromRequest(Object stepRequest)
+    public Object buildResponseFromRequest(Object stepRequest, String trustingAccountStagingBucketName)
     {
         EmrPigStepAddRequest emrPigStepAddRequest = (EmrPigStepAddRequest) stepRequest;
         EmrPigStep step = new EmrPigStep();
@@ -44,7 +44,8 @@ public class EmrPigStepHelper extends EmrStepHelper
         step.setEmrClusterName(emrPigStepAddRequest.getEmrClusterName());
 
         step.setStepName(emrPigStepAddRequest.getStepName().trim());
-        step.setScriptLocation(emrPigStepAddRequest.getScriptLocation().trim().replaceAll(getS3ManagedReplaceString(), emrHelper.getS3StagingLocation()));
+        step.setScriptLocation(emrPigStepAddRequest.getScriptLocation().trim()
+            .replaceAll(getS3ManagedReplaceString(), emrHelper.getS3StagingLocation(trustingAccountStagingBucketName)));
         // Add the script arguments
         if (!CollectionUtils.isEmpty(emrPigStepAddRequest.getScriptArguments()))
         {

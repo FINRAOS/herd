@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -210,8 +210,8 @@ public class BusinessObjectFormatServiceTestHelper
      *
      * @return the created business object format create request
      */
-    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema,
-        String documentSchemaUrl, List<Attribute> attributes, Schema schema)
+    public BusinessObjectFormatUpdateRequest createBusinessObjectFormatUpdateRequest(String description, String documentSchema, String documentSchemaUrl,
+        List<Attribute> attributes, Schema schema)
     {
         BusinessObjectFormatUpdateRequest businessObjectFormatUpdateRequest = new BusinessObjectFormatUpdateRequest();
 
@@ -281,7 +281,8 @@ public class BusinessObjectFormatServiceTestHelper
                     businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
                     AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                     partitionKey, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiter,
-                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomCusteredByValue, schemaNullValue, schemaColumns, partitionColumns);
+                    schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomCusteredByValue,
+                    schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -595,10 +596,10 @@ public class BusinessObjectFormatServiceTestHelper
 
         attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_1_MIXED_CASE, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
             AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
-        attributeDefinitions.add(new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE,
-            AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(
+            new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_2, AbstractServiceTest.NO_PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
+        attributeDefinitions.add(
+            new AttributeDefinition(AbstractServiceTest.ATTRIBUTE_NAME_3, AbstractServiceTest.PUBLISH_ATTRIBUTE, AbstractServiceTest.NO_PUBLISH_FOR_FILTER));
 
         return attributeDefinitions;
     }
