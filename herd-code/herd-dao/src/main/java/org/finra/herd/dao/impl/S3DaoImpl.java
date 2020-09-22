@@ -39,6 +39,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -1071,6 +1073,12 @@ public class S3DaoImpl implements S3Dao
             amazonS3Client.setEndpoint(params.getS3Endpoint());
         }
 
+        if (StringUtils.isNotBlank(params.getAwsRegionName()))
+        {
+            LOGGER.info("Configured AWS Region: " + params.getAwsRegionName());
+            amazonS3Client.setRegion(Region.getRegion(Regions.US_EAST_2));
+        }
+
         // Return the newly created client.
         return amazonS3Client;
     }
@@ -1088,6 +1096,9 @@ public class S3DaoImpl implements S3Dao
      */
     private S3Object getS3Object(AmazonS3Client s3Client, String bucketName, String key, boolean errorOnNoSuchKey)
     {
+
+
+
         try
         {
             GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
