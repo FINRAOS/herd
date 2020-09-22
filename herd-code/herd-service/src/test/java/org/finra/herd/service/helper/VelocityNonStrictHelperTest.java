@@ -69,4 +69,24 @@ public class VelocityNonStrictHelperTest extends AbstractServiceTest
         String result = velocityNonStrictHelper.evaluate(template, variables, logTag, false);
         Assert.assertEquals("Result not equal.", "${baz}", result);
     }
+
+    @Test
+    public void testEvaluateNonStrictReflection()
+    {
+        String template = "$foo.getClass().forName(\"java.lang.Runtime\").getRuntime().getName()";
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("foo", "bar");
+        String logTag = "test";
+        try
+        {
+            velocityNonStrictHelper.evaluate(template, variables, logTag);
+            fail();
+        }
+        catch (MethodInvocationException methodInvocationException)
+        {
+            Assert.assertEquals("Exception message not equal.",
+                "Object 'java.lang.Class' does not contain method forName(java.lang.String) at test[line 1, column 17]",
+                methodInvocationException.getMessage());
+        }
+    }
 }
