@@ -2847,17 +2847,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             request.setBusinessObjectFormatFileType(businessObjectFormatFileType);
             BusinessObjectFormatDdl resultDdl = businessObjectFormatService.generateBusinessObjectFormatDdl(request);
 
-            // Get the expected Hive file format.
-            String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
-
-            // Include ROW FORMAT statement in the expected DDL only if Hive file format is not ORC or PARQUET.
-            boolean includeRowFormatStatement = !expectedHiveFileFormat.equals(Hive13DdlGenerator.ORC_HIVE_FILE_FORMAT) &&
-                !expectedHiveFileFormat.equals(Hive13DdlGenerator.PARQUET_HIVE_FILE_FORMAT);
-
             // Validate the results.
+            String expectedHiveFileFormat = businessObjectFormatFileTypeMap.get(businessObjectFormatFileType);
             String expectedDdl = businessObjectFormatServiceTestHelper
                 .getExpectedBusinessObjectFormatDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
-                    expectedHiveFileFormat, businessObjectFormatFileType, true, true, includeRowFormatStatement);
+                    expectedHiveFileFormat, businessObjectFormatFileType, true, true);
             businessObjectFormatServiceTestHelper
                 .validateBusinessObjectFormatDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION,
                     BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, null, expectedDdl, resultDdl);

@@ -399,31 +399,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectFormatDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded,
-        boolean isIfNotExistsOptionIncluded)
-    {
-        return getExpectedBusinessObjectFormatDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveFileFormat,
-            businessObjectFormatFileType, isDropStatementIncluded, isIfNotExistsOptionIncluded, AbstractServiceTest.INCLUDE_ROW_FORMAT_STATEMENT);
-    }
-
-    /**
-     * Returns Hive DDL that is expected to be produced by a unit test based on specified parameters and hard-coded test values.
-     *
-     * @param partitionLevels the number of partition levels
-     * @param firstColumnName the name of the first schema column
-     * @param firstColumnDataType the data type of the first schema column
-     * @param hiveRowFormat the Hive row format
-     * @param hiveClusteredByValue the Hive ClusteredBy Value
-     * @param hiveFileFormat the Hive file format
-     * @param businessObjectFormatFileType the business object format file type
-     * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
-     * @param isRowFormatStatementIncluded specifies if expected DDL should include a ROW FORMAT statement
-     *
-     * @return the Hive DDL
-     */
-    public String getExpectedBusinessObjectFormatDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded,
-        boolean isIfNotExistsOptionIncluded, boolean isRowFormatStatementIncluded)
+        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -472,12 +448,7 @@ public class BusinessObjectFormatServiceTestHelper
         }
 
         sb.append("[Hive Clustered By Value]\n");
-
-        if (isRowFormatStatementIncluded)
-        {
-            sb.append("[Row Format]\n");
-        }
-
+        sb.append("[Row Format]\n");
         sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
 
         if (partitionLevels == 0)

@@ -20,7 +20,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -215,28 +217,87 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
 
         // Read the Activiti XML file so that an error can be injected.
-        InputStream xmlStream = resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream();
+        String xmlString = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream(), Charset.defaultCharset());
+        String errorMsg = "Activiti XML can not contain activiti shell type service tasks.";
 
         // Update Activiti XML such that service task is modified to shell type activiti task with all lower case - activiti:type="shell".
-        request.setActivitiJobXml(IOUtils.toString(xmlStream)
+        testCreateJobDefinitionWithProhibitedActivitiXml(request, xmlString
             .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"",
-                "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" activiti:type=\"shell\" activiti:async=\"true\""));
-
-        // Try creating the job definition and the Activiti layer must throw an exception.
-        try
-        {
-            jobDefinitionService.createJobDefinition(request, false);
-            fail();
-        }
-        catch (Exception e)
-        {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("Activiti XML can not contain activiti shell type service tasks.", e.getMessage());
-        }
+                "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" activiti:type=\"shell\" activiti:async=\"true\""), errorMsg);
 
         // Update Activiti XML such that service task is modified to shell type activiti task with all upper case - ACTIVITI:TYPE="SHELL".
-        request.setActivitiJobXml(request.getActivitiJobXml().replaceAll("activiti:type=\"shell\"", "ACTIVITI:TYPE=\"SHELL\""));
+        testCreateJobDefinitionWithProhibitedActivitiXml(request, xmlString
+            .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"",
+                "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" ACTIVITI:TYPE=\"SHELL\" activiti:async=\"true\""), errorMsg);
 
+        // Update Activiti XML such that service task is modified to shell type activiti task with all upper case - activiti:type= " shell".
+        testCreateJobDefinitionWithProhibitedActivitiXml(request, xmlString
+            .replaceAll("serviceTask id=\"servicetask1\" name=\"Test Service Step\" activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"",
+                "serviceTask id=\"testShellTask\" name=\"Execute test shell task\" activiti:type= \" shell\" activiti:async=\"true\""), errorMsg);
+    }
+
+    /**
+     * This method tests the scenario when reflection is used in activiti JUEL expression. This must throw IllegalArgumentException from the Activiti layer.
+     */
+    @Test
+    public void testCreateJobDefinitionWithProhibitedJuelExpression() throws IOException
+    {
+        // Create the namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Create a valid job definition request.
+        JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
+
+        // Read the Activiti XML file so that an error can be injected.
+        String xmlString = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream(), Charset.defaultCharset());
+
+        String errorMsg = "Activiti XML has prohibited expression.";
+        // Update Activiti XML such that service task is modified to use activiti:expression with reflection.
+        String activitiExpression =
+            "activiti:expression=\"\\${''\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request,
+            xmlString.replaceAll("activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"", activitiExpression), errorMsg);
+
+        // Update Activiti XML such that service task is modified to use activiti:expression with reflection and whitespace.
+        String activitiExpressionWithWhitespace =
+            "activiti:expression= \" \\${ ''\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request,
+            xmlString.replaceAll("activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"", activitiExpressionWithWhitespace), errorMsg);
+
+        // Update Activiti XML such that service task is modified to use deferred expression with reflection and double quote.
+        String activitiExpressionWithDoubleQuote =
+            "activiti:expression=\"\\${\"\"\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request,
+            xmlString.replaceAll("activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"", activitiExpressionWithDoubleQuote), errorMsg);
+
+        // Update Activiti XML such that service task is modified to use immediate expression with reflection and double quote.
+        String immediateExpressionWithDoubleQuote =
+            "activiti:expression=\"\\#{\"\"\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request,
+            xmlString.replaceAll("activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"", immediateExpressionWithDoubleQuote), errorMsg);
+
+        // Update Activiti XML such that extension element is modified to use deferred expression with reflection.
+        String extensionElementExpression =
+            "expression= \" \\${ ''\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request, xmlString.replaceAll("stringValue=\"Unit Test\"", extensionElementExpression), errorMsg);
+
+        // Update Activiti XML such that extension element is modified to use immediate evaluate expression with reflection and whitespace.
+        String immediateEvaluateExpression =
+            "expression= \" \\#{ ''\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}\"";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request, xmlString.replaceAll("stringValue=\"Unit Test\"", immediateEvaluateExpression), errorMsg);
+
+        // Update Activiti XML such that extension element is modified to use field injection expression with reflection.
+        String filedInjectionExpression =
+            " <activiti:field name=\"name\" > <activiti:expression>\\${ ''\\.class\\.forName('java\\.lang\\.Runtime')\\.methods[6]\\.invoke(null)\\.exec('touch /tmp /testing')}</activiti:expression>\n" +
+                "        </activiti:field>";
+        testCreateJobDefinitionWithProhibitedActivitiXml(request,
+            xmlString.replaceAll("<activiti:field name=\"name\" stringValue=\"Unit Test\" />", filedInjectionExpression), errorMsg);
+    }
+
+    private void testCreateJobDefinitionWithProhibitedActivitiXml(JobDefinitionCreateRequest request, String activitiXml, String errorMsg)
+    {
+        // Update Activiti XML such that service task has prohibited activiti xml
+        request.setActivitiJobXml(activitiXml);
         // Try creating the job definition and the Activiti layer must throw an exception.
         try
         {
@@ -246,8 +307,32 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("Activiti XML can not contain activiti shell type service tasks.", e.getMessage());
+            assertEquals(errorMsg, e.getMessage());
         }
+    }
+
+    /**
+     * This method tests the scenario when allowed activiti JUEL expression is given.
+     */
+    @Test
+    public void testCreateJobDefinitionWithAllowedJuelServiceTask() throws Exception
+    {
+        // Create the namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Create a valid job definition request.
+        JobDefinitionCreateRequest request = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
+        request.getParameters().add(new Parameter("testKey", "testValue"));
+        // Read the Activiti XML file so that an error can be injected.
+        String xmlString = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH).getInputStream(), Charset.defaultCharset());
+
+        // Update Activiti XML such that service task has allowed JUEL expression
+
+        request.setActivitiJobXml(
+            xmlString.replaceAll("activiti:class=\"org.activiti.engine.impl.test.NoOpServiceTask\"", "activiti:expression=\"\\${testKey2}\""));
+
+        // Try creating the job definition
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
