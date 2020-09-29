@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -865,8 +866,8 @@ public class BusinessObjectDataDaoHelper
                         // If not already there, append slash to directory path, since it represents a directory.
                         String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
 
-                        // Minimize the file path.
-                        storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
+                        // Minimize the file path. Use the pattern regex utility to escape regular expression meta characters within the directory path.
+                        storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(Pattern.quote(directoryPathWithTrailingSlash), ""));
                     }
                 }
             }

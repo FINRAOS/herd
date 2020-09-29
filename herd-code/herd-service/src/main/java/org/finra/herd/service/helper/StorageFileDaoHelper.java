@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +75,8 @@ public class StorageFileDaoHelper
                 // Otherwise, minimize the file path.
                 else
                 {
-                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(directoryPathWithTrailingSlash, ""));
+                    // When minimizing the file path use the pattern regex utility to escape regular expression meta characters within the directory path.
+                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(Pattern.quote(directoryPathWithTrailingSlash), ""));
                 }
             }
 
