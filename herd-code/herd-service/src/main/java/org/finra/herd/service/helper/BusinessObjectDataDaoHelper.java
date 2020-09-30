@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -33,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.ExpectedPartitionValueDao;
@@ -863,11 +863,8 @@ public class BusinessObjectDataDaoHelper
                     // Otherwise, minimize the file path.
                     else
                     {
-                        // If not already there, append slash to directory path, since it represents a directory.
-                        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
-
-                        // Minimize the file path. Use the pattern regex utility to escape regular expression meta characters within the directory path.
-                        storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(Pattern.quote(directoryPathWithTrailingSlash), ""));
+                        // Minimize the file path.
+                        storageFileEntity.setPath(HerdStringUtils.getMinimizedFilePath(storageFile.getFilePath(), directoryPath));
                     }
                 }
             }

@@ -17,12 +17,12 @@ package org.finra.herd.service.helper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -56,9 +56,6 @@ public class StorageFileDaoHelper
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
 
-        // If not already there, append slash to directory path, since it represents a directory.
-        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
-
         for (StorageFile storageFile : storageFiles)
         {
             StorageFileEntity storageFileEntity = new StorageFileEntity();
@@ -75,8 +72,8 @@ public class StorageFileDaoHelper
                 // Otherwise, minimize the file path.
                 else
                 {
-                    // When minimizing the file path use the pattern regex utility to escape regular expression meta characters within the directory path.
-                    storageFileEntity.setPath(storageFile.getFilePath().replaceFirst(Pattern.quote(directoryPathWithTrailingSlash), ""));
+                    // Minimize the file path.
+                    storageFileEntity.setPath(HerdStringUtils.getMinimizedFilePath(storageFile.getFilePath(), directoryPath));
                 }
             }
 
