@@ -464,6 +464,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
         Integer httpProxyPort = awsParamsDto.getHttpProxyPort();
         s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+        s3FileTransferRequestParamsDto.setAwsRegionName(awsParamsDto.getAwsRegionName());
+
         Assert.isTrue(!s3Dao.s3FileExists(s3FileTransferRequestParamsDto),
             String.format("A S3 object already exists in bucket \"%s\" and key \"%s\".", bucketName, key));
     }
