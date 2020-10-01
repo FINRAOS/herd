@@ -1096,9 +1096,6 @@ public class S3DaoImpl implements S3Dao
      */
     private S3Object getS3Object(AmazonS3Client s3Client, String bucketName, String key, boolean errorOnNoSuchKey)
     {
-
-
-
         try
         {
             GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
