@@ -1076,7 +1076,7 @@ public class S3DaoImpl implements S3Dao
         if (StringUtils.isNotBlank(params.getAwsRegionName()))
         {
             LOGGER.info("Configured AWS Region: " + params.getAwsRegionName());
-            amazonS3Client.setRegion(Region.getRegion(Regions.US_EAST_2));
+            amazonS3Client.setRegion(Region.getRegion(Regions.fromName(params.getAwsRegionName())));
         }
 
         // Return the newly created client.
