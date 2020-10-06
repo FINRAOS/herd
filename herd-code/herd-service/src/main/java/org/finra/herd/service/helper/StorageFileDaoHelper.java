@@ -76,6 +76,10 @@ public class StorageFileDaoHelper
                     storageFileEntity.setPath(HerdStringUtils.getMinimizedFilePath(storageFile.getFilePath(), directoryPath));
                 }
             }
+            else
+            {
+                storageFileEntity.setPath(storageFile.getFilePath());
+            }
 
             storageFileEntity.setFileSizeBytes(storageFile.getFileSizeBytes());
             storageFileEntity.setRowCount(storageFile.getRowCount());

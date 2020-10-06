@@ -31,6 +31,7 @@ import static org.finra.herd.service.AbstractServiceTest.FILE_NAME;
 import static org.finra.herd.service.AbstractServiceTest.FILE_NAME_2;
 import static org.finra.herd.service.AbstractServiceTest.FILE_SIZE;
 import static org.finra.herd.service.AbstractServiceTest.FILE_SIZE_2;
+import static org.finra.herd.service.AbstractServiceTest.NO_DIRECTORY_PATH;
 import static org.finra.herd.service.AbstractServiceTest.ROW_COUNT;
 import static org.finra.herd.service.AbstractServiceTest.ROW_COUNT_2;
 import static org.hamcrest.CoreMatchers.is;
@@ -95,6 +96,35 @@ public class StorageFileDaoHelperTest
 
         // Validate the results.
         assertThat("Result size not equal to two.", result.size(), is(2));
+        assertThat("File size not equal.", result.get(0).getFileSizeBytes(), is(FILE_SIZE));
+        assertThat("Row count not equal.", result.get(0).getRowCount(), is(ROW_COUNT));
+        assertThat("File size not equal.", result.get(1).getFileSizeBytes(), is(FILE_SIZE_2));
+        assertThat("Row count not equal.", result.get(1).getRowCount(), is(ROW_COUNT_2));
+
+        // Verify the external calls.
+        verify(storageFileDao).saveStorageFiles(argumentCaptor.capture());
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testCreateStorageFileEntitiesFromStorageFilesWithNullDirectoryPath()
+    {
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setDirectoryPath(DIRECTORY_PATH);
+
+        // Create a list of storage files
+        List<StorageFile> storageFiles =
+            Lists.newArrayList(new StorageFile(DIRECTORY_PATH + "/" + FILE_NAME, FILE_SIZE, ROW_COUNT),
+                new StorageFile(DIRECTORY_PATH + "/" + FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2));
+
+        // Call the method under test.
+        List<StorageFileEntity> result = storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, NO_DIRECTORY_PATH);
+
+        // Validate the results.
+        assertThat("Result size not equal to two.", result.size(), is(2));
+        assertThat("Path is not correct.", result.get(0).getPath(), is(DIRECTORY_PATH + "/" + FILE_NAME));
+        assertThat("Path is not correct.", result.get(1).getPath(), is(DIRECTORY_PATH + "/" + FILE_NAME_2));
         assertThat("File size not equal.", result.get(0).getFileSizeBytes(), is(FILE_SIZE));
         assertThat("Row count not equal.", result.get(0).getRowCount(), is(ROW_COUNT));
         assertThat("File size not equal.", result.get(1).getFileSizeBytes(), is(FILE_SIZE_2));
