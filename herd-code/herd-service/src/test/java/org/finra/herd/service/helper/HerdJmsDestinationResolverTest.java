@@ -1,173 +1,256 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.finra.herd.core.AbstractCoreTest.EMPTY_STRING;
+import static org.finra.herd.dao.AbstractDaoTest.AWS_REGION_NAME_US_EAST_1;
+import static org.finra.herd.dao.AbstractDaoTest.AWS_SQS_QUEUE_NAME;
+import static org.finra.herd.dao.AbstractDaoTest.AWS_SQS_QUEUE_URL;
+import static org.finra.herd.dao.AbstractDaoTest.ERROR_MESSAGE;
+import static org.finra.herd.dao.AbstractDaoTest.I_DO_NOT_EXIST;
+import static org.finra.herd.dao.AbstractDaoTest.NO_AWS_ACCESS_KEY;
+import static org.finra.herd.dao.AbstractDaoTest.NO_AWS_SECRET_KEY;
+import static org.finra.herd.dao.AbstractDaoTest.NO_HTTP_PROXY_HOST;
+import static org.finra.herd.dao.AbstractDaoTest.NO_HTTP_PROXY_PORT;
+import static org.finra.herd.dao.AbstractDaoTest.NO_SESSION_TOKEN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.Session;
 
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsClientFactory;
+import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.service.AbstractServiceTest;
 
 /**
  * This class tests functionality within the HerdJmsDestinationResolver.
  */
-public class HerdJmsDestinationResolverTest extends AbstractServiceTest
+public class HerdJmsDestinationResolverTest
 {
-    @Autowired
-    HerdJmsDestinationResolver herdJmsDestinationResolver;
+    @Mock
+    private AwsClientFactory awsClientFactory;
 
-    @Test
-    public void testResolveDestinationNameNoExists() throws Exception
+    @Mock
+    private AwsHelper awsHelper;
+
+    @Mock
+    private ConfigurationHelper configurationHelper;
+
+    @InjectMocks
+    private HerdJmsDestinationResolver herdJmsDestinationResolverImpl;
+
+    @Before
+    public void before()
     {
-        try
-        {
-            herdJmsDestinationResolver.resolveDestinationName(null, "queue_not_exists", false);
-            fail("Should throw an IllegalStateException.");
-        }
-        catch (IllegalStateException ex)
-        {
-            assertEquals(String.format("Failed to resolve the SQS queue: \"%s\".", ""), ex.getMessage());
-        }
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testResolveDestinationNameNoQueueExists() throws Exception
+    public void testResolveDestinationInvalidSqsDestinationIdentifier() throws Exception
     {
+        // Create AWS parameters DTO.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
+
+        // Mock objects required for this test.
+        AmazonSQS amazonSQS = mock(AmazonSQS.class);
+        GetQueueUrlResult getQueueUrlResult = mock(GetQueueUrlResult.class);
+        Session session = mock(Session.class);
+
+        // Mock calls to external methods.
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsClientFactory.getAmazonSQSClient(awsParamsDto)).thenReturn(amazonSQS);
+        when(amazonSQS.getQueueUrl(EMPTY_STRING)).thenReturn(getQueueUrlResult);
+        when(getQueueUrlResult.getQueueUrl()).thenReturn(AWS_SQS_QUEUE_URL);
+        when(session.createQueue(AWS_SQS_QUEUE_URL)).thenThrow(new JMSException(ERROR_MESSAGE));
+
+        // Try to call the method under test.
         try
         {
-            herdJmsDestinationResolver.resolveDestinationName(null, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
-            fail("Should throw an IllegalStateException.");
+            herdJmsDestinationResolverImpl.resolveDestinationName(session, I_DO_NOT_EXIST, false);
+            fail();
         }
         catch (IllegalStateException ex)
         {
-            assertTrue("\"Failed to resolve the SQS queue:\" error message doesn't match", ex.getMessage().startsWith("Failed to resolve the SQS queue:"));
+            assertEquals("Failed to resolve the SQS queue: \"\".", ex.getMessage());
         }
+
+        // Verify calls to external methods.
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsClientFactory).getAmazonSQSClient(awsParamsDto);
+        verify(amazonSQS).getQueueUrl(EMPTY_STRING);
+        verify(getQueueUrlResult).getQueueUrl();
+        verify(session).createQueue(AWS_SQS_QUEUE_URL);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
-    public void testResolveDestinationNameNoConfig() throws Exception
+    public void testResolveDestinationSqsQueueNoExists() throws Exception
     {
-        // Override configuration.
-        removeReloadablePropertySourceFromEnvironment();
+        // Create AWS parameters DTO.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
 
+        // Mock objects required for this test.
+        AmazonSQS amazonSQS = mock(AmazonSQS.class);
+        GetQueueUrlResult getQueueUrlResult = mock(GetQueueUrlResult.class);
+        Session session = mock(Session.class);
+
+        // Mock calls to external methods.
+        when(configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME)).thenReturn(AWS_SQS_QUEUE_NAME);
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsClientFactory.getAmazonSQSClient(awsParamsDto)).thenReturn(amazonSQS);
+        when(amazonSQS.getQueueUrl(AWS_SQS_QUEUE_NAME)).thenReturn(getQueueUrlResult);
+        when(getQueueUrlResult.getQueueUrl()).thenReturn(AWS_SQS_QUEUE_URL);
+        when(session.createQueue(AWS_SQS_QUEUE_URL)).thenThrow(new JMSException(ERROR_MESSAGE));
+
+        // Try to call the method under test.
         try
         {
-            herdJmsDestinationResolver.resolveDestinationName(null, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
-            fail("Should throw an IllegalStateException.");
+            herdJmsDestinationResolverImpl.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
+            fail();
+        }
+        catch (IllegalStateException ex)
+        {
+            assertEquals(String.format("Failed to resolve the SQS queue: \"%s\".", AWS_SQS_QUEUE_NAME), ex.getMessage());
+        }
+
+        // Verify calls to external methods.
+        verify(configurationHelper).getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsClientFactory).getAmazonSQSClient(awsParamsDto);
+        verify(amazonSQS).getQueueUrl(AWS_SQS_QUEUE_NAME);
+        verify(getQueueUrlResult).getQueueUrl();
+        verify(session).createQueue(AWS_SQS_QUEUE_URL);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testResolveDestinationSqsQueueNameNotConfigured()
+    {
+        // Mock calls to external methods.
+        when(configurationHelper.getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME)).thenReturn(EMPTY_STRING);
+
+        // Try to call the method under test.
+        try
+        {
+            herdJmsDestinationResolverImpl.resolveDestinationName(null, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
+            fail();
         }
         catch (IllegalStateException ex)
         {
             assertEquals(String.format("SQS queue name not found. Ensure the \"%s\" configuration entry is configured.",
                 ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME.getKey()), ex.getMessage());
         }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
-        }
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test
     public void testResolveDestinationHerdIncoming() throws Exception
     {
-        Session session = mock(Session.class);
-        Queue queue = mock(Queue.class);
-
-        // Mock the call to external methods
-        when(session.createQueue(any())).thenReturn(queue);
-
-        // Call the method under test
-        Destination destination = herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
-
-        assertThat("Destination is null.", destination, not(nullValue()));
-
-        // Verify the calls to external methods
-        verify(session, times(1)).createQueue(any());
+        runTestResolveDestinationTest(HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, ConfigurationValue.HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME);
     }
 
     @Test
     public void testResolveDestinationStoragePolicy() throws Exception
     {
-        Session session = mock(Session.class);
-        Queue queue = mock(Queue.class);
-
-        // Mock the call to external methods
-        when(session.createQueue(any())).thenReturn(queue);
-
-        // Call the method under test
-        Destination destination =
-            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, false);
-
-        assertThat("Destination is null.", destination, not(nullValue()));
-
-        // Verify the calls to external methods
-        verify(session, times(1)).createQueue(any());
+        runTestResolveDestinationTest(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE,
+            ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME);
     }
 
     @Test
     public void testResolveDestinationSampleData() throws Exception
     {
-        Session session = mock(Session.class);
-        Queue queue = mock(Queue.class);
-
-        // Mock the call to external methods
-        when(session.createQueue(any())).thenReturn(queue);
-
-        // Call the method under test
-        Destination destination =
-            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, false);
-
-        assertThat("Destination is null.", destination, not(nullValue()));
-
-        // Verify the calls to external methods
-        verify(session, times(1)).createQueue(any());
+        runTestResolveDestinationTest(HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, ConfigurationValue.SAMPLE_DATA_SQS_QUEUE_NAME);
     }
 
     @Test
     public void testResolveDestinationSearchIndexUpdate() throws Exception
     {
+        runTestResolveDestinationTest(HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE,
+            ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
+    }
+
+    /**
+     * Executes happy path test for the specified SQS destination identifier.
+     *
+     * @param sqsDestinationIdentifier the SQS destination identifier
+     * @param queueNameConfigurationValue the configuration value for the relative SQS destination
+     */
+    private void runTestResolveDestinationTest(String sqsDestinationIdentifier, ConfigurationValue queueNameConfigurationValue) throws Exception
+    {
+        // Create AWS parameters DTO.
+        AwsParamsDto awsParamsDto =
+            new AwsParamsDto(NO_AWS_ACCESS_KEY, NO_AWS_SECRET_KEY, NO_SESSION_TOKEN, NO_HTTP_PROXY_HOST, NO_HTTP_PROXY_PORT, AWS_REGION_NAME_US_EAST_1);
+
+        // Mock objects required for this test.
+        AmazonSQS amazonSQS = mock(AmazonSQS.class);
+        GetQueueUrlResult getQueueUrlResult = mock(GetQueueUrlResult.class);
         Session session = mock(Session.class);
         Queue queue = mock(Queue.class);
 
-        // Mock the call to external methods
-        when(session.createQueue(any())).thenReturn(queue);
+        // Mock calls to external methods.
+        when(configurationHelper.getProperty(queueNameConfigurationValue)).thenReturn(AWS_SQS_QUEUE_NAME);
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsClientFactory.getAmazonSQSClient(awsParamsDto)).thenReturn(amazonSQS);
+        when(amazonSQS.getQueueUrl(AWS_SQS_QUEUE_NAME)).thenReturn(getQueueUrlResult);
+        when(getQueueUrlResult.getQueueUrl()).thenReturn(AWS_SQS_QUEUE_URL);
+        when(session.createQueue(AWS_SQS_QUEUE_URL)).thenReturn(queue);
 
-        // Call the method under test
-        Destination destination =
-            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE, false);
+        // Call the method under test.
+        Destination result = herdJmsDestinationResolverImpl.resolveDestinationName(session, sqsDestinationIdentifier, false);
 
-        assertThat("Destination is null.", destination, not(nullValue()));
+        // Validate the response.
+        assertEquals(result, queue);
 
-        // Verify the calls to external methods
-        verify(session, times(1)).createQueue(any());
+        // Verify calls to external methods.
+        verify(configurationHelper).getProperty(queueNameConfigurationValue);
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsClientFactory).getAmazonSQSClient(awsParamsDto);
+        verify(amazonSQS).getQueueUrl(AWS_SQS_QUEUE_NAME);
+        verify(getQueueUrlResult).getQueueUrl();
+        verify(session).createQueue(AWS_SQS_QUEUE_URL);
+        verifyNoMoreInteractionsHelper();
+    }
+
+    /**
+     * Checks if any of the mocks has any interaction.
+     */
+    private void verifyNoMoreInteractionsHelper()
+    {
+        verifyNoMoreInteractions(awsClientFactory, awsHelper, configurationHelper);
     }
 }

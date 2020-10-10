@@ -180,6 +180,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_SQS_QUEUE_NAME = "UT_AWS_SQS_Queue_Name_" + RANDOM_SUFFIX;
 
+    public static final String AWS_SQS_QUEUE_URL = "UT_AWS_SQS_Queue_URL_" + RANDOM_SUFFIX;
+
     public static final String BACKSLASH = "\\";
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;

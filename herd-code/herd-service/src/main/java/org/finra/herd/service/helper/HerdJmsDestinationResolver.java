@@ -1,24 +1,24 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Session;
 
+import com.amazonaws.services.sqs.AmazonSQS;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +27,9 @@ import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsClientFactory;
+import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 @Component
@@ -42,12 +45,18 @@ public class HerdJmsDestinationResolver implements DestinationResolver
     public static final String SQS_DESTINATION_SAMPLE_DATA_QUEUE = "sample_data_queue";
 
     public static final String SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE = "search_index_update_queue";
-    
+
+    @Autowired
+    private AwsClientFactory awsClientFactory;
+
+    @Autowired
+    private AwsHelper awsHelper;
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Override
-    public Destination resolveDestinationName(Session session, String destinationName, boolean pubSubDomain) throws JMSException
+    public Destination resolveDestinationName(Session session, String destinationName, boolean pubSubDomain)
     {
         String sqsQueueName;
 
@@ -70,16 +79,22 @@ public class HerdJmsDestinationResolver implements DestinationResolver
                 sqsQueueName = getSqsQueueName(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
                 break;
             default:
-                LOGGER.warn("Failed to resolve the destination name: \"%s\".", destinationName);
+                LOGGER.warn("Failed to resolve the destination name: \"{}\".", destinationName);
                 sqsQueueName = "";
                 break;
         }
+
+        // Get URL for the SQS queue name. This is needed in order to add AWS region value configured in the system to the SQS queue name.
+        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
+        AmazonSQS amazonSQS = awsClientFactory.getAmazonSQSClient(awsParamsDto);
+        String sqsQueueUrl = amazonSQS.getQueueUrl(sqsQueueName).getQueueUrl();
+        LOGGER.info("Got sqsQueueUrl=\"{}\" for sqsQueueName=\"{}\"", sqsQueueUrl, sqsQueueName);
 
         Destination destination;
 
         try
         {
-            destination = session.createQueue(sqsQueueName);
+            destination = session.createQueue(sqsQueueUrl);
         }
         catch (Exception ex)
         {
