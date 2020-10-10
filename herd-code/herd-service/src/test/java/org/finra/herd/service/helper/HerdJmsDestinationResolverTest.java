@@ -102,7 +102,8 @@ public class HerdJmsDestinationResolverTest
         }
         catch (IllegalStateException ex)
         {
-            assertEquals("Failed to resolve the SQS queue: \"\".", ex.getMessage());
+            assertEquals(String.format("Failed to resolve SQS queue. sqsQueueName=\"%s\", sqsQueueUrl=\"%s\"", EMPTY_STRING, AWS_SQS_QUEUE_URL),
+                ex.getMessage());
         }
 
         // Verify calls to external methods.
@@ -142,7 +143,8 @@ public class HerdJmsDestinationResolverTest
         }
         catch (IllegalStateException ex)
         {
-            assertEquals(String.format("Failed to resolve the SQS queue: \"%s\".", AWS_SQS_QUEUE_NAME), ex.getMessage());
+            assertEquals(String.format("Failed to resolve SQS queue. sqsQueueName=\"%s\", sqsQueueUrl=\"%s\"", AWS_SQS_QUEUE_NAME, AWS_SQS_QUEUE_URL),
+                ex.getMessage());
         }
 
         // Verify calls to external methods.

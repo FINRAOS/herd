@@ -88,7 +88,6 @@ public class HerdJmsDestinationResolver implements DestinationResolver
         AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
         AmazonSQS amazonSQS = awsClientFactory.getAmazonSQSClient(awsParamsDto);
         String sqsQueueUrl = amazonSQS.getQueueUrl(sqsQueueName).getQueueUrl();
-        LOGGER.info("Got sqsQueueUrl=\"{}\" for sqsQueueName=\"{}\"", sqsQueueUrl, sqsQueueName);
 
         Destination destination;
 
@@ -98,7 +97,8 @@ public class HerdJmsDestinationResolver implements DestinationResolver
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException(String.format("Failed to resolve the SQS queue: \"%s\".", sqsQueueName), ex);
+            throw new IllegalStateException(String.format("Failed to resolve SQS queue. sqsQueueName=\"%s\", sqsQueueUrl=\"%s\"", sqsQueueName, sqsQueueUrl),
+                ex);
         }
 
         return destination;
