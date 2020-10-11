@@ -18,7 +18,6 @@ package org.finra.herd.service.helper;
 import javax.jms.Destination;
 import javax.jms.Session;
 
-import com.amazonaws.services.sqs.AmazonSQS;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +26,6 @@ import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.AwsClientFactory;
-import org.finra.herd.dao.helper.AwsHelper;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 @Component
@@ -45,12 +41,6 @@ public class HerdJmsDestinationResolver implements DestinationResolver
     public static final String SQS_DESTINATION_SAMPLE_DATA_QUEUE = "sample_data_queue";
 
     public static final String SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE = "search_index_update_queue";
-
-    @Autowired
-    private AwsClientFactory awsClientFactory;
-
-    @Autowired
-    private AwsHelper awsHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -84,22 +74,16 @@ public class HerdJmsDestinationResolver implements DestinationResolver
                 break;
         }
 
-        // Get URL for the SQS queue name. This is needed in order to add AWS region value configured in the system to the SQS queue name.
-        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-        AmazonSQS amazonSQS = awsClientFactory.getAmazonSQSClient(awsParamsDto);
-        String sqsQueueUrl = amazonSQS.getQueueUrl(sqsQueueName).getQueueUrl();
-
         Destination destination;
 
         try
         {
-            destination = session.createQueue(sqsQueueUrl);
+            destination = session.createQueue(sqsQueueName);
         }
         catch (Exception ex)
         {
-            LOGGER.error("Failed to resolve SQS queue. sqsQueueUrl=\"{}\", sqsQueueName=\"{}\"", sqsQueueUrl, sqsQueueName, ex);
-            throw new IllegalStateException(String.format("Failed to resolve SQS queue. sqsQueueName=\"%s\", sqsQueueUrl=\"%s\"", sqsQueueName, sqsQueueUrl),
-                ex);
+            LOGGER.error("Failed to resolve SQS queue. sqsQueueName=\"{}\"", sqsQueueName, ex);
+            throw new IllegalStateException(String.format("Failed to resolve \"%s\" SQS queue name.", sqsQueueName), ex);
         }
 
         return destination;
