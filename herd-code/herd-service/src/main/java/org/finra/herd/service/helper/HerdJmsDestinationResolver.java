@@ -97,6 +97,7 @@ public class HerdJmsDestinationResolver implements DestinationResolver
         }
         catch (Exception ex)
         {
+            LOGGER.error("Failed to resolve SQS queue. sqsQueueUrl=\"{}\", sqsQueueName=\"{}\"", sqsQueueUrl, sqsQueueName, ex);
             throw new IllegalStateException(String.format("Failed to resolve SQS queue. sqsQueueName=\"%s\", sqsQueueUrl=\"%s\"", sqsQueueName, sqsQueueUrl),
                 ex);
         }
