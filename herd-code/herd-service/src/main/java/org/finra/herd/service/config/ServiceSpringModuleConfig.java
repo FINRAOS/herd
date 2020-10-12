@@ -28,8 +28,9 @@ import java.util.Properties;
 import javax.jms.ConnectionFactory;
 import javax.sql.DataSource;
 
+import com.amazon.sqs.javamessaging.ProviderConfiguration;
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
-import com.amazonaws.ClientConfiguration;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
@@ -468,19 +469,9 @@ public class ServiceSpringModuleConfig
     {
         AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
 
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        // Only set the proxy hostname and/or port if they're configured.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()))
-        {
-            clientConfiguration.setProxyHost(awsParamsDto.getHttpProxyHost());
-        }
-        if (awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        return SQSConnectionFactory.builder().withClientConfiguration(clientConfiguration).build();
+        return new SQSConnectionFactory(new ProviderConfiguration(),
+            AmazonSQSClientBuilder.standard().withClientConfiguration(awsHelper.getClientConfiguration(awsParamsDto))
+                .withRegion(awsParamsDto.getAwsRegionName()));
     }
 
     /**
