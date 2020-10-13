@@ -404,12 +404,12 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       case "DOUBLE" => DoubleType
       case "DATE" => DateType
       case "DECIMAL" =>
-        var size = "10,0"
         if (columnSize != null) {
-          size = columnSize
+          val ss = columnSize.split(",")
+          DecimalType(ss(0).toInt, ss(1).toInt)
+        } else {
+          DecimalType(10, 0)
         }
-        val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
-        DecimalType(precision, scale)
       case "TIMESTAMP" => TimestampType
       case "BOOLEAN" => BooleanType
       case _ => toComplexSparkType(columnType.toUpperCase)
