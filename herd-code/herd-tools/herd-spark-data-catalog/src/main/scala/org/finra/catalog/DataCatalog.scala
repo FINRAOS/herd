@@ -23,6 +23,7 @@ import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.xml._
+
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -39,6 +40,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
 import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
+
 import org.finra.herd.sdk.api._
 import org.finra.herd.sdk.invoker.ApiException
 import org.finra.herd.sdk.model._
