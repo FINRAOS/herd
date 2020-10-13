@@ -392,11 +392,15 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataType of the string value
    */
   private[catalog] def getStructType(columnType: String, columnSize: String): DataType = {
-    val dbType = columnType match {
-      case "STRING" => StringType
+    val dbType = columnType.toUpperCase match {
+      case "STRING" | "VARCHAR" | "CHAR" => StringType
+      case "TINYINT" => ByteType
+      case "SMALLINT" => ShortType
+      case "INT" => IntegerType
+      case "BIGINT" => LongType
+      case "FLOAT" => FloatType
+      case "DOUBLE" => DoubleType
       case "DATE" => DateType
-      case "TIMESTAMP" => TimestampType
-      case "VARCHAR" => StringType
       case "DECIMAL" =>
         val ss = columnSize.split(",")
         if (ss.length != 2) {
@@ -404,9 +408,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
         } else {
           DecimalType(ss(0).toInt, ss(1).toInt)
         }
-      case "BIGINT" => LongType
-      case "INT" => IntegerType
-      case "SMALLINT" => ShortType
+      case "TIMESTAMP" => TimestampType
+      case "BOOLEAN" => BooleanType
       case _ => StringType
     }
     dbType
