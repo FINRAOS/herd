@@ -23,7 +23,6 @@ import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.xml._
-
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -32,13 +31,14 @@ import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
+import org.apache.spark.SparkException
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.parser.{CatalystSqlParser, ParseException}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
 import org.apache.spark.sql.types._
 import org.slf4j.LoggerFactory
-
 import org.finra.herd.sdk.api._
 import org.finra.herd.sdk.invoker.ApiException
 import org.finra.herd.sdk.model._
@@ -402,17 +402,27 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       case "DOUBLE" => DoubleType
       case "DATE" => DateType
       case "DECIMAL" =>
-        val ss = columnSize.split(",")
-        if (ss.length != 2) {
-          DecimalType(18, 8)
-        } else {
-          DecimalType(ss(0).toInt, ss(1).toInt)
+        var size = "10,0"
+        if (columnSize != null) {
+          size = columnSize
         }
+        val Array(precision, scale) = (if (size.indexOf(",") == -1) (size + ",0") else size).split(",").map(_.toInt)
+        DecimalType(precision, scale)
       case "TIMESTAMP" => TimestampType
       case "BOOLEAN" => BooleanType
-      case _ => StringType
+      case _ => toComplexSparkType(columnType.toUpperCase)
     }
     dbType
+  }
+
+  def toComplexSparkType(col: String): DataType = {
+    try {
+      CatalystSqlParser.parseDataType(col)
+
+    } catch {
+      case e: ParseException =>
+        throw new SparkException("Cannot recognize hive type string: " + col, e)
+    }
   }
 
   /**
