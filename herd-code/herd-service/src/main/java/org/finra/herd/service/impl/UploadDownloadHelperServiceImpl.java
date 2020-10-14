@@ -185,7 +185,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
                 S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
                     .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath()).withHttpProxyHost(awsParamsDto.getHttpProxyHost())
-                    .withHttpProxyPort(awsParamsDto.getHttpProxyPort()).build();
+                    .withHttpProxyPort(awsParamsDto.getHttpProxyPort()).withAwsRegionName(awsParamsDto.getAwsRegionName()).build();
             s3Dao.validateS3File(s3FileTransferRequestParamsDto, sourceStorageFileEntity.getFileSizeBytes());
 
             // Get the S3 managed "external" storage entity and make sure it exists.
@@ -423,7 +423,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
                     .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
                     .withHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
-                    .withHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
+                    .withHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort())
+                    .withAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName()).build();
 
             s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
         }
