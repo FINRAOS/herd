@@ -551,7 +551,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
                 S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
                     S3FileTransferRequestParamsDto.builder().withS3BucketName(s3BucketName).withS3KeyPrefix(storageFilePath)
-                        .withHttpProxyHost(awsParams.getHttpProxyHost()).withHttpProxyPort(awsParams.getHttpProxyPort()).build();
+                        .withHttpProxyHost(awsParams.getHttpProxyHost()).withHttpProxyPort(awsParams.getHttpProxyPort())
+                        .withAwsRegionName(awsParams.getAwsRegionName()).build();
 
                 s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
             }
