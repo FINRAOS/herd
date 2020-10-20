@@ -1,22 +1,21 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Session;
 
 import org.apache.commons.lang3.StringUtils;
@@ -42,12 +41,12 @@ public class HerdJmsDestinationResolver implements DestinationResolver
     public static final String SQS_DESTINATION_SAMPLE_DATA_QUEUE = "sample_data_queue";
 
     public static final String SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE = "search_index_update_queue";
-    
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Override
-    public Destination resolveDestinationName(Session session, String destinationName, boolean pubSubDomain) throws JMSException
+    public Destination resolveDestinationName(Session session, String destinationName, boolean pubSubDomain)
     {
         String sqsQueueName;
 
@@ -70,7 +69,7 @@ public class HerdJmsDestinationResolver implements DestinationResolver
                 sqsQueueName = getSqsQueueName(ConfigurationValue.SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME);
                 break;
             default:
-                LOGGER.warn("Failed to resolve the destination name: \"%s\".", destinationName);
+                LOGGER.warn("Failed to resolve the destination name: \"{}\".", destinationName);
                 sqsQueueName = "";
                 break;
         }
@@ -83,7 +82,8 @@ public class HerdJmsDestinationResolver implements DestinationResolver
         }
         catch (Exception ex)
         {
-            throw new IllegalStateException(String.format("Failed to resolve the SQS queue: \"%s\".", sqsQueueName), ex);
+            LOGGER.error("Failed to resolve SQS queue. sqsQueueName=\"{}\"", sqsQueueName, ex);
+            throw new IllegalStateException(String.format("Failed to resolve \"%s\" SQS queue name.", sqsQueueName), ex);
         }
 
         return destination;

@@ -32,8 +32,10 @@ import com.amazonaws.services.kms.AWSKMSClient
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.StringEscapeUtils
+import org.apache.spark.SparkException
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.parser.{CatalystSqlParser, ParseException}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.herd._
 import org.apache.spark.sql.types._
@@ -392,24 +394,37 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @return DataType of the string value
    */
   private[catalog] def getStructType(columnType: String, columnSize: String): DataType = {
-    val dbType = columnType match {
-      case "STRING" => StringType
-      case "DATE" => DateType
-      case "TIMESTAMP" => TimestampType
-      case "VARCHAR" => StringType
-      case "DECIMAL" =>
-        val ss = columnSize.split(",")
-        if (ss.length != 2) {
-          DecimalType(18, 8)
-        } else {
-          DecimalType(ss(0).toInt, ss(1).toInt)
-        }
-      case "BIGINT" => LongType
-      case "INT" => IntegerType
+    val dbType = columnType.toUpperCase match {
+      case "STRING" | "VARCHAR" | "CHAR" => StringType
+      case "TINYINT" => ByteType
       case "SMALLINT" => ShortType
-      case _ => StringType
+      case "INT" => IntegerType
+      case "BIGINT" => LongType
+      case "FLOAT" => FloatType
+      case "DOUBLE" => DoubleType
+      case "DATE" => DateType
+      case "DECIMAL" =>
+        if (columnSize != null) {
+          val ss = columnSize.split(",")
+          DecimalType(ss(0).toInt, ss(1).toInt)
+        } else {
+          DecimalType(10, 0)
+        }
+      case "TIMESTAMP" => TimestampType
+      case "BOOLEAN" => BooleanType
+      case _ => toComplexSparkType(columnType.toUpperCase)
     }
     dbType
+  }
+
+  def toComplexSparkType(col: String): DataType = {
+    try {
+      CatalystSqlParser.parseDataType(col)
+
+    } catch {
+      case e: ParseException =>
+        throw new SparkException("Cannot recognize hive type string: " + col, e)
+    }
   }
 
   /**
