@@ -132,6 +132,17 @@
       </xs:annotation>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectDataVersionLessKey">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="subPartitionValues" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <!-- This object is used to parse Elasticsearch responses. Do not modify this DTO unless there are changes done to the relative Elasticsearch index. -->
    <xs:complexType name="businessObjectDefinitionIndexSearchResponseDto">
       <xs:sequence>

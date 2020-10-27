@@ -352,6 +352,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
+    public static final Boolean DO_NOT_TRANSITION_LATEST_VALID = true;
+
     public static final Boolean EBS_OPTIMIZED = true;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
@@ -702,6 +704,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
+
+    public static final Boolean NO_DO_NOT_TRANSITION_LATEST_VALID = false;
 
     public static final EmrClusterDefinitionEbsConfiguration NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION = null;
 
