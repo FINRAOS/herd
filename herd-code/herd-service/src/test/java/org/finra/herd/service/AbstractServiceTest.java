@@ -444,6 +444,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Boolean FILE_SIZE_REQUIRED = true;
+
     public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
 
     public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
@@ -550,6 +552,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
 
+    public static final String NO_DIRECTORY_PATH = null;
+
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
     public static final Boolean NO_DRY_RUN = false;
@@ -637,6 +641,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
+
+    public static final Boolean NO_USE_FULL_FILE_PATH = false;
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
@@ -819,6 +825,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "      <transmission-id>$uuid</transmission-id>\n" +
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
+
+    public static final Boolean USE_FULL_FILE_PATH = true;
 
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 

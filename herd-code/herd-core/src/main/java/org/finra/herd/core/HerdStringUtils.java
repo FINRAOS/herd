@@ -58,6 +58,23 @@ public class HerdStringUtils
     }
 
     /**
+     * This method will minimize a file path by removing the first appearance of the directory path string.
+     *
+     * @param filePath the file path to minimize
+     * @param directoryPath the directory path to remove
+     *
+     * @return the minimized file path
+     */
+    public static String getMinimizedFilePath(final String filePath, final String directoryPath)
+    {
+        // If not already there, append slash to directory path, since it represents a directory.
+        String directoryPathWithTrailingSlash = StringUtils.appendIfMissing(directoryPath, "/");
+
+        // If the file path starts with the directory path then minimize the file path.
+        return filePath.startsWith(directoryPathWithTrailingSlash) ? filePath.substring(directoryPathWithTrailingSlash.length()) : filePath;
+    }
+
+    /**
      * Truncates the description field to a configurable value thereby producing a 'short description'
      *
      * @param description the specified description

@@ -42,14 +42,12 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataStorageFileService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
@@ -68,9 +66,6 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
-
-    @Autowired
-    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -205,6 +200,9 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             directoryPath = s3KeyPrefixHelper
                 .buildS3KeyPrefix(storageUnitEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
             usingExpectedS3keyPrefix = true;
+
+            // We intend to minimize the file path, so store the expected S3 key prefix in the storage unit directory path.
+            storageUnitEntity.setDirectoryPath(directoryPath);
         }
 
         // If we know the directory path, ensure that there are no storage files already registered in this
@@ -216,7 +214,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         }
 
         // Retrieve all storage files already registered for this storage unit loaded in a map for easy access.
-        Map<String, StorageFileEntity> storageFileEntities = storageFileHelper.getStorageFileEntitiesMap(storageUnitEntity.getStorageFiles());
+        Map<String, StorageFile> alreadyRegisteredStorageFiles =
+            storageFileHelper.getAlreadyRegisteredStorageFilesMap(storageUnitEntity.getDirectoryPath(), storageUnitEntity.getStorageFiles());
 
         // Add a trailing slash to the storage directory path if it doesn't already have it.
         String directoryPathWithTrailingSlash = null;
@@ -230,7 +229,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         if (BooleanUtils.isTrue(businessObjectDataStorageFilesCreateRequest.isDiscoverStorageFiles()))
         {
             // Discover new storage files for this storage unit.
-            storageFiles = discoverStorageFiles(storageUnitEntity, storageFileEntities, directoryPathWithTrailingSlash);
+            storageFiles = discoverStorageFiles(storageUnitEntity, alreadyRegisteredStorageFiles, directoryPathWithTrailingSlash);
         }
         // Otherwise, use the list of storage files specified in the request.
         else
@@ -239,11 +238,11 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             storageFiles = businessObjectDataStorageFilesCreateRequest.getStorageFiles();
 
             // Validate storage files.
-            validateStorageFiles(storageFiles, storageUnitEntity, storageFileEntities, directoryPathWithTrailingSlash, usingExpectedS3keyPrefix,
+            validateStorageFiles(storageFiles, storageUnitEntity, alreadyRegisteredStorageFiles, directoryPathWithTrailingSlash, usingExpectedS3keyPrefix,
                 validateFileExistence, validateFileSize, businessObjectDataKeyAsString);
         }
 
-        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity);
+        return new BusinessObjectDataStorageFilesDto(businessObjectDataEntity, storageFiles, storageUnitEntity, directoryPath);
     }
 
     /**
@@ -260,7 +259,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         List<StorageFile> storageFiles = businessObjectDataStorageFilesDto.getStorageFiles();
 
         // Add new storage files to the storage unit.
-        storageFileDaoHelper.createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles);
+        storageFileDaoHelper
+            .createStorageFileEntitiesFromStorageFiles(storageUnitEntity, storageFiles, businessObjectDataStorageFilesDto.getDirectoryPath());
 
         // Construct and return the response.
         return createBusinessObjectDataStorageFilesCreateResponse(storageUnitEntity.getStorage(), businessObjectDataEntity, storageFiles);
@@ -270,12 +270,12 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      * Discovers new storage files in S3 for the specified storage unit.
      *
      * @param storageUnitEntity the storage unit entity
-     * @param storageFileEntities the storage files already registered for this storage unit loaded in a map for easy access
+     * @param alreadyRegisteredStorageFiles the storage files already registered for this storage unit loaded in a map for easy access
      * @param directoryPathWithTrailingSlash the S3 key prefix that has a trailing slash character
      *
      * @return the list of discovered storage files
      */
-    private List<StorageFile> discoverStorageFiles(StorageUnitEntity storageUnitEntity, Map<String, StorageFileEntity> storageFileEntities,
+    private List<StorageFile> discoverStorageFiles(StorageUnitEntity storageUnitEntity, Map<String, StorageFile> alreadyRegisteredStorageFiles,
         String directoryPathWithTrailingSlash)
     {
         // Get S3 bucket access parameters and set the key prefix to the directory path with a trailing slash.
@@ -289,13 +289,13 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         Map<String, StorageFile> actualS3Keys = storageFileHelper.getStorageFilesMapFromS3ObjectSummaries(s3Service.listDirectory(params, true));
 
         // For the already registered storage files, validate file existence and file size against S3 keys and metadata reported by S3.
-        for (Map.Entry<String, StorageFileEntity> entry : storageFileEntities.entrySet())
+        for (Map.Entry<String, StorageFile> entry : alreadyRegisteredStorageFiles.entrySet())
         {
-            storageFileHelper.validateStorageFileEntity(entry.getValue(), params.getS3BucketName(), actualS3Keys, true);
+            storageFileHelper.validateStorageFilePathAndSize(entry.getKey(), entry.getValue().getFileSizeBytes(), params.getS3BucketName(), actualS3Keys, true);
         }
 
         // Remove all already registered storage files from the map of actual S3 keys.
-        actualS3Keys.keySet().removeAll(storageFileEntities.keySet());
+        actualS3Keys.keySet().removeAll(alreadyRegisteredStorageFiles.keySet());
 
         // Validate that we have at least one unregistered storage file discovered in S3.
         Assert.notEmpty(actualS3Keys.keySet(),
@@ -310,13 +310,14 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
      *
      * @param storageFiles the list of storage files
      * @param storageUnitEntity the storage unit entity
-     * @param storageFileEntities the storage files already registered for this storage unit loaded in a map for easy access
+     * @param alreadyRegisteredStorageFiles the storage files already registered for this storage unit loaded in a map for easy access
      * @param directoryPathWithTrailingSlash the S3 key prefix that has a trailing slash character
      * @param usingExpectedS3keyPrefix specifies if expected S3 key prefix is being used since storage unit directory path is not set
      * @param validateFileExistence the validate file existence flag
      * @param validateFileSize the validate file size flag
      */
-    private void validateStorageFiles(List<StorageFile> storageFiles, StorageUnitEntity storageUnitEntity, Map<String, StorageFileEntity> storageFileEntities,
+    private void validateStorageFiles(List<StorageFile> storageFiles, StorageUnitEntity storageUnitEntity,
+        Map<String, StorageFile> alreadyRegisteredStorageFiles,
         String directoryPathWithTrailingSlash, boolean usingExpectedS3keyPrefix, boolean validateFileExistence, boolean validateFileSize,
         String businessObjectDataKeyAsString)
     {
@@ -336,7 +337,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         List<String> requestStorageFilePaths = storageFileHelper.getFilePathsFromStorageFiles(storageFiles);
 
         // Get storage files already registered with the storage unit.
-        List<String> registeredStorageFilePaths = new ArrayList<>(storageFileEntities.keySet());
+        List<String> registeredStorageFilePaths = new ArrayList<>(alreadyRegisteredStorageFiles.keySet());
 
         // Check if request contains any of the already registered files.
         registeredStorageFilePaths.retainAll(requestStorageFilePaths);
@@ -360,9 +361,10 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             Map<String, StorageFile> actualS3Keys = storageFileHelper.getStorageFilesMapFromS3ObjectSummaries(s3Service.listDirectory(params, true));
 
             // For the already registered storage files, validate each storage file against S3 keys and metadata reported by S3.
-            for (Map.Entry<String, StorageFileEntity> entry : storageFileEntities.entrySet())
+            for (Map.Entry<String, StorageFile> entry : alreadyRegisteredStorageFiles.entrySet())
             {
-                storageFileHelper.validateStorageFileEntity(entry.getValue(), params.getS3BucketName(), actualS3Keys, validateFileSize);
+                storageFileHelper.validateStorageFilePathAndSize(entry.getKey(), entry.getValue().getFileSizeBytes(), params.getS3BucketName(), actualS3Keys,
+                    validateFileSize);
             }
 
             // Validate each storage file listed in the request.
