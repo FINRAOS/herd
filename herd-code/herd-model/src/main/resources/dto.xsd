@@ -607,6 +607,7 @@
          <xs:element name="businessObjectDataEntity" type="businessObjectDataEntity" minOccurs="0"/>
          <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="storageUnitEntity" type="storageUnitEntity" minOccurs="0"/>
+         <xs:element name="directoryPath" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
