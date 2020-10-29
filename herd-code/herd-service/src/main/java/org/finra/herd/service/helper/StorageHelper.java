@@ -122,6 +122,7 @@ public class StorageHelper
 
         // Update the parameters with proxy host and port retrieved from the configuration.
         setProxyHostAndPort(params);
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
 
         return params;
     }
@@ -137,6 +138,8 @@ public class StorageHelper
 
         // Update the parameters with proxy host and port retrieved from the configuration.
         setProxyHostAndPort(params);
+
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
 
         return params;
     }
