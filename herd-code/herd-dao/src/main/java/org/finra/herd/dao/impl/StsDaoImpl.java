@@ -17,6 +17,8 @@ package org.finra.herd.dao.impl;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.policy.Policy;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
@@ -78,12 +80,14 @@ public class StsDaoImpl implements StsDao
         }
 
         AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = new AWSSecurityTokenServiceClient(clientConfiguration);
+        awsSecurityTokenServiceClient.setRegion(Region.getRegion(Regions.fromName(awsParamsDto.getAwsRegionName())));
 
         // Create the request.
         AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest();
         assumeRoleRequest.setRoleSessionName(sessionName);
         assumeRoleRequest.setRoleArn(awsRoleArn);
         assumeRoleRequest.setDurationSeconds(awsRoleDurationSeconds);
+
         if (policy != null)
         {
             assumeRoleRequest.setPolicy(policy.toJson());

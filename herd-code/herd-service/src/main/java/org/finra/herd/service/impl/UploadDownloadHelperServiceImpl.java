@@ -279,6 +279,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
      */
     protected void performFileMoveImpl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
+
+        LOGGER.info("Configured aws region :" + completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
+
         // Create and initialize an S3 file copy request parameters DTO.
         S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
         params.setSourceBucketName(completeUploadSingleParamsDto.getSourceBucketName());
@@ -286,6 +289,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         params.setSourceObjectKey(completeUploadSingleParamsDto.getSourceFilePath());
         params.setTargetObjectKey(completeUploadSingleParamsDto.getTargetFilePath());
         params.setKmsKeyId(completeUploadSingleParamsDto.getKmsKeyId());
+        params.setAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
         params.setHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost());
         params.setHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort());
 
