@@ -80,7 +80,10 @@ public class StsDaoImpl implements StsDao
         }
 
         AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = new AWSSecurityTokenServiceClient(clientConfiguration);
-        awsSecurityTokenServiceClient.setRegion(Region.getRegion(Regions.fromName(awsParamsDto.getAwsRegionName())));
+        if (awsParamsDto.getAwsRegionName() != null)
+        {
+            awsSecurityTokenServiceClient.setRegion(Region.getRegion(Regions.fromName(awsParamsDto.getAwsRegionName())));
+        }
 
         // Create the request.
         AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest();

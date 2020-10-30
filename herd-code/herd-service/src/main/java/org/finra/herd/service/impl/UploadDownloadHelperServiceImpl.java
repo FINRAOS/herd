@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -42,6 +43,7 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -107,6 +109,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
     @Autowired
     private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     @PublishNotificationMessages
     @Override
@@ -180,6 +185,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             // Get the AWS parameters.
             AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
             completeUploadSingleParamsDto.setAwsParams(awsParamsDto);
+            completeUploadSingleParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
 
             // Validate the source S3 file.
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
@@ -279,9 +285,6 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
      */
     protected void performFileMoveImpl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
-
-        LOGGER.info("Configured aws region :" + completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
-
         // Create and initialize an S3 file copy request parameters DTO.
         S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
         params.setSourceBucketName(completeUploadSingleParamsDto.getSourceBucketName());
@@ -292,6 +295,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         params.setAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
         params.setHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost());
         params.setHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort());
+        params.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
 
         String targetStatus;
 

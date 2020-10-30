@@ -37,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.helper.AwsHelper;
@@ -44,6 +45,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -97,6 +99,9 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
 
     @Mock
     private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Mock
+    private ConfigurationHelper configurationHelper;
 
     @InjectMocks
     private UploadDownloadHelperServiceImpl uploadDownloadHelperService;
@@ -192,6 +197,7 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
         when(storageHelper.getStorageBucketName(targetStorageEntity)).thenReturn(S3_BUCKET_NAME_2);
         when(storageHelper.getStorageKmsKeyId(targetStorageEntity)).thenReturn(AWS_KMS_KEY_ID);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
 
         // Call the method under test.
         uploadDownloadHelperService.prepareForFileMoveImpl(objectKey, completeUploadSingleParamsDto);
@@ -223,7 +229,7 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(new CompleteUploadSingleParamsDto(sourceBusinessObjectDataKey, S3_BUCKET_NAME, S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
             BusinessObjectDataStatusEntity.RE_ENCRYPTING, targetBusinessObjectDataKey, S3_BUCKET_NAME_2, S3_KEY_2, BusinessObjectDataStatusEntity.UPLOADING,
-            BusinessObjectDataStatusEntity.RE_ENCRYPTING, AWS_KMS_KEY_ID, awsParamsDto), completeUploadSingleParamsDto);
+            BusinessObjectDataStatusEntity.RE_ENCRYPTING, AWS_KMS_KEY_ID, awsParamsDto, S3_ENDPOINT), completeUploadSingleParamsDto);
     }
 
     @Test
@@ -315,6 +321,7 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
             .updateBusinessObjectDataStatus(sourceBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
         when(jsonHelper.objectToJson(sourceBusinessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING);
         when(jsonHelper.objectToJson(targetBusinessObjectDataKey)).thenReturn(BUSINESS_OBJECT_DATA_KEY_AS_STRING_2);
+        when(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT)).thenReturn(S3_ENDPOINT);
 
         // Try to call the method under test.
         try
@@ -351,7 +358,7 @@ public class UploadDownloadHelperServiceImplTest extends AbstractServiceTest
         assertEquals(
             new CompleteUploadSingleParamsDto(sourceBusinessObjectDataKey, S3_BUCKET_NAME, S3_KEY, BusinessObjectDataStatusEntity.UPLOADING, NO_BDATA_STATUS,
                 targetBusinessObjectDataKey, S3_BUCKET_NAME_2, S3_KEY_2, BusinessObjectDataStatusEntity.UPLOADING, NO_BDATA_STATUS, AWS_KMS_KEY_ID,
-                awsParamsDto), completeUploadSingleParamsDto);
+                awsParamsDto, S3_ENDPOINT), completeUploadSingleParamsDto);
     }
 
     /**

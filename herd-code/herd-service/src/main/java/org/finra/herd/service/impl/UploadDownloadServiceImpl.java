@@ -242,8 +242,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         String awsKmsKeyId = storageHelper.getStorageKmsKeyId(sourceStorageEntity);
 
-        LOGGER.info("Configured AWS Region: " + awsHelper.getAwsParamsDto().getAwsRegionName());
-
         // Get the temporary security credentials to access S3_MANAGED_STORAGE.
         Credentials assumedSessionCredentials = stsDao
             .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), String.valueOf(sourceBusinessObjectData.getId()), awsRoleArn, awsRoleDurationSeconds,

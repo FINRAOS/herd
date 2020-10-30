@@ -359,7 +359,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Perform the file move.
         uploadDownloadHelperService.performFileMove(completeUploadSingleParamsDto);
@@ -399,7 +399,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 EMPTY_S3_BUCKET_NAME, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Try to perform the file move.
         executeWithoutLogging(UploadDownloadHelperServiceImpl.class, () -> {
@@ -454,7 +454,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Execute the file move post steps.
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
@@ -507,7 +507,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Try to execute the file move post steps when the target business object data does not have "RE-ENCRYPTING" status.
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
@@ -560,7 +560,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                BusinessObjectDataStatusEntity.INVALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.INVALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Try to execute the file move post steps when new target business object data status is not set to "VALID".
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
@@ -611,7 +611,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                     NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), EMPTY_S3_BUCKET_NAME, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION,
                 BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID,
-                emrHelper.getAwsParamsDto());
+                emrHelper.getAwsParamsDto(), S3_ENDPOINT);
             uploadDownloadHelperServiceImpl.performFileMove(completeUploadSingleParamsDto);
 
             // Validate the updated complete upload single parameters DTO.
@@ -666,7 +666,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto(), S3_ENDPOINT);
 
         // Delete the source file from S3
         uploadDownloadHelperService.deleteSourceFileFromS3(completeUploadSingleParamsDto);
@@ -695,7 +695,7 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
                 MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
                 BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
                 EMPTY_S3_BUCKET_NAME, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, BusinessObjectDataStatusEntity.UPLOADING,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, null);
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, null, S3_ENDPOINT);
 
         // Try to delete the source file from S3
         executeWithoutLogging(UploadDownloadHelperServiceImpl.class, () -> {
