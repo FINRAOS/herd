@@ -1166,6 +1166,49 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     }
 
     @Test
+    public void testCreateBusinessObjectDataWithSubPartitions() throws Exception
+    {
+        // Get a list of two partition columns that is larger than number of partitions supported by business object data registration.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        assertTrue(CollectionUtils.size(partitionColumns) > BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1);
+
+        // Get a list of regular columns.
+        List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+
+        // Create a business object format with schema that has one more partition column than supported by business object data registration.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), NO_PARTITION_KEY_GROUP,
+                NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns,
+                partitionColumns);
+
+        // Create business object data registered using three partition values (primary and three sub-partition values).
+        List<String> subPartitionValues = Lists.newArrayList(SUB_PARTITION_VALUE_1 + "|", SUB_PARTITION_VALUE_2, SUB_PARTITION_VALUE_3);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
+                INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Get expected S3 key prefix for the business object data.
+        String s3KeyPrefix = getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            partitionColumns.get(0).getName(), PARTITION_VALUE, Lists.newArrayList(partitionColumns.subList(1, 3)).toArray(new SchemaColumn[0]),
+            subPartitionValues.subList(0, 2).toArray(new String[0]), INITIAL_DATA_VERSION);
+
+        // Place test files and 0 byte S3 directory markers in the S3 managed storage.
+        businessObjectDataServiceTestHelper.prepareTestS3Files(s3KeyPrefix, localTempPath, Collections.singletonList(LOCAL_FILE), S3_DIRECTORY_MARKERS);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = businessObjectDataService.createBusinessObjectData(businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                partitionColumns.get(0).getName(), PARTITION_VALUE, subPartitionValues.subList(0, 2), BDATA_STATUS, StorageEntity.MANAGED_STORAGE,
+                s3KeyPrefix, businessObjectDataServiceTestHelper.getTestStorageFiles(s3KeyPrefix, Collections.singletonList(LOCAL_FILE))));
+
+        // Verify that the file path is correct and has been minimized properly.
+        assertEquals("Incorrect file path.", businessObjectData.getStorageUnits().get(0).getStorageDirectory().getDirectoryPath() + "/" + LOCAL_FILE,
+            businessObjectData.getStorageUnits().get(0).getStorageFiles().get(0).getFilePath());
+    }
+
+    @Test
     public void testCreateBusinessObjectDataS3ManagedBucketSubPartitionAlreadyRegistered()
     {
         // Get a list of two partition columns that is larger than number of partitions supported by business object data registration.
