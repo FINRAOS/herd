@@ -924,6 +924,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
 
+    public static final String S3_ENDPOINT_US_EAST_1 = "s3-external-1.amazonaws.com";
+
     public static final String S3_KEY = "UT_S3_Key_1_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_2 = "UT_S3_Key_2_" + RANDOM_SUFFIX;

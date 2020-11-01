@@ -541,8 +541,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
 
-        LOGGER.info("Configured AWS Region: " + s3BucketAccessParams.getAwsRegionName());
-
         // Use downloader role credentials.
         s3BucketAccessParams.setAwsAccessKeyId(downloaderCredentials.getAccessKeyId());
         s3BucketAccessParams.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());

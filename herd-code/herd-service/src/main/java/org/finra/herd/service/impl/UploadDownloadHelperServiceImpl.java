@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.Arrays;
@@ -156,7 +156,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 if (!BusinessObjectDataStatusEntity.UPLOADING.equals(businessObjectDataEntity.getStatus().getCode()))
                 {
                     LOGGER.info("Ignoring S3 notification since business object data status \"{}\" does not match the expected status \"{}\". " +
-                        "businessObjectDataKey={}", businessObjectDataEntity.getStatus().getCode(), BusinessObjectDataStatusEntity.UPLOADING,
+                            "businessObjectDataKey={}", businessObjectDataEntity.getStatus().getCode(), BusinessObjectDataStatusEntity.UPLOADING,
                         jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
 
                     // Exit from the method without setting the new status values in the completeUploadSingleParamsDto to "RE-ENCRYPTING".
@@ -221,7 +221,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             catch (OptimisticLockException e)
             {
                 LOGGER.info("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
-                    "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
+                        "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
                     jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
                     jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()));
 
@@ -295,7 +295,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         params.setAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
         params.setHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost());
         params.setHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort());
-        params.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+        params.setS3Endpoint(completeUploadSingleParamsDto.getS3Endpoint());
 
         String targetStatus;
 
@@ -311,7 +311,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         {
             // Log the error.
             LOGGER.error("Failed to copy the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3BucketName=\"{}\" " +
-                "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}", completeUploadSingleParamsDto.getSourceFilePath(),
+                    "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}", completeUploadSingleParamsDto.getSourceFilePath(),
                 completeUploadSingleParamsDto.getSourceBucketName(), completeUploadSingleParamsDto.getTargetBucketName(),
                 jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
                 jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()), e);

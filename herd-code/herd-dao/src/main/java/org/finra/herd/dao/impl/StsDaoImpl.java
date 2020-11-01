@@ -1,35 +1,33 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.policy.Policy;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.StsOperations;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
@@ -39,10 +37,10 @@ import org.finra.herd.model.dto.AwsParamsDto;
 public class StsDaoImpl implements StsDao
 {
     @Autowired
-    private StsOperations stsOperations;
+    private AwsHelper awsHelper;
 
     @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
+    private StsOperations stsOperations;
 
     /**
      * Returns a set of temporary security credentials (consisting of an access key ID, a secret access key, and a security token) that can be used to access
@@ -67,23 +65,12 @@ public class StsDaoImpl implements StsDao
         // - Java System Properties - aws.accessKeyId and aws.secretKey
         // - Instance Profile Credentials - delivered through the Amazon EC2 metadata service
 
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
+        // Get client configuration.
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsParamsDto);
 
-        // Only set the proxy hostname and/or port if they're configured.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()))
-        {
-            clientConfiguration.setProxyHost(awsParamsDto.getHttpProxyHost());
-        }
-        if (awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = new AWSSecurityTokenServiceClient(clientConfiguration);
-        if (awsParamsDto.getAwsRegionName() != null)
-        {
-            awsSecurityTokenServiceClient.setRegion(Region.getRegion(Regions.fromName(awsParamsDto.getAwsRegionName())));
-        }
+        // Build STS client.
+        AWSSecurityTokenService awsSecurityTokenService =
+            AWSSecurityTokenServiceClientBuilder.standard().withClientConfiguration(clientConfiguration).withRegion(awsParamsDto.getAwsRegionName()).build();
 
         // Create the request.
         AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest();
@@ -97,7 +84,7 @@ public class StsDaoImpl implements StsDao
         }
 
         // Get the temporary security credentials.
-        AssumeRoleResult assumeRoleResult = stsOperations.assumeRole(awsSecurityTokenServiceClient, assumeRoleRequest);
+        AssumeRoleResult assumeRoleResult = stsOperations.assumeRole(awsSecurityTokenService, assumeRoleRequest);
         return assumeRoleResult.getCredentials();
     }
 }
