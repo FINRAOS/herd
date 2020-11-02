@@ -50,6 +50,20 @@ public class HerdStringUtilsTest extends AbstractCoreTest
     }
 
     @Test
+    public void testGetMinimizedFilePath()
+    {
+        final String directoryPath = "this/is/a/test/path";
+        final String fileName = "fileName1.csv";
+        final String filePath = directoryPath + "/" + fileName;
+
+        // Happy path test.
+        assertEquals("Did not minimize correctly.", fileName, HerdStringUtils.getMinimizedFilePath(filePath, directoryPath));
+
+        // Directory path not in file path.
+        assertEquals("Did not minimize correctly.", filePath, HerdStringUtils.getMinimizedFilePath(filePath, directoryPath + "FOO"));
+    }
+
+    @Test
     public void testGetShortDescription()
     {
         String longString = RandomStringUtils.randomAlphabetic(500);
