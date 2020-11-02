@@ -255,19 +255,21 @@ public class StorageFileHelper
     }
 
     /**
-     * Returns a map of file paths to the storage file entities build from the list of storage file entities.
+     * Returns a map of full file paths to the storage files build from the list of storage file entities.
      *
+     * @param storageUnitDirectoryPath the storage unit directory path
      * @param storageFileEntities the collection of storage file entities
      *
      * @return the map of file paths to storage file entities
      */
-    public Map<String, StorageFileEntity> getStorageFileEntitiesMap(Collection<StorageFileEntity> storageFileEntities)
+    public Map<String, StorageFile> getAlreadyRegisteredStorageFilesMap(String storageUnitDirectoryPath, Collection<StorageFileEntity> storageFileEntities)
     {
-        Map<String, StorageFileEntity> result = new HashMap<>();
+        Map<String, StorageFile> result = new HashMap<>();
 
         for (StorageFileEntity storageFileEntity : storageFileEntities)
         {
-            result.put(storageFileEntity.getPath(), storageFileEntity);
+            StorageFile storageFile = createStorageFileFromEntity(storageFileEntity, storageUnitDirectoryPath);
+            result.put(storageFile.getFilePath(), storageFile);
         }
 
         return result;
@@ -466,30 +468,31 @@ public class StorageFileHelper
     }
 
     /**
-     * Validates storage file entity against the actual S3 objects reported by S3.
+     * Validates storage file path and size against the actual S3 objects reported by S3.
      *
-     * @param storageFileEntity the storage file to be validated
+     * @param storageFilePath the storage file path to be validated
+     * @param storageFileSize the size of the storage file
      * @param s3BucketName the S3 bucket name
      * @param actualS3Keys the map of storage file paths to storage files as reported by S3
      * @param validateFileSize specifies whether file size validation is required or not
      */
-    public void validateStorageFileEntity(StorageFileEntity storageFileEntity, String s3BucketName, Map<String, StorageFile> actualS3Keys,
+    public void validateStorageFilePathAndSize(String storageFilePath, Long storageFileSize, String s3BucketName, Map<String, StorageFile> actualS3Keys,
         boolean validateFileSize)
     {
-        if (!actualS3Keys.containsKey(storageFileEntity.getPath()))
+        if (!actualS3Keys.containsKey(storageFilePath))
         {
             throw new ObjectNotFoundException(
-                String.format("Previously registered storage file not found at s3://%s/%s location.", s3BucketName, storageFileEntity.getPath()));
+                String.format("Previously registered storage file not found at s3://%s/%s location.", s3BucketName, storageFilePath));
         }
         else if (validateFileSize)
         {
             // Validate the file size.
-            StorageFile actualS3StorageFile = actualS3Keys.get(storageFileEntity.getPath());
-            Assert.isTrue(storageFileEntity.getFileSizeBytes() != null,
-                String.format("Previously registered storage file \"%s\" has no file size specified.", storageFileEntity.getPath()));
-            Assert.isTrue(storageFileEntity.getFileSizeBytes().equals(actualS3StorageFile.getFileSizeBytes()), String
+            StorageFile actualS3StorageFile = actualS3Keys.get(storageFilePath);
+            Assert.isTrue(storageFileSize != null,
+                String.format("Previously registered storage file \"%s\" has no file size specified.", storageFilePath));
+            Assert.isTrue(storageFileSize.equals(actualS3StorageFile.getFileSizeBytes()), String
                 .format("Previously registered storage file \"%s\" has file size of %d bytes that does not match file size of %d bytes reported by S3.",
-                    storageFileEntity.getPath(), storageFileEntity.getFileSizeBytes(), actualS3StorageFile.getFileSizeBytes()));
+                    storageFilePath, storageFileSize, actualS3StorageFile.getFileSizeBytes()));
         }
     }
 
