@@ -136,12 +136,12 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         }
 
         // Get all business object definition columns
-        List<BusinessObjectDefinitionColumnEntity> BusinessObjectDefinitionColumnEntities =
+        List<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities =
             businessObjectDefinitionColumnDao.findAll(BusinessObjectDefinitionColumnEntity.class);
 
         // Ensure that the schema column name does not already exist in another business object definition column.
         // This check is not case sensitive.
-        for (BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity : BusinessObjectDefinitionColumnEntities)
+        for (BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity : businessObjectDefinitionColumnEntities)
         {
             if (businessObjectDefinitionColumnEntity.getSchemaColumnName() != null &&
                 businessObjectDefinitionColumnEntity.getSchemaColumnName().equalsIgnoreCase(request.getSchemaColumnName()))
