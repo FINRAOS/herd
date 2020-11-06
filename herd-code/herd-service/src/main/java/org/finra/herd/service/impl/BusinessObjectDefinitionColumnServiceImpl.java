@@ -135,24 +135,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
                 businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
         }
 
-        // Get all business object definition columns
-        List<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities =
-            businessObjectDefinitionColumnDao.findAll(BusinessObjectDefinitionColumnEntity.class);
-
-        // Ensure that the schema column name does not already exist in another business object definition column.
-        // This check is not case sensitive.
-        for (BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity : businessObjectDefinitionColumnEntities)
-        {
-            if (businessObjectDefinitionColumnEntity.getSchemaColumnName() != null &&
-                businessObjectDefinitionColumnEntity.getSchemaColumnName().equalsIgnoreCase(request.getSchemaColumnName()))
-            {
-                throw new AlreadyExistsException(String.format(
-                    "Unable to create business object definition column because a business object definition column " +
-                        "with schema column name \"%s\" already exists for the business object definition {%s}.", request.getSchemaColumnName(),
-                    businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
-            }
-        }
-
         // Retrieve schema column entities from all format instances for the business object definition that match the specified schema column name.
         Collection<SchemaColumnEntity> schemaColumnEntities = schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, request.getSchemaColumnName());
 
@@ -177,6 +159,23 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         for (SchemaColumnEntity schemaColumnEntity : schemaColumnEntities)
         {
             if (schemaColumnEntity.getBusinessObjectDefinitionColumn() != null)
+            {
+                throw new AlreadyExistsException(String.format(
+                    "Unable to create business object definition column because a business object definition column " +
+                        "with schema column name \"%s\" already exists for the business object definition {%s}.", request.getSchemaColumnName(),
+                    businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
+            }
+        }
+
+        // Get all business object definition columns
+        List<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities =
+            businessObjectDefinitionColumnDao.findAll(BusinessObjectDefinitionColumnEntity.class);
+
+        // Ensure that the schema column name does not already exist in another business object definition column.
+        // This check is not case sensitive.
+        for (BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity : businessObjectDefinitionColumnEntities)
+        {
+            if (request.getSchemaColumnName().equalsIgnoreCase(businessObjectDefinitionColumnEntity.getSchemaColumnName()))
             {
                 throw new AlreadyExistsException(String.format(
                     "Unable to create business object definition column because a business object definition column " +
