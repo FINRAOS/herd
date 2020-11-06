@@ -239,7 +239,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         // Validate the returned object.
         // Note that the schema column will now be lower case because we are putting the schema column name as is into the business object definition column.
         assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(),
-            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME.toLowerCase()), COLUMN_NAME.toLowerCase(),
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME.toLowerCase()), COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION.toLowerCase(), NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS), resultBusinessObjectDefinitionColumn);
     }
 
@@ -551,7 +551,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         // Validate the returned object.
         // Note that the schema column name should now be upper case because we are putting it directly as is into the business object definition column.
         assertEquals(new BusinessObjectDefinitionColumn(resultBusinessObjectDefinitionColumn.getId(),
-            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME.toUpperCase()), COLUMN_NAME.toUpperCase(),
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME.toUpperCase()), COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION.toUpperCase(), NO_BUSINESS_OBJECT_DEFINITION_COLUMN_CHANGE_EVENTS), resultBusinessObjectDefinitionColumn);
     }
 

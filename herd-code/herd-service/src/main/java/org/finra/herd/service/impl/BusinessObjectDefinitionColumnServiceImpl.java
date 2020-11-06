@@ -186,7 +186,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
 
         // Create a business object definition column entity from the request information.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, request);
+            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, request, IterableUtils.get(schemaColumnEntities, 0).getName());
 
         // Persist the change event entity
         businessObjectDefinitionColumnDaoHelper.saveBusinessObjectDefinitionColumnChangeEvents(businessObjectDefinitionColumnEntity);
@@ -350,18 +350,19 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
      *
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param request the business object definition column create request
+     * @param schemaColumnName the schema column name
      *
      * @return the newly created business object definition column entity
      */
     private BusinessObjectDefinitionColumnEntity createBusinessObjectDefinitionColumnEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        BusinessObjectDefinitionColumnCreateRequest request)
+        BusinessObjectDefinitionColumnCreateRequest request, String schemaColumnName)
     {
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = new BusinessObjectDefinitionColumnEntity();
 
         businessObjectDefinitionColumnEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionColumnEntity.setName(request.getBusinessObjectDefinitionColumnKey().getBusinessObjectDefinitionColumnName());
         businessObjectDefinitionColumnEntity.setDescription(request.getDescription());
-        businessObjectDefinitionColumnEntity.setSchemaColumnName(request.getSchemaColumnName());
+        businessObjectDefinitionColumnEntity.setSchemaColumnName(schemaColumnName);
 
         return businessObjectDefinitionColumnEntity;
     }
