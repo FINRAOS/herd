@@ -68,6 +68,12 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @Column(name = "clmn_ds")
     private String description;
 
+    /**
+     * The business object definition column schema column name.
+     */
+    @Column(name = "schm_clmn_name_tx")
+    private String schemaColumnName;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "businessObjectDefinitionColumn")
     private Collection<SchemaColumnEntity> schemaColumns;
@@ -115,6 +121,16 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public String getSchemaColumnName()
+    {
+        return schemaColumnName;
+    }
+
+    public void setSchemaColumnName(String schemaColumnName)
+    {
+        this.schemaColumnName = schemaColumnName;
     }
 
     public Collection<SchemaColumnEntity> getSchemaColumns()
