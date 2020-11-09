@@ -184,6 +184,7 @@
          <xs:element name="targetNewStatus" type="xs:string" minOccurs="0"/>
          <xs:element name="kmsKeyId" type="xs:string" minOccurs="0"/>
          <xs:element name="awsParams" type="awsParamsDto" minOccurs="0"/>
+         <xs:element name="s3Endpoint" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
