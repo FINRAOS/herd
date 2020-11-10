@@ -15,6 +15,7 @@
  */
 package org.finra.herd.service;
 
+import static org.finra.herd.dao.AbstractDaoTest.NO_DO_NOT_TRANSITION_LATEST_VALID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -1063,8 +1064,8 @@ public class BusinessObjectDataServiceTestHelper
                 .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
                     businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
                     businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(), storageName,
-                    StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
-                    AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                    NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED,
+                    AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
         }
 
         // Return the business object data entity.

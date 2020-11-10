@@ -97,8 +97,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -164,8 +164,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -335,8 +335,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when business object data status is not supported by the storage policy feature.
         try
@@ -402,8 +402,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity with storage policy filter storage having a non-S3 storage platform type.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has a non-S3 storage platform type.
         try
@@ -444,8 +444,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity with the storage policy filter storage having no S3 path prefix validation enabled.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 path prefix validation enabled.
         try
@@ -485,8 +485,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity with storage policy filter storage has no S3 bucket name attribute configured.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 file existence validation enabled.
         try
@@ -525,8 +525,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity with storage policy filter storage has no S3 bucket name attribute configured.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 bucket name attribute configured.
         try
@@ -564,8 +564,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -616,8 +616,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -669,8 +669,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -722,8 +722,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -783,8 +783,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -865,8 +865,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
