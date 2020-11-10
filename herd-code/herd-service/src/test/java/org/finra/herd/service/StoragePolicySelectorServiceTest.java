@@ -20,7 +20,9 @@ import static org.junit.Assert.fail;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,13 +50,18 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 {
     @Test
-    public void testExecuteBusinessObjectDataNotSelectedDueToHigherPriorityLevelStoragePolicy()
+    public void testExecuteDifferentPriorityLevelsWhenStoragePoliciesAreWithNoTransitionLatestValidFlagDisabled()
     {
+        // Create an list of unique storage policy keys.
+        List<StoragePolicyKey> storagePolicyKeys = Arrays.asList(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+
         // Storage a storage policy with a filter that has no fields specified.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(0), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE,
+                NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -65,18 +72,25 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Get the business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
 
+        // Get business object data key.
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
         // Apply the offset in days to business object data "created on" value, so it would match to the storage policy.
         businessObjectDataDaoTestHelper.ageBusinessObjectData(businessObjectDataEntity, BDATA_AGE_IN_DAYS + 1);
 
         // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
-        assertEquals(1, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+        assertEquals(Collections.singletonList(new StoragePolicySelection(businessObjectDataKey, storagePolicyKeys.get(0), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
 
         // Create a storage policy with a filter that has only usage and file type specified
         // and with the age restriction greater than the current business object data entity age.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(1), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2,
+                NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -85,14 +99,15 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         businessObjectDataDaoTestHelper.ageBusinessObjectData(businessObjectDataEntity, 2);
 
         // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
-        assertEquals(1, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+        assertEquals(Collections.singletonList(new StoragePolicySelection(businessObjectDataKey, storagePolicyKeys.get(1), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
 
         // Create a storage policy with a filter that has only business object definition
         // specified and with the age restriction greater than the current business object data entity age.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(2), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BDEF_NAMESPACE,
+                BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -101,14 +116,15 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         businessObjectDataDaoTestHelper.ageBusinessObjectData(businessObjectDataEntity, 2);
 
         // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
-        assertEquals(1, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+        assertEquals(Collections.singletonList(new StoragePolicySelection(businessObjectDataKey, storagePolicyKeys.get(2), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
 
         // Create a storage policy with a filter that has business object definition, usage, and file type
         // specified and with the age restriction greater than the current business object data entity age.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-            LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(3), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -117,7 +133,118 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         businessObjectDataDaoTestHelper.ageBusinessObjectData(businessObjectDataEntity, 2);
 
         // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
-        assertEquals(1, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+        assertEquals(Collections.singletonList(new StoragePolicySelection(businessObjectDataKey, storagePolicyKeys.get(3), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+    }
+
+    @Test
+    public void testExecuteDifferentPriorityLevelsWhenStoragePoliciesAreWithNoTransitionLatestValidFlagEnabled()
+    {
+        // Create an list of unique storage policy keys.
+        List<StoragePolicyKey> storagePolicyKeys = Arrays.asList(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+
+        // Storage a storage policy with a filter that has no fields specified.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(0), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE,
+                NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist three storage units in the storage policy filter storage.  One of them would be a latest valid version, thus it would not get
+        // selected by any of the storage policies with the enabled NoTransitionLatestValid flag.
+        List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
+        for (Integer businessObjectDataVersion : Arrays.asList(INITIAL_DATA_VERSION, SECOND_DATA_VERSION, THIRD_DATA_VERSION))
+        {
+            storageUnitEntities.add(storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, businessObjectDataVersion, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                    StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH));
+        }
+
+        // Get the relative business object data keys.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataKeys.add(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()));
+        }
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+        }
+
+        // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(0), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(0), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+
+        // Create a storage policy with a filter that has only usage and file type specified
+        // and with the age restriction greater than the current business object data entity age.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(1), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2,
+                NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the last added storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), 2);
+        }
+
+        // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(1), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(1), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+
+        // Create a storage policy with a filter that has only business object definition
+        // specified and with the age restriction greater than the current business object data entity age.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(2), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BDEF_NAMESPACE,
+                BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the last added storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), 2);
+        }
+
+        // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(2), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(2), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+
+        // Create a storage policy with a filter that has business object definition, usage, and file type
+        // specified and with the age restriction greater than the current business object data entity age.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(3), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the last added storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), 2);
+        }
+
+        // Execute the storage policy selection and validate the results. The business object data is expected to be selected.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(3), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(3), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
     }
 
     @Test
@@ -181,6 +308,86 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testExecuteMixingStoragePoliciesWithNoTransitionLatestValidFlagEnabledAndDisabled()
+    {
+        // Create an list of unique storage policy keys.
+        List<StoragePolicyKey> storagePolicyKeys = Arrays.asList(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
+            new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+
+        // Storage two identical storage policies with a filter that has no fields specified with and without set NoTransitionLatestValid flag.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(0), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE,
+                NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(1), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE,
+                NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist three storage units in the storage policy filter storage.  One of them would be a latest valid version, thus it would not get
+        // selected by any of the storage policies with the enabled NoTransitionLatestValid flag.
+        List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
+        for (Integer businessObjectDataVersion : Arrays.asList(INITIAL_DATA_VERSION, SECOND_DATA_VERSION, THIRD_DATA_VERSION))
+        {
+            storageUnitEntities.add(storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, businessObjectDataVersion, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                    StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH));
+        }
+
+        // Get the relative business object data keys.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataKeys.add(businessObjectDataHelper.getBusinessObjectDataKey(storageUnitEntity.getBusinessObjectData()));
+        }
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+        }
+
+        // Execute the storage policy selection and validate the results. All business object data
+        // versions are expected to be selected by the relative storage policies.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(0), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(0), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(2), storagePolicyKeys.get(1), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+
+        // Create two more storage policies with a filter that has business object definition, usage, and file type specified and with the age restriction
+        // greater than the current business object data entity age - one with and another without set NoTransitionLatestValid flag.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(2), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKeys.get(3), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, STORAGE_POLICY_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Execute the storage policy selection and validate the results. No business object data is not expected to be selected.
+        assertEquals(0, storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Apply the offset in days to business object data "created on" value, so it would match to the last added storage policy.
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), 2);
+        }
+
+        // Execute the storage policy selection and validate the results. All business object data
+        // versions are expected to be selected by the relative storage policies.
+        assertEquals(Arrays.asList(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKeys.get(2), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(1), storagePolicyKeys.get(2), STORAGE_POLICY_VERSION),
+            new StoragePolicySelection(businessObjectDataKeys.get(2), storagePolicyKeys.get(3), STORAGE_POLICY_VERSION)),
+            storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
+    }
+
+    @Test
     public void testExecutePrimaryPartitionValueStoragePolicyRuleType() throws Exception
     {
         // Create a storage policy key.
@@ -211,7 +418,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
             List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT);
 
             // Validate the results.
-            assertEquals(Arrays.asList(new StoragePolicySelection(
+            assertEquals(Collections.singletonList(new StoragePolicySelection(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
                     SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
         }
@@ -253,7 +460,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         try
         {
             // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-            assertEquals(Arrays.asList(new StoragePolicySelection(
+            assertEquals(Collections.singletonList(new StoragePolicySelection(
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
                         SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)),
                 storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
@@ -292,7 +499,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         try
         {
             // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-            assertEquals(Arrays.asList(new StoragePolicySelection(
+            assertEquals(Collections.singletonList(new StoragePolicySelection(
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
                         SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)),
                 storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
@@ -339,7 +546,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         try
         {
             // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-            assertEquals(Arrays.asList(new StoragePolicySelection(
+            assertEquals(Collections.singletonList(new StoragePolicySelection(
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
                         SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)),
                 storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
@@ -385,7 +592,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         try
         {
             // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-            assertEquals(Arrays.asList(new StoragePolicySelection(
+            assertEquals(Collections.singletonList(new StoragePolicySelection(
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
                         SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)),
                 storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
@@ -428,7 +635,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT);
 
         // Validate the results.
-        assertEquals(Arrays.asList(new StoragePolicySelection(
+        assertEquals(Collections.singletonList(new StoragePolicySelection(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
     }
@@ -455,7 +662,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
 
         // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-        assertEquals(Arrays.asList(new StoragePolicySelection(
+        assertEquals(Collections.singletonList(new StoragePolicySelection(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, MAX_RESULT));
 
@@ -500,7 +707,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(AWS_SQS_QUEUE_NAME, 1);
 
         // Validate the results. Only the oldest business object data should get selected.
-        assertEquals(Arrays.asList(new StoragePolicySelection(
+        assertEquals(Collections.singletonList(new StoragePolicySelection(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
     }
