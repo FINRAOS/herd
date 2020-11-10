@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,8 +100,9 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
     @Override
     public List<StoragePolicySelection> execute(String sqsQueueName, int maxResult)
     {
-        // Create a result list.
-        List<StoragePolicySelection> storagePolicySelections = new ArrayList<>();
+        // Create a result map. We use the map here to prevent duplicate selection of business object data entities.
+        // Please note that we use linked has map here in order to preserve the order of selections.
+        Map<BusinessObjectDataEntity, StoragePolicySelection> storagePolicySelectionMap = new LinkedHashMap<>();
 
         // Get the current timestamp from the database.
         Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
@@ -130,7 +132,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
             // Keep track of all business object data entities selected per storage policies. This is need to avoid a lower priority selection policy to be
             // executed ahead of a higher priority one. Please note that this check also implies that, for each of the two scans that we perform, any business
             // object data could be selected for checking applicable rules only by one storage policy regardless of storage policy priority level.
-            Set<BusinessObjectDataEntity> selectedBusinessObjectDataEntities = new LinkedHashSet<>();
+            Set<BusinessObjectDataEntity> businessObjectDataEntitiesSelectedForReview = new HashSet<>();
 
             // Separately process all possible storage policy priority levels in order of priorities. This is done to assure that higher priority level storage
             // policies will be listed earlier in the final result map.
@@ -157,20 +159,23 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                         // Get business object data entity.
                         BusinessObjectDataEntity businessObjectDataEntity = entry.getKey();
 
-                        // Process this storage policy selection, only if this business object data entity has not been selected earlier. This is needed in
-                        // order to avoid a lower priority selection policy to be executed ahead of a higher priority one. Please note that we clear the set
-                        // that tracks business object data entities selected for review between the scans. This is needed, so storage policies that are not
-                        // configured to ignore the latest valid business object data would still be able to select business object data entities that got
-                        // selected for rule checking by the policies configured to ignore latest valid versions.  The below check also implies that, for each
-                        // of the two scans that we perform, any business object data could be selected for checking applicable rules only by one storage
-                        // policy regardless of storage policy priority level.
-                        if (!selectedBusinessObjectDataEntities.contains(businessObjectDataEntity))
+                        // Process this storage policy selection, only if this business object data entity has not been selected for review earlier. This is
+                        // needed in order to avoid a lower priority selection policy to be executed ahead of a higher priority one. Please note that we clear
+                        // the set that tracks business object data entities selected for review between the scans. This is needed, so storage policies that
+                        // are not configured to ignore the latest valid business object data would still be able to select business object data entities that
+                        // got selected for rule checking by the policies configured to ignore latest valid versions.  The below check also implies that, for
+                        // each of the two scans that we perform, any business object data could be selected for checking applicable rules only by one storage
+                        // policy regardless of storage policy priority level. Since two sets of storage policies configured and not configured to ignore
+                        // the latest valid business object data select data independent from each other, we also check against all already created storage
+                        // policy selections. This is needed in order to avoid selecting the same business object data entity for transition twice.
+                        if (!businessObjectDataEntitiesSelectedForReview.contains(businessObjectDataEntity) &&
+                            !storagePolicySelectionMap.containsKey(businessObjectDataEntity))
                         {
                             boolean createStoragePolicySelection = false;
 
                             // Remember that we got this business object data entity as matching to a storage policy.
                             // This is done so we would not try to select this business object data again later by a lower level storage policy.
-                            selectedBusinessObjectDataEntities.add(businessObjectDataEntity);
+                            businessObjectDataEntitiesSelectedForReview.add(businessObjectDataEntity);
 
                             // Get the storage policy entity, so we can validate the storage policy rule against this business object data.
                             StoragePolicyEntity storagePolicyEntity = entry.getValue();
@@ -232,16 +237,16 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                                 StoragePolicyKey storagePolicyKey =
                                     new StoragePolicyKey(storagePolicyEntity.getNamespace().getCode(), storagePolicyEntity.getName());
 
-                                // Create and add a storage policy selection to the result list.
-                                storagePolicySelections
-                                    .add(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, storagePolicyEntity.getVersion()));
+                                // Create and add a storage policy selection to the result map.
+                                storagePolicySelectionMap.put(businessObjectDataEntity,
+                                    new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, storagePolicyEntity.getVersion()));
 
                                 LOGGER.info("Selected business object data for storage policy processing: " +
                                         "businessObjectDataKey={} storagePolicyKey={} storagePolicyVersion={}", jsonHelper.objectToJson(businessObjectDataKey),
                                     jsonHelper.objectToJson(storagePolicyKey), storagePolicyEntity.getVersion());
 
-                                // Stop adding storage policy selections to the result list if we reached the maximum results limit.
-                                if (storagePolicySelections.size() >= maxResult)
+                                // Stop adding storage policy selections to the result map if we reached the maximum results limit.
+                                if (storagePolicySelectionMap.size() >= maxResult)
                                 {
                                     break;
                                 }
@@ -250,7 +255,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                     }
 
                     // Stop processing storage policies if we reached the max result limit or there are no more business object data to select.
-                    if (storagePolicySelections.size() >= maxResult || map.isEmpty())
+                    if (storagePolicySelectionMap.size() >= maxResult || map.isEmpty())
                     {
                         break;
                     }
@@ -260,16 +265,20 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                 }
 
                 // Stop processing storage policies if we reached the max result limit.
-                if (storagePolicySelections.size() >= maxResult)
+                if (storagePolicySelectionMap.size() >= maxResult)
                 {
                     break;
                 }
             }
         }
 
+        // Get the list of all storage policy selections.
+        List<StoragePolicySelection> storagePolicySelections = new ArrayList<>(storagePolicySelectionMap.values());
+
         // Send all storage policy selections to the specified SQS queue.
         sendStoragePolicySelectionToSqsQueue(sqsQueueName, storagePolicySelections);
 
+        // Return the selections.
         return storagePolicySelections;
     }
 
