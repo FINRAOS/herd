@@ -442,6 +442,10 @@ public class BusinessObjectDataHelper
     /**
      * Select all latest valid business object data from the specified list of business object data entities. This method does not look at entities outside of
      * the specified list.
+     *
+     * @param businessObjectDataEntities the list of business object data entities
+     *
+     * @return the set of latest valid business object data entities selected from the specified list of entities
      */
     public Set<BusinessObjectDataEntity> getLatestValidBusinessObjectDataEntities(List<BusinessObjectDataEntity> businessObjectDataEntities)
     {
