@@ -2602,6 +2602,19 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="relationalSchemaName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Schema Name if the Format is of type Relational Table.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relationalTableName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Table Name if the Format is of type Relational Table.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+
       </xs:all>
    </xs:complexType>
 
