@@ -343,10 +343,12 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       formatVersion
     )
 
-    if(fmt.getSchema == null)
+    if(fmt.getSchema == null) {
       throw new Exception("Schema not found")
-    if(fmt.getSchema.getPartitionKeyGroup == null)
+    }
+    if(fmt.getSchema.getPartitionKeyGroup == null) {
       throw new Exception("Partition Key Group not found")
+    }
 
     log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
 
