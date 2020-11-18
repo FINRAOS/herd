@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.model.jpa;
 
 import javax.persistence.Column;
@@ -114,6 +114,10 @@ public class StoragePolicyEntity extends AuditableEntity
 
     @Column(name = "file_type_cd", insertable = false, updatable = false)
     private String fileTypeCode;
+
+    @Column(name = "do_not_trnsn_ltst_valid_fl")
+    @Type(type = "yes_no")
+    private Boolean doNotTransitionLatestValid;
 
     @ManyToOne
     @JoinColumn(name = "strge_plcy_stts_cd", referencedColumnName = "strge_plcy_stts_cd", nullable = false)
@@ -267,6 +271,16 @@ public class StoragePolicyEntity extends AuditableEntity
     public void setFileTypeCode(String fileTypeCode)
     {
         this.fileTypeCode = fileTypeCode;
+    }
+
+    public Boolean getDoNotTransitionLatestValid()
+    {
+        return doNotTransitionLatestValid;
+    }
+
+    public void setDoNotTransitionLatestValid(Boolean doNotTransitionLatestValid)
+    {
+        this.doNotTransitionLatestValid = doNotTransitionLatestValid;
     }
 
     public StoragePolicyStatusEntity getStatus()

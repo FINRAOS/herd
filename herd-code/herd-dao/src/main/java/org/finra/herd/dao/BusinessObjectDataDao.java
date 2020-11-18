@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import java.util.List;
@@ -151,6 +151,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * map is ordered by the business object data "created on" timestamp, starting with the oldest business object data entity.
      *
      * @param storagePolicyPriorityLevel the storage policy priority level
+     * @param doNotTransitionLatestValid specifies if this storage policy should not transition latest valid business object data versions
      * @param supportedBusinessObjectDataStatuses the list of business object data statuses that storage policies apply to (case-sensitive)
      * @param storagePolicyTransitionMaxAllowedAttempts the maximum number of failed storage policy transition attempts before the relative storage unit gets
      * excluded from being selected. 0 means the maximum is not set
@@ -160,8 +161,8 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return the map of business object data entities to their corresponding storage policy entities
      */
     Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
-        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
-        int startPosition, int maxResult);
+        StoragePolicyPriorityLevel storagePolicyPriorityLevel, Boolean doNotTransitionLatestValid, List<String> supportedBusinessObjectDataStatuses,
+        int storagePolicyTransitionMaxAllowedAttempts, int startPosition, int maxResult);
 
     /**
      * Retrieves a list of business object data by their partition value.
