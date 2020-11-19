@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
@@ -30,8 +30,11 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
+import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
 import org.finra.herd.model.dto.RelationalTableRegistrationDto;
@@ -40,6 +43,8 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.RelationalTableRegistrationHelperService;
 import org.finra.herd.service.RelationalTableRegistrationService;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
@@ -50,6 +55,12 @@ import org.finra.herd.service.helper.StorageUnitHelper;
 public class RelationalTableRegistrationServiceImpl implements RelationalTableRegistrationService
 {
     @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
     private RelationalTableRegistrationHelperService relationalTableRegistrationHelperService;
 
     @Autowired
@@ -57,6 +68,19 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
 
     @Autowired
     private StorageUnitHelper storageUnitHelper;
+
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        // Perform validations and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+
+        return relationalTableRegistrationHelperService.deleteRelationalTableRegistration(businessObjectDefinitionKey, businessObjectFormatKey);
+    }
 
     @PublishNotificationMessages
     @NamespacePermission(fields = "#relationalTableRegistrationCreateRequest.namespace", permissions = NamespacePermissionEnum.WRITE)

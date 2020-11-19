@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
+import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -266,6 +267,36 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Validate the newly created business object definition.
         assertEquals(existingBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
     }
+
+    @Test
+    public void testDeleteRelationalTableRegistration()
+    {
+        // Create database entities required for relational table registration testing.
+        relationalTableRegistrationServiceTestHelper
+            .createDatabaseEntitiesForRelationalTableRegistrationTesting(BDEF_NAMESPACE, DATA_PROVIDER_NAME, STORAGE_NAME);
+
+        // Pick one of the in-memory database tables to be registered as a relational table.
+        String relationalSchemaName = "PUBLIC";
+        String relationalTableName = BusinessObjectDefinitionEntity.TABLE_NAME.toUpperCase();
+
+        // Create a relational table registration create request for a table that is part of the in-memory database setup as part of DAO mocks.
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                relationalSchemaName, relationalTableName, STORAGE_NAME);
+
+        // Create a relational table registration.
+        BusinessObjectData resultBusinessObjectData = relationalTableRegistrationService
+            .createRelationalTableRegistration(relationalTableRegistrationCreateRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
+
+
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse = relationalTableRegistrationService.deleteRelationalTableRegistration(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME),
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
+
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElementsDeleted();
+
+        assertEquals(businessObjectDataList.size(), 1);
+    }
+
 
     @Test
     public void testGetRelationalTableRegistrationsForSchemaUpdate()
