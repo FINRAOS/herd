@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import java.util.Arrays;
@@ -197,6 +197,7 @@ public class StoragePolicyServiceTestHelper
      * @param businessObjectFormatUsage the business object usage
      * @param businessObjectFormatFileType the business object format file type
      * @param storageName the storage name
+     * @param doNotTransitionLatestValid specifies if this storage policy should not transition latest valid business object data versions
      * @param storagePolicyTransitionType the storage policy transition type
      * @param storagePolicyStatus the storage policy status
      *
@@ -204,7 +205,8 @@ public class StoragePolicyServiceTestHelper
      */
     public StoragePolicyCreateRequest createStoragePolicyCreateRequest(StoragePolicyKey storagePolicyKey, String storagePolicyRuleType,
         Integer storagePolicyRuleValue, String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, String storageName, String storagePolicyTransitionType, String storagePolicyStatus)
+        String businessObjectFormatFileType, String storageName, Boolean doNotTransitionLatestValid, String storagePolicyTransitionType,
+        String storagePolicyStatus)
     {
         StoragePolicyCreateRequest request = new StoragePolicyCreateRequest();
 
@@ -222,6 +224,7 @@ public class StoragePolicyServiceTestHelper
         storagePolicyFilter.setBusinessObjectFormatUsage(businessObjectFormatUsage);
         storagePolicyFilter.setBusinessObjectFormatFileType(businessObjectFormatFileType);
         storagePolicyFilter.setStorageName(storageName);
+        storagePolicyFilter.setDoNotTransitionLatestValid(doNotTransitionLatestValid);
 
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         request.setStoragePolicyTransition(storagePolicyTransition);
@@ -242,6 +245,7 @@ public class StoragePolicyServiceTestHelper
      * @param businessObjectFormatUsage the business object usage
      * @param businessObjectFormatFileType the business object format file type
      * @param storageName the storage name
+     * @param doNotTransitionLatestValid specifies if this storage policy should not transition latest valid business object data versions
      * @param storagePolicyTransitionType the storage policy transition type
      * @param storagePolicyStatus the storage policy status
      *
@@ -249,7 +253,7 @@ public class StoragePolicyServiceTestHelper
      */
     public StoragePolicyUpdateRequest createStoragePolicyUpdateRequest(String storagePolicyRuleType, Integer storagePolicyRuleValue,
         String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType,
-        String storageName, String storagePolicyTransitionType, String storagePolicyStatus)
+        String storageName, Boolean doNotTransitionLatestValid, String storagePolicyTransitionType, String storagePolicyStatus)
     {
         StoragePolicyUpdateRequest request = new StoragePolicyUpdateRequest();
 
@@ -265,6 +269,7 @@ public class StoragePolicyServiceTestHelper
         storagePolicyFilter.setBusinessObjectFormatUsage(businessObjectFormatUsage);
         storagePolicyFilter.setBusinessObjectFormatFileType(businessObjectFormatFileType);
         storagePolicyFilter.setStorageName(storageName);
+        storagePolicyFilter.setDoNotTransitionLatestValid(doNotTransitionLatestValid);
 
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         request.setStoragePolicyTransition(storagePolicyTransition);

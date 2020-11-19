@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +38,7 @@ import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -605,20 +606,24 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperTest extends Ab
         // Create four more storage policies having on of the filter fields not matching the business object data.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKeys.get(0), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED,
-                AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                BDEF_NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET);
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKeys.get(1), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED,
-                AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                BDEF_NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET);
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKeys.get(2), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED,
-                AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET);
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKeys.get(3), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED,
-                AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET);
 
         // Try to execute a before step for the retry storage policy transition when storage policy filter does not match business object data.
         for (int i = 0; i < 4; i++)
@@ -657,8 +662,9 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperTest extends Ab
         // Create another storage policy with storage policy filter with missing optional fields.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKeys.get(1), StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
-                NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED,
-                AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
+                NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION,
+                AbstractServiceTest.LATEST_VERSION_FLAG_SET);
 
         // Retry a storage policy transition with storage policy filter missing all optional fields.
         BusinessObjectData businessObjectData = businessObjectDataRetryStoragePolicyTransitionHelper
@@ -744,7 +750,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperTest extends Ab
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+        businessObjectDataServiceTestHelper
             .createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, STORAGE_NAME, S3_BUCKET_NAME,
                 NO_STORAGE_UNIT_STATUS);
 
@@ -788,7 +794,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperTest extends Ab
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data is not currently being archived. " +
-                "Storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}", STORAGE_NAME,
+                    "Storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}", STORAGE_NAME,
                 StorageUnitStatusEntity.ARCHIVING, STORAGE_UNIT_STATUS,
                 businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
