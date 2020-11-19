@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
@@ -21,12 +21,15 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Test;
@@ -141,6 +144,76 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetLatestValidBusinessObjectDataEntitiesDifferentDataVersions()
+    {
+        // Create two business object data entities with the second one having a greater business object data version.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = new ArrayList<>();
+        for (Integer dataVersion : Arrays.asList(INITIAL_DATA_VERSION, SECOND_DATA_VERSION))
+        {
+            businessObjectDataEntities.add(businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, dataVersion), NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID));
+        }
+
+        // Validate that we get the right latest valid business object data entity regardless of the input list order.
+        assertEquals(new HashSet<>(Collections.singletonList(businessObjectDataEntities.get(1))),
+            businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(businessObjectDataEntities));
+        assertEquals(new HashSet<>(Collections.singletonList(businessObjectDataEntities.get(1))),
+            businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(Lists.reverse(businessObjectDataEntities)));
+    }
+
+    @Test
+    public void testGetLatestValidBusinessObjectDataEntitiesDifferentFormatVersions()
+    {
+        // Create two business object data entities with the second one having a greater format version.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = new ArrayList<>();
+        for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
+        {
+            businessObjectDataEntities.add(businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, formatVersion, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION), NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID));
+        }
+
+        // Validate that we get the right latest valid business object data entity regardless of the input list order.
+        assertEquals(new HashSet<>(Collections.singletonList(businessObjectDataEntities.get(1))),
+            businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(businessObjectDataEntities));
+        assertEquals(new HashSet<>(Collections.singletonList(businessObjectDataEntities.get(1))),
+            businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(Lists.reverse(businessObjectDataEntities)));
+    }
+
+    @Test
+    public void testGetLatestValidBusinessObjectDataEntitiesEmptyList()
+    {
+        // Validate that we get an empty set back when input list is empty.
+        assertEquals(new HashSet<>(), businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(new ArrayList<>()));
+    }
+
+    @Test
+    public void testGetLatestValidBusinessObjectDataEntitiesNoValidBusinessObjectData()
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION), LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Validate that we get an empty set back when input contains no VALID business object data entities.
+        assertEquals(new HashSet<>(), businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(Collections.singletonList(businessObjectDataEntity)));
+    }
+
+    @Test
+    public void testGetLatestValidBusinessObjectDataEntitiesSingleValidEntity()
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION), LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        // Validate that we get an empty set back when input contains no VALID business object data entities.
+        assertEquals(new HashSet<>(Collections.singletonList(businessObjectDataEntity)),
+            businessObjectDataHelper.getLatestValidBusinessObjectDataEntities(Collections.singletonList(businessObjectDataEntity)));
+    }
+
+    @Test
     public void testGetPartitionValue()
     {
         // Create and persist test database entities.
@@ -149,14 +222,14 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
                 SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Retrieve primary and sub-partition values along with trying the "out of bounds" cases.
-        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
+        assertNull(businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
         assertEquals(PARTITION_VALUE, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 1));
         for (int partitionColumnPosition = 2; partitionColumnPosition <= BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1; partitionColumnPosition++)
         {
             assertEquals(SUBPARTITION_VALUES.get(partitionColumnPosition - 2),
                 businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, partitionColumnPosition));
         }
-        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
+        assertNull(businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
     }
 
     @Test

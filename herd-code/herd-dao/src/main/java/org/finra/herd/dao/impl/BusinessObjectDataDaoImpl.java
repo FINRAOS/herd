@@ -425,8 +425,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public Map<BusinessObjectDataEntity, StoragePolicyEntity> getBusinessObjectDataEntitiesMatchingStoragePolicies(
-        StoragePolicyPriorityLevel storagePolicyPriorityLevel, List<String> supportedBusinessObjectDataStatuses, int storagePolicyTransitionMaxAllowedAttempts,
-        int startPosition, int maxResult)
+        StoragePolicyPriorityLevel storagePolicyPriorityLevel, Boolean doNotTransitionLatestValid, List<String> supportedBusinessObjectDataStatuses,
+        int storagePolicyTransitionMaxAllowedAttempts, int startPosition, int maxResult)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -462,6 +462,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Add restriction on storage policy filter storage.
         predicates.add(builder.equal(storageUnitEntityJoin.get(StorageUnitEntity_.storageName), storagePolicyEntityRoot.get(StoragePolicyEntity_.storageName)));
+
+        // Add restriction on storage policy allowing or not to transition latest valid business object data versions.
+        predicates.add(builder.equal(storagePolicyEntityRoot.get(StoragePolicyEntity_.doNotTransitionLatestValid), doNotTransitionLatestValid));
 
         // Add restriction on storage policy latest version flag.
         predicates.add(builder.isTrue(storagePolicyEntityRoot.get(StoragePolicyEntity_.latestVersion)));

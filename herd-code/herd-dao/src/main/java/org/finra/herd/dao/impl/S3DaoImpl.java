@@ -1069,13 +1069,11 @@ public class S3DaoImpl implements S3Dao
         // Set the optional endpoint, if specified.
         if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
-            LOGGER.info("Configured S3 Endpoint: " + params.getS3Endpoint());
             amazonS3Client.setEndpoint(params.getS3Endpoint());
         }
-
-        if (StringUtils.isNotBlank(params.getAwsRegionName()))
+        // Otherwise, set AWS region, if specified.
+        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
         {
-            LOGGER.info("Configured AWS Region: " + params.getAwsRegionName());
             amazonS3Client.setRegion(Region.getRegion(Regions.fromName(params.getAwsRegionName())));
         }
 

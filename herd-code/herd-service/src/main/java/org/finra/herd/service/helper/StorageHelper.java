@@ -105,6 +105,7 @@ public class StorageHelper
 
         S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
 
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
         params.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         params.setS3BucketName(s3BucketName);
 
@@ -122,6 +123,7 @@ public class StorageHelper
 
         // Update the parameters with proxy host and port retrieved from the configuration.
         setProxyHostAndPort(params);
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
 
         return params;
     }
@@ -137,6 +139,8 @@ public class StorageHelper
 
         // Update the parameters with proxy host and port retrieved from the configuration.
         setProxyHostAndPort(params);
+
+        params.setAwsRegionName(configurationHelper.getProperty(ConfigurationValue.AWS_REGION_NAME));
 
         return params;
     }

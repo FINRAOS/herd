@@ -7920,6 +7920,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="doNotTransitionLatestValid" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, this storage policy will not transition latest valid business object data versions</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

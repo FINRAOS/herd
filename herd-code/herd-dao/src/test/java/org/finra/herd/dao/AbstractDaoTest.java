@@ -352,6 +352,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
+    public static final Boolean DO_NOT_TRANSITION_LATEST_VALID = true;
+
     public static final Boolean EBS_OPTIMIZED = true;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
@@ -703,6 +705,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_DATA_VERSION = null;
 
+    public static final Boolean NO_DO_NOT_TRANSITION_LATEST_VALID = false;
+
     public static final EmrClusterDefinitionEbsConfiguration NO_EMR_CLUSTER_DEFINITION_EBS_CONFIGURATION = null;
 
     public static final EmrClusterDefinitionVolumeSpecification NO_EMR_CLUSTER_DEFINITION_VOLUME_SPECIFICATION = null;
@@ -923,6 +927,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
+
+    public static final String S3_ENDPOINT_US_EAST_1 = "s3-external-1.amazonaws.com";
 
     public static final String S3_KEY = "UT_S3_Key_1_" + RANDOM_SUFFIX;
 
