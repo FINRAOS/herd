@@ -21,9 +21,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,7 +48,6 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -58,7 +55,6 @@ import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
-import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -73,8 +69,6 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
-import org.finra.herd.service.BusinessObjectDataService;
-import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.BusinessObjectFormatService;
 import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.RelationalTableRegistrationHelperService;
@@ -112,9 +106,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private BusinessObjectDataService businessObjectDataService;
-
-    @Autowired
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
 
     @Autowired
@@ -122,9 +113,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
-
-    @Autowired
-    private BusinessObjectDefinitionService businessObjectDefinitionService;
 
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
@@ -173,67 +161,6 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
 
     @Autowired
     private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectFormatKey businessObjectFormatKey)
-    {
-        // Get the existing business object definition
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-
-        // Get the business object format entities for this business object definition
-        Collection<BusinessObjectFormatEntity> businessObjectFormatEntities = businessObjectDefinitionEntity.getBusinessObjectFormats();
-
-        // Create a list to hold the filtered business object format entities.
-        List<BusinessObjectFormatEntity> filteredBusinessObjectFormatEntities = new ArrayList<>();
-
-        // Filter the list of business object format entities.
-        for (BusinessObjectFormatEntity businessObjectFormatEntity : businessObjectFormatEntities)
-        {
-            // If this format entity matches the format usage and file type code.
-            if (businessObjectFormatEntity.getUsage().equals(businessObjectFormatKey.getBusinessObjectFormatUsage())
-                && businessObjectFormatEntity.getFileTypeCode().equals(businessObjectFormatKey.getBusinessObjectFormatFileType()))
-            {
-                filteredBusinessObjectFormatEntities.add(businessObjectFormatEntity);
-            }
-        }
-
-        // Create a list of business object data that are deleted.
-        List<BusinessObjectData> deletedBusinessObjectData = new ArrayList<>();
-
-        // For each business object format entity, delete the associated business object data and then delete the business object format.
-        for (BusinessObjectFormatEntity businessObjectFormatEntity : filteredBusinessObjectFormatEntities)
-        {
-            // Get the associated Business Object Data entity.
-            List<BusinessObjectDataKey> businessObjectDataKeys =
-                businessObjectDataDao.getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, 1);
-
-            // Delete the business object data associated with this business object format.
-            for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
-            {
-                // Add the business object data to the deleted list.
-                deletedBusinessObjectData.add(businessObjectDataService.deleteBusinessObjectData(businessObjectDataKey, false));
-            }
-
-            // Delete the business object format.
-            // This service call will also update the Elasticsearch index.
-            businessObjectFormatService.deleteBusinessObjectFormat(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
-        }
-
-        // If specified Business Object Format is the last Business Object Format in the Business Object Definition,
-        // then the Business Object Definition will be deleted as well.
-        if (businessObjectFormatEntities.size() == filteredBusinessObjectFormatEntities.size())
-        {
-            // Delete the business object definition.
-            // This service call will also update the Elasticsearch index.
-            businessObjectDefinitionService.deleteBusinessObjectDefinition(businessObjectDefinitionKey);
-        }
-
-        return new RelationalTableRegistrationDeleteResponse(deletedBusinessObjectData);
-    }
-
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -19,7 +19,6 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
@@ -45,13 +44,11 @@ public interface RelationalTableRegistrationService
     /**
      * Deletes a relational table registration.
      *
-     * @param businessObjectDefinitionKey the business object definition key
      * @param businessObjectFormatKey the business object format key
      *
      * @return the relational table registration delete response
      */
-    RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectFormatKey businessObjectFormatKey);
+    RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectFormatKey businessObjectFormatKey);
 
     /**
      * Returns latest versions of all relational tables registered in the system.

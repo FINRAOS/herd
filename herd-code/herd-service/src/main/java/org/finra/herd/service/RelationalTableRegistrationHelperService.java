@@ -19,10 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
-import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.RelationalStorageAttributesDto;
 import org.finra.herd.model.dto.RelationalTableRegistrationDto;
@@ -32,17 +29,6 @@ import org.finra.herd.model.dto.RelationalTableRegistrationDto;
  */
 public interface RelationalTableRegistrationHelperService
 {
-    /**
-     * Deletes a relational table registration.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     * @param businessObjectFormatKey the business object format key
-     *
-     * @return the relational table registration delete response
-     */
-    RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectFormatKey businessObjectFormatKey);
-
     /**
      * Prepares for relational table registration by validating database entities per specified relational table registration create request. This method
      * returns storage attributes required to perform relation table registration.

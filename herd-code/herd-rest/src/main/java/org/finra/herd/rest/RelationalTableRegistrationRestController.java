@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
@@ -78,7 +77,7 @@ public class RelationalTableRegistrationRestController extends HerdBaseControlle
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage)
     {
-        return relationalTableRegistrationService.deleteRelationalTableRegistration(new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName),
+        return relationalTableRegistrationService.deleteRelationalTableRegistration(
             new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
     }
 }
