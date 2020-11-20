@@ -1257,6 +1257,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setDescription(request.getDescription());
         businessObjectFormatEntity.setDocumentSchema(getTrimmedString(request.getDocumentSchema()));
         businessObjectFormatEntity.setDocumentSchemaUrl(getTrimmedString(request.getDocumentSchemaUrl()));
+        businessObjectFormatEntity.setRelationalSchemaName(request.getRelationalSchemaName());
+        businessObjectFormatEntity.setRelationalTableName(request.getRelationalTableName());
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))

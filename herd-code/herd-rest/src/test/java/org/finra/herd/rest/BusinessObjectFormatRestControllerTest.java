@@ -85,7 +85,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
                 NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
-                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME, FORMAT_RELATIONAL_TABLE_NAME);
+                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, null, null);
 
         when(businessObjectFormatService.createBusinessObjectFormat(request)).thenReturn(businessObjectFormat);
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatRestController.createBusinessObjectFormat(request);
