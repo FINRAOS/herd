@@ -518,6 +518,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setPartitionKey(relationalTableRegistrationDto.getBusinessObjectFormat().getPartitionKey());
         businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setRelationalSchemaName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalSchemaName());
+        businessObjectFormatCreateRequest.setRelationalTableName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalTableName());
 
         // Log the relational table registration DTO along with the business object format create request.
         LOGGER.info("Updating relational table schema... relationalTableRegistrationDto={} businessObjectFormatCreateRequest={}",
