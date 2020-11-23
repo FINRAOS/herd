@@ -765,8 +765,7 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
 
         // Create a business object format.
         businessObjectFormatServiceImpl.updateBusinessObjectFormat(businessObjectFormatKey,
-            new BusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, schema,
-                NO_FORMAT_RELATIONAL_SCHEMA_NAME, NO_FORMAT_RELATIONAL_TABLE_NAME));
+            new BusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, schema));
 
         verify(businessObjectFormatHelper).validateBusinessObjectFormatKey(businessObjectFormatKey);
         verify(attributeHelper).validateFormatAttributes(NO_ATTRIBUTES);
