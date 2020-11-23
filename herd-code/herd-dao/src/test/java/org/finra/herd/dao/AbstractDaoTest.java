@@ -869,10 +869,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
 
-    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
-
-    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
-
     public static final List<Attribute> NULL_AS_ATTRIBUTES = null;
 
     public static final List<BusinessObjectDataKey> NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN = null;
