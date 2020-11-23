@@ -171,10 +171,10 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @JoinColumn(name = "rtntn_type_cd", referencedColumnName = "rtntn_type_cd", nullable = true)
     private RetentionTypeEntity retentionType;
 
-    @Column(name = "rltnl_schm_nm")
+    @Column(name = "rltnl_schm_nm_tx")
     private String relationalSchemaName;
 
-    @Column(name = "rltnl_tbl_nm")
+    @Column(name = "rltnl_tbl_nm_tx")
     private String relationalTableName;
 
     public Long getId()
