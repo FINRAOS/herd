@@ -58,27 +58,9 @@ public class RelationalTableRegistrationRestControllerTest extends AbstractRestT
         // Create the objects needed for the mock test.
         BusinessObjectData businessObjectData1 = new BusinessObjectData();
         businessObjectData1.setId(businessObjectData1.getId());
-        businessObjectData1.setNamespace(BDEF_NAMESPACE);
-        businessObjectData1.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectData1.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        businessObjectData1.setVersion(0);
-        businessObjectData1.setStatus("VALID");
-        businessObjectData1.setLatestVersion(true);
-        businessObjectData1.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        businessObjectData1.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
-        businessObjectData1.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
 
         BusinessObjectData businessObjectData2 = new BusinessObjectData();
         businessObjectData2.setId(businessObjectData2.getId());
-        businessObjectData2.setNamespace(BDEF_NAMESPACE);
-        businessObjectData2.setBusinessObjectDefinitionName(BDEF_NAME);
-        businessObjectData2.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-        businessObjectData2.setVersion(0);
-        businessObjectData2.setStatus("VALID");
-        businessObjectData2.setLatestVersion(true);
-        businessObjectData2.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
-        businessObjectData2.setPartitionValue(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_VALUE);
-        businessObjectData2.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
 
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
         businessObjectDataList.add(businessObjectData1);

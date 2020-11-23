@@ -288,7 +288,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
             relationalTableRegistrationService.deleteRelationalTableRegistration(businessObjectFormatKey);
 
         // Get the business object data list from the response.
-        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElementsDeleted();
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
 
         // Validate the result.
         assertEquals(businessObjectDataList.size(), 1);
@@ -322,7 +322,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
             relationalTableRegistrationService.deleteRelationalTableRegistration(businessObjectFormatKey);
 
         // Get the business object data list from the response.
-        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElementsDeleted();
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
 
         // Validate the result.
         assertEquals(businessObjectDataList.size(), 1);
@@ -372,7 +372,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
 
         // Get the business object data list from the response.
-        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElementsDeleted();
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
 
         // Validate the result.
         assertEquals(businessObjectDataList.size(), 0);
@@ -446,7 +446,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
 
         // Get the business object data list from the response.
-        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElementsDeleted();
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
 
         // Validate the result.
         assertEquals(businessObjectDataList.size(), 2);
