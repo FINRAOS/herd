@@ -319,6 +319,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
+
+        // Update relational table related fields
+        businessObjectFormatEntity.setRelationalSchemaName(request.getRelationalSchemaName());
+        businessObjectFormatEntity.setRelationalTableName(request.getRelationalTableName());
+
         // Update business object format attributes
         updateBusinessObjectFormatAttributesHelper(businessObjectFormatEntity, request.getAttributes());
 
