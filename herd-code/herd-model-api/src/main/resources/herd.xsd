@@ -3849,7 +3849,9 @@
       <xs:sequence>
          <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
+               <xs:documentation>Values that uniquely identify a Business Object Data and provide additional information related to this Business Object Data
+                  registered in the system
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -8894,6 +8896,19 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="relationalTableRegistrationDeleteResponse" type="relationalTableRegistrationDeleteResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for relational table registration delete response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="relationalTableRegistrationDeleteResponse">
+      <xs:sequence>
+         <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** External Interface ***** -->
