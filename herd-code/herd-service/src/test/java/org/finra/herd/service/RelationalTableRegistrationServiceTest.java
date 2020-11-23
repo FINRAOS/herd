@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -27,11 +27,13 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
@@ -40,13 +42,18 @@ import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
+import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -268,6 +275,211 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testDeleteRelationalTableRegistration()
+    {
+        // Setup the objects needed for the test.
+        BusinessObjectData resultBusinessObjectData = prepareToTestDeleteRelationalTableRegistration();
+
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null);
+
+        // Call the method being tested.
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
+            relationalTableRegistrationService.deleteRelationalTableRegistration(businessObjectFormatKey);
+
+        // Get the business object data list from the response.
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
+
+        // Validate the result.
+        assertEquals(businessObjectDataList.size(), 1);
+        assertEquals(businessObjectDataList.get(0), resultBusinessObjectData);
+        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey));
+
+        try
+        {
+            businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.createBusinessObjectDataKey(resultBusinessObjectData));
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object data"),
+                "Incorrect error message.");
+        }
+    }
+
+    @Test
+    public void testDeleteRelationalTableRegistrationTrimParameters()
+    {
+        // Setup the objects needed for the test.
+        BusinessObjectData resultBusinessObjectData = prepareToTestDeleteRelationalTableRegistration();
+
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null);
+
+        // Call the method being tested.
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
+            relationalTableRegistrationService.deleteRelationalTableRegistration(businessObjectFormatKey);
+
+        // Get the business object data list from the response.
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
+
+        // Validate the result.
+        assertEquals(businessObjectDataList.size(), 1);
+        assertEquals(businessObjectDataList.get(0), resultBusinessObjectData);
+        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey));
+
+        try
+        {
+            businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.createBusinessObjectDataKey(resultBusinessObjectData));
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object data"),
+                "Incorrect error message.");
+        }
+    }
+
+    @Test
+    public void testDeleteRelationalTableRegistrationNoBusinessObjectData()
+    {
+        // Create a business object definition.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME, new ArrayList<>());
+
+        // Create a file type entity.
+        FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+
+        List<BusinessObjectFormatKey> businessObjectFormatKeyList = new ArrayList<>();
+
+        // Create and persist database entities required for testing.
+        for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
+        {
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                    SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+
+            businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
+        }
+
+        // Call the method being tested.
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
+            relationalTableRegistrationService.deleteRelationalTableRegistration(
+                new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
+
+        // Get the business object data list from the response.
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
+
+        // Validate the result.
+        assertEquals(businessObjectDataList.size(), 0);
+        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyList.get(0)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyList.get(1)));
+    }
+
+    @Test
+    public void testDeleteRelationalTableRegistrationMultipleBusinessObjectData()
+    {
+        // Create a business object definition.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME, new ArrayList<>());
+
+        // Create a file type entity.
+        FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
+
+        List<BusinessObjectData> resultBusinessObjectDataList = new ArrayList<>();
+        List<BusinessObjectFormatKey> businessObjectFormatKeyList = new ArrayList<>();
+
+        // Create and persist database entities required for testing.
+        for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
+        {
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                    SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+
+            businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
+
+            // Create a request to create business object data.
+            BusinessObjectDataCreateRequest businessObjectDataCreateRequest = new BusinessObjectDataCreateRequest();
+            businessObjectDataCreateRequest.setNamespace(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectDataCreateRequest.setBusinessObjectDefinitionName(businessObjectFormatEntity.getBusinessObjectDefinition().getName());
+            businessObjectDataCreateRequest.setBusinessObjectFormatUsage(businessObjectFormatEntity.getUsage());
+            businessObjectDataCreateRequest.setBusinessObjectFormatFileType(businessObjectFormatEntity.getFileType().getCode());
+            businessObjectDataCreateRequest.setBusinessObjectFormatVersion(businessObjectFormatEntity.getBusinessObjectFormatVersion());
+            businessObjectDataCreateRequest.setPartitionKey(businessObjectFormatEntity.getPartitionKey());
+            businessObjectDataCreateRequest.setPartitionValue(AbstractServiceTest.PARTITION_VALUE);
+            businessObjectDataCreateRequest.setSubPartitionValues(AbstractServiceTest.SUBPARTITION_VALUES);
+
+            StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
+
+            List<StorageUnitCreateRequest> storageUnits = new ArrayList<>();
+            businessObjectDataCreateRequest.setStorageUnits(storageUnits);
+
+            StorageUnitCreateRequest storageUnit = new StorageUnitCreateRequest();
+            storageUnits.add(storageUnit);
+            storageUnit.setStorageName(storageEntity.getName());
+
+            List<StorageFile> storageFiles = new ArrayList<>();
+            storageUnit.setStorageFiles(storageFiles);
+
+            StorageFile storageFile1 = new StorageFile();
+            storageFiles.add(storageFile1);
+            storageFile1.setFilePath("Folder/file1.gz");
+            storageFile1.setFileSizeBytes(0L);
+            storageFile1.setRowCount(0L);
+
+            // Create business object data.
+            BusinessObjectData businessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(businessObjectDataCreateRequest);
+
+            resultBusinessObjectDataList.add(businessObjectData);
+        }
+
+        // Call the method being tested.
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
+            relationalTableRegistrationService.deleteRelationalTableRegistration(
+                new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
+
+        // Get the business object data list from the response.
+        List<BusinessObjectData> businessObjectDataList = relationalTableRegistrationDeleteResponse.getBusinessObjectDataElements();
+
+        // Validate the result.
+        assertEquals(businessObjectDataList.size(), 2);
+        assertEquals(businessObjectDataList, resultBusinessObjectDataList);
+        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyList.get(0)));
+        assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKeyList.get(1)));
+
+        try
+        {
+            businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.createBusinessObjectDataKey(businessObjectDataList.get(0)));
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object data"),
+                "Incorrect error message.");
+        }
+
+        try
+        {
+            businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.createBusinessObjectDataKey(businessObjectDataList.get(1)));
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object data"),
+                "Incorrect error message.");
+        }
+    }
+
+
+    @Test
     public void testGetRelationalTableRegistrationsForSchemaUpdate()
     {
         // Create a storage unit entity for a relational table registration.
@@ -461,5 +673,26 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                         SUBPARTITION_VALUES, DATA_VERSION)), STORAGE_NAME), e.getMessage());
         }
+    }
+
+
+    private BusinessObjectData prepareToTestDeleteRelationalTableRegistration()
+    {
+        // Create database entities required for relational table registration testing.
+        relationalTableRegistrationServiceTestHelper
+            .createDatabaseEntitiesForRelationalTableRegistrationTesting(BDEF_NAMESPACE, DATA_PROVIDER_NAME, STORAGE_NAME);
+
+        // Pick one of the in-memory database tables to be registered as a relational table.
+        String relationalSchemaName = "PUBLIC";
+        String relationalTableName = BusinessObjectDefinitionEntity.TABLE_NAME.toUpperCase();
+
+        // Create a relational table registration create request for a table that is part of the in-memory database setup as part of DAO mocks.
+        RelationalTableRegistrationCreateRequest relationalTableRegistrationCreateRequest =
+            new RelationalTableRegistrationCreateRequest(BDEF_NAMESPACE, BDEF_NAME, BDEF_DISPLAY_NAME, FORMAT_USAGE_CODE, DATA_PROVIDER_NAME,
+                relationalSchemaName, relationalTableName, STORAGE_NAME);
+
+        // Create a relational table registration.
+        return relationalTableRegistrationService
+            .createRelationalTableRegistration(relationalTableRegistrationCreateRequest, APPEND_TO_EXISTING_BUSINESS_OBJECT_DEFINTION_FALSE);
     }
 }
