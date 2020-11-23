@@ -130,7 +130,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
         for (Boolean doNotTransitionLatestValid : new Boolean[] {true, false})
         {
             // Keep track of all business object data entities selected per storage policies. This is need to avoid a lower priority selection policy to be
-            // executed ahead of a higher priorit y one. Please note that this check also implies that, for each of the two scans that we perform, any business
+            // executed ahead of a higher priority one. Please note that this check also implies that, for each of the two scans that we perform, any business
             // object data could be selected for checking applicable rules only by one storage policy regardless of storage policy priority level.
             Set<BusinessObjectDataEntity> businessObjectDataEntitiesSelectedForReview = new HashSet<>();
 
