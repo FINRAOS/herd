@@ -244,6 +244,10 @@ public class BusinessObjectFormatHelper
         // Add in the business object format schema backwards compatibility changes flag.
         businessObjectFormat.setAllowNonBackwardsCompatibleChanges(latestVersionBusinessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
 
+        // Add in relational table related fields
+        businessObjectFormat.setRelationalSchemaName(latestVersionBusinessObjectFormatEntity.getRelationalSchemaName());
+        businessObjectFormat.setRelationalTableName(latestVersionBusinessObjectFormatEntity.getRelationalTableName());
+
         return businessObjectFormat;
     }
 

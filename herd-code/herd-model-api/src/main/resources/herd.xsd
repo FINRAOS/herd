@@ -2311,6 +2311,16 @@
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="relationalSchemaName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Schema Name if the Format is of type Relational Table</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relationalTableName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Table Name if the Format is of type Relational Table</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -2600,6 +2610,16 @@
             <xs:annotation>
                <xs:documentation>If true, allows non backwards compatible changes to the schema
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relationalSchemaName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Schema Name if the Format is of type Relational Table</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relationalTableName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Contains Relational Table Name if the Format is of type Relational Table</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -8844,14 +8864,12 @@
          </xs:element>
          <xs:element name="relationalSchemaName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database
-               </xs:documentation>
+               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="relationalTableName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database
-               </xs:documentation>
+               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageName" type="xs:string">

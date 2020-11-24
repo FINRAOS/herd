@@ -138,12 +138,10 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
+        expectedBusinessObjectFormat.setAttributes(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
-        expectedBusinessObjectFormat.setAttributes(Arrays.asList(
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
-                relationalSchemaName),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
-                relationalTableName)));
+        expectedBusinessObjectFormat.setRelationalSchemaName(relationalSchemaName);
+        expectedBusinessObjectFormat.setRelationalTableName(relationalTableName);
         expectedBusinessObjectFormat.setSchema(expectedSchema);
         expectedBusinessObjectFormat.setAllowNonBackwardsCompatibleChanges(true);
 
@@ -251,14 +249,12 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setBusinessObjectFormatParents(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatChildren(new ArrayList<>());
         expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
+        expectedBusinessObjectFormat.setAttributes(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
-        expectedBusinessObjectFormat.setAttributes(Arrays.asList(
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
-                relationalSchemaName),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
-                relationalTableName)));
         expectedBusinessObjectFormat.setSchema(expectedSchema);
         expectedBusinessObjectFormat.setAllowNonBackwardsCompatibleChanges(true);
+        expectedBusinessObjectFormat.setRelationalTableName(relationalTableName);
+        expectedBusinessObjectFormat.setRelationalSchemaName(relationalSchemaName);
 
         // Validate the newly created business object format.
         assertEquals(expectedBusinessObjectFormat, businessObjectFormat);
@@ -367,8 +363,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         }
 
         // Call the method being tested.
-        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
-            relationalTableRegistrationService.deleteRelationalTableRegistration(
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse = relationalTableRegistrationService
+            .deleteRelationalTableRegistration(
                 new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
 
         // Get the business object data list from the response.
@@ -441,8 +437,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         }
 
         // Call the method being tested.
-        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse =
-            relationalTableRegistrationService.deleteRelationalTableRegistration(
+        RelationalTableRegistrationDeleteResponse relationalTableRegistrationDeleteResponse = relationalTableRegistrationService
+            .deleteRelationalTableRegistration(
                 new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null));
 
         // Get the business object data list from the response.
@@ -523,12 +519,9 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
                 BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
-                Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
-                        relationalSchemaName),
-                    new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
-                        relationalTableName)), NO_ATTRIBUTE_DEFINITIONS,
+                null, NO_ATTRIBUTE_DEFINITIONS,
                 new Schema(expectedSchema.getColumns().subList(0, expectedSchema.getColumns().size() - 1), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null,
-                    null, null, null, NO_PARTITION_KEY_GROUP)));
+                    null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 
         // Create a business object data key for the initial version of the relation table registration.
         BusinessObjectDataKey businessObjectDataKey =
@@ -586,6 +579,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setId(resultBusinessObjectFormat.getId());
         expectedBusinessObjectFormat.setBusinessObjectFormatVersion(SECOND_FORMAT_VERSION);
         expectedBusinessObjectFormat.setSchema(expectedSchema);
+        expectedBusinessObjectFormat.setRelationalSchemaName(relationalSchemaName);
+        expectedBusinessObjectFormat.setRelationalTableName(relationalTableName);
 
         // Validate the newly created business object format version.
         assertEquals(expectedBusinessObjectFormat, resultBusinessObjectFormat);
@@ -612,13 +607,10 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Create a business object format with the schema that matches the relational table schema.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
-                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, Arrays
-                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
-                        relationalSchemaName),
-                    new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
-                        relationalTableName)), NO_ATTRIBUTE_DEFINITIONS,
+                BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, null,
+                NO_ATTRIBUTE_DEFINITIONS,
                 new Schema(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns(), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null, null,
-                    null, null, NO_PARTITION_KEY_GROUP)));
+                    null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 
         // Create a business object data key for the initial version of the relation table registration.
         BusinessObjectDataKey businessObjectDataKey =
