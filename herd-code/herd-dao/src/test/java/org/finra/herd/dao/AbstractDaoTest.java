@@ -480,6 +480,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final String FORMAT_RELATIONAL_SCHEMA_NAME = "UT_relationalSchemaName" + RANDOM_SUFFIX;
+
+    public static final String FORMAT_RELATIONAL_TABLE_NAME = "UT_relationalTableName" + RANDOM_SUFFIX;
+
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
     public static final Long GLOBAL_ATTRIBUTE_DEFINITON_ID = (long) (Math.random() * Long.MAX_VALUE);
