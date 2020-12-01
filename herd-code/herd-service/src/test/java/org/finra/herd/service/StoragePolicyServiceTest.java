@@ -1429,4 +1429,192 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
                 e.getMessage());
         }
     }
+
+    // Unit tests for deleteStoragePolicy().
+
+    @Test
+    public void testDeleteStoragePolicy()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy.
+        StoragePolicy resultStoragePolicy = storagePolicyService.deleteStoragePolicy(storagePolicyKey);
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyMissingRequiredParameters()
+    {
+        // Try to delete a storage policy when namespace is not specified.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(BLANK_TEXT, STORAGE_POLICY_NAME));
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to delete a storage policy when storage policy name is not specified.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, BLANK_TEXT));
+            fail("Should throw an IllegalArgumentException when storage policy name is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A storage policy name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyTrimParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using input parameters with leading and trailing empty spaces.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(addWhitespace(STORAGE_POLICY_NAMESPACE_CD), addWhitespace(STORAGE_POLICY_NAME)));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyUpperCaseParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using upper case input parameters.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toUpperCase(), STORAGE_POLICY_NAME.toUpperCase()));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyLowerCaseParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using lower case input parameters.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toLowerCase(), STORAGE_POLICY_NAME.toLowerCase()));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyNoExists()
+    {
+        // Try to delete a non-existing storage policy.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
 }

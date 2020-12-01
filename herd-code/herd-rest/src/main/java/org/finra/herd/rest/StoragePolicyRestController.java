@@ -96,4 +96,21 @@ public class StoragePolicyRestController extends HerdBaseController
     {
         return storagePolicyService.getStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName));
     }
+
+    /**
+     * Deletes an existing storage policy by key.
+     * <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param storagePolicyName the storage policy name
+     *
+     * @return the deleted storage policy
+     */
+    @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}/storagePolicyNames/{storagePolicyName}",
+        method = RequestMethod.DELETE)
+    @Secured(SecurityFunctions.FN_STORAGE_POLICIES_DELETE)
+    public StoragePolicy deleteStoragePolicy(@PathVariable("namespace") String namespace, @PathVariable("storagePolicyName") String storagePolicyName)
+    {
+        return storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName));
+    }
 }
