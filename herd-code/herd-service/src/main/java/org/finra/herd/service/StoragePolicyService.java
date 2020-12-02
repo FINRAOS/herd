@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 
 /**
@@ -52,4 +53,14 @@ public interface StoragePolicyService
      * @return the storage policy information
      */
     public StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
+
+
+    /**
+     * Gets a list of keys for all storage policies defined in the system for the specified namespace.
+     *
+     * @param namespace the namespace
+     *
+     * @return the storage policy keys
+     */
+    public StoragePolicyKeys getStoragePolicyKeys(String namespace);
 }
