@@ -6233,7 +6233,9 @@
          </xs:element>
          <xs:element name="stepConcurrencyLevel" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The step concurrency level of the cluster</xs:documentation>
+               <xs:documentation>The step concurrency level of the cluster. Default is 1 which is non-concurrent. The maximum value is 256
+                  NOTE: Running multiple steps in parallel is only supported with Amazon EMR version 5.28.0 and later
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -7052,6 +7054,30 @@
             <xs:annotation>
                <xs:documentation>Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is "lowest-price" (the
                   default), which launches the lowest price first
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="capacityReservationOptions" type="emrClusterDefinitionCapacityReservationOptions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the strategy for using unused Capacity Reservations for fulfilling On-Demand capacity.
+                  NOTE: This strategy can only be used if the EC2 Fleet is of type instant
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionCapacityReservationOptions">
+      <xs:all>
+         <xs:element name="usageStrategy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates whether to use unused Capacity Reservations for fulfilling On-Demand capacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="capacityReservationPreference" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates the instance's Capacity Reservation preferences
                </xs:documentation>
             </xs:annotation>
          </xs:element>
