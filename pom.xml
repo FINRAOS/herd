@@ -289,6 +289,11 @@
          <!-- We are using private AWSElasticMapReduceJavaClient SDK -->
          <dependency>
             <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-emr</artifactId>
+            <version>1.11.x</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
             <version>${aws.sdk.version}</version>
             <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
@@ -309,11 +314,11 @@
             <artifactId>aws-java-sdk-ec2</artifactId>
             <version>${aws.sdk.version}</version>
          </dependency>
-         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-emr</artifactId>
-            <version>${aws.sdk.version}</version>
-         </dependency>
+<!--         <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-emr</artifactId>-->
+<!--            <version>${aws.sdk.version}</version>-->
+<!--         </dependency>-->
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
