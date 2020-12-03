@@ -249,7 +249,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     public StoragePolicyKeys getStoragePolicyKeys(String namespace)
     {
         // Validate the namespace.
-        Assert.hasText(namespace, "A namespace must be specified.");
+        alternateKeyHelper.validateStringParameter("namespace", namespace);
 
         // Retrieve and return the list of storage policy keys.
         StoragePolicyKeys storagePolicyKeys = new StoragePolicyKeys();
