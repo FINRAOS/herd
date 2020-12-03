@@ -346,7 +346,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     if(fmt.getSchema == null) {
       throw new Exception("Schema not found")
     }
-    if(fmt.getSchema.getPartitionKeyGroup == null) {
+    if(fmt.getSchema.getPartitionKeyGroup == null && params.partitionFilter == null) {
       throw new Exception("Partition Key Group not found")
     }
 
