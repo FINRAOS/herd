@@ -7059,8 +7059,7 @@
          </xs:element>
          <xs:element name="capacityReservationOptions" type="emrClusterDefinitionCapacityReservationOptions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Describes the strategy for using unused Capacity Reservations for fulfilling On-Demand capacity.
-                  NOTE: This strategy can only be used if the EC2 Fleet is of type instant
+               <xs:documentation>Describes the strategy for using unused Capacity Reservations for fulfilling On-Demand capacity
                </xs:documentation>
             </xs:annotation>
          </xs:element>
