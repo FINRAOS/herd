@@ -15,10 +15,14 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +30,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.functional.TriConsumer;
 
 /**
@@ -44,7 +59,16 @@ public class BusinessObjectDefinitionHelper
     private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
     private JsonHelper jsonHelper;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     /**
      * Returns a string representation of the business object definition key.
@@ -58,6 +82,113 @@ public class BusinessObjectDefinitionHelper
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\"", businessObjectDefinitionKey.getNamespace(),
             businessObjectDefinitionKey.getBusinessObjectDefinitionName());
     }
+
+    /**
+     * Creates a business object definition from the persisted entity.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     *
+     * @return the business object definition
+     */
+    public BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
+    {
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+        businessObjectDefinition.setId(businessObjectDefinitionEntity.getId());
+        businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+        businessObjectDefinition.setDescription(businessObjectDefinitionEntity.getDescription());
+        businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+
+        // Add attributes.
+        List<Attribute> attributes = new ArrayList<>();
+
+        businessObjectDefinition.setAttributes(attributes);
+
+        for (BusinessObjectDefinitionAttributeEntity attributeEntity : businessObjectDefinitionEntity.getAttributes())
+        {
+            attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+        }
+
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() != null)
+        {
+            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat();
+            DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat();
+            businessObjectDefinition.setDescriptiveBusinessObjectFormat(descriptiveBusinessObjectFormat);
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatUsage(descriptiveFormatEntity.getUsage());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatFileType(descriptiveFormatEntity.getFileType().getCode());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatVersion(descriptiveFormatEntity.getBusinessObjectFormatVersion());
+        }
+
+        // Add sample data files.
+        List<SampleDataFile> sampleDataFiles = new ArrayList<>();
+
+        businessObjectDefinition.setSampleDataFiles(sampleDataFiles);
+
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : businessObjectDefinitionEntity.getSampleDataFiles())
+        {
+            sampleDataFiles.add(new SampleDataFile(sampleDataFileEntity.getDirectoryPath(), sampleDataFileEntity.getFileName()));
+        }
+
+        // Add auditable fields.
+        businessObjectDefinition.setCreatedByUserId(businessObjectDefinitionEntity.getCreatedBy());
+        businessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinitionEntity.getUpdatedBy());
+        businessObjectDefinition.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()));
+
+        // Add change events.
+        final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+
+        if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
+        {
+            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
+                DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
+                if (businessObjectDefinitionChangeEventEntity.getFileType() != null)
+                {
+                    descriptiveBusinessObjectFormatUpdateRequest =
+                        new DescriptiveBusinessObjectFormatUpdateRequest(businessObjectDefinitionChangeEventEntity.getUsage(),
+                            businessObjectDefinitionChangeEventEntity.getFileType());
+                }
+                businessObjectDefinitionChangeEvents.add(new BusinessObjectDefinitionChangeEvent(businessObjectDefinitionChangeEventEntity.getDisplayName(),
+                    businessObjectDefinitionChangeEventEntity.getDescription(), descriptiveBusinessObjectFormatUpdateRequest,
+                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionChangeEventEntity.getCreatedOn()),
+                    businessObjectDefinitionChangeEventEntity.getCreatedBy()));
+            });
+        }
+        businessObjectDefinition.setBusinessObjectDefinitionChangeEvents(businessObjectDefinitionChangeEvents);
+
+        return businessObjectDefinition;
+    }
+
+    /**
+     * Deletes a business object definition for the specified name.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     *
+     * @return the business object definition that was deleted.
+     */
+    public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        // Perform validation and trim.
+        validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        // Retrieve and ensure that a business object definition already exists with the specified key.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Delete the business object definition.
+        businessObjectDefinitionDao.delete(businessObjectDefinitionEntity);
+
+        // Notify the search index that a business object definition must be deleted.
+        LOGGER.info("Delete the business object definition in the search index associated with the business object definition being deleted." +
+            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_DELETE);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
+
+        // Create and return the business object definition object from the deleted entity.
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
+    }
+
 
     /**
      * Executes a function for business object definition entities.
