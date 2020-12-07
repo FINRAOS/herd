@@ -42,10 +42,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdStringUtils;
-import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
-import org.finra.herd.dao.BusinessObjectFormatExternalInterfaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
@@ -119,9 +117,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     private AttributeHelper attributeHelper;
 
     @Autowired
-    private BusinessObjectDataDao businessObjectDataDao;
-
-    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -132,9 +127,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
-
-    @Autowired
-    private BusinessObjectFormatExternalInterfaceDao businessObjectFormatExternalInterfaceDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -411,7 +403,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
     {
-        return businessObjectFormatHelper.deleteBusinessObjectFormat(businessObjectFormatKey);
+        return businessObjectFormatDaoHelper.deleteBusinessObjectFormat(businessObjectFormatKey);
     }
 
     @Override

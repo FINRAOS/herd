@@ -54,9 +54,10 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.RelationalTableRegistrationHelperService;
 import org.finra.herd.service.RelationalTableRegistrationService;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 
@@ -73,13 +74,16 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
     private BusinessObjectDataDao businessObjectDataDao;
 
     @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
@@ -219,7 +223,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
             // Delete the business object data associated with this business object format.
             for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
             {
-                BusinessObjectData businessObjectData = businessObjectDataHelper.deleteBusinessObjectData(businessObjectDataKey, false);
+                BusinessObjectData businessObjectData = businessObjectDataDaoHelper.deleteBusinessObjectData(businessObjectDataKey, false);
                 LOGGER.info("Deleting business object data. businessObjectData={}", jsonHelper.objectToJson(businessObjectData));
 
                 // Add the business object data to the deleted list.
@@ -229,7 +233,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
             // Delete the business object format.
             // This service call will also update the Elasticsearch index.
             BusinessObjectFormat businessObjectFormat =
-                businessObjectFormatHelper.deleteBusinessObjectFormat(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
+                businessObjectFormatDaoHelper.deleteBusinessObjectFormat(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
 
             LOGGER.info("Deleting business object format. businessObjectFormat={}", jsonHelper.objectToJson(businessObjectFormat));
         }
@@ -240,7 +244,7 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
         {
             // Delete the business object definition.
             // This service call will also update the Elasticsearch index.
-            BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionHelper.deleteBusinessObjectDefinition(businessObjectDefinitionKey);
+            BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionDaoHelper.deleteBusinessObjectDefinition(businessObjectDefinitionKey);
 
             LOGGER.info("Deleting business object definition. businessObjectDefinition={}", jsonHelper.objectToJson(businessObjectDefinition));
         }

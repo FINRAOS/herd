@@ -463,7 +463,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     protected BusinessObjectDefinition deleteBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
-        return businessObjectDefinitionHelper.deleteBusinessObjectDefinition(businessObjectDefinitionKey);
+        return businessObjectDefinitionDaoHelper.deleteBusinessObjectDefinition(businessObjectDefinitionKey);
     }
 
     @Override

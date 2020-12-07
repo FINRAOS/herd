@@ -25,8 +25,6 @@ import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -38,7 +36,6 @@ import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
@@ -92,7 +89,6 @@ import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AttributeDaoHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -109,7 +105,6 @@ import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.CustomDdlDaoHelper;
 import org.finra.herd.service.helper.DdlGeneratorFactory;
-import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
@@ -135,8 +130,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * A status reason of "not registered".
      */
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
     @Autowired
     private AttributeDaoHelper attributeDaoHelper;
@@ -202,16 +195,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private DdlGeneratorFactory ddlGeneratorFactory;
 
     @Autowired
-    private JsonHelper jsonHelper;
-
-    @Autowired
     private NotificationEventService notificationEventService;
-
-    @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
-
-    @Autowired
-    private S3Service s3Service;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
@@ -257,7 +241,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles)
     {
         // Return the deleted business object data.
-        return businessObjectDataHelper.deleteBusinessObjectData(businessObjectDataKey, deleteFiles);
+        return businessObjectDataDaoHelper.deleteBusinessObjectData(businessObjectDataKey, deleteFiles);
     }
 
     /**

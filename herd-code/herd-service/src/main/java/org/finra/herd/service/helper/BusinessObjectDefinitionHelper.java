@@ -1,21 +1,19 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
-
-import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,7 +29,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
@@ -59,16 +56,7 @@ public class BusinessObjectDefinitionHelper
     private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
-    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
-
-    @Autowired
-    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
-
-    @Autowired
     private JsonHelper jsonHelper;
-
-    @Autowired
-    private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     /**
      * Returns a string representation of the business object definition key.
@@ -87,6 +75,7 @@ public class BusinessObjectDefinitionHelper
      * Creates a business object definition from the persisted entity.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
+     * @param includeBusinessObjectDefinitionUpdateHistory the include business object definition update history
      *
      * @return the business object definition
      */
@@ -160,35 +149,6 @@ public class BusinessObjectDefinitionHelper
 
         return businessObjectDefinition;
     }
-
-    /**
-     * Deletes a business object definition for the specified name.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     *
-     * @return the business object definition that was deleted.
-     */
-    public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
-    {
-        // Perform validation and trim.
-        validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-
-        // Retrieve and ensure that a business object definition already exists with the specified key.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-
-        // Delete the business object definition.
-        businessObjectDefinitionDao.delete(businessObjectDefinitionEntity);
-
-        // Notify the search index that a business object definition must be deleted.
-        LOGGER.info("Delete the business object definition in the search index associated with the business object definition being deleted." +
-            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_DELETE);
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
-
-        // Create and return the business object definition object from the deleted entity.
-        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
-    }
-
 
     /**
      * Executes a function for business object definition entities.
