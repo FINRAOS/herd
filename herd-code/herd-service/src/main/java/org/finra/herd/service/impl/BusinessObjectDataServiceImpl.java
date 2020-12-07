@@ -15,20 +15,16 @@
  */
 package org.finra.herd.service.impl;
 
-import java.io.File;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -40,7 +36,6 @@ import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.Attribute;
@@ -79,7 +74,6 @@ import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -90,14 +84,11 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
-import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AttributeDaoHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -114,7 +105,6 @@ import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.CustomDdlDaoHelper;
 import org.finra.herd.service.helper.DdlGeneratorFactory;
-import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
@@ -140,8 +130,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * A status reason of "not registered".
      */
     public static final String REASON_NOT_REGISTERED = "NOT_REGISTERED";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
 
     @Autowired
     private AttributeDaoHelper attributeDaoHelper;
@@ -207,16 +195,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private DdlGeneratorFactory ddlGeneratorFactory;
 
     @Autowired
-    private JsonHelper jsonHelper;
-
-    @Autowired
     private NotificationEventService notificationEventService;
-
-    @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
-
-    @Autowired
-    private S3Service s3Service;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
@@ -261,161 +240,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @Override
     public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles)
     {
-        // Validate and trim the business object data key.
-        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
-
-        // Validate the mandatory deleteFiles flag.
-        Assert.notNull(deleteFiles, "A delete files flag must be specified.");
-
-        // Retrieve the business object data and ensure it exists.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
-
-        // If the business object data has children, remove the parent children relationship.
-        if (!businessObjectDataEntity.getBusinessObjectDataChildren().isEmpty())
-        {
-            for (BusinessObjectDataEntity childBusinessObjectEntity : businessObjectDataEntity.getBusinessObjectDataChildren())
-            {
-                childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
-            }
-
-            String businessObjectDataChildren = businessObjectDataEntity.getBusinessObjectDataChildren().stream()
-                .map(bData -> String.format("{%s}", businessObjectDataHelper.businessObjectDataEntityAltKeyToString(bData))).collect(Collectors.joining(", "));
-            businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<>());
-            businessObjectDataDao.save(businessObjectDataEntity);
-            LOGGER.warn(String
-                .format("Deleting business object data {%s} that has children associated with it. The parent relationship has been removed from: %s.",
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), businessObjectDataChildren));
-        }
-
-        // If the flag is set, clean up the data files from all storages of S3 storage platform type.
-        LOGGER.info("deleteFiles={}", deleteFiles);
-        if (deleteFiles)
-        {
-            // Loop over all storage units for this business object data.
-            for (StorageUnitEntity storageUnitEntity : businessObjectDataEntity.getStorageUnits())
-            {
-                StorageEntity storageEntity = storageUnitEntity.getStorage();
-
-                // Currently, we only support data file deletion from S3 platform type.
-                if (storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3))
-                {
-                    LOGGER.info("Deleting business object data files from the storage... storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
-                        jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
-
-                    // Get the S3 validation flags.
-                    boolean validatePathPrefix = storageHelper
-                        .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
-                            storageEntity, false, true);
-
-                    // If this storage conforms to the path prefix validation, then delete all keys found under the S3 key prefix.
-                    if (validatePathPrefix)
-                    {
-                        // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
-                        // Please note that it is not required, so we pass in a "false" flag.
-                        String s3KeyPrefixVelocityTemplate = storageHelper
-                            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                                storageEntity, false);
-
-                        // Validate that S3 key prefix velocity template is configured.
-                        Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate), String
-                            .format("Storage \"%s\" has enabled path validation without S3 key prefix velocity template configured.", storageEntity.getName()));
-
-                        // Build the S3 key prefix as per S3 Naming Convention Wiki page.
-                        String s3KeyPrefix = s3KeyPrefixHelper
-                            .buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey,
-                                storageEntity.getName());
-
-                        // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
-                        S3FileTransferRequestParamsDto params = storageHelper.getS3BucketAccessParams(storageEntity);
-                        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-                        params.setS3KeyPrefix(s3KeyPrefix + "/");
-                        // Delete a list of all keys/objects from S3 managed bucket matching the expected S3 key prefix.
-                        // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
-                        s3Service.deleteDirectory(params);
-                    }
-                    // For a non S3 prefixed paths, delete the files explicitly or if only directory is registered, delete all files/subfolders found under it.
-                    else
-                    {
-                        // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
-                        S3FileTransferRequestParamsDto params = storageHelper.getS3BucketAccessParams(storageEntity);
-
-                        // If only directory is registered delete all files/sub-folders found under it.
-                        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) && storageUnitEntity.getStorageFiles().isEmpty())
-                        {
-                            // Since the directory path represents a directory, we add a trailing '/' character to it.
-                            params.setS3KeyPrefix(storageUnitEntity.getDirectoryPath() + "/");
-                            // Delete a list of all keys/objects from S3 bucket matching the directory path.
-                            // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
-                            s3Service.deleteDirectory(params);
-                        }
-                        // Delete the files explicitly.
-                        else
-                        {
-                            // Create a list of files to delete.
-                            List<File> files = new ArrayList<>();
-                            for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
-                            {
-                                String filePath = storageFileEntity.getPath();
-
-                                if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
-                                    !StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
-                                {
-                                    if (StringUtils.equals(filePath, StorageFileEntity.S3_EMPTY_PARTITION))
-                                    {
-                                        filePath = storageUnitEntity.getDirectoryPath() + filePath;
-                                    }
-                                    else
-                                    {
-                                        filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
-                                    }
-                                }
-
-                                files.add(new File(filePath));
-                            }
-                            params.setFiles(files);
-                            s3Service.deleteFileList(params);
-                        }
-                    }
-                }
-                else
-                {
-                    LOGGER.info("Skipping business object data file removal for a storage unit from the storage since it is not an S3 storage platform. " +
-                            " storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
-                        jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
-                }
-            }
-        }
-
-        // Create the business object data object from the entity.
-        BusinessObjectData deletedBusinessObjectData = businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
-
-        // Delete this business object data.
-        businessObjectDataDao.delete(businessObjectDataEntity);
-
-        // If this business object data version is the latest, set the latest flag on the previous version of this object data, if it exists.
-        if (businessObjectDataEntity.getLatestVersion())
-        {
-            // Get the maximum version for this business object data, if it exists.
-            Integer maxBusinessObjectDataVersion = businessObjectDataDao.getBusinessObjectDataMaxVersion(businessObjectDataKey);
-
-            if (maxBusinessObjectDataVersion != null)
-            {
-                // Retrieve the previous version business object data entity. Since we successfully got the maximum
-                // version for this business object data, the retrieved entity is not expected to be null.
-                BusinessObjectDataEntity previousVersionBusinessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(
-                    new BusinessObjectDataKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues(), maxBusinessObjectDataVersion));
-
-                // Update the previous version business object data entity.
-                previousVersionBusinessObjectDataEntity.setLatestVersion(true);
-                businessObjectDataDao.saveAndRefresh(previousVersionBusinessObjectDataEntity);
-            }
-        }
-
         // Return the deleted business object data.
-        return deletedBusinessObjectData;
+        return businessObjectDataDaoHelper.deleteBusinessObjectData(businessObjectDataKey, deleteFiles);
     }
 
     /**

@@ -31,7 +31,6 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -48,7 +47,6 @@ import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -300,6 +298,28 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException objectNotFoundException)
         {
             Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object data"),
+                "Incorrect error message.");
+        }
+    }
+
+    @Test
+    public void testDeleteRelationalTableRegistrationNoBusinessObjectFormats()
+    {
+        // Setup the objects needed for the test.
+        BusinessObjectData resultBusinessObjectData = prepareToTestDeleteRelationalTableRegistration();
+
+        BusinessObjectFormatKey bogusBusinessObjectFormatKey =
+            new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE, null);
+
+        try
+        {
+            // Call the method being tested.
+            relationalTableRegistrationService.deleteRelationalTableRegistration(bogusBusinessObjectFormatKey);
+            fail();
+        }
+        catch (ObjectNotFoundException objectNotFoundException)
+        {
+            Assert.isTrue(objectNotFoundException.toString().contains("org.finra.herd.model.ObjectNotFoundException: Business object format with namespace"),
                 "Incorrect error message.");
         }
     }

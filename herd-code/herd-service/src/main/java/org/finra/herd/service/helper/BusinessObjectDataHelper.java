@@ -593,7 +593,6 @@ public class BusinessObjectDataHelper
      * @param storageName the storage name
      *
      * @return the storage unit
-     *
      * @throws IllegalStateException if business object data has no storage unit with the specified storage name
      */
     public StorageUnit getStorageUnitByStorageName(BusinessObjectData businessObjectData, String storageName) throws IllegalStateException
