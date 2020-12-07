@@ -31,6 +31,7 @@ import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -194,6 +195,15 @@ public class RelationalTableRegistrationServiceImpl implements RelationalTableRe
             {
                 filteredBusinessObjectFormatEntities.add(businessObjectFormatEntity);
             }
+        }
+
+        // Fail if we do not find any business object formats matching usage and file type.
+        if (filteredBusinessObjectFormatEntities.isEmpty())
+        {
+            throw new ObjectNotFoundException(String.format("Business object format with namespace \"%s\", business object definition name \"%s\", " +
+                    "format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", businessObjectFormatKey.getNamespace(),
+                businessObjectFormatKey.getBusinessObjectDefinitionName(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
+                businessObjectFormatKey.getBusinessObjectFormatFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion()));
         }
 
         // Create a list of business object data that are deleted.
