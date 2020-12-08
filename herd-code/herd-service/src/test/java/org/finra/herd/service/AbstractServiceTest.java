@@ -646,6 +646,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
+    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
+
+    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
+
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
 
     public static final Long PAGE_COUNT = getRandomLong();

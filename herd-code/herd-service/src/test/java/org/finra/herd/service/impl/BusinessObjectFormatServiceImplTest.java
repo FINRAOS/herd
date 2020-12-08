@@ -739,7 +739,8 @@ public class BusinessObjectFormatServiceImplTest extends AbstractServiceTest
         // Create a business object format.
         businessObjectFormatServiceImpl.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, schema));
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, schema,
+                NO_FORMAT_RELATIONAL_SCHEMA_NAME, NO_FORMAT_RELATIONAL_TABLE_NAME));
 
         verifyNoMoreInteractionsHelper();
     }

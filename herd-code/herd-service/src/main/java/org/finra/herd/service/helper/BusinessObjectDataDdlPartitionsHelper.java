@@ -627,7 +627,7 @@ public class BusinessObjectDataDdlPartitionsHelper
             }
 
             sb.append(
-                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? ",\n" : ";\n"))
+                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "\n" : ";\n"))
                 .append(";\n");
         }
     }
