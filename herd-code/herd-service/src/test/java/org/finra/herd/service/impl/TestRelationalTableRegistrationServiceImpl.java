@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.RelationalTableRegistrationCreateRequest;
+import org.finra.herd.model.api.xml.RelationalTableRegistrationDeleteResponse;
 
 /**
  * An implementation of the relational table registration service for testing.
@@ -44,6 +46,17 @@ public class TestRelationalTableRegistrationServiceImpl extends RelationalTableR
         Boolean appendToExistingBusinessObjectDefinition)
     {
         return createRelationalTableRegistrationImpl(relationalTableRegistrationCreateRequest, appendToExistingBusinessObjectDefinition);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public RelationalTableRegistrationDeleteResponse deleteRelationalTableRegistration(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        return deleteRelationalTableRegistrationImpl(businessObjectFormatKey);
     }
 
     /**
