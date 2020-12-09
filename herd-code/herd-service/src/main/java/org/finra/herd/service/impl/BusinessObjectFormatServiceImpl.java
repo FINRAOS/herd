@@ -42,10 +42,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdStringUtils;
-import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
-import org.finra.herd.dao.BusinessObjectFormatExternalInterfaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
@@ -76,7 +74,6 @@ import org.finra.herd.model.jpa.BusinessObjectFormatAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatExternalInterfaceEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
-import org.finra.herd.model.jpa.ExternalInterfaceEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.jpa.RetentionTypeEntity;
@@ -120,9 +117,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     private AttributeHelper attributeHelper;
 
     @Autowired
-    private BusinessObjectDataDao businessObjectDataDao;
-
-    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -133,9 +127,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @Autowired
     private BusinessObjectFormatDao businessObjectFormatDao;
-
-    @Autowired
-    private BusinessObjectFormatExternalInterfaceDao businessObjectFormatExternalInterfaceDao;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -412,99 +403,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
     {
-        // Perform validation and trim the alternate key parameters.
-        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
-
-        // Retrieve and ensure that a business object format exists.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-
-        // Get the associated Business Object Definition so we can update the search index
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectFormatEntity.getBusinessObjectDefinition();
-
-        // Check if we are allowed to delete this business object format.
-        if (businessObjectDataDao.getBusinessObjectDataCount(businessObjectFormatKey) > 0L)
-        {
-            throw new IllegalArgumentException(String
-                .format("Can not delete a business object format that has business object data associated with it. Business object format: {%s}",
-                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
-        }
-
-        if (!businessObjectFormatEntity.getBusinessObjectFormatChildren().isEmpty())
-        {
-            throw new IllegalArgumentException(String
-                .format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
-                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
-        }
-
-        // Create and return the business object format object from the deleted entity.
-        BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
-
-        // Check if business object format being deleted is used as a descriptive format.
-        if (businessObjectFormatEntity.equals(businessObjectFormatEntity.getBusinessObjectDefinition().getDescriptiveBusinessObjectFormat()))
-        {
-            businessObjectFormatEntity.getBusinessObjectDefinition().setDescriptiveBusinessObjectFormat(null);
-            businessObjectDefinitionDao.saveAndRefresh(businessObjectFormatEntity.getBusinessObjectDefinition());
-        }
-
-        // Get the external interface references for this business object format.
-        List<ExternalInterfaceEntity> externalInterfaceEntities = new ArrayList<>();
-        for (BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity : businessObjectFormatEntity
-            .getBusinessObjectFormatExternalInterfaces())
-        {
-            externalInterfaceEntities.add(businessObjectFormatExternalInterfaceEntity.getExternalInterface());
-        }
-
-        // Delete this business object format.
-        businessObjectFormatDao.delete(businessObjectFormatEntity);
-
-        // If this business object format version is the latest, set the latest flag on the previous version of this object format, if it exists.
-        if (businessObjectFormatEntity.getLatestVersion())
-        {
-            // Get the maximum version for this business object format, if it exists.
-            Integer maxBusinessObjectFormatVersion = businessObjectFormatDao.getBusinessObjectFormatMaxVersion(businessObjectFormatKey);
-
-            if (maxBusinessObjectFormatVersion != null)
-            {
-                // Retrieve the previous version business object format entity. Since we successfully got the maximum
-                // version for this business object format, the retrieved entity is not expected to be null.
-                BusinessObjectFormatEntity previousVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
-                    new BusinessObjectFormatKey(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
-                        businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
-                        maxBusinessObjectFormatVersion));
-
-                // Update the previous version business object format entity.
-                previousVersionBusinessObjectFormatEntity.setLatestVersion(true);
-
-                // Update the previous version retention information
-                previousVersionBusinessObjectFormatEntity.setRecordFlag(businessObjectFormatEntity.isRecordFlag());
-                previousVersionBusinessObjectFormatEntity.setRetentionPeriodInDays(businessObjectFormatEntity.getRetentionPeriodInDays());
-                previousVersionBusinessObjectFormatEntity.setRetentionType(businessObjectFormatEntity.getRetentionType());
-
-                // Update the previous version schema compatibility changes information.
-                previousVersionBusinessObjectFormatEntity
-                    .setAllowNonBackwardsCompatibleChanges(businessObjectFormatEntity.isAllowNonBackwardsCompatibleChanges());
-
-                // Create external interface references for the previous version of the business object format.
-                for (ExternalInterfaceEntity externalInterfaceEntity : externalInterfaceEntities)
-                {
-                    // Creates a business object format to external interface mapping entity.
-                    BusinessObjectFormatExternalInterfaceEntity businessObjectFormatExternalInterfaceEntity = new BusinessObjectFormatExternalInterfaceEntity();
-                    previousVersionBusinessObjectFormatEntity.getBusinessObjectFormatExternalInterfaces().add(businessObjectFormatExternalInterfaceEntity);
-                    businessObjectFormatExternalInterfaceEntity.setBusinessObjectFormat(previousVersionBusinessObjectFormatEntity);
-                    businessObjectFormatExternalInterfaceEntity.setExternalInterface(externalInterfaceEntity);
-                }
-
-                // Save the updated entity.
-                businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
-            }
-        }
-
-        // Notify the search index that a business object definition must be updated.
-        LOGGER.info("Modify the business object definition in the search index associated with the business object definition format being deleted." +
-            " businessObjectDefinitionId=\"{}\", searchIndexUpdateType=\"{}\"", businessObjectDefinitionEntity.getId(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-
-        return deletedBusinessObjectFormat;
+        return businessObjectFormatDaoHelper.deleteBusinessObjectFormat(businessObjectFormatKey);
     }
 
     @Override
