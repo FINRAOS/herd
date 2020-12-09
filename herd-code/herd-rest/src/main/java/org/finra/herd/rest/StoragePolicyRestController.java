@@ -102,6 +102,7 @@ public class StoragePolicyRestController extends HerdBaseController
      * Gets a list of keys for all storage policies defined in the system for the specified namespace. <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
+     *                  
      * @return the storage policy keys
      */
     @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}", method = RequestMethod.GET)
