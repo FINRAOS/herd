@@ -33,7 +33,7 @@ public interface StoragePolicyService
      *
      * @return the newly created storage policy
      */
-    public StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request);
+    StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request);
 
     /**
      * Updates an existing storage policy by key.
@@ -43,7 +43,7 @@ public interface StoragePolicyService
      *
      * @return the updated storage policy
      */
-    public StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request);
+    StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request);
 
     /**
      * Gets an existing storage policy by key.
@@ -52,7 +52,7 @@ public interface StoragePolicyService
      *
      * @return the storage policy information
      */
-    public StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
+    StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
 
 
     /**
@@ -62,8 +62,7 @@ public interface StoragePolicyService
      *
      * @return the storage policy keys
      */
-    public StoragePolicyKeys getStoragePolicyKeys(String namespace);
-    StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
+    StoragePolicyKeys getStoragePolicyKeys(String namespace);
 
     /**
      * Deletes an existing storage policy by key.
