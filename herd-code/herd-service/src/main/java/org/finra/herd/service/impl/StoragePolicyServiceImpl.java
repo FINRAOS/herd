@@ -164,6 +164,20 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         return createStoragePolicyFromEntity(storagePolicyEntity);
     }
 
+    @NamespacePermission(fields = "#storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public StoragePolicy deleteStoragePolicy(StoragePolicyKey storagePolicyKey)
+    {
+        // Validate and trim the key.
+        storagePolicyHelper.validateStoragePolicyKey(storagePolicyKey);
+
+        // Retrieve and ensure that a storage policy exists with the specified key.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoHelper.deleteStoragePolicyEntityByKey(storagePolicyKey);
+
+        // Create and return the storage policy object from the persisted entity.
+        return createStoragePolicyFromEntity(storagePolicyEntity);
+    }
+
     @NamespacePermissions({@NamespacePermission(fields = "#storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
         @NamespacePermission(fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.WRITE)})
     @Override

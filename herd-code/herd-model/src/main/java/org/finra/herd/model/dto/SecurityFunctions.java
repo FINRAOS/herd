@@ -411,6 +411,8 @@ public class SecurityFunctions
 
     public static final String FN_STORAGE_PLATFORMS_GET = "FN_STORAGE_PLATFORMS_GET";
 
+    public static final String FN_STORAGE_POLICIES_DELETE = "FN_STORAGE_POLICIES_DELETE";
+
     public static final String FN_STORAGE_POLICIES_GET = "FN_STORAGE_POLICIES_GET";
 
     public static final String FN_STORAGE_POLICIES_POST = "FN_STORAGE_POLICIES_POST";

@@ -83,6 +83,31 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
     }
 
     @Test
+    public void testDeleteStoragePolicy()
+    {
+        // Create the objects needed for the test.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        StoragePolicy storagePolicy = new StoragePolicy(ID, storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
+            new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED);
+
+        // Setup the mock calls.
+        when(storagePolicyService.deleteStoragePolicy(storagePolicyKey)).thenReturn(storagePolicy);
+
+        // Call the method being tested.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyRestController.deleteStoragePolicy(storagePolicyKey.getNamespace(), storagePolicyKey.getStoragePolicyName());
+
+        // Verify the external calls.
+        verify(storagePolicyService).deleteStoragePolicy(storagePolicyKey);
+        verifyNoMoreInteractions(storagePolicyService);
+
+        // Validate the returned object.
+        assertEquals(storagePolicy, resultStoragePolicy);
+    }
+
+    @Test
     public void testGetStoragePolicy()
     {
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);

@@ -102,7 +102,7 @@ public class StoragePolicyRestController extends HerdBaseController
      * Gets a list of keys for all storage policies defined in the system for the specified namespace. <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
-     *
+     *                  
      * @return the storage policy keys
      */
     @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}", method = RequestMethod.GET)
@@ -110,5 +110,22 @@ public class StoragePolicyRestController extends HerdBaseController
     public StoragePolicyKeys getStoragePolicyKeys(@PathVariable("namespace") String namespace)
     {
         return storagePolicyService.getStoragePolicyKeys(namespace);
+    }
+
+    /**
+     * Deletes an existing storage policy by key.
+     * <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param storagePolicyName the storage policy name
+     *
+     * @return the deleted storage policy
+     */
+    @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}/storagePolicyNames/{storagePolicyName}",
+        method = RequestMethod.DELETE)
+    @Secured(SecurityFunctions.FN_STORAGE_POLICIES_DELETE)
+    public StoragePolicy deleteStoragePolicy(@PathVariable("namespace") String namespace, @PathVariable("storagePolicyName") String storagePolicyName)
+    {
+        return storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName));
     }
 }

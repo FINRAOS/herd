@@ -52,6 +52,30 @@ public class StoragePolicyDaoHelper
     private NamespaceDao namespaceDao;
 
     /**
+     * Delete a storage policy entity based on the key and makes sure that it exists.
+     *
+     * @param storagePolicyKey the storage policy key
+     *
+     * @return the storage policy entity
+     * @throws ObjectNotFoundException if the entity doesn't exist
+     */
+    public StoragePolicyEntity deleteStoragePolicyEntityByKey(StoragePolicyKey storagePolicyKey) throws ObjectNotFoundException
+    {
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDao.getStoragePolicyByAltKey(storagePolicyKey);
+
+        if (storagePolicyEntity == null)
+        {
+            throw new ObjectNotFoundException(String
+                .format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", storagePolicyKey.getStoragePolicyName(),
+                    storagePolicyKey.getNamespace()));
+        }
+
+        storagePolicyDao.delete(storagePolicyEntity);
+
+        return storagePolicyEntity;
+    }
+
+    /**
      * Gets a storage policy entity based on the key and makes sure that it exists.
      *
      * @param storagePolicyKey the storage policy key
