@@ -15,15 +15,20 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.StoragePolicyDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
@@ -42,6 +47,9 @@ public class StoragePolicyDaoHelper
 
     @Autowired
     private StoragePolicyDao storagePolicyDao;
+
+    @Autowired
+    private NamespaceDao namespaceDao;
 
     /**
      * Gets a storage policy entity based on the key and makes sure that it exists.
@@ -118,6 +126,29 @@ public class StoragePolicyDaoHelper
                 false, true))
         {
             throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
+        }
+    }
+
+    /**
+     * Gets a list of keys for all storage policy keys defined in the system for the specified namespace.
+     *
+     * @param namespace the name space
+     *
+     * @return list of storage policy keys
+     */
+    public List<StoragePolicyKey> getStoragePolicyKeys(String namespace)
+    {
+        // Try to retrieve the relative namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
+
+        // If namespace entity exists, retrieve storage policy keys by namespace entity.
+        if (namespaceEntity != null)
+        {
+            return storagePolicyDao.getStoragePolicyKeysByNamespace(namespaceEntity);
+        }
+        else
+        {
+            return Lists.newArrayList();
         }
     }
 }
