@@ -20,6 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -30,6 +32,7 @@ import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyFilter;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyRule;
 import org.finra.herd.model.api.xml.StoragePolicyTransition;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
@@ -149,5 +152,26 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(storagePolicyService);
         // Validate the returned object.
         assertEquals(storagePolicy, resultStoragePolicy);
+    }
+
+    @Test
+    public void testGetStoragePolicyKeys()
+    {
+        // Create an storage policy keys.
+        StoragePolicyKeys storagePolicyKeys =
+            new StoragePolicyKeys(Arrays.asList(new StoragePolicyKey(NAMESPACE, STORAGE_POLICY_NAME)));
+
+        // Mock the external calls.
+        when(storagePolicyService.getStoragePolicyKeys(NAMESPACE)).thenReturn(storagePolicyKeys);
+
+        // Call the method under test.
+        StoragePolicyKeys result = storagePolicyRestController.getStoragePolicyKeys(NAMESPACE);
+
+        // Verify the external calls.
+        verify(storagePolicyService).getStoragePolicyKeys(NAMESPACE);
+        verifyNoMoreInteractions(storagePolicyService);
+
+        // Validate the results.
+        assertEquals(storagePolicyKeys, result);
     }
 }

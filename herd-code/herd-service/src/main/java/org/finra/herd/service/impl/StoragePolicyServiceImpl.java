@@ -33,6 +33,7 @@ import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyFilter;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyRule;
 import org.finra.herd.model.api.xml.StoragePolicyTransition;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
@@ -255,6 +256,19 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
 
         // Create and return the storage policy object from the persisted entity.
         return createStoragePolicyFromEntity(storagePolicyEntity);
+    }
+
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public StoragePolicyKeys getStoragePolicyKeys(String namespace)
+    {
+        // Validate the namespace.
+        alternateKeyHelper.validateStringParameter("namespace", namespace);
+
+        // Retrieve and return the list of storage policy keys.
+        StoragePolicyKeys storagePolicyKeys = new StoragePolicyKeys();
+        storagePolicyKeys.getStoragePolicyKeies().addAll(storagePolicyDaoHelper.getStoragePolicyKeys(namespace.trim()));
+        return storagePolicyKeys;
     }
 
     /**
