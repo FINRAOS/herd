@@ -15,7 +15,10 @@
 */
 package org.finra.herd.dao;
 
+import java.util.List;
+
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 
 public interface StoragePolicyDao extends BaseJpaDao
@@ -38,4 +41,14 @@ public interface StoragePolicyDao extends BaseJpaDao
      * @return the storage policy entity
      */
     public StoragePolicyEntity getStoragePolicyByAltKeyAndVersion(StoragePolicyKey key, Integer storagePolicyVersion);
+
+    /**
+     * Gets a list of keys for all storage policies defined in the system for the specified namespace.
+     *
+     *
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the list of storage policy keys
+     */
+    List<StoragePolicyKey> getStoragePolicyKeysByNamespace(NamespaceEntity namespaceEntity);
 }

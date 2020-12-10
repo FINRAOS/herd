@@ -15,12 +15,16 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.List;
+
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.google.common.collect.Lists;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.StoragePolicyDao;
@@ -74,5 +78,38 @@ public class StoragePolicyDaoImpl extends AbstractHerdDao implements StoragePoli
         return executeSingleResultQuery(criteria, String.format(
             "Found more than one storage policy with with parameters {namespace=\"%s\", storagePolicyName=\"%s\", storagePolicyVersion=\"%d\"}.", key
                 .getNamespace(), key.getStoragePolicyName(), storagePolicyVersion));
+    }
+
+    @Override
+    public List<StoragePolicyKey> getStoragePolicyKeysByNamespace(NamespaceEntity namespaceEntity)
+    {
+        // Create criteria builder and a top-level query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the Storage policy.
+        Root<StoragePolicyEntity> emrClusterDefinitionEntityRoot = criteria.from(StoragePolicyEntity.class);
+
+        // Get the Storage Policy name column.
+        Path<String> storagePolicyName = emrClusterDefinitionEntityRoot.get(StoragePolicyEntity_.name);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate = builder.equal(emrClusterDefinitionEntityRoot.get(StoragePolicyEntity_.namespace), namespaceEntity);
+
+        // Add all clauses for the query.
+        criteria.select(storagePolicyName).where(predicate).orderBy(builder.asc(storagePolicyName));
+
+        // Execute the query to get a list of storage policy names back.
+        List<String> storagePolicyNames = entityManager.createQuery(criteria).getResultList();
+
+        // Build a list of storage policy keys.
+        List<StoragePolicyKey> storagePolicyKeys = Lists.newArrayList();
+        for (String emrClusterDefinitionName : storagePolicyNames)
+        {
+            storagePolicyKeys.add(new StoragePolicyKey(namespaceEntity.getCode(), emrClusterDefinitionName));
+        }
+
+        // Return the list of keys.
+        return storagePolicyKeys;
     }
 }
