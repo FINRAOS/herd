@@ -14,7 +14,9 @@
   limitations under the License.
 """
 # Standard library imports
-import configparser, string, random
+import configparser
+import random
+import string
 import unittest
 from unittest import mock
 
