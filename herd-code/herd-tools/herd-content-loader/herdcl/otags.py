@@ -311,7 +311,7 @@ class Controller:
     ############################################################################
     def load_tags(self):
         """
-        One of the controller actions. Loads business object sample files
+        One of the controller actions. Loads tag types and tag entities
 
         :return: Run Summary dict
 
@@ -410,6 +410,7 @@ class Controller:
         """
         # Descriptive format information is inside the business object definition
         namespace, usage, file_type, bdef_name, logical_name, description = row[:6]
+        description = description.replace('\n', '<br>')
         LOGGER.info('Getting BDef for {}'.format((namespace, bdef_name)))
         resp = self.get_business_object_definition(namespace, bdef_name)
         LOGGER.debug(resp)
@@ -736,6 +737,7 @@ class Controller:
                     xls_schema_name = str.upper(self.data_frame.at[index, Columns.SCHEMA_NAME.value]).strip()
                     xls_column_name = self.data_frame.at[index, Columns.COLUMN_NAME.value]
                     xls_description = self.data_frame.at[index, Columns.DESCRIPTION.value]
+                    xls_description = xls_description.replace('\n', '<br>')
 
                     # Check if schema name in worksheet matches existing schema name
                     schema_match_filter = self.format_columns[key][Columns.SCHEMA_NAME.value] == xls_schema_name
@@ -1349,6 +1351,7 @@ class Controller:
                 xls_tag = str.upper(row[Tags.TAG.value]).strip()
                 xls_tag_type = str.upper(row[Tags.TAGTYPE.value]).strip()
                 xls_description = row[Tags.DESCRIPTION.value]
+                xls_description = xls_description.replace('\n', '<br>')
                 xls_parent = row[Tags.PARENT.value]
 
                 xls_description, xls_parent = self.get_tag_optional_fields(xls_description,

@@ -343,6 +343,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       formatVersion
     )
 
+    if(fmt.getSchema == null) {
+      throw new Exception("Schema not found")
+    }
+
     log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
 
     var allData = api.getBusinessObjectPartitions(

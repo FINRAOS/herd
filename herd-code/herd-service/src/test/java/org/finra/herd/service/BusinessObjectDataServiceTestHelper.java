@@ -1663,11 +1663,9 @@ public class BusinessObjectDataServiceTestHelper
             ddlBuilder.append("\n");
             ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
                 AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" +
-                expectedS3KeyPrefix + "',");
+                expectedS3KeyPrefix + "'");
         }
-
-        // Replace the last comma with a semicolon.
-        ddlBuilder.setLength(ddlBuilder.length() - 1);
+        
         ddlBuilder.append(";");
 
         // Return the expected DDL.
