@@ -4085,6 +4085,14 @@
                <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
+                  when businessObjectDataVersion is specified in the request
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Storage Names to include when checking for Business Object Data availability</xs:documentation>
@@ -4311,6 +4319,11 @@
                <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Storage Names to include when checking for Business Object Data availability</xs:documentation>
@@ -4400,7 +4413,6 @@
       </xs:all>
    </xs:complexType>
 
-
    <!-- ***** Business Object Data Availability Collection ***** -->
 
    <xs:element name="businessObjectDataAvailabilityCollectionRequest" type="businessObjectDataAvailabilityCollectionRequest"/>
@@ -4464,6 +4476,14 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
+                  when businessObjectDataVersion is specified in the request
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
@@ -4523,6 +4543,11 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
@@ -4568,7 +4593,6 @@
       </xs:sequence>
    </xs:complexType>
 
-
    <!-- ***** Business Object Data Partitions ***** -->
 
    <xs:element name="businessObjectDataPartitionsRequest" type="businessObjectDataPartitionsRequest"/>
@@ -4581,6 +4605,14 @@
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
+                  when businessObjectDataVersion is specified in the request
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeAllRegisteredSubPartitions" type="xs:boolean" minOccurs="0">
@@ -4616,10 +4648,16 @@
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="partitions" type="partitions" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
+
    <xs:complexType name="partitions">
       <xs:sequence>
          <xs:element name="partition" type="partition" minOccurs="0" maxOccurs="unbounded">
@@ -4630,6 +4668,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partition">
       <xs:sequence>
          <xs:element name="partitionColumns" type="partitionColumns" minOccurs="0">
@@ -4641,6 +4680,7 @@
          <xs:element name="partitionLocation" type="xs:string"/>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partitionColumns">
       <xs:sequence>
          <xs:element name="partitionColumn" type="partitionColumn" minOccurs="0" maxOccurs="unbounded">
@@ -4651,6 +4691,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partitionColumn">
       <xs:sequence>
          <xs:element name="partitionColumnName" type="xs:string">
@@ -4667,6 +4708,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <!-- ***** Business Object Data Notification  ***** -->
 
    <xs:element name="businessObjectDataNotificationRegistrationCreateRequest" type="businessObjectDataNotificationRegistrationCreateRequest"/>
@@ -8875,12 +8917,14 @@
          </xs:element>
          <xs:element name="relationalSchemaName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database</xs:documentation>
+               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="relationalTableName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database</xs:documentation>
+               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageName" type="xs:string">

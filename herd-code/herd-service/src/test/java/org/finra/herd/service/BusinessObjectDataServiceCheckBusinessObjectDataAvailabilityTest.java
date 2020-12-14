@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -21,10 +21,12 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
@@ -50,6 +52,17 @@ import org.finra.herd.service.impl.BusinessObjectDataServiceImpl;
  */
 public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest extends AbstractServiceTest
 {
+    static class BusinessObjectDataStatusComparator implements Comparator<BusinessObjectDataStatus>
+    {
+        @Override
+        public int compare(BusinessObjectDataStatus businessObjectDataStatusA, BusinessObjectDataStatus businessObjectDataStatusB)
+        {
+            return StringUtils
+                .compare(businessObjectDataStatusA.getPartitionValue() + "," + StringUtils.join(businessObjectDataStatusA.getSubPartitionValues(), ","),
+                    businessObjectDataStatusB.getPartitionValue() + "," + StringUtils.join(businessObjectDataStatusB.getSubPartitionValues(), ","));
+        }
+    }
+
     @Test
     public void testCheckBusinessObjectDataAvailabilityPartitionValueList()
     {
@@ -60,12 +73,19 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+        expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -82,12 +102,19 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+        expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -147,13 +174,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE,
-                        new LatestBeforePartitionValue(upperBoundPartitionValue), NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES,
-                    STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                        new LatestBeforePartitionValue(upperBoundPartitionValue), NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS,
+                    NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
             // Validate the response object.
             assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(upperBoundPartitionValue),
-                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
                 .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
                 new ArrayList<>()), resultBusinessObjectDataAvailability);
         }
@@ -173,14 +200,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                        new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                        new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                     NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
             // Validate the response object.
             assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                    new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
+                .asList(
+                    new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
                 new ArrayList<>()), resultBusinessObjectDataAvailability);
         }
     }
@@ -364,16 +392,24 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         request.setBusinessObjectFormatVersion(null);
         request.setBusinessObjectDataVersion(null);
         request.setStorageName(null);
+        request.setStorageNames(null);
         request.setIncludeAllRegisteredSubPartitions(null);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES,
-                null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -395,16 +431,98 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         request.getPartitionValueFilter().setPartitionKey(BLANK_TEXT);
         request.setBusinessObjectDataVersion(null);
         request.setStorageName(null);
+        request.setStorageNames(null);
         request.setIncludeAllRegisteredSubPartitions(null);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES,
-                null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityMissingOptionalParametersWithBusinessObjectDataStatusSetToUploading()
+    {
+        // Prepare test data and execute the check business object data availability request without optional parameters, except for:
+        // - business object data status for available business object data is set to UPLOADING (one of pre-registration statuses)
+        businessObjectDataAvailabilityTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, NO_SUBPARTITION_VALUES,
+                NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+        BusinessObjectDataAvailabilityRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectFormatVersion(null);
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.UPLOADING);
+        request.setStorageName(null);
+        request.setStorageNames(null);
+        request.setIncludeAllRegisteredSubPartitions(null);
+        BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the results.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityMissingOptionalParametersWithBusinessObjectDataStatusSetToValid()
+    {
+        // Prepare test data and execute the check business object data availability request without optional parameters, except for:
+        // - business object data status for available business object data is set to VALID
+        businessObjectDataAvailabilityTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, NO_SUBPARTITION_VALUES,
+                NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+        BusinessObjectDataAvailabilityRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectFormatVersion(null);
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID);
+        request.setStorageName(null);
+        request.setStorageNames(null);
+        request.setIncludeAllRegisteredSubPartitions(null);
+        BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the results.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -420,12 +538,19 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+        expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(null, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null,
-                DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+            .getTestBusinessObjectDataStatuses(NO_FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -444,13 +569,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE,
-                        new LatestBeforePartitionValue(upperBoundPartitionValue), NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES,
-                    NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                        new LatestBeforePartitionValue(upperBoundPartitionValue), NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS,
+                    NO_STORAGE_NAMES, NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
             // Validate the response object.
             assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(upperBoundPartitionValue),
-                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays
                 .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
                 new ArrayList<>()), resultBusinessObjectDataAvailability);
         }
@@ -470,14 +595,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                        new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+                        new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME,
                     NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
             // Validate the response object.
             assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays.asList(
-                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                    new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays
+                .asList(
+                    new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
                 new ArrayList<>()), resultBusinessObjectDataAvailability);
         }
     }
@@ -492,6 +618,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         request.setBusinessObjectDefinitionName(addWhitespace(request.getBusinessObjectDefinitionName()));
         request.setBusinessObjectFormatUsage(addWhitespace(request.getBusinessObjectFormatUsage()));
         request.setBusinessObjectFormatFileType(addWhitespace(request.getBusinessObjectFormatFileType()));
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(addWhitespace(BusinessObjectDataStatusEntity.VALID));
         request.getPartitionValueFilters().get(0).setPartitionKey(addWhitespace(request.getPartitionValueFilters().get(0).getPartitionKey()));
         for (int i = 0; i < request.getPartitionValueFilters().get(0).getPartitionValues().size(); i++)
         {
@@ -503,11 +631,17 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -549,17 +683,25 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toUpperCase());
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toUpperCase());
         request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toUpperCase());
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID.toUpperCase());
         request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toUpperCase());
         request.setStorageName(request.getStorageName().toUpperCase());
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -575,17 +717,25 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toLowerCase());
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toLowerCase());
         request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toLowerCase());
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID.toLowerCase());
         request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toLowerCase());
         request.setStorageName(request.getStorageName().toLowerCase());
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -612,6 +762,33 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                     .getExpectedBusinessObjectFormatNotFoundErrorMessage(request.getNamespace(), request.getBusinessObjectDefinitionName(),
                         request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()),
                 e.getMessage());
+        }
+
+        // Try to check business object data availability using non-existing business object data status.
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataStatus(I_DO_NOT_EXIST);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object data status \"%s\" doesn't exist.", I_DO_NOT_EXIST), e.getMessage());
+        }
+
+        // Try to check business object data availability using neither VALID nor pre-registered status value.
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.INVALID);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Business object data status specified in the request must be \"%s\" or one of the pre-registration statuses.",
+                BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Try to check business object data availability using non-existing partition key (partition column).
@@ -650,7 +827,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         for (PartitionValueFilter partitionValueFilter : businessObjectDataServiceTestHelper.getInvalidPartitionValueFilters())
         {
             request = new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                Arrays.asList(partitionValueFilter), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                Arrays.asList(partitionValueFilter), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
             try
             {
@@ -859,7 +1036,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Prepare test data and execute the check business object data availability request.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
         BusinessObjectDataAvailabilityRequest request =
-            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES);
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
@@ -867,7 +1044,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, 0, null, null, DATA_VERSION, null, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
@@ -885,15 +1062,16 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailabilityRequest request =
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the response object. Business object data should be listed as "available" with the "VALID" reason.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
-            .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays
+                .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             NO_NOT_AVAILABLE_STATUSES), result);
 
         // Update the storage unit status to a non-available one.
@@ -907,7 +1085,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the response object. Business object data should be listed as "not available" with the "NO_ENABLED_STORAGE_UNIT" reason.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            NO_AVAILABLE_STATUSES,
             Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_UNIT_STATUS))), result);
     }
 
@@ -929,14 +1108,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Only the first version should be listed as VALID "available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), INITIAL_DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), INITIAL_DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
@@ -953,13 +1132,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Business object data should be listed as "not available" with the "ARCHIVED" reason.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_AVAILABLE_STATUSES,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+                NO_AVAILABLE_STATUSES,
                 Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, StorageUnitStatusEntity.ARCHIVED))),
             result);
     }
@@ -1112,11 +1292,18 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
             // Validate the results.
-            List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
+            List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
                     BusinessObjectDataStatusEntity.VALID, false);
+            List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
+                    BusinessObjectDataStatusEntity.UPLOADING, false);
+            List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+            expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+            expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+            expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
             List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
-                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION,
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION,
                     BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
             businessObjectDataServiceTestHelper
                 .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1144,11 +1331,18 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             BusinessObjectDataAvailability resultAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
             // Validate the results.
-            List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
-                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
+            List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
                     BusinessObjectDataStatusEntity.VALID, false);
+            List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION,
+                    BusinessObjectDataStatusEntity.UPLOADING, false);
+            List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+            expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+            expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+            expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
             List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
-                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION,
+                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, i + 1, STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, DATA_VERSION,
                     BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
             businessObjectDataServiceTestHelper
                 .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1287,7 +1481,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_GREATEST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(STORAGE_1_GREATEST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_1_GREATEST_PARTITION_VALUE_STATUS, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1328,13 +1522,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
                     NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION,
-                NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
                 NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION,
-            NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
+            NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.INVALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
 
@@ -1342,14 +1536,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
                 NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES,
-            STORAGE_NAME, Arrays.asList(
+                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+            NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
@@ -1377,7 +1571,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_GREATEST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(MULTI_STORAGE_GREATEST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, MULTI_STORAGE_GREATEST_PARTITION_VALUE_STATUS,
+                false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1401,7 +1596,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_1_LEAST_PARTITION_VALUE_STATUS, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1442,13 +1637,13 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
                     NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION,
-                NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
                 NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION,
-            NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
+            NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.INVALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
 
@@ -1456,14 +1651,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
                 NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN), NO_PARTITION_VALUE_RANGE,
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES,
-            STORAGE_NAME, Arrays.asList(
+                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+            NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
@@ -1491,7 +1686,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                Arrays.asList(STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                Arrays.asList(MULTI_STORAGE_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION, MULTI_STORAGE_LEAST_PARTITION_VALUE_STATUS, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
@@ -1520,13 +1715,21 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the response object.
-        assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
-                request.getPartitionValueFilters(), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                    MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
-                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(NO_FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                    MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, NO_DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
-            resultBusinessObjectDataAvailability);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(NO_FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
     }
 
     @Test
@@ -1577,7 +1780,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE),
-                        NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                        NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
             fail("Suppose to throw an ObjectNotFoundException when failed to find the latest before partition value.");
         }
         catch (ObjectNotFoundException e)
@@ -1613,28 +1817,29 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE_3),
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+                STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE_3),
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.INVALID)),
-            new ArrayList<>()), resultBusinessObjectDataAvailability);
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION,
+                BusinessObjectDataStatusEntity.INVALID)), new ArrayList<>()), resultBusinessObjectDataAvailability);
 
         // Check business object data availability using the latest before partition value filter option and without business object data version specified.
         resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE_3),
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE_3),
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(
+                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
 
@@ -1652,7 +1857,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                        new LatestAfterPartitionValue(PARTITION_VALUE_2))), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                        new LatestAfterPartitionValue(PARTITION_VALUE_2))), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                     NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
             fail("Suppose to throw an ObjectNotFoundException when failed to find the latest after partition value.");
         }
@@ -1689,57 +1894,259 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_STORAGE_NAMES,
-                STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                    new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_3, SUBPARTITION_VALUES, INITIAL_DATA_VERSION,
-                BusinessObjectDataStatusEntity.INVALID)), new ArrayList<>()), resultBusinessObjectDataAvailability);
+                new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, INITIAL_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+            STORAGE_NAME, Arrays.asList(
+            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_3, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.INVALID)),
+            new ArrayList<>()), resultBusinessObjectDataAvailability);
 
         // Check business object data availability using the latest after partition value filter option and without business object data version specified.
         resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                    new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+                STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
-            .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION,
-                BusinessObjectDataStatusEntity.VALID)), new ArrayList<>()), resultBusinessObjectDataAvailability);
+                new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+            STORAGE_NAME, Arrays.asList(
+            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+            new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
 
     @Test
-    public void testCheckBusinessObjectDataAvailabilityMultipleStorages()
+    public void testCheckBusinessObjectDataAvailabilityExplicitMultipleStorage()
     {
         // Create database entities required for testing.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
-        // Check business object data availability in multiple storages.
-        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
+        // Create request to check business object data availability for data located in explicitly specified multiple storage with request having:
+        // - business object data version set to a valid value (this forces to select business object data regardless of business object data status)
+        BusinessObjectDataAvailabilityRequest request =
             new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, STORAGE_NAMES, NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, STORAGE_NAMES, NO_STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
 
         // Validate the response object.
-        assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, STORAGE_NAMES, NO_STORAGE_NAME, businessObjectDataServiceTestHelper
-                .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                    MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false),
-                businessObjectDataServiceTestHelper.getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-                    MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false)),
-            resultBusinessObjectDataAvailability);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+        expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION,
+                BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
     }
 
     @Test
-    public void testCheckBusinessObjectDataAvailabilityNoStorageNamesAndSameBusinessObjectDataInMultipleStorages()
+    public void testCheckBusinessObjectDataAvailabilityExplicitMultipleStorageWithBusinessObjectDataStatusSetToUploading()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create request to check business object data availability for data located in explicitly specified multiple storage with request having:
+        // - business object data version is not set
+        // - business object data status for available business object data is set to UPLOADING (one of the pre-registration statuses)
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, STORAGE_NAMES, NO_STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the response object.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityExplicitMultipleStorageWithBusinessObjectDataStatusSetToValid()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create request to check business object data availability for data located in explicitly specified multiple storage with request having:
+        // - business object data version is not set
+        // - business object data status for available business object data is set to VALID
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID, STORAGE_NAMES, NO_STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the response object.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityExplicitSingleStorage()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create request to check business object data availability for data located in explicitly specified single storage with request having:
+        // - business object data version set to a valid value (this forces to select business object data regardless of business object data status)
+        // - storage is set to the first storage
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, Arrays.asList(STORAGE_NAME), NO_STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the response object.
+        List<BusinessObjectDataStatus> availableStatusesWithStatusValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> availableStatusesWithStatusUploading = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = new ArrayList<>();
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusValid);
+        expectedAvailableStatuses.addAll(availableStatusesWithStatusUploading);
+        expectedAvailableStatuses.sort(new BusinessObjectDataStatusComparator());
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION,
+                BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityExplicitSingleStorageWithBusinessObjectDataStatusSetToUploading()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create request to check business object data availability for data located in explicitly specified single storage with request having:
+        // - business object data version is not set
+        // - business object data status for available business object data is set to UPLOADING (one of the pre-registration statuses)
+        // - storage is set to the first storage
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, Arrays.asList(STORAGE_NAME),
+                NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the response object.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityExplicitSingleStorageWithBusinessObjectDataStatusSetToValid()
+    {
+        // Create database entities required for testing.
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create request to check business object data availability for data located in explicitly specified single storage with request having:
+        // - business object data version is not set
+        // - business object data status for available business object data is set to VALID
+        // - storage is set to the first storage
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID, Arrays.asList(STORAGE_NAME),
+                NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Check business object data availability in multiple storage.
+        BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+        // Validate the response object.
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonValid = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, false);
+        List<BusinessObjectDataStatus> notAvailableStatusesWithReasonNotRegistered = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES, null, null, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonValid);
+        expectedNotAvailableStatuses.addAll(notAvailableStatusesWithReasonNotRegistered);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultBusinessObjectDataAvailability);
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityNoStorageNamesAndSameBusinessObjectDataInMultipleStorage()
     {
         // Prepare database entities required for testing.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
@@ -1752,7 +2159,8 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             businessObjectDataService.checkBusinessObjectDataAvailability(
                 new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                     new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                        NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                        NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+                    NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
             fail("Suppose to throw an IllegalArgumentException when business object data registered in more than one storage.");
         }
         catch (IllegalArgumentException e)
@@ -1795,14 +2203,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME,
                 NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(SECOND_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+            Arrays.asList(
+                new BusinessObjectDataStatus(SECOND_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
 
@@ -1829,14 +2238,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME,
-                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+                NO_STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, NO_STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME,
+            Arrays.asList(
+                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
             new ArrayList<>()), resultBusinessObjectDataAvailability);
     }
 
@@ -1857,17 +2267,17 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Both sub-partitions should be listed as "available" with a VALID reason.
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
-                BusinessObjectDataStatusEntity.VALID),
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
-                BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                    BusinessObjectDataStatusEntity.VALID),
+                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
+                    BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
     @Test
@@ -1887,14 +2297,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Only one sub-partition should be listed - the first sub-partition as VALID "available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
@@ -1915,14 +2325,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Both sub-partitions should be listed - the first as VALID "available" and the second as INVALID "non-available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
                 BusinessObjectDataStatusEntity.INVALID))), result);
@@ -1945,15 +2355,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         // Both sub-partitions should be listed - the first as VALID "available" and the second as NO_ENABLED_STORAGE_UNIT "non-available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
                 StorageUnitStatusEntity.DISABLED))), result);
@@ -1976,15 +2386,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object.
         // Both sub-partitions should be listed - the first as VALID "available" and the second as ARCHIVED "non-available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
                 StorageUnitStatusEntity.ARCHIVED))), result);
@@ -2007,14 +2417,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Both sub-partitions should be listed - the first as VALID "available" and the second as "ARCHIVED" "non-available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), Arrays.asList(
             new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_2), DATA_VERSION,
                 StorageUnitStatusEntity.ARCHIVED))), result);
@@ -2037,14 +2447,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Only one sub-partition should be listed - the first sub-partition as VALID "available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
@@ -2065,14 +2475,14 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(
             new BusinessObjectDataAvailabilityRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
                 INCLUDE_ALL_REGISTERED_SUBPARTITIONS));
 
         // Validate the response object. Only one sub-partition should be listed - the first sub-partition as VALID "available".
         assertEquals(new BusinessObjectDataAvailability(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
-            new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+            Arrays.asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, Arrays.asList(SUB_PARTITION_VALUE_1), DATA_VERSION,
                 BusinessObjectDataStatusEntity.VALID)), NO_NOT_AVAILABLE_STATUSES), result);
     }
 
@@ -2100,7 +2510,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
             .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
                 Arrays.asList(useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE : STORAGE_1_LEAST_PARTITION_VALUE), NO_SUBPARTITION_VALUES,
-                DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+                DATA_VERSION, useMaxPartitionValueToken ? STORAGE_1_GREATEST_PARTITION_VALUE_STATUS : STORAGE_1_LEAST_PARTITION_VALUE_STATUS, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses = new ArrayList<>();
         businessObjectDataServiceTestHelper
             .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);

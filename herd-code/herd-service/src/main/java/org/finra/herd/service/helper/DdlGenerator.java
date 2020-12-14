@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.util.List;
@@ -21,6 +21,7 @@ import java.util.Map;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -52,6 +53,7 @@ public abstract class DdlGenerator
      * @param request the business object data DDL request
      * @param businessObjectFormatEntity the business object format entity
      * @param customDdlEntity the optional custom DDL entity
+     * @param businessObjectDataStatusEntity the business object data status for available business object data
      * @param storageNames the list of storage names, maybe empty
      * @param requestedStorageEntities the list of storage entities per storage names specified in the request
      * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
@@ -60,8 +62,8 @@ public abstract class DdlGenerator
      * @return the generated DDL
      */
     public abstract String generateCreateTableDdl(BusinessObjectDataDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity,
-        CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
-        Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames);
+        CustomDdlEntity customDdlEntity, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        List<StorageEntity> requestedStorageEntities, Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames);
 
     public abstract String generateReplaceColumnsStatement(BusinessObjectFormatDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity);
 
