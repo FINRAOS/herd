@@ -637,9 +637,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String MULTI_STORAGE_GREATEST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
 
+    public static final String MULTI_STORAGE_GREATEST_UPLOADING_PARTITION_VALUE = "2014-04-11";
+
+    public static final String MULTI_STORAGE_GREATEST_VALID_PARTITION_VALUE = "2014-04-08";
+
     public static final String MULTI_STORAGE_LEAST_PARTITION_VALUE = "2014-04-01";
 
     public static final String MULTI_STORAGE_LEAST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
+
+    public static final String MULTI_STORAGE_LEAST_UPLOADING_PARTITION_VALUE = "2014-04-01";
+
+    public static final String MULTI_STORAGE_LEAST_VALID_PARTITION_VALUE = "2014-04-02";
 
     public static final List<String> MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES =
         Collections.unmodifiableList(Arrays.asList("2014-04-04", "2014-04-07"));
