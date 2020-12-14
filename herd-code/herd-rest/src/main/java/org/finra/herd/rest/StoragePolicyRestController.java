@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.StoragePolicyService;
@@ -95,5 +96,36 @@ public class StoragePolicyRestController extends HerdBaseController
     public StoragePolicy getStoragePolicy(@PathVariable("namespace") String namespace, @PathVariable("storagePolicyName") String storagePolicyName)
     {
         return storagePolicyService.getStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName));
+    }
+
+    /**
+     * Gets a list of keys for all storage policies defined in the system for the specified namespace. <p>Requires READ permission on namespace</p>
+     *
+     * @param namespace the namespace
+     *                  
+     * @return the storage policy keys
+     */
+    @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_STORAGE_POLICIES_ALL_GET)
+    public StoragePolicyKeys getStoragePolicyKeys(@PathVariable("namespace") String namespace)
+    {
+        return storagePolicyService.getStoragePolicyKeys(namespace);
+    }
+
+    /**
+     * Deletes an existing storage policy by key.
+     * <p>Requires WRITE permission on namespace</p>
+     *
+     * @param namespace the namespace
+     * @param storagePolicyName the storage policy name
+     *
+     * @return the deleted storage policy
+     */
+    @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}/storagePolicyNames/{storagePolicyName}",
+        method = RequestMethod.DELETE)
+    @Secured(SecurityFunctions.FN_STORAGE_POLICIES_DELETE)
+    public StoragePolicy deleteStoragePolicy(@PathVariable("namespace") String namespace, @PathVariable("storagePolicyName") String storagePolicyName)
+    {
+        return storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName));
     }
 }

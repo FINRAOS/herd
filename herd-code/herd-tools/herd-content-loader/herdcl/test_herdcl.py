@@ -403,6 +403,31 @@ class TestObjectAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         self.assertEqual(mock_descr_info.get.call_count, 0)
 
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info_newline_no_update(self, mock_descr_info, mock_bdef):
+        """
+        Test of no update to business object definition descriptive info with new line in description
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description='description<br>',
+            descriptive_business_object_format=mock.Mock(
+                business_object_format_file_type='file_type',
+                business_object_format_usage='usage'
+            ),
+            display_name='logical_name',
+            namespace='namespace'
+        )
+        row = ['namespace', 'usage', 'file_type', 'bdef_name', 'logical_name', 'description\n']
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        self.assertEqual(mock_descr_info.get.call_count, 0)
+
     @mock.patch(
         'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
         'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
@@ -1097,6 +1122,38 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following bdef columns' in
                         self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_delete_business_object_definition_column')
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_create_business_object_definition_column')
+    def test_update_bdef_columns_newline_no_update(self, mock_create_column, mock_delete_column):
+        """
+        Test of no update to schema columns with new line in description
+
+        """
+        key = (string_generator(), string_generator())
+        schema = str.upper(string_generator()).strip()
+        column = string_generator()
+        description = string_generator()
+        self.controller.format_columns[key] = pd.DataFrame(
+            data=[[schema, column, description + '<br>', True]],
+            columns=[Columns.SCHEMA_NAME.value, Columns.COLUMN_NAME.value, Columns.DESCRIPTION.value, 'Found'])
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[schema, column, description + '\n']],
+            columns=[Columns.SCHEMA_NAME.value, Columns.COLUMN_NAME.value, Columns.DESCRIPTION.value])
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_bdef_columns(key, index_array)
+        self.assertEqual(mock_create_column.call_count, 0)
+        self.assertEqual(mock_delete_column.call_count, 0)
+        self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          len(index_array))
         self.assertEqual(self.controller.run_summary['success_rows'], 1)
@@ -2388,6 +2445,56 @@ class TestTagAction(unittest.TestCase):
             mock.Mock(
                 display_name=name_2,
                 description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
+                parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                search_score_multiplier=None
+            )
+        ]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(mock_create.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+
+    @mock.patch('herdsdk.TagApi.tag_create_tag')
+    @mock.patch('herdsdk.TagApi.tag_update_tag')
+    @mock.patch('herdsdk.TagApi.tag_get_tag')
+    def test_update_tag_list_newline_no_update(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag list with no update to description with new line
+
+        """
+        name_1 = 'name'
+        name_2 = 'name 2'
+        tag_type = str.upper(string_generator()).strip()
+        parent_tag = str.upper(string_generator()).strip()
+        child_tag = str.upper(string_generator()).strip()
+        description = string_generator()
+
+        self.controller.tag_list = {
+            tag_type: [parent_tag, child_tag],
+            'remove': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name_1, tag_type, parent_tag, description + '\n', ''],
+                  [name_2, tag_type, child_tag, description + '\n', name_1]],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value, Tags.DESCRIPTION.value, Tags.PARENT.value])
+
+        mock_tags.side_effect = [
+            mock.Mock(
+                display_name=name_1,
+                description=description + '<br>',
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                parent_tag_key=None,
+                search_score_multiplier=None
+            ),
+            mock.Mock(
+                display_name=name_2,
+                description= description + '<br>',
                 tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
                 parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
                 search_score_multiplier=None
