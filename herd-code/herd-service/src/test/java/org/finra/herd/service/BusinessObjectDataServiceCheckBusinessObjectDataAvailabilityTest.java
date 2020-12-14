@@ -17,6 +17,7 @@ package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -187,6 +188,68 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
     }
 
     @Test
+    public void testCheckBusinessObjectDataAvailabilityLatestBeforePartitionValueWithBusinessObjectDataStatusSetToUploading()
+    {
+        // Create database entities required for testing.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create request with latest before partition value filter.
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(PARTITION_VALUE),
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Confirm that, by default, no results are returned since there are no VALID business object data instances.
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(null);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertTrue(e.getMessage()
+                .startsWith(String.format("Failed to find partition value which is the latest before partition value = \"%s\"", PARTITION_VALUE)));
+        }
+
+        // Confirm that no results are returned for business object data status explicitly set to VALID.
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertTrue(e.getMessage()
+                .startsWith(String.format("Failed to find partition value which is the latest before partition value = \"%s\"", PARTITION_VALUE)));
+        }
+
+        // Check availability using latest before partition value filter option with business object data status set to UPLOADING.
+        for (String upperBoundPartitionValue : Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2))
+        {
+            // Update request and check availability.
+            request.getPartitionValueFilters().get(0).getLatestBeforePartitionValue().setPartitionValue(upperBoundPartitionValue);
+            request.setBusinessObjectDataVersion(null);
+            request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.UPLOADING);
+            BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+            // Validate the response object.
+            assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(upperBoundPartitionValue),
+                    NO_LATEST_AFTER_PARTITION_VALUE)), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
+                .asList(
+                    new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING)),
+                new ArrayList<>()), result);
+        }
+    }
+
+    @Test
     public void testCheckBusinessObjectDataAvailabilityLatestAfterPartitionValue()
     {
         // Create database entities required for testing.
@@ -194,7 +257,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        // Check an availability using a latest after partition value filter option.
+        // Check availability using latest after partition value filter option.
         for (String lowerBoundPartitionValue : Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2))
         {
             BusinessObjectDataAvailability resultBusinessObjectDataAvailability = businessObjectDataService.checkBusinessObjectDataAvailability(
@@ -210,6 +273,68 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
                 .asList(
                     new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
                 new ArrayList<>()), resultBusinessObjectDataAvailability);
+        }
+    }
+
+    @Test
+    public void testCheckBusinessObjectDataAvailabilityLatestAfterPartitionValueWithBusinessObjectDataStatusSetToUploading()
+    {
+        // Create database entities required for testing.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create request with latest after partition value filter.
+        BusinessObjectDataAvailabilityRequest request =
+            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    new LatestAfterPartitionValue(PARTITION_VALUE_2))), null, NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+
+        // Confirm that, by default, no results are returned since there are no VALID business object data instances.
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(null);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertTrue(e.getMessage()
+                .startsWith(String.format("Failed to find partition value which is the latest after partition value = \"%s\"", PARTITION_VALUE_2)));
+        }
+
+        // Confirm that no results are returned for business object data status explicitly set to VALID.
+        request.setBusinessObjectDataVersion(null);
+        request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertTrue(e.getMessage()
+                .startsWith(String.format("Failed to find partition value which is the latest after partition value = \"%s\"", PARTITION_VALUE_2)));
+        }
+
+        // Check availability using latest after partition value filter option with business object data status set to UPLOADING.
+        for (String lowerBoundPartitionValue : Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2))
+        {
+            // Update request and check availability.
+            request.getPartitionValueFilters().get(0).getLatestAfterPartitionValue().setPartitionValue(lowerBoundPartitionValue);
+            request.setBusinessObjectDataVersion(null);
+            request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.UPLOADING);
+            BusinessObjectDataAvailability result = businessObjectDataService.checkBusinessObjectDataAvailability(request);
+
+            // Validate the response object.
+            assertEquals(new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    new LatestAfterPartitionValue(lowerBoundPartitionValue))), null, NO_DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING,
+                NO_STORAGE_NAMES, STORAGE_NAME, Arrays.asList(
+                new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.UPLOADING)),
+                new ArrayList<>()), result);
         }
     }
 
