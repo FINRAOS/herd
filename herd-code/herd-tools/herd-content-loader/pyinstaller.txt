@@ -4,5 +4,5 @@ xlrd == 1.2.0
 xlsxwriter >= 1.1.0
 herdcl
 herdsdk
-pyinstaller
-pypiwin32
+pyinstaller == 3.5
+pypiwin32 == 223
