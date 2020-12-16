@@ -147,6 +147,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         ddlRequest.setPartitionValueFilters(request.getPartitionValueFilters());
         ddlRequest.setPartitionValueFilter(null);
         ddlRequest.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+        ddlRequest.setBusinessObjectDataStatus(request.getBusinessObjectDataStatus());
         ddlRequest.setStorageNames(request.getStorageNames());
         ddlRequest.setStorageName(null);
         ddlRequest.setAllowMissingData(request.isAllowMissingData());
@@ -161,6 +162,7 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @param request the business object data DDL request
      * @param businessObjectFormatEntity the business object format entity
      * @param customDdlEntity the optional custom DDL entity
+     * @param businessObjectDataStatusEntity the business object data status for available business object data
      * @param storageNames the list of storage names
      * @param requestedStorageEntities the list of storage entities per storage names specified in the request
      * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
@@ -169,8 +171,9 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @return the generateDDL and generatePartitions Wrapper class object
      */
     protected GenerateDdlRequestWrapper buildGenerateDdlPartitionsWrapper(BusinessObjectDataDdlRequest request,
-        BusinessObjectFormatEntity businessObjectFormatEntity, CustomDdlEntity customDdlEntity, List<String> storageNames,
-        List<StorageEntity> requestedStorageEntities, Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
+        BusinessObjectFormatEntity businessObjectFormatEntity, CustomDdlEntity customDdlEntity, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<String> storageNames, List<StorageEntity> requestedStorageEntities, Map<String, StorageEntity> cachedStorageEntities,
+        Map<String, String> cachedS3BucketNames)
     {
         // Get business object format key from the request.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -185,7 +188,8 @@ public class BusinessObjectDataDdlPartitionsHelper
         // the call below, so we select storage units only from all S3 storage, when the specified list of storage entities is empty.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), requestedStorageEntities, s3StoragePlatformEntity, null, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), businessObjectDataStatusEntity, requestedStorageEntities, s3StoragePlatformEntity, null,
+                businessObjectFormatEntity);
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.
@@ -196,6 +200,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest = getGenerateDdlRequestWrapperInstance();
         generateDdlRequest.allowMissingData = request.isAllowMissingData();
         generateDdlRequest.businessObjectDataVersion = request.getBusinessObjectDataVersion();
+        generateDdlRequest.businessObjectDataStatusEntity = businessObjectDataStatusEntity;
         generateDdlRequest.businessObjectFormatEntity = businessObjectFormatEntity;
         generateDdlRequest.businessObjectFormatVersion = request.getBusinessObjectFormatVersion();
         generateDdlRequest.customDdlEntity = customDdlEntity;
@@ -287,10 +292,6 @@ public class BusinessObjectDataDdlPartitionsHelper
         // Override the business object format version with the original (optional) value from the request.
         businessObjectFormatKey.setBusinessObjectFormatVersion(generateDdlRequest.businessObjectFormatVersion);
 
-        // Get business object data status entity for the VALID status.
-        BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-            businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
         // Get storage platform entity for S3 storage platform type.
         StoragePlatformEntity s3StoragePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(StoragePlatformEntity.S3);
 
@@ -303,7 +304,7 @@ public class BusinessObjectDataDdlPartitionsHelper
             .getStorageUnitsByPartitionFilters(generateDdlRequest.businessObjectFormatEntity.getBusinessObjectDefinition(),
                 businessObjectFormatKey.getBusinessObjectFormatUsage(), generateDdlRequest.businessObjectFormatEntity.getFileType(),
                 businessObjectFormatKey.getBusinessObjectFormatVersion(), generateDdlRequest.partitionFilters, generateDdlRequest.businessObjectDataVersion,
-                validBusinessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true,
+                generateDdlRequest.businessObjectDataStatusEntity, generateDdlRequest.requestedStorageEntities, s3StoragePlatformEntity, null, true,
                 generateDdlRequest.getAsOfTime());
 
         // Exclude duplicate business object data per specified list of storage names.
@@ -1055,6 +1056,8 @@ public class BusinessObjectDataDdlPartitionsHelper
         private Boolean allowMissingData;
 
         private Integer businessObjectDataVersion;
+
+        private BusinessObjectDataStatusEntity businessObjectDataStatusEntity;
 
         private BusinessObjectFormatEntity businessObjectFormatEntity;
 
