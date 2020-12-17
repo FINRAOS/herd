@@ -622,12 +622,35 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String MESSAGE_TYPE_2 = "UT_MessageType_2_" + RANDOM_SUFFIX;
 
-    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
+    public static final List<String> MULTI_STORAGE_AVAILABLE_AS_UPLOADING_PARTITION_VALUES_UNION =
+        Collections.unmodifiableList(Arrays.asList("2014-04-01", "2014-04-09", "2014-04-10", "2014-04-11"));
 
-    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION =
+    public static final List<String> MULTI_STORAGE_AVAILABLE_AS_VALID_PARTITION_VALUES_UNION =
         Collections.unmodifiableList(Arrays.asList("2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-06", "2014-04-08"));
 
-    public static final List<String> MULTI_STORAGE_NOT_AVAILABLE_PARTITION_VALUES = Collections.unmodifiableList(Arrays.asList("2014-04-04", "2014-04-07"));
+    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
+
+    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION = Collections.unmodifiableList(Arrays
+        .asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-06", "2014-04-08", "2014-04-09", "2014-04-10", "2014-04-11"));
+
+    public static final String MULTI_STORAGE_GREATEST_PARTITION_VALUE = "2014-04-11";
+
+    public static final String MULTI_STORAGE_GREATEST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
+
+    public static final String MULTI_STORAGE_GREATEST_UPLOADING_PARTITION_VALUE = "2014-04-11";
+
+    public static final String MULTI_STORAGE_GREATEST_VALID_PARTITION_VALUE = "2014-04-08";
+
+    public static final String MULTI_STORAGE_LEAST_PARTITION_VALUE = "2014-04-01";
+
+    public static final String MULTI_STORAGE_LEAST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
+
+    public static final String MULTI_STORAGE_LEAST_UPLOADING_PARTITION_VALUE = "2014-04-01";
+
+    public static final String MULTI_STORAGE_LEAST_VALID_PARTITION_VALUE = "2014-04-02";
+
+    public static final List<String> MULTI_STORAGE_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES =
+        Collections.unmodifiableList(Arrays.asList("2014-04-04", "2014-04-07"));
 
     public static final String NAMESPACE = "UT_Namespace_1_" + RANDOM_SUFFIX;
 
@@ -1098,20 +1121,44 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> SORTED_LOCAL_FILES =
         Arrays.asList("FOO3.DAT", "Foo2.dat", "folder/foo1.dat", "folder/foo2.dat", "folder/foo3.dat", "foo1.dat");
 
-    public static final List<String> SORTED_PARTITION_VALUES =
-        Arrays.asList("2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-04", "2014-04-05", "2014-04-06", "2014-04-07", "2014-04-08");
+    public static final List<String> SORTED_PARTITION_VALUES = Arrays
+        .asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-04", "2014-04-05", "2014-04-06", "2014-04-07", "2014-04-08", "2014-04-09",
+            "2014-04-10", "2014-04-11");
 
-    public static final List<String> STORAGE_1_AVAILABLE_PARTITION_VALUES =
+    public static final List<String> STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES =
+        Collections.unmodifiableList(Arrays.asList("2014-04-01", "2014-04-09", "2014-04-10"));
+
+    public static final List<String> STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES =
         Collections.unmodifiableList(Arrays.asList("2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-08"));
 
-    public static final String STORAGE_1_GREATEST_PARTITION_VALUE = STORAGE_1_AVAILABLE_PARTITION_VALUES.get(STORAGE_1_AVAILABLE_PARTITION_VALUES.size() - 1);
+    public static final List<String> STORAGE_1_AVAILABLE_PARTITION_VALUES = Collections
+        .unmodifiableList(Arrays.asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-08", "2014-04-09", "2014-04-10"));
 
-    public static final String STORAGE_1_LEAST_PARTITION_VALUE = STORAGE_1_AVAILABLE_PARTITION_VALUES.get(0);
+    public static final String STORAGE_1_GREATEST_PARTITION_VALUE = "2014-04-10";
 
-    public static final List<String> STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES =
-        Collections.unmodifiableList(Arrays.asList("2014-04-04", "2014-04-06", "2014-04-07"));
+    public static final String STORAGE_1_GREATEST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
 
-    public static final List<String> STORAGE_2_AVAILABLE_PARTITION_VALUES = Collections.unmodifiableList(Arrays.asList("2014-04-06", "2014-04-08"));
+    public static final String STORAGE_1_GREATEST_UPLOADING_PARTITION_VALUE = "2014-04-10";
+
+    public static final String STORAGE_1_GREATEST_VALID_PARTITION_VALUE = "2014-04-08";
+
+    public static final String STORAGE_1_LEAST_PARTITION_VALUE = "2014-04-01";
+
+    public static final String STORAGE_1_LEAST_PARTITION_VALUE_STATUS = BusinessObjectDataStatusEntity.UPLOADING;
+
+    public static final String STORAGE_1_LEAST_UPLOADING_PARTITION_VALUE = "2014-04-01";
+
+    public static final String STORAGE_1_LEAST_VALID_PARTITION_VALUE = "2014-04-02";
+
+    public static final List<String> STORAGE_1_NOT_AVAILABLE_NOT_REGISTERED_PARTITION_VALUES =
+        Collections.unmodifiableList(Arrays.asList("2014-04-04", "2014-04-06", "2014-04-07", "2014-04-11"));
+
+    public static final List<String> STORAGE_2_AVAILABLE_AS_UPLOADING_PARTITION_VALUES = Collections.unmodifiableList(Arrays.asList("2014-04-11"));
+
+    public static final List<String> STORAGE_2_AVAILABLE_AS_VALID_PARTITION_VALUES = Collections.unmodifiableList(Arrays.asList("2014-04-06", "2014-04-08"));
+
+    public static final List<String> STORAGE_2_AVAILABLE_PARTITION_VALUES =
+        Collections.unmodifiableList(Arrays.asList("2014-04-06", "2014-04-08", "2014-04-11"));
 
     public static final String STORAGE_DIRECTORY_PATH = "UT_Storage_Directory/Some_Path/" + RANDOM_SUFFIX;
 
@@ -1285,8 +1332,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Long TOTAL_INDEX_SEARCH_RESULTS = (long) (Math.random() * Long.MAX_VALUE);
 
-    public static final List<String> UNSORTED_PARTITION_VALUES =
-        Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+    public static final List<String> UNSORTED_PARTITION_VALUES = Arrays
+        .asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-01", "2014-04-10", "2014-04-09", "2014-04-11", "2014-04-08", "2014-04-07",
+            "2014-04-05", "2014-04-06");
 
     public static final String UPDATED_BY = "UT_UpdatedBy_" + RANDOM_SUFFIX;
 

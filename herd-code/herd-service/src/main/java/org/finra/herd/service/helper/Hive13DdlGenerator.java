@@ -45,6 +45,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.HivePartitionDto;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
@@ -136,6 +137,7 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param request the business object data DDL request
      * @param businessObjectFormatEntity the business object format entity
      * @param customDdlEntity the optional custom DDL entity
+     * @param businessObjectDataStatusEntity the business object data status for available business object data
      * @param storageNames the list of storage names
      * @param requestedStorageEntities the list of storage entities per storage names specified in the request
      * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
@@ -145,12 +147,12 @@ public class Hive13DdlGenerator extends DdlGenerator
      */
     @Override
     public String generateCreateTableDdl(BusinessObjectDataDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity,
-        CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
-        Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
+        CustomDdlEntity customDdlEntity, BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames,
+        List<StorageEntity> requestedStorageEntities, Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
     {
         BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequestWrapper = businessObjectDataDdlPartitionsHelper
-            .buildGenerateDdlPartitionsWrapper(request, businessObjectFormatEntity, customDdlEntity, storageNames, requestedStorageEntities,
-                cachedStorageEntities, cachedS3BucketNames);
+            .buildGenerateDdlPartitionsWrapper(request, businessObjectFormatEntity, customDdlEntity, businessObjectDataStatusEntity, storageNames,
+                requestedStorageEntities, cachedStorageEntities, cachedS3BucketNames);
         return generateCreateTableDdlHelper(generateDdlRequestWrapper);
     }
 
@@ -430,8 +432,6 @@ public class Hive13DdlGenerator extends DdlGenerator
      */
     private String generateCreateTableDdlHelper(BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequest)
     {
-        // TODO: We might want to consider using a template engine such as Velocity to generate this DDL so we don't wind up just doing string manipulation.
-
         StringBuilder sb = new StringBuilder();
 
         // For custom DDL, we would need to substitute the custom DDL tokens with their relative values.

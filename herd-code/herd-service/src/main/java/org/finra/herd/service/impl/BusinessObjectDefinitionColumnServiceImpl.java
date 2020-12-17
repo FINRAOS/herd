@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,18 +154,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             }
         }
 
-        // Ensure a business object definition column with the specified schema column name doesn't already exist for this business object definition.
-        for (SchemaColumnEntity schemaColumnEntity : schemaColumnEntities)
-        {
-            if (schemaColumnEntity.getBusinessObjectDefinitionColumn() != null)
-            {
-                throw new AlreadyExistsException(String.format(
-                    "Unable to create business object definition column because a business object definition column " +
-                        "with schema column name \"%s\" already exists for the business object definition {%s}.", request.getSchemaColumnName(),
-                    businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
-            }
-        }
-
         // Get all business object definition columns
         Collection<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities = businessObjectDefinitionEntity.getColumns();
 
@@ -213,12 +200,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         // Retrieve and ensure that a business object definition column exists with the business object definition.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
             businessObjectDefinitionColumnDaoHelper.getBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey);
-
-        // Unlink schema columns from the business object definition column.
-        for (SchemaColumnEntity schemaColumnEntity : businessObjectDefinitionColumnEntity.getSchemaColumns())
-        {
-            schemaColumnEntity.setBusinessObjectDefinitionColumn(null);
-        }
 
         // Delete the business object definition column.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionColumnEntity.getBusinessObjectDefinition();
@@ -395,17 +376,8 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
 
         if (fields.contains(SCHEMA_COLUMN_NAME_FIELD))
         {
-            // Check to see if the business object definition column schema column name exists.
-            if (StringUtils.isNotEmpty(businessObjectDefinitionColumnEntity.getSchemaColumnName()))
-            {
-                // Use the schema column name from the business object definition column entity.
-                businessObjectDefinitionColumn.setSchemaColumnName(businessObjectDefinitionColumnEntity.getSchemaColumnName());
-            }
-            else if (CollectionUtils.isNotEmpty(businessObjectDefinitionColumnEntity.getSchemaColumns()))
-            {
-                // Use the schema column name from the schema column entity.
-                businessObjectDefinitionColumn.setSchemaColumnName(IterableUtils.get(businessObjectDefinitionColumnEntity.getSchemaColumns(), 0).getName());
-            }
+            // Use the schema column name from the business object definition column entity.
+            businessObjectDefinitionColumn.setSchemaColumnName(businessObjectDefinitionColumnEntity.getSchemaColumnName());
         }
 
         // Add change events.

@@ -454,13 +454,21 @@ public class StorageUnitDaoTest extends AbstractDaoTest
 
         // Create a list of expected multi storage available storage unit availability DTOs.
         List<StorageUnitAvailabilityDto> expectedMultiStorageAvailableStorageUnitAvailabilityDtos = new ArrayList<>();
+        List<StorageUnitAvailabilityDto> expectedMultiStorageAvailableAsValidStorageUnitAvailabilityDtos = new ArrayList<>();
         for (StorageUnitEntity storageUnitEntity : expectedMultiStorageAvailableStorageUnits)
         {
-            expectedMultiStorageAvailableStorageUnitAvailabilityDtos.add(new StorageUnitAvailabilityDto(storageUnitEntity.getId(),
+            StorageUnitAvailabilityDto storageUnitAvailabilityDto = new StorageUnitAvailabilityDto(storageUnitEntity.getId(),
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     storageUnitEntity.getBusinessObjectData().getPartitionValue(), SUBPARTITION_VALUES, storageUnitEntity.getBusinessObjectData().getVersion()),
-                storageUnitEntity.getStorage().getName(), storageUnitEntity.getDirectoryPath(), BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET, null, null));
+                storageUnitEntity.getStorage().getName(), storageUnitEntity.getDirectoryPath(), storageUnitEntity.getBusinessObjectData().getStatus().getCode(),
+                StorageUnitStatusEntity.ENABLED, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET, null, null);
+
+            expectedMultiStorageAvailableStorageUnitAvailabilityDtos.add(storageUnitAvailabilityDto);
+
+            if (storageUnitAvailabilityDto.getBusinessObjectDataStatus().equals(BusinessObjectDataStatusEntity.VALID))
+            {
+                expectedMultiStorageAvailableAsValidStorageUnitAvailabilityDtos.add(storageUnitAvailabilityDto);
+            }
         }
 
         // Get business object definition entity.
@@ -545,7 +553,7 @@ public class StorageUnitDaoTest extends AbstractDaoTest
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS, NO_AS_OF_TIME);
 
         // Validate the results.
-        assertEquals(expectedMultiStorageAvailableStorageUnitAvailabilityDtos, results);
+        assertEquals(expectedMultiStorageAvailableAsValidStorageUnitAvailabilityDtos, results);
 
         // Try to retrieve "available" storage units, with wrong business object data
         // status and without specifying both business object format version and business object data version.
@@ -560,11 +568,11 @@ public class StorageUnitDaoTest extends AbstractDaoTest
         // Retrieve "available" storage units and with VALID business object data status without specifying any of the storage names or storage platform type.
         results = storageUnitDao
             .getStorageUnitsByPartitionFilters(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, partitionFilters,
-                DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
+                NO_DATA_VERSION, validBusinessObjectDataStatusEntity, NO_STORAGE_ENTITIES, NO_STORAGE_PLATFORM_ENTITY, NO_EXCLUDED_STORAGE_PLATFORM_ENTITY,
                 SELECT_ONLY_AVAILABLE_STORAGE_UNITS, NO_AS_OF_TIME);
 
         // Validate the results.
-        assertEquals(expectedMultiStorageAvailableStorageUnitAvailabilityDtos, results);
+        assertEquals(expectedMultiStorageAvailableAsValidStorageUnitAvailabilityDtos, results);
 
         // Try to retrieve "available" storage units without specifying any storage names and providing a non-existing storage platform type.
         results = storageUnitDao
