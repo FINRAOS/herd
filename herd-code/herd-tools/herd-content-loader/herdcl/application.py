@@ -21,8 +21,9 @@ import traceback
 try:
     import logger
     import otags
+    import gui
 except ImportError:
-    from herdcl import logger, otags
+    from herdcl import logger, otags, gui
 
 LOGGER = logger.get_logger(__name__)
 
@@ -97,7 +98,6 @@ def main():
         main_app.run()
     else:
         main_app.controller.gui_enabled = True
-        import gui
         app = gui.MainUI()
         LOGGER.info('Opening GUI')
         app.master.title('Herd Content Loader')
