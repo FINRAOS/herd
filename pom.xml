@@ -1011,7 +1011,25 @@
                   <groupId>org.apache.zookeeper</groupId>
                   <artifactId>zookeeper</artifactId>
                </exclusion>
+               <exclusion>
+                  <groupId>tomcat</groupId>
+                  <artifactId>jasper-compiler</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-mapper-asl</artifactId>
+               </exclusion>
             </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>tomcat</groupId>
+            <artifactId>jasper-compiler</artifactId>
+            <version>9.0.36</version>
+         </dependency>
+         <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.15-TALEND</version>
          </dependency>
          <dependency>
             <groupId>com.github.stefanbirkner</groupId>
