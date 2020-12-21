@@ -69,7 +69,7 @@
             <configuration>
                <file>${project.build.directory}/resources/setup.py</file>
                <token>@@Version@@</token>
-               <value>"${herd.python.version}"</value>
+               <value>"${herd.sdk.version}"</value>
             </configuration>
          </plugin>
          <plugin>

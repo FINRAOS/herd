@@ -277,7 +277,7 @@
                      <configOptions>
                         <packageName>herdsdk</packageName>
                         <projectName>herdsdk</projectName>
-                        <packageVersion>${herd.python.version}</packageVersion>
+                        <packageVersion>${herd.sdk.version}</packageVersion>
                      </configOptions>
                   </configuration>
                </execution>
