@@ -4088,8 +4088,8 @@
          <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
-                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
-                  when businessObjectDataVersion is specified in the request
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4479,8 +4479,8 @@
          <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
-                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
-                  when businessObjectDataVersion is specified in the request
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4608,8 +4608,8 @@
          <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
-                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. This parameter is ignored
-                  when businessObjectDataVersion is specified in the request
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
                </xs:documentation>
             </xs:annotation>
          </xs:element>

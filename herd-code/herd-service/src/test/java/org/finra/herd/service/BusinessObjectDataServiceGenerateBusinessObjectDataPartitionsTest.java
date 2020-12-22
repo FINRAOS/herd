@@ -530,6 +530,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         request.setBusinessObjectDefinitionName(addWhitespace(request.getBusinessObjectDefinitionName()));
         request.setBusinessObjectFormatUsage(addWhitespace(request.getBusinessObjectFormatUsage()));
         request.setBusinessObjectFormatFileType(addWhitespace(request.getBusinessObjectFormatFileType()));
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(addWhitespace(BusinessObjectDataStatusEntity.VALID));
         request.getPartitionValueFilters().get(0).setPartitionKey(addWhitespace(request.getPartitionValueFilters().get(0).getPartitionKey()));
         for (int i = 0; i < request.getPartitionValueFilters().get(0).getPartitionValues().size(); i++)
@@ -537,12 +538,15 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
             request.getPartitionValueFilters().get(0).getPartitionValues()
                 .set(i, addWhitespace(request.getPartitionValueFilters().get(0).getPartitionValues().get(i)));
         }
+        request.setStorageNames(Arrays.asList(addWhitespace(STORAGE_NAME)));
 
         BusinessObjectDataPartitions resultPartitions = businessObjectDataService.generateBusinessObjectDataPartitions(request);
 
         // Validate the results.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataPartitions(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataPartitions(), resultPartitions);
+        List<Partition> expectedPartitions = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataPartitions(PARTITION_COLUMNS.length, FileTypeEntity.TXT_FILE_TYPE,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, false);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataPartitions(request, expectedPartitions, resultPartitions);
     }
 
     @Test
@@ -558,6 +562,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         request.setBusinessObjectDefinitionName(addWhitespace(request.getBusinessObjectDefinitionName()));
         request.setBusinessObjectFormatUsage(addWhitespace(request.getBusinessObjectFormatUsage()));
         request.setBusinessObjectFormatFileType(addWhitespace(request.getBusinessObjectFormatFileType()));
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(addWhitespace(BusinessObjectDataStatusEntity.VALID));
         request.getPartitionValueFilters().get(0).setPartitionKey(addWhitespace(request.getPartitionValueFilters().get(0).getPartitionKey()));
         BusinessObjectDataPartitions resultPartitions = businessObjectDataService.generateBusinessObjectDataPartitions(request);
@@ -580,14 +585,18 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toUpperCase());
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toUpperCase());
         request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toUpperCase());
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID.toUpperCase());
         request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toUpperCase());
+        request.setStorageNames(Arrays.asList(STORAGE_NAME.toUpperCase()));
 
         BusinessObjectDataPartitions resultPartitions = businessObjectDataService.generateBusinessObjectDataPartitions(request);
 
         // Validate the results.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataPartitions(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataPartitions(), resultPartitions);
+        List<Partition> expectedPartitions = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataPartitions(PARTITION_COLUMNS.length, FileTypeEntity.TXT_FILE_TYPE,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, false);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataPartitions(request, expectedPartitions, resultPartitions);
     }
 
     @Test
@@ -601,17 +610,22 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().toLowerCase());
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().toLowerCase());
         request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().toLowerCase());
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.VALID.toLowerCase());
         request.getPartitionValueFilters().get(0).setPartitionKey(request.getPartitionValueFilters().get(0).getPartitionKey().toLowerCase());
         for (int i = 0; i < request.getStorageNames().size(); i++)
         {
             request.getStorageNames().set(i, request.getStorageNames().get(i).toLowerCase());
         }
+        request.setStorageNames(Arrays.asList(STORAGE_NAME.toLowerCase()));
+
         BusinessObjectDataPartitions resultPartitions = businessObjectDataService.generateBusinessObjectDataPartitions(request);
 
         // Validate the results.
-        businessObjectDataServiceTestHelper
-            .validateBusinessObjectDataPartitions(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataPartitions(), resultPartitions);
+        List<Partition> expectedPartitions = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataPartitions(PARTITION_COLUMNS.length, FileTypeEntity.TXT_FILE_TYPE,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES, SUBPARTITION_VALUES, false);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataPartitions(request, expectedPartitions, resultPartitions);
     }
 
     @Test
@@ -640,6 +654,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
 
         // Try to retrieve business object data ddl using non-existing business object data status.
         request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataPartitionsRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(I_DO_NOT_EXIST);
         try
         {
@@ -653,6 +668,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
 
         // Try to retrieve business object data ddl using neither VALID nor pre-registered status value.
         request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataPartitionsRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.INVALID);
         try
         {
@@ -823,6 +839,20 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         catch (IllegalArgumentException e)
         {
             assertEquals("A partition value token cannot be specified as one of partition values.", e.getMessage());
+        }
+
+        // Try to retrieve business object data partitions when both business object data version and business object data status values are specified.
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataPartitionsRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(DATA_VERSION);
+        request.setBusinessObjectDataStatus(BDATA_STATUS);
+        try
+        {
+            businessObjectDataService.generateBusinessObjectDataPartitions(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object data version and business object data status cannot be both specified.", e.getMessage());
         }
 
         // Try to retrieve business object data partitions passing a non-existing storage in the list of storage names.

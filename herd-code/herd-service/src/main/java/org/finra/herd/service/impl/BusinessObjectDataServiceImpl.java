@@ -1669,6 +1669,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             request.setBusinessObjectDataStatus(request.getBusinessObjectDataStatus().trim());
         }
 
+        // Make sure that request does not contain both business object data version and business object data status values.
+        Assert.isTrue(request.getBusinessObjectDataVersion() == null || StringUtils.isBlank(request.getBusinessObjectDataStatus()),
+            "A business object data version and business object data status cannot be both specified.");
+
         // Validate the partition value filters. Allow partition value tokens to be specified.
         businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), true);
 
@@ -1744,6 +1748,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             request.setBusinessObjectDataStatus(request.getBusinessObjectDataStatus().trim());
         }
 
+        // Make sure that request does not contain both business object data version and business object data status values.
+        Assert.isTrue(request.getBusinessObjectDataVersion() == null || StringUtils.isBlank(request.getBusinessObjectDataStatus()),
+            "A business object data version and business object data status cannot be both specified.");
+
         // Validate the partition value filters. Do not allow partition value tokens to be specified.
         businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), false);
 
@@ -1808,6 +1816,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         {
             request.setBusinessObjectDataStatus(request.getBusinessObjectDataStatus().trim());
         }
+
+        // Make sure that request does not contain both business object data version and business object data status values.
+        Assert.isTrue(request.getBusinessObjectDataVersion() == null || StringUtils.isBlank(request.getBusinessObjectDataStatus()),
+            "A business object data version and business object data status cannot be both specified.");
 
         // Validate the partition value filters. Do not allow partition value tokens to be specified.
         businessObjectDataHelper.validatePartitionValueFilters(request.getPartitionValueFilters(), null, false);
