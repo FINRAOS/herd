@@ -891,6 +891,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
 
         // Try to check business object data availability using non-existing business object data status.
         request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(I_DO_NOT_EXIST);
         try
         {
@@ -904,6 +905,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
 
         // Try to check business object data availability using neither VALID nor pre-registered status value.
         request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(NO_DATA_VERSION);
         request.setBusinessObjectDataStatus(BusinessObjectDataStatusEntity.INVALID);
         try
         {
@@ -1029,6 +1031,20 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
             assertEquals(String
                     .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".", END_PARTITION_VALUE, START_PARTITION_VALUE),
                 e.getMessage());
+        }
+
+        // Try to check business object data availability when both business object data version and business object data status values are specified.
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        request.setBusinessObjectDataVersion(DATA_VERSION);
+        request.setBusinessObjectDataStatus(BDATA_STATUS);
+        try
+        {
+            businessObjectDataService.checkBusinessObjectDataAvailability(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object data version and business object data status cannot be both specified.", e.getMessage());
         }
 
         // Try to check business object data availability when both a list of storage names and standalone storage name are specified.
