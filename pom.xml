@@ -506,6 +506,7 @@
             <artifactId>h2</artifactId>
             <version>${h2db.version}</version>
             <scope>test</scope>
+            <optional>true</optional>
          </dependency>
          <!-- This is the main SLF4J logging API that is used by the code base when we want to log. -->
          <dependency>
@@ -1015,6 +1016,14 @@
                <exclusion>
                   <groupId>org.apache.zookeeper</groupId>
                   <artifactId>zookeeper</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>tomcat</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-mapper-asl</artifactId>
                </exclusion>
             </exclusions>
          </dependency>
