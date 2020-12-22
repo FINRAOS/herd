@@ -59,6 +59,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.OnDemandCapacityReservationOptions;
 import com.amazonaws.services.elasticmapreduce.model.OnDemandProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.ScriptBootstrapActionConfig;
@@ -827,6 +828,16 @@ public class EmrDaoImpl implements EmrDao
         {
             onDemandProvisioningSpecification = new OnDemandProvisioningSpecification();
             onDemandProvisioningSpecification.setAllocationStrategy(emrClusterDefinitionOnDemandSpecification.getAllocationStrategy());
+
+            if (emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions() != null)
+            {
+                OnDemandCapacityReservationOptions onDemandCapacityReservationOptions = new OnDemandCapacityReservationOptions();
+                onDemandCapacityReservationOptions
+                    .setUsageStrategy(emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions().getUsageStrategy());
+                onDemandCapacityReservationOptions.setCapacityReservationPreference(
+                    emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions().getCapacityReservationPreference());
+                onDemandProvisioningSpecification.setCapacityReservationOptions(onDemandCapacityReservationOptions);
+            }
         }
 
         return onDemandProvisioningSpecification;

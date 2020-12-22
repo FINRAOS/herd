@@ -255,6 +255,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BUSINESS_OBJECT_DEFINITION_SEARCH_INDEX_NAME = "UT_BusinessObjectDefinitionSearchIndexName_" + RANDOM_SUFFIX;
 
+    public static final String CAPACITY_PREFERENCE_1 = "open";
+
+    public static final String CAPACITY_USAGE_STRATEGY_1 = "use-capacity-reservations-first";
+
     public static final String CODE = "code";
 
     public static final String COLUMNS_NAME_FIELD = "columns.name";

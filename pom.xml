@@ -45,7 +45,7 @@
        -->
       <activiti.version>5.19.0.1</activiti.version>
       <aspectj.version>1.8.11</aspectj.version>
-      <aws.sdk.version>1.11.827</aws.sdk.version>
+      <aws.sdk.version>1.11.873</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
       <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.11</commons.codec.version>
@@ -285,6 +285,12 @@
          </dependency>
 
          <!-- Third Party Dependencies -->
+         <!-- We are using private AWSElasticMapReduceJavaClient SDK -->
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-emr</artifactId>
+            <version>1.11.x</version>
+         </dependency>
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
@@ -307,11 +313,11 @@
             <artifactId>aws-java-sdk-ec2</artifactId>
             <version>${aws.sdk.version}</version>
          </dependency>
-         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-emr</artifactId>
-            <version>${aws.sdk.version}</version>
-         </dependency>
+<!--         <dependency>-->
+<!--            <groupId>com.amazonaws</groupId>-->
+<!--            <artifactId>aws-java-sdk-emr</artifactId>-->
+<!--            <version>${aws.sdk.version}</version>-->
+<!--         </dependency>-->
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
