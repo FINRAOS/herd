@@ -14,7 +14,9 @@
   limitations under the License.
 """
 # Standard library imports
-import configparser, string, random
+import configparser
+import random
+import string
 import unittest
 from unittest import mock
 
@@ -123,7 +125,8 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         # Mock config.get so each call returns a different value
-        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername',
+                     'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
@@ -1622,22 +1625,6 @@ class TestSampleAction(unittest.TestCase):
         self.controller.check_sample_files()
         self.assertEqual(self.controller.run_summary['success_rows'], 2)
 
-    def test_run_aws_command_no_command_found(self):
-        """
-        Test of getting aws method with no commmand found
-
-        """
-        resp = mock.Mock(
-            aws_access_key='access',
-            aws_secret_key='secret',
-            aws_session_token='token',
-            aws_s3_bucket_name='bucket',
-            s3_key_prefix='prefix'
-        )
-
-        return_value = self.controller.run_aws_command('s3_err', resp, 'path', 'file')
-        self.assertTrue('Command s3_err not found' in return_value)
-
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
     def test_get_bdef_sample_files(self, mock_bdef):
@@ -1934,6 +1921,97 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(mock_remove.call_count, 0)
         self.assertEqual(mock_upload.call_count, 0)
         self.assertEqual(mock_download.call_count, 1)
+
+    def test_run_aws_command_no_command_found(self):
+        """
+        Test of getting aws method with no commmand found
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix'
+        )
+
+        return_value = self.controller.run_aws_command('s3_err', resp, 'path', 'file')
+        self.assertTrue('Command s3_err not found' in return_value)
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.upload_file')
+    def test_upload_file(self, mock_upload):
+        """
+        Test of boto3 upload_file method getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id=''
+        )
+        args = {
+            'ServerSideEncryption': 'AES256'
+        }
+        mock_upload.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_upload', resp, 'path', 'file')
+        mock_upload.assert_called_with(filename='path',
+                                       bucket=resp.aws_s3_bucket_name,
+                                       key=resp.s3_key_prefix + 'file',
+                                       extra_args=args)
+        mock_upload.assert_called_once()
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.upload_file')
+    def test_upload_file_kms(self, mock_upload):
+        """
+        Test of boto3 upload_file method with kms key getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id='id'
+        )
+        args = {
+            'ServerSideEncryption': 'aws:kms',
+            'SSEKMSKeyId': resp.aws_kms_key_id
+        }
+        mock_upload.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_upload', resp, 'path', 'file')
+        mock_upload.assert_called_with(filename='path',
+                                       bucket=resp.aws_s3_bucket_name,
+                                       key=resp.s3_key_prefix + 'file',
+                                       extra_args=args)
+        mock_upload.assert_called_once()
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.download_file')
+    def test_download_file(self, mock_download):
+        """
+        Test of boto3 download_file method getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id='id'
+        )
+        mock_download.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_download', resp, 'path', 'file')
+        mock_download.assert_called_with(bucket=resp.aws_s3_bucket_name,
+                                         key=resp.s3_key_prefix + 'file',
+                                         filename='path')
+        mock_download.assert_called_once()
 
 
 class TestTagAction(unittest.TestCase):
@@ -2494,7 +2572,7 @@ class TestTagAction(unittest.TestCase):
             ),
             mock.Mock(
                 display_name=name_2,
-                description= description + '<br>',
+                description=description + '<br>',
                 tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
                 parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
                 search_score_multiplier=None

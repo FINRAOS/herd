@@ -22,7 +22,7 @@ class Menu(Enum):
     SAMPLES = 'Samples'
     TAGS = 'Tags'
     EXPORT = 'Export BDef'
-    ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PROD-CT']
+    ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PRODY-DI', 'PRODY-QI']
 
 class Summary(Enum):
     CHANGES = 'changes'

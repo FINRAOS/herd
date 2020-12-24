@@ -25,7 +25,8 @@ class AwsClient:
             'awsSecretKey': resp.aws_secret_key,
             'awsSessionToken': resp.aws_session_token,
             'bucketName': resp.aws_s3_bucket_name,
-            'keyPrefix': resp.s3_key_prefix + file
+            'keyPrefix': resp.s3_key_prefix + file,
+            'kmsKey': resp.aws_kms_key_id
         }
         self.client = S3Transfer(boto3.client('s3',
                                               region_name='us-east-1',
@@ -37,11 +38,19 @@ class AwsClient:
         return getattr(self, method)
 
     def s3_upload(self, path):
+        args = {}
+
+        if self.cred['kmsKey']:
+            args['ServerSideEncryption'] = 'aws:kms'
+            args['SSEKMSKeyId'] = self.cred['kmsKey']
+        else:
+            args['ServerSideEncryption'] = 'AES256'
+
         try:
             self.client.upload_file(filename=path,
                                     bucket=self.cred['bucketName'],
                                     key=self.cred['keyPrefix'],
-                                    extra_args={'ServerSideEncryption': 'AES256'})
+                                    extra_args=args)
         except S3UploadFailedError as e:
             return e
 

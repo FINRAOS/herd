@@ -59,6 +59,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
+import com.amazonaws.services.elasticmapreduce.model.OnDemandCapacityReservationOptions;
 import com.amazonaws.services.elasticmapreduce.model.OnDemandProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
@@ -82,6 +83,7 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionCapacityReservationOptions;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
@@ -645,8 +647,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = null;
         final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
             new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
-            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2, emrClusterDefinitionCapacityReservationOptions);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
             new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
         final EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet =
@@ -666,8 +670,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
                 .withTargetSpotCapacity(targetSpotCapacity).withInstanceTypeConfigs(expectedInstanceTypeConfigs).withLaunchSpecifications(
                 new InstanceFleetProvisioningSpecifications().withSpotSpecification(
                     new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
-                        .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
-                    .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)))), result);
+                        .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES)).withOnDemandSpecification(
+                    new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2).withCapacityReservationOptions(
+                        new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
+                            .withCapacityReservationPreference(CAPACITY_PREFERENCE_1))))), result);
     }
 
     @Test
@@ -849,8 +855,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Create objects required for testing.
         final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
             new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
+        final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
-            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2);
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2, emrClusterDefinitionCapacityReservationOptions);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
             new EmrClusterDefinitionLaunchSpecifications(emrClusterDefinitionSpotSpecification, emrClusterDefinitionOnDemandSpecification);
 
@@ -863,8 +871,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
         // Validate the results.
         assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(
             new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
-                .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES))
-            .withOnDemandSpecification(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2)), result);
+                .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES)).withOnDemandSpecification(
+            new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2).withCapacityReservationOptions(
+                new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
+                    .withCapacityReservationPreference(CAPACITY_PREFERENCE_1))), result);
     }
 
     @Test
@@ -986,8 +996,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
     public void testGetOnDemandSpecification()
     {
         // Create objects required for testing.
+        final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
-            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1);
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1, emrClusterDefinitionCapacityReservationOptions);
 
         // Call the method under test.
         OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(emrClusterDefinitionOnDemandSpecification);
@@ -996,7 +1008,9 @@ public class EmrDaoImplTest extends AbstractDaoTest
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1), result);
+        assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withCapacityReservationOptions(
+            new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1).withCapacityReservationPreference(CAPACITY_PREFERENCE_1)),
+            result);
     }
 
     @Test
@@ -1010,6 +1024,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertNull(result);
+    }
+
+    @Test
+    public void testGetOnDemandSpecificationWhenEmrClusterDefinitionCapacityReservationOptionsIsNull()
+    {
+        // Create objects required for testing.
+        final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
+            new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1, null);
+
+        // Call the method under test.
+        OnDemandProvisioningSpecification result = emrDaoImpl.getOnDemandSpecification(emrClusterDefinitionOnDemandSpecification);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withCapacityReservationOptions(null), result);
     }
 
     @Test

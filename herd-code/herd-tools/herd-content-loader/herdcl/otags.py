@@ -313,6 +313,12 @@ class Controller:
         """
         One of the controller actions. Loads tag types and tag entities
 
+        Steps involved:
+        1) Get Tag Type Codes
+        2) Update any changes to Tag Type Codes
+        3) Get Tag Entities
+        4) Update any changes to Tag Entities
+
         :return: Run Summary dict
 
         """

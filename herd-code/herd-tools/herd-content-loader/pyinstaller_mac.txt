@@ -5,5 +5,3 @@ xlsxwriter >= 1.1.0
 herdcl
 herdsdk
 pyinstaller
-pypiwin32
-pywin32 == 228
