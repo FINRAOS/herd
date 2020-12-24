@@ -32,7 +32,7 @@
 
    <properties>
       <!-- NOTE: Only increment version if there are updates to herd content loader -->
-      <herd.cl.version>0.137.0</herd.cl.version>
+      <herd.cl.version>0.138.0</herd.cl.version>
    </properties>
 
    <build>
