@@ -1495,6 +1495,114 @@ class TestLineageAction(unittest.TestCase):
                 'business_object_format_update_business_object_format_parents')
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_get_business_object_format')
+    def test_update_lineage_row_difference_bdata(self, mock_format, mock_update):
+        """
+        Test of business object format lineage with difference in list length between return value and dataframe
+
+        """
+        namespace = ['namespace_a', 'namespace_b', 'namespace_c']
+        bdef_name = ['bdef_name_a', 'bdef_name_b', 'bdef_name_c']
+        usage = ['usage_a', 'usage_b', 'usage_c']
+        file_type = ['file_type_a', 'file_type_b', 'file_type_c']
+
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[
+                mock.Mock(
+                    namespace=namespace[0],
+                    business_object_definition_name=bdef_name[0],
+                    business_object_format_usage=usage[0],
+                    business_object_format_file_type=file_type[0]
+                ),
+                mock.Mock(
+                    namespace=namespace[1],
+                    business_object_definition_name=bdef_name[1],
+                    business_object_format_usage=usage[1],
+                    business_object_format_file_type=file_type[1]
+                ),
+                mock.Mock(
+                    namespace=namespace[2],
+                    business_object_definition_name=bdef_name[2],
+                    business_object_format_usage=usage[2],
+                    business_object_format_file_type=file_type[2]
+                )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[['namespace', 'definition', 'usage', 'file type', namespace[1], bdef_name[1], usage[1],
+                   file_type[1]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[0], bdef_name[0], usage[0],
+                   file_type[0]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage_row_difference_excel(self, mock_format, mock_update):
+        """
+        Test of business object format lineage with difference in list length between return value and dataframe
+
+        """
+        namespace = ['namespace_a', 'namespace_b', 'namespace_c']
+        bdef_name = ['bdef_name_a', 'bdef_name_b', 'bdef_name_c']
+        usage = ['usage_a', 'usage_b', 'usage_c']
+        file_type = ['file_type_a', 'file_type_b', 'file_type_c']
+
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[
+                mock.Mock(
+                    namespace=namespace[0],
+                    business_object_definition_name=bdef_name[0],
+                    business_object_format_usage=usage[0],
+                    business_object_format_file_type=file_type[0]
+                ),
+                mock.Mock(
+                    namespace=namespace[1],
+                    business_object_definition_name=bdef_name[1],
+                    business_object_format_usage=usage[1],
+                    business_object_format_file_type=file_type[1]
+                )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[['namespace', 'definition', 'usage', 'file type', namespace[1], bdef_name[1], usage[1],
+                   file_type[1]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[0], bdef_name[0], usage[0],
+                   file_type[0]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[2], bdef_name[2], usage[2],
+                   file_type[2]]],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
     def test_update_lineage_empty(self, mock_format, mock_update):
         """
         Test of updating business object format lineage removing all parents
