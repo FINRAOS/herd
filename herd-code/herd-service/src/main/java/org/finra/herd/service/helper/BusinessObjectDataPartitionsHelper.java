@@ -27,6 +27,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.Partition;
 import org.finra.herd.model.dto.StorageUnitAvailabilityDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 
@@ -41,6 +42,7 @@ public class BusinessObjectDataPartitionsHelper
      *
      * @param request the business object data DDL request
      * @param businessObjectFormatEntity the business object format entity
+     * @param businessObjectDataStatusEntity the business object data status for available business object data
      * @param storageNames the list of storage names
      * @param requestedStorageEntities the list of storage entities per storage names specified in the request
      * @param cachedStorageEntities the map of storage names in upper case to the relative storage entities
@@ -49,13 +51,13 @@ public class BusinessObjectDataPartitionsHelper
      * @return the business object data partitions list
      */
     public List<Partition> generatePartitions(BusinessObjectDataDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity,
-        List<String> storageNames, List<StorageEntity> requestedStorageEntities, Map<String, StorageEntity> cachedStorageEntities,
-        Map<String, String> cachedS3BucketNames)
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity, List<String> storageNames, List<StorageEntity> requestedStorageEntities,
+        Map<String, StorageEntity> cachedStorageEntities, Map<String, String> cachedS3BucketNames)
     {
 
         BusinessObjectDataDdlPartitionsHelper.GenerateDdlRequestWrapper generateDdlRequestWrapper = businessObjectDataDdlPartitionsHelper
-            .buildGenerateDdlPartitionsWrapper(request, businessObjectFormatEntity, null, storageNames, requestedStorageEntities, cachedStorageEntities,
-                cachedS3BucketNames);
+            .buildGenerateDdlPartitionsWrapper(request, businessObjectFormatEntity, null, businessObjectDataStatusEntity, storageNames,
+                requestedStorageEntities, cachedStorageEntities, cachedS3BucketNames);
         BusinessObjectFormat businessObjectFormatForSchema = businessObjectDataDdlPartitionsHelper.validatePartitionFiltersAndFormat(generateDdlRequestWrapper);
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos =
             businessObjectDataDdlPartitionsHelper.processPartitionFiltersForGenerateDdlPartitions(generateDdlRequestWrapper);

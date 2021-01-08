@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import static org.finra.herd.dao.AbstractDaoTest.NO_DO_NOT_TRANSITION_LATEST_VALID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,10 +35,10 @@ import java.util.regex.Pattern;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataAttributeDaoTestHelper;
@@ -372,7 +373,10 @@ public class BusinessObjectDataServiceTestHelper
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                         businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, partitionValue, subPartitionValues, businessObjectVersion,
-                        AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                        AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                        (AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
+                            AbstractServiceTest.STORAGE_2_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ?
+                            BusinessObjectDataStatusEntity.UPLOADING : BusinessObjectDataStatusEntity.VALID));
             }
             else
             {
@@ -382,7 +386,10 @@ public class BusinessObjectDataServiceTestHelper
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                         businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, testSubPartitionValues,
-                        businessObjectVersion, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                        businessObjectVersion, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                        (AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
+                            AbstractServiceTest.STORAGE_2_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ?
+                            BusinessObjectDataStatusEntity.UPLOADING : BusinessObjectDataStatusEntity.VALID));
             }
 
             // Get the expected S3 key prefix.
@@ -1235,10 +1242,10 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(AbstractServiceTest.PARTITION_KEY, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
-                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES,
-                AbstractServiceTest.STORAGE_NAME, Arrays.asList(
-                new BusinessObjectDataStatus(AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, AbstractServiceTest.SUBPARTITION_VALUES,
-                    AbstractServiceTest.DATA_VERSION, BusinessObjectDataStatusEntity.VALID)), new ArrayList<>());
+                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                Arrays.asList(new BusinessObjectDataStatus(AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                    AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.DATA_VERSION, BusinessObjectDataStatusEntity.VALID)), new ArrayList<>());
         businessObjectDataAvailabilityResponses.add(businessObjectDataAvailability);
 
         // Set the expected values for the flags.
@@ -1535,7 +1542,7 @@ public class BusinessObjectDataServiceTestHelper
                 new PartitionValueFilter(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
-                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl,
                 AbstractServiceTest.NO_AS_OF_TIME);
 
@@ -1665,7 +1672,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" +
                 expectedS3KeyPrefix + "'");
         }
-        
+
         ddlBuilder.append(";");
 
         // Return the expected DDL.
@@ -1960,6 +1967,7 @@ public class BusinessObjectDataServiceTestHelper
     public String getExpectedS3BucketName(String partitionValue)
     {
         if (AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES.contains(partitionValue) ||
+            AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
             Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE.equals(partitionValue))
         {
             return AbstractServiceTest.S3_BUCKET_NAME;
@@ -2154,8 +2162,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(AbstractServiceTest.PARTITION_KEY, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
-                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES,
-                AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS,
+                AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
         businessObjectDataAvailabilityRequests.add(businessObjectDataAvailabilityRequest);
 
         return businessObjectDataAvailabilityCollectionRequest;
@@ -2265,7 +2273,7 @@ public class BusinessObjectDataServiceTestHelper
                 new PartitionValueFilter(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
-                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
                 AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
@@ -2952,6 +2960,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataAvailability.getBusinessObjectFormatVersion());
         assertEquals(request.getPartitionValueFilter(), actualBusinessObjectDataAvailability.getPartitionValueFilter());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataAvailability.getBusinessObjectDataVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataAvailability.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataAvailability.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getStorageName(), actualBusinessObjectDataAvailability.getStorageName());
         assertEquals(expectedAvailableStatuses, actualBusinessObjectDataAvailability.getAvailableStatuses());
         assertEquals(expectedNotAvailableStatuses, actualBusinessObjectDataAvailability.getNotAvailableStatuses());
@@ -2973,6 +2989,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataDdl.getBusinessObjectFormatVersion());
         assertEquals(request.getPartitionValueFilter(), actualBusinessObjectDataDdl.getPartitionValueFilter());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataDdl.getBusinessObjectDataVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataDdl.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataDdl.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getStorageName(), actualBusinessObjectDataDdl.getStorageName());
         assertEquals(request.getOutputFormat(), actualBusinessObjectDataDdl.getOutputFormat());
         assertEquals(request.getTableName(), actualBusinessObjectDataDdl.getTableName());
@@ -3021,6 +3045,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatUsage(), actualBusinessObjectDataPartitions.getBusinessObjectFormatUsage());
         assertEquals(request.getBusinessObjectFormatFileType(), actualBusinessObjectDataPartitions.getBusinessObjectFormatFileType());
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataPartitions.getBusinessObjectFormatVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataPartitions.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataPartitions.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getPartitionValueFilters(), actualBusinessObjectDataPartitions.getPartitionValueFilters());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataPartitions.getBusinessObjectDataVersion());
         assertEquals(request.getStorageNames(), actualBusinessObjectDataPartitions.getStorageNames());
