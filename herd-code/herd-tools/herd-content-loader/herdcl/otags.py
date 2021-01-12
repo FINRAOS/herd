@@ -925,8 +925,7 @@ class Controller:
                 sorted(l, key=lambda x: (x[columns[0]], x[columns[1]], x[columns[2]], x[columns[3]]))
                 for l in (format_parents, xls_parent_list)
             ]
-            pairs = zip(format_parents, xls_parent_list)
-            if all(x == y for x, y in pairs):
+            if format_parents == xls_parent_list:
                 LOGGER.info('No parent changes made')
                 self.run_summary['success_rows'] += len(df.index)
                 return
