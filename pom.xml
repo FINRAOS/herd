@@ -32,10 +32,10 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <revision>0.139.0-SNAPSHOT</revision>
+      <revision>0.140.0-SNAPSHOT</revision>
       <!-- NOTE: Match version with herd snapshot version. For herd-sdk python -->
-      <herd.sdk.version>0.139.0</herd.sdk.version>
-      <herd-ui.version>0.109.0</herd-ui.version>
+      <herd.sdk.version>0.140.0</herd.sdk.version>
+      <herd-ui.version>0.110.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -63,7 +63,7 @@
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
       <hibernate.validator.version>5.4.2.Final</hibernate.validator.version>
       <hibernate.version>5.2.12.Final</hibernate.version>
-      <h2db.version>1.4.196</h2db.version>
+      <h2db.version>1.4.200</h2db.version>
       <jackson.version>2.11.0</jackson.version>
       <apache.spark.jackson.version>2.9.10</apache.spark.jackson.version>
       <javax.servlet.version>4.0.1</javax.servlet.version>
@@ -1155,6 +1155,9 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-war-plugin</artifactId>
                <version>${maven.war.plugin.version}</version>
+               <configuration>
+                  <packagingExcludes>**.h2-1.4.200.jar,*h2database*</packagingExcludes>
+               </configuration>
             </plugin>
             <plugin>
                <groupId>org.codehaus.mojo</groupId>
