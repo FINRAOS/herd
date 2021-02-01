@@ -17,7 +17,6 @@ package org.finra.herd.service.impl;
 
 import java.util.List;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,82 +54,191 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
 
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
-    public NamespaceIamRoleAuthorization createNamespaceIamRoleAuthorization(NamespaceIamRoleAuthorizationCreateRequest request)
+    public NamespaceIamRoleAuthorization createNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationCreateRequest request)
     {
+        // Validate the namespace IAM role authorization create request.
         Assert.notNull(request, "NamespaceIamRoleAuthorizationCreateRequest must be specified");
-        Assert.hasText(request.getNamespaceIamRoleAuthorizationKey().getNamespace(), "Namespace must be specified");
-        Assert.hasText(request.getNamespaceIamRoleAuthorizationKey().getIamRoleName(), "IAM role name must be specified");
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = request.getNamespaceIamRoleAuthorizationKey();
+        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
+        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
+        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
 
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespaceIamRoleAuthorizationKey().getNamespace().trim());
+        // Retrieve the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
 
-        assertNamespaceIamRoleAuthorizationNotExist(namespaceEntity);
+        // Verify that a namespace IAM role authorization for this namespace and IAM role name does not already exist.
+        assertNamespaceIamRoleAuthorizationEntityNotExist(namespaceIamRoleAuthorizationKey);
 
+        // Create the new namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
             createNamespaceIamRoleAuthorizationEntity(namespaceEntity, request.getNamespaceIamRoleAuthorizationKey().getIamRoleName(),
                 request.getIamRoleDescription());
+
+        // Persist the namespace IAM role authorization entity.
         namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity);
 
-        return new NamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationEntity.getId(),
-            new NamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(),
-                namespaceIamRoleAuthorizationEntity.getIamRoleName()), namespaceIamRoleAuthorizationEntity.getDescription());
+        return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
     }
 
     @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
-    public NamespaceIamRoleAuthorization deleteNamespaceIamRoleAuthorization(NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
+    public NamespaceIamRoleAuthorization deleteNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
+        // Validate the namespace IAM role authorization key.
+        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
         Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
         Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
+        namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
 
+        // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
-            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+            retrieveAndValidateNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
 
-        // If no namespace IAM role authorization entity is found, throw an object not exception.
-        if (namespaceIamRoleAuthorizationEntity == null)
-        {
-            throw new ObjectNotFoundException(String.format("Namespace IAM role authorization for namespace \"%s\" and IAM role name \"%s\" does not exist",
-                namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()));
-        }
-
+        // Delete the namespace IAM role authorization entity.
         namespaceIamRoleAuthorizationDao.delete(namespaceIamRoleAuthorizationEntity);
 
-        return new NamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationEntity.getId(),
-            new NamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(),
-                namespaceIamRoleAuthorizationEntity.getIamRoleName()), namespaceIamRoleAuthorizationEntity.getDescription());
+        return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
     }
 
     @Override
-    public NamespaceIamRoleAuthorization getNamespaceIamRoleAuthorization(NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
+    public NamespaceIamRoleAuthorization getNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
         // Validate and trim the namespace IAM role authorization key.
         validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
 
         // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
-            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+            retrieveAndValidateNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
 
-        // If no namespace IAM role authorization entity is found, throw an object not exception.
-        if (namespaceIamRoleAuthorizationEntity == null)
-        {
-            throw new ObjectNotFoundException(String.format("Namespace IAM role authorization for namespace \"%s\" and IAM role name \"%s\" does not exist",
-                namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()));
-        }
-
-        return new NamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationEntity.getId(),
-            new NamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(),
-                namespaceIamRoleAuthorizationEntity.getIamRoleName()), namespaceIamRoleAuthorizationEntity.getDescription());
+        return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
     }
 
     @Override
     public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizations()
     {
+        // Get all of the namespace IAM role authorization entities.
+        return getNamespaceIamRoleAuthorizationKeysFromEntityLists(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(null));
+    }
+
+    @Override
+    public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByIamRoleName(String iamRoleName)
+    {
+        // Validate the IAM role name.
+        iamRoleName = alternateKeyHelper.validateStringParameter("An", "IAM role name", iamRoleName);
+
+        // Get the namespace IAM role authorization entities by IAM role name.
+        return getNamespaceIamRoleAuthorizationKeysFromEntityLists(
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(iamRoleName));
+    }
+
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByNamespace(String namespace)
+    {
+        // Validate the namespace.
+        namespace = alternateKeyHelper.validateStringParameter("namespace", namespace);
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespace);
+
+        // Get the namespace IAM role authorization entities by namespace.
+        return getNamespaceIamRoleAuthorizationKeysFromEntityLists(
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(namespaceEntity));
+    }
+
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.GRANT)
+    @Override
+    public NamespaceIamRoleAuthorization updateNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey,
+        final NamespaceIamRoleAuthorizationUpdateRequest request)
+    {
+        // Validate the namespace IAM role authorization key and namespace IAM role authorization update request.
+        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
+        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
+        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
+        Assert.notNull(request, "NamespaceIamRoleAuthorizationUpdateRequest must be specified");
+        namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
+
+        // Get the namespace IAM role authorization entity.
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
+            retrieveAndValidateNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+
+        // Update the namespace IAM role authorization entity.
+        namespaceIamRoleAuthorizationEntity.setDescription(request.getIamRoleDescription());
+
+        // Persist the namespace IAM role authorization entity.
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity);
+
+        return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
+    }
+
+    /**
+     * Asserts that no NamespaceIamRoleAuthorizationEntity exists for the given namespace Iam role authorization key. Throws a AlreadyExistsException if any
+     * NamespaceIamRoleAuthorizationEntity exists.
+     *
+     * @param namespaceIamRoleAuthorizationKey The namespace IAM role authorization key
+     *
+     * @throws AlreadyExistsException if the namespace IAM role authorization entity already exists
+     */
+    private void assertNamespaceIamRoleAuthorizationEntityNotExist(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
+    {
+        // Check to see if a namespace IAM role authorization entity exists.
+        if (namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey) != null)
+        {
+            throw new AlreadyExistsException(String.format("Namespace IAM role authorization with namespace \"%s\" and IAM role name \"%s\" already exists",
+                namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()));
+        }
+    }
+
+    /**
+     * Creates a new NamespaceIamRoleAuthorizationEntity from the given parameters.
+     *
+     * @param namespaceEntity The namespace entity
+     * @param iamRoleName The IAM role name
+     * @param iamRoleDescription The IAM role description
+     *
+     * @return The NamespaceIamRoleAuthorizationEntity
+     */
+    private NamespaceIamRoleAuthorizationEntity createNamespaceIamRoleAuthorizationEntity(final NamespaceEntity namespaceEntity, final String iamRoleName,
+        final String iamRoleDescription)
+    {
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity.setNamespace(namespaceEntity);
+        namespaceIamRoleAuthorizationEntity.setIamRoleName(iamRoleName.trim());
+        if (StringUtils.isNotBlank(iamRoleDescription))
+        {
+            namespaceIamRoleAuthorizationEntity.setDescription(iamRoleDescription.trim());
+        }
+        return namespaceIamRoleAuthorizationEntity;
+    }
+
+    /**
+     * Converts a namespace IAM role authorization entity into a namespace IAM role authorization.
+     *
+     * @param namespaceIamRoleAuthorizationEntity the namespace IAM role authorization entity
+     *
+     * @return the namespace IAM role authorization
+     */
+    private NamespaceIamRoleAuthorization getNamespaceIamRoleAuthorizationFromEntity(
+        final NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity)
+    {
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
+            new NamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(),
+                namespaceIamRoleAuthorizationEntity.getIamRoleName());
+
+        return new NamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationEntity.getId(), namespaceIamRoleAuthorizationKey,
+            namespaceIamRoleAuthorizationEntity.getDescription());
+    }
+
+    /**
+     * Converts a namespace IAM role authorization entity list into a namespace IAM role authorization keys object.
+     *
+     * @param namespaceIamRoleAuthorizationEntities a list of namespace IAM role authorization entities
+     *
+     * @return the namespace IAM role authorization keys
+     */
+    private NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationKeysFromEntityLists(
+        final List<NamespaceIamRoleAuthorizationEntity> namespaceIamRoleAuthorizationEntities)
+    {
         // Create a new namespace IAM role authorization keys object to hold the keys obtained from the get namespace IAM role authorizations DAO call.
         NamespaceIamRoleAuthorizationKeys namespaceIamRoleAuthorizationKeys = new NamespaceIamRoleAuthorizationKeys();
-
-        // Get all of the namespace IAM role authorization entities.
-        List<NamespaceIamRoleAuthorizationEntity> namespaceIamRoleAuthorizationEntities =
-            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(null);
 
         // For each namespace IAM role authorization entity convert it to a new namespace IAM role authorization key and add that key to the list of keys in
         // the namespace authorization IAM role key object.
@@ -144,29 +252,17 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
         return namespaceIamRoleAuthorizationKeys;
     }
 
-    @Override
-    public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByIamRoleName(String iamRoleName)
+    /**
+     * Retrieves a namespace IAM role authorization entity by the namespace IAM role authorization key and validates that the entity exists.
+     *
+     * @param namespaceIamRoleAuthorizationKey the namespace IAM role key
+     *
+     * @return the namespace IAM role authorization entity
+     * @throws ObjectNotFoundException if the namespace IAM role authorization is not found
+     */
+    private NamespaceIamRoleAuthorizationEntity retrieveAndValidateNamespaceIamRoleAuthorization(
+        final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
-        return null;
-    }
-
-    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
-    @Override
-    public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByNamespace(String namespace)
-    {
-        return null;
-    }
-
-    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.GRANT)
-    @Override
-    public NamespaceIamRoleAuthorization updateNamespaceIamRoleAuthorization(NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey,
-        NamespaceIamRoleAuthorizationUpdateRequest request)
-    {
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
-        Assert.notNull(request, "NamespaceIamRoleAuthorizationUpdateRequest must be specified");
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
-
         // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
             namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
@@ -178,50 +274,6 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
                 namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()));
         }
 
-        // Update the namespace IAM role authorization entity.
-        namespaceIamRoleAuthorizationEntity.setDescription(request.getIamRoleDescription());
-
-        // Persist the namespace IAM role authorization entity.
-        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity);
-
-        return new NamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationEntity.getId(),
-            new NamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationEntity.getNamespace().getCode(),
-                namespaceIamRoleAuthorizationEntity.getIamRoleName()), namespaceIamRoleAuthorizationEntity.getDescription());
-    }
-
-    /**
-     * Asserts that no NamespaceIamRoleAuthorizationEntities exist for the given namespace. Throws a AlreadyExistsException if any
-     * NamespaceIamRoleAuthorizationEntity exist.
-     *
-     * @param namespaceEntity The namespace entity
-     */
-    private void assertNamespaceIamRoleAuthorizationNotExist(NamespaceEntity namespaceEntity)
-    {
-        if (CollectionUtils.isNotEmpty(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(namespaceEntity)))
-        {
-            throw new AlreadyExistsException(String.format("Namespace IAM role authorizations with namespace \"%s\" already exist", namespaceEntity.getCode()));
-        }
-    }
-
-    /**
-     * Creates a new NamespaceIamRoleAuthorizationEntity from the given parameters.
-     *
-     * @param namespaceEntity The namespace entity
-     * @param iamRoleName The IAM role name
-     * @param iamRoleDescription The IAM role description
-     *
-     * @return The NamespaceIamRoleAuthorizationEntity
-     */
-    private NamespaceIamRoleAuthorizationEntity createNamespaceIamRoleAuthorizationEntity(NamespaceEntity namespaceEntity, String iamRoleName,
-        String iamRoleDescription)
-    {
-        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = new NamespaceIamRoleAuthorizationEntity();
-        namespaceIamRoleAuthorizationEntity.setNamespace(namespaceEntity);
-        namespaceIamRoleAuthorizationEntity.setIamRoleName(iamRoleName.trim());
-        if (StringUtils.isNotBlank(iamRoleDescription))
-        {
-            namespaceIamRoleAuthorizationEntity.setDescription(iamRoleDescription.trim());
-        }
         return namespaceIamRoleAuthorizationEntity;
     }
 

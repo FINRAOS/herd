@@ -71,10 +71,11 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertDependenciesCalledAndResultExpected()
+    public void testCreateNamespaceIamRoleAuthorization()
     {
         // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
+            new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
         NamespaceIamRoleAuthorizationCreateRequest expectedRequest =
             new NamespaceIamRoleAuthorizationCreateRequest(namespaceIamRoleAuthorizationKey, IAM_ROLE_DESCRIPTION);
 
@@ -83,14 +84,10 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
 
         NamespaceIamRoleAuthorizationEntity expectedNamespaceIamRoleAuthorizationEntity =
             createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME, IAM_ROLE_DESCRIPTION);
-        expectedNamespaceIamRoleAuthorizationEntity.setId(ID);
-
-        List<NamespaceIamRoleAuthorizationEntity> expectedNamespaceIamRoleAuthorizationEntityList = new ArrayList<>();
 
         // Setup the interactions.
         when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
-        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(expectedNamespaceEntity))
-            .thenReturn(expectedNamespaceIamRoleAuthorizationEntityList);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey)).thenReturn(null);
         doAnswer((Answer<Void>) invocation -> {
             // Get the namespace IAM role authorization entity and set its primary key.
             NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = (NamespaceIamRoleAuthorizationEntity) invocation.getArguments()[0];
@@ -99,9 +96,10 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
         }).when(namespaceIamRoleAuthorizationDao).saveAndRefresh(any(NamespaceIamRoleAuthorizationEntity.class));
 
         // Call the method being tested.
-        NamespaceIamRoleAuthorization response = namespaceIamRoleAuthorizationServiceImpl.createNamespaceIamRoleAuthorization(expectedRequest);
+        NamespaceIamRoleAuthorization response =
+            namespaceIamRoleAuthorizationServiceImpl.createNamespaceIamRoleAuthorization(expectedRequest);
 
-        // Validate response
+        // Validate the results.
         assertEquals(ID, new Long(response.getId()));
         assertEquals(IAM_ROLE_DESCRIPTION, response.getIamRoleDescription());
         assertEquals(IAM_ROLE_NAME, response.getNamespaceIamRoleAuthorizationKey().getIamRoleName());
@@ -109,13 +107,13 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
 
         // Verify the interactions.
         verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
-        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizations(expectedNamespaceEntity);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
         verify(namespaceIamRoleAuthorizationDao).saveAndRefresh(expectedNamespaceIamRoleAuthorizationEntity);
         verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertErrorWhenAuthorizationAlreadyExist()
+    public void testCreateNamespaceIamRoleAuthorizationAssertErrorWhenAuthorizationAlreadyExist()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
@@ -125,10 +123,13 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
         NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
         expectedNamespaceEntity.setCode(NAMESPACE);
 
+        NamespaceIamRoleAuthorizationEntity existingNamespaceIamRoleAuthorizationEntity =
+            createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME, IAM_ROLE_DESCRIPTION);
+
         // Setup the interactions.
         when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
-        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(expectedNamespaceEntity)).thenReturn(
-            Collections.singletonList(new NamespaceIamRoleAuthorizationEntity()));
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
+            .thenReturn(existingNamespaceIamRoleAuthorizationEntity);
 
         try
         {
@@ -136,22 +137,22 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
             namespaceIamRoleAuthorizationServiceImpl.createNamespaceIamRoleAuthorization(expectedRequest);
             fail();
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
             // Validate response
-            assertEquals(AlreadyExistsException.class, e.getClass());
-            assertEquals(String.format("Namespace IAM role authorizations with namespace \"%s\" already exist", expectedNamespaceEntity.getCode()),
-                e.getMessage());
+            assertEquals(AlreadyExistsException.class, exception.getClass());
+            assertEquals(String.format("Namespace IAM role authorization with namespace \"%s\" and IAM role name \"%s\" already exists",
+                NAMESPACE, IAM_ROLE_NAME), exception.getMessage());
         }
 
         // Verify the interactions.
         verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
-        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizations(expectedNamespaceEntity);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
         verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsBlank()
+    public void testCreateNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsBlank()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, BLANK_TEXT);
@@ -184,7 +185,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsNull()
+    public void testCreateNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsNull()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, null);
@@ -217,7 +218,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
+    public void testCreateNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(BLANK_TEXT, IAM_ROLE_NAME);
@@ -250,7 +251,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsNull()
+    public void testCreateNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsNull()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(null, IAM_ROLE_NAME);
@@ -283,7 +284,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void createNamespaceIamRoleAuthorizationAssertInputsTrimmed()
+    public void testCreateNamespaceIamRoleAuthorizationAssertInputsTrimmed()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
@@ -328,7 +329,165 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void getNamespaceIamRoleAuthorizationAssertDependenciesCalledAndResultExpected()
+    public void testDeleteNamespaceIamRoleAuthorization()
+    {
+        // Setup the objects needed for the test.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
+
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        NamespaceIamRoleAuthorizationEntity expectedNamespaceIamRoleAuthorizationEntity =
+            createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME, IAM_ROLE_DESCRIPTION);
+        expectedNamespaceIamRoleAuthorizationEntity.setId(ID);
+
+        // Setup the interactions.
+        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
+
+        // Call the method being tested.
+        NamespaceIamRoleAuthorization response =
+            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+
+        // Validate the results.
+        assertEquals(ID, new Long(response.getId()));
+        assertEquals(IAM_ROLE_DESCRIPTION, response.getIamRoleDescription());
+        assertEquals(IAM_ROLE_NAME, response.getNamespaceIamRoleAuthorizationKey().getIamRoleName());
+        assertEquals(NAMESPACE, response.getNamespaceIamRoleAuthorizationKey().getNamespace());
+
+        // Verify the interactions.
+        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+        verify(namespaceIamRoleAuthorizationDao).delete(expectedNamespaceIamRoleAuthorizationEntity);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+
+    @Test
+    public void testDeleteNamespaceIamRoleAuthorizationAssertInputsAreTrimmed()
+    {
+        // Setup the objects needed for the test.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
+            new NamespaceIamRoleAuthorizationKey(addWhitespace(NAMESPACE_2), addWhitespace(IAM_ROLE_NAME_2));
+
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE_2);
+
+        NamespaceIamRoleAuthorizationEntity expectedNamespaceIamRoleAuthorizationEntity =
+            createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME_2, IAM_ROLE_DESCRIPTION_2);
+        expectedNamespaceIamRoleAuthorizationEntity.setId(ID);
+
+        // Setup the interactions.
+        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE_2)).thenReturn(expectedNamespaceEntity);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
+
+        // Call the method being tested.
+        NamespaceIamRoleAuthorization response =
+            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+
+        // Validate the results.
+        assertEquals(ID, new Long(response.getId()));
+        assertEquals(IAM_ROLE_DESCRIPTION_2, response.getIamRoleDescription());
+        assertEquals(IAM_ROLE_NAME_2, response.getNamespaceIamRoleAuthorizationKey().getIamRoleName());
+        assertEquals(NAMESPACE_2, response.getNamespaceIamRoleAuthorizationKey().getNamespace());
+
+        // Verify the interactions.
+        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE_2);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+        verify(namespaceIamRoleAuthorizationDao).delete(expectedNamespaceIamRoleAuthorizationEntity);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testDeleteNamespaceIamRoleAuthorizationAssertErrorWhenDaoReturnsEmpty()
+    {
+        // Setup the objects needed for the test.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
+            new NamespaceIamRoleAuthorizationKey(addWhitespace(NAMESPACE), addWhitespace(IAM_ROLE_NAME));
+
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        // Setup the interactions.
+        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey)).thenReturn(null);
+
+        try
+        {
+            // Call the method being tested.
+            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+            fail();
+        }
+        catch (Exception e)
+        {
+            // Validate the results.
+            assertEquals(ObjectNotFoundException.class, e.getClass());
+            assertEquals(String.format("Namespace IAM role authorization for namespace \"%s\" and IAM role name \"%s\" does not exist",
+                namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()),
+                e.getMessage());
+        }
+
+        // Verify the interactions.
+        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+
+    @Test
+    public void testDeleteNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
+    {
+        // Setup the objects needed for the test.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(BLANK_TEXT, IAM_ROLE_NAME);
+
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        try
+        {
+            // Call the method being tested.
+            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+            fail();
+        }
+        catch (Exception e)
+        {
+            // Validate the results.
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Namespace must be specified", e.getMessage());
+        }
+
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testDeleteNamespaceIamRoleAuthorizationAssertErrorWhenIamRoleNameIsBlank()
+    {
+        // Setup the objects needed for the test.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, BLANK_TEXT);
+
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        try
+        {
+            // Call the method being tested.
+            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+            fail();
+        }
+        catch (Exception e)
+        {
+            // Validate the results.
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("IAM role name must be specified", e.getMessage());
+        }
+
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorization()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
@@ -364,7 +523,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void getNamespaceIamRoleAuthorizationAssertInputsTrimmed()
+    public void testGetNamespaceIamRoleAuthorizationAssertInputsTrimmed()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
@@ -402,7 +561,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void getNamespaceIamRoleAuthorizationAssertErrorWhenNoEntityFound()
+    public void testGetNamespaceIamRoleAuthorizationAssertErrorWhenNoEntityFound()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
@@ -436,7 +595,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void getNamespaceIamRoleAuthorizationsAssertCallsDependenciesAndResultExpected()
+    public void testGetNamespaceIamRoleAuthorizations()
     {
         // Setup the objects needed for testing.
         NamespaceEntity namespaceEntity1 = new NamespaceEntity();
@@ -498,7 +657,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void getNamespaceIamRoleAuthorizationsAssertResultEmptyWhenDaoReturnsEmpty()
+    public void testGetNamespaceIamRoleAuthorizationsAssertResultEmptyWhenDaoReturnsEmpty()
     {
         // Setup the interactions.
         when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(null)).thenReturn(Collections.emptyList());
@@ -517,7 +676,267 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void updateNamespaceIamRoleAuthorizationAssertCallsDependenciesAndResultExpected()
+    public void testGetNamespaceIamRoleAuthorizationsByIamRoleName()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity namespaceEntity1 = new NamespaceEntity();
+        namespaceEntity1.setCode(NAMESPACE);
+
+        NamespaceEntity namespaceEntity2 = new NamespaceEntity();
+        namespaceEntity2.setCode(NAMESPACE_2);
+
+        List<NamespaceIamRoleAuthorizationEntity> expectedNamespaceIamRoleAuthorizationEntities = new ArrayList<>();
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity1);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity2);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION_3);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity3);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity4 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity4.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity4.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity4.setDescription(IAM_ROLE_DESCRIPTION_4);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity4);
+
+        // Setup the interactions.
+        when(alternateKeyHelper.validateStringParameter("An", "IAM role name", IAM_ROLE_NAME)).thenReturn(IAM_ROLE_NAME);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntities);
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationKeys result = namespaceIamRoleAuthorizationServiceImpl.getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME);
+
+        // Validate the results.
+        assertNotNull(result);
+        assertNotNull(result.getNamespaceIamRoleAuthorizationKeys());
+        assertEquals(4, result.getNamespaceIamRoleAuthorizationKeys().size());
+
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey1 = result.getNamespaceIamRoleAuthorizationKeys().get(0);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey2 = result.getNamespaceIamRoleAuthorizationKeys().get(1);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey3 = result.getNamespaceIamRoleAuthorizationKeys().get(2);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey4 = result.getNamespaceIamRoleAuthorizationKeys().get(3);
+
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey1.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey1.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey2.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey2.getIamRoleName());
+        assertEquals(NAMESPACE_2, namespaceIAMRoleAuthorizationKey3.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey3.getIamRoleName());
+        assertEquals(NAMESPACE_2, namespaceIAMRoleAuthorizationKey4.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey4.getIamRoleName());
+
+        // Verify the interactions.
+        verify(alternateKeyHelper).validateStringParameter("An", "IAM role name", IAM_ROLE_NAME);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationsByIamRoleNameAssertInputsTrimmed()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity namespaceEntity1 = new NamespaceEntity();
+        namespaceEntity1.setCode(NAMESPACE);
+
+        NamespaceEntity namespaceEntity2 = new NamespaceEntity();
+        namespaceEntity2.setCode(NAMESPACE_2);
+
+        List<NamespaceIamRoleAuthorizationEntity> expectedNamespaceIamRoleAuthorizationEntities = new ArrayList<>();
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity1);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity2);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION_3);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity3);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity4 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity4.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity4.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity4.setDescription(IAM_ROLE_DESCRIPTION_4);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity4);
+
+        // Setup the interactions.
+        when(alternateKeyHelper.validateStringParameter("An", "IAM role name", addWhitespace(IAM_ROLE_NAME))).thenReturn(IAM_ROLE_NAME);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntities);
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationKeys result =
+            namespaceIamRoleAuthorizationServiceImpl.getNamespaceIamRoleAuthorizationsByIamRoleName(addWhitespace(IAM_ROLE_NAME));
+
+        // Validate the results.
+        assertNotNull(result);
+        assertNotNull(result.getNamespaceIamRoleAuthorizationKeys());
+        assertEquals(4, result.getNamespaceIamRoleAuthorizationKeys().size());
+
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey1 = result.getNamespaceIamRoleAuthorizationKeys().get(0);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey2 = result.getNamespaceIamRoleAuthorizationKeys().get(1);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey3 = result.getNamespaceIamRoleAuthorizationKeys().get(2);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey4 = result.getNamespaceIamRoleAuthorizationKeys().get(3);
+
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey1.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey1.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey2.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey2.getIamRoleName());
+        assertEquals(NAMESPACE_2, namespaceIAMRoleAuthorizationKey3.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey3.getIamRoleName());
+        assertEquals(NAMESPACE_2, namespaceIAMRoleAuthorizationKey4.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey4.getIamRoleName());
+
+        // Verify the interactions.
+        verify(alternateKeyHelper).validateStringParameter("An", "IAM role name", addWhitespace(IAM_ROLE_NAME));
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationsByNamespaceAssertInputsTrimmed()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        List<NamespaceIamRoleAuthorizationEntity> expectedNamespaceIamRoleAuthorizationEntities = new ArrayList<>();
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity1);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME_2);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity2);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME_3);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION_3);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity3);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity4 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity4.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity4.setIamRoleName(IAM_ROLE_NAME_4);
+        namespaceIamRoleAuthorizationEntity4.setDescription(IAM_ROLE_DESCRIPTION_4);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity4);
+
+        // Setup the interactions.
+        when(alternateKeyHelper.validateStringParameter("namespace", addWhitespace(NAMESPACE))).thenReturn(NAMESPACE);
+        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(expectedNamespaceEntity))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntities);
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationKeys result =
+            namespaceIamRoleAuthorizationServiceImpl.getNamespaceIamRoleAuthorizationsByNamespace(addWhitespace(NAMESPACE));
+
+        // Validate the results.
+        assertNotNull(result);
+        assertNotNull(result.getNamespaceIamRoleAuthorizationKeys());
+        assertEquals(4, result.getNamespaceIamRoleAuthorizationKeys().size());
+
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey1 = result.getNamespaceIamRoleAuthorizationKeys().get(0);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey2 = result.getNamespaceIamRoleAuthorizationKeys().get(1);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey3 = result.getNamespaceIamRoleAuthorizationKeys().get(2);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey4 = result.getNamespaceIamRoleAuthorizationKeys().get(3);
+
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey1.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey1.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey2.getNamespace());
+        assertEquals(IAM_ROLE_NAME_2, namespaceIAMRoleAuthorizationKey2.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey3.getNamespace());
+        assertEquals(IAM_ROLE_NAME_3, namespaceIAMRoleAuthorizationKey3.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey4.getNamespace());
+        assertEquals(IAM_ROLE_NAME_4, namespaceIAMRoleAuthorizationKey4.getIamRoleName());
+
+        // Verify the interactions.
+        verify(alternateKeyHelper).validateStringParameter("namespace", addWhitespace(NAMESPACE));
+        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizations(expectedNamespaceEntity);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationsByNamespace()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
+        expectedNamespaceEntity.setCode(NAMESPACE);
+
+        List<NamespaceIamRoleAuthorizationEntity> expectedNamespaceIamRoleAuthorizationEntities = new ArrayList<>();
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity1);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME_2);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity2);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME_3);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION_3);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity3);
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity4 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity4.setNamespace(expectedNamespaceEntity);
+        namespaceIamRoleAuthorizationEntity4.setIamRoleName(IAM_ROLE_NAME_4);
+        namespaceIamRoleAuthorizationEntity4.setDescription(IAM_ROLE_DESCRIPTION_4);
+        expectedNamespaceIamRoleAuthorizationEntities.add(namespaceIamRoleAuthorizationEntity4);
+
+        // Setup the interactions.
+        when(alternateKeyHelper.validateStringParameter("namespace", NAMESPACE)).thenReturn(NAMESPACE);
+        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
+        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(expectedNamespaceEntity))
+            .thenReturn(expectedNamespaceIamRoleAuthorizationEntities);
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationKeys result = namespaceIamRoleAuthorizationServiceImpl.getNamespaceIamRoleAuthorizationsByNamespace(NAMESPACE);
+
+        // Validate the results.
+        assertNotNull(result);
+        assertNotNull(result.getNamespaceIamRoleAuthorizationKeys());
+        assertEquals(4, result.getNamespaceIamRoleAuthorizationKeys().size());
+
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey1 = result.getNamespaceIamRoleAuthorizationKeys().get(0);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey2 = result.getNamespaceIamRoleAuthorizationKeys().get(1);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey3 = result.getNamespaceIamRoleAuthorizationKeys().get(2);
+        NamespaceIamRoleAuthorizationKey namespaceIAMRoleAuthorizationKey4 = result.getNamespaceIamRoleAuthorizationKeys().get(3);
+
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey1.getNamespace());
+        assertEquals(IAM_ROLE_NAME, namespaceIAMRoleAuthorizationKey1.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey2.getNamespace());
+        assertEquals(IAM_ROLE_NAME_2, namespaceIAMRoleAuthorizationKey2.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey3.getNamespace());
+        assertEquals(IAM_ROLE_NAME_3, namespaceIAMRoleAuthorizationKey3.getIamRoleName());
+        assertEquals(NAMESPACE, namespaceIAMRoleAuthorizationKey4.getNamespace());
+        assertEquals(IAM_ROLE_NAME_4, namespaceIAMRoleAuthorizationKey4.getIamRoleName());
+
+        // Verify the interactions.
+        verify(alternateKeyHelper).validateStringParameter("namespace", NAMESPACE);
+        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
+        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorizations(expectedNamespaceEntity);
+        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
+    }
+
+    @Test
+    public void testUpdateNamespaceIamRoleAuthorization()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
@@ -534,12 +953,6 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
         when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
         when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
             .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
-        doAnswer((Answer<Void>) invocation -> {
-            // Get the namespace IAM role authorization entity and set its primary key.
-            NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = (NamespaceIamRoleAuthorizationEntity) invocation.getArguments()[0];
-            namespaceIamRoleAuthorizationEntity.setId(ID);
-            return null;
-        }).when(namespaceIamRoleAuthorizationDao).saveAndRefresh(any(NamespaceIamRoleAuthorizationEntity.class));
 
         // Call the method being tested.
         NamespaceIamRoleAuthorization response =
@@ -559,7 +972,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void updateNamespaceIamRoleAuthorizationAssertInputsTrimmed()
+    public void testUpdateNamespaceIamRoleAuthorizationAssertInputsTrimmed()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
@@ -577,12 +990,6 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
         when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
         when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
             .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
-        doAnswer((Answer<Void>) invocation -> {
-            // Get the namespace IAM role authorization entity and set its primary key.
-            NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = (NamespaceIamRoleAuthorizationEntity) invocation.getArguments()[0];
-            namespaceIamRoleAuthorizationEntity.setId(ID);
-            return null;
-        }).when(namespaceIamRoleAuthorizationDao).saveAndRefresh(any(NamespaceIamRoleAuthorizationEntity.class));
 
         // Call the method being tested.
         NamespaceIamRoleAuthorization response =
@@ -602,7 +1009,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void updateNamespaceIamRoleAuthorizationAssertErrorWhenDaoReturnsEmpty()
+    public void testUpdateNamespaceIamRoleAuthorizationAssertErrorWhenDaoReturnsEmpty()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
@@ -638,7 +1045,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
     }
 
     @Test
-    public void updateNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsBlank()
+    public void testUpdateNamespaceIamRoleAuthorizationAssertErrorWhenRoleNameIsBlank()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, BLANK_TEXT);
@@ -665,7 +1072,7 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
 
 
     @Test
-    public void updateNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
+    public void testUpdateNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
     {
         // Setup the objects needed for the test.
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(BLANK_TEXT, IAM_ROLE_NAME);
@@ -685,164 +1092,6 @@ public class NamespaceIamRoleAuthorizationServiceTest extends AbstractServiceTes
             // Validate the results.
             assertEquals(IllegalArgumentException.class, e.getClass());
             assertEquals("Namespace must be specified", e.getMessage());
-        }
-
-        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
-    }
-
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertCallsDependenciesAndResultExpected()
-    {
-        // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
-
-        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
-        expectedNamespaceEntity.setCode(NAMESPACE);
-
-        NamespaceIamRoleAuthorizationEntity expectedNamespaceIamRoleAuthorizationEntity =
-            createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME, IAM_ROLE_DESCRIPTION);
-        expectedNamespaceIamRoleAuthorizationEntity.setId(ID);
-
-        // Setup the interactions.
-        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
-        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
-            .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
-
-        // Call the method being tested.
-        NamespaceIamRoleAuthorization response =
-            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-
-        // Validate the results.
-        assertEquals(ID, new Long(response.getId()));
-        assertEquals(IAM_ROLE_DESCRIPTION, response.getIamRoleDescription());
-        assertEquals(IAM_ROLE_NAME, response.getNamespaceIamRoleAuthorizationKey().getIamRoleName());
-        assertEquals(NAMESPACE, response.getNamespaceIamRoleAuthorizationKey().getNamespace());
-
-        // Verify the interactions.
-        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
-        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-        verify(namespaceIamRoleAuthorizationDao).delete(expectedNamespaceIamRoleAuthorizationEntity);
-        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
-    }
-
-
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertInputsAreTrimmed()
-    {
-        // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
-            new NamespaceIamRoleAuthorizationKey(addWhitespace(NAMESPACE_2), addWhitespace(IAM_ROLE_NAME_2));
-
-        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
-        expectedNamespaceEntity.setCode(NAMESPACE_2);
-
-        NamespaceIamRoleAuthorizationEntity expectedNamespaceIamRoleAuthorizationEntity =
-            createNamespaceIamRoleAuthorizationEntity(expectedNamespaceEntity, IAM_ROLE_NAME_2, IAM_ROLE_DESCRIPTION_2);
-        expectedNamespaceIamRoleAuthorizationEntity.setId(ID);
-
-        // Setup the interactions.
-        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE_2)).thenReturn(expectedNamespaceEntity);
-        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey))
-            .thenReturn(expectedNamespaceIamRoleAuthorizationEntity);
-
-        // Call the method being tested.
-        NamespaceIamRoleAuthorization response =
-            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-
-        // Validate the results.
-        assertEquals(ID, new Long(response.getId()));
-        assertEquals(IAM_ROLE_DESCRIPTION_2, response.getIamRoleDescription());
-        assertEquals(IAM_ROLE_NAME_2, response.getNamespaceIamRoleAuthorizationKey().getIamRoleName());
-        assertEquals(NAMESPACE_2, response.getNamespaceIamRoleAuthorizationKey().getNamespace());
-
-        // Verify the interactions.
-        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE_2);
-        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-        verify(namespaceIamRoleAuthorizationDao).delete(expectedNamespaceIamRoleAuthorizationEntity);
-        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
-    }
-
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertErrorWhenDaoReturnsEmpty()
-    {
-        // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
-            new NamespaceIamRoleAuthorizationKey(addWhitespace(NAMESPACE), addWhitespace(IAM_ROLE_NAME));
-
-        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
-        expectedNamespaceEntity.setCode(NAMESPACE);
-
-        // Setup the interactions.
-        when(namespaceDaoHelper.getNamespaceEntity(NAMESPACE)).thenReturn(expectedNamespaceEntity);
-        when(namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey)).thenReturn(null);
-
-        try
-        {
-            // Call the method being tested.
-            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-            fail();
-        }
-        catch (Exception e)
-        {
-            // Validate the results.
-            assertEquals(ObjectNotFoundException.class, e.getClass());
-            assertEquals(String.format("Namespace IAM role authorization for namespace \"%s\" and IAM role name \"%s\" does not exist",
-                namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()),
-                e.getMessage());
-        }
-
-        // Verify the interactions.
-        verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
-        verify(namespaceIamRoleAuthorizationDao).getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
-    }
-
-
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertErrorWhenNamespaceIsBlank()
-    {
-        // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(BLANK_TEXT, IAM_ROLE_NAME);
-
-        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
-        expectedNamespaceEntity.setCode(NAMESPACE);
-
-        try
-        {
-            // Call the method being tested.
-            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-            fail();
-        }
-        catch (Exception e)
-        {
-            // Validate the results.
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("Namespace must be specified", e.getMessage());
-        }
-
-        verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
-    }
-
-    @Test
-    public void deleteNamespaceIamRoleAuthorizationAssertErrorWhenIamRoleNameIsBlank()
-    {
-        // Setup the objects needed for the test.
-        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, BLANK_TEXT);
-
-        NamespaceEntity expectedNamespaceEntity = new NamespaceEntity();
-        expectedNamespaceEntity.setCode(NAMESPACE);
-
-        try
-        {
-            // Call the method being tested.
-            namespaceIamRoleAuthorizationServiceImpl.deleteNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
-            fail();
-        }
-        catch (Exception e)
-        {
-            // Validate the results.
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("IAM role name must be specified", e.getMessage());
         }
 
         verifyNoMoreInteractions(namespaceDaoHelper, namespaceIamRoleAuthorizationDao);
