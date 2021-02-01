@@ -15,6 +15,7 @@
  */
 package org.finra.herd.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -22,6 +23,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.springframework.stereotype.Repository;
@@ -42,14 +44,21 @@ public class NamespaceIamRoleAuthorizationDaoImpl extends AbstractHerdDao implem
     @Override
     public NamespaceIamRoleAuthorizationEntity getNamespaceIamRoleAuthorization(NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
+        // Create the criteria builder and the criteria.
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<NamespaceIamRoleAuthorizationEntity> criteriaQuery = criteriaBuilder.createQuery(NamespaceIamRoleAuthorizationEntity.class);
         Root<NamespaceIamRoleAuthorizationEntity> root = criteriaQuery.from(NamespaceIamRoleAuthorizationEntity.class);
         Join<NamespaceIamRoleAuthorizationEntity, NamespaceEntity> namespaceEntity = root.join(NamespaceIamRoleAuthorizationEntity_.namespace);
 
-        criteriaQuery.where(criteriaBuilder.equal(root.get(NamespaceIamRoleAuthorizationEntity_.namespace), namespaceIamRoleAuthorizationKey.getNamespace()));
-        criteriaQuery
-            .where(criteriaBuilder.equal(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName), namespaceIamRoleAuthorizationKey.getIamRoleName()));
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder
+            .equal(namespaceEntity.get(NamespaceEntity_.code), namespaceIamRoleAuthorizationKey.getNamespace()));
+        predicates.add(criteriaBuilder
+            .equal(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName), namespaceIamRoleAuthorizationKey.getIamRoleName()));
+
+        // Add the clauses for the query.
+        criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()])));
 
         return executeSingleResultQuery(criteriaQuery, String
             .format("Found more than one namespaceIamRoleAuthorization with namespaceCode=\"%s\" and iamRoleName=\"%s\".",
@@ -59,6 +68,7 @@ public class NamespaceIamRoleAuthorizationDaoImpl extends AbstractHerdDao implem
     @Override
     public List<NamespaceIamRoleAuthorizationEntity> getNamespaceIamRoleAuthorizations(NamespaceEntity namespaceEntity)
     {
+        // Create the criteria builder and the criteria.
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<NamespaceIamRoleAuthorizationEntity> query = criteriaBuilder.createQuery(NamespaceIamRoleAuthorizationEntity.class);
         Root<NamespaceIamRoleAuthorizationEntity> root = query.from(NamespaceIamRoleAuthorizationEntity.class);
@@ -80,11 +90,13 @@ public class NamespaceIamRoleAuthorizationDaoImpl extends AbstractHerdDao implem
     @Override
     public List<NamespaceIamRoleAuthorizationEntity> getNamespaceIamRoleAuthorizationsByIamRoleName(String iamRoleName)
     {
+        // Create the criteria builder and the criteria.
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<NamespaceIamRoleAuthorizationEntity> criteriaQuery = criteriaBuilder.createQuery(NamespaceIamRoleAuthorizationEntity.class);
         Root<NamespaceIamRoleAuthorizationEntity> root = criteriaQuery.from(NamespaceIamRoleAuthorizationEntity.class);
         Join<NamespaceIamRoleAuthorizationEntity, NamespaceEntity> namespaceJoin = root.join(NamespaceIamRoleAuthorizationEntity_.namespace);
 
+        // Create the standard restrictions (i.e. the standard where clauses).
         criteriaQuery
             .where(criteriaBuilder.equal(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName), iamRoleName));
 
