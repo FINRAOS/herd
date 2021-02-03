@@ -55,7 +55,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     @Autowired
     private NamespaceIamRoleAuthorizationHelper namespaceIamRoleAuthorizationHelper;
 
-    @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.GRANT)
+    @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public NamespaceIamRoleAuthorization createNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationCreateRequest request)
     {
@@ -77,7 +77,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
         return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
     }
 
-    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.GRANT)
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public NamespaceIamRoleAuthorization deleteNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
@@ -93,7 +93,8 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
 
         return getNamespaceIamRoleAuthorizationFromEntity(namespaceIamRoleAuthorizationEntity);
     }
-
+    
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public NamespaceIamRoleAuthorization getNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
@@ -134,7 +135,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
             namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizations(namespaceEntity));
     }
 
-    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.GRANT)
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public NamespaceIamRoleAuthorization updateNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey,
         final NamespaceIamRoleAuthorizationUpdateRequest request)
