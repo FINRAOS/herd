@@ -106,6 +106,7 @@ public class NamespaceIamRoleAuthorizationHelper
      * Creates a new NamespaceIamRoleAuthorizationEntity from the given parameters.
      *
      * @param namespaceIamRoleAuthorizationKey The namespace IAM role authorization key
+     * @param iamRoleDescription The IAM role description
      *
      * @return The NamespaceIamRoleAuthorizationEntity
      */
