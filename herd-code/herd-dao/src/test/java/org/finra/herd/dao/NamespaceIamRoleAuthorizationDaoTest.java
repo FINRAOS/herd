@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -71,6 +72,59 @@ public class NamespaceIamRoleAuthorizationDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetNamespaceIamRoleAuthorizationWithMixedCase()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity namespaceEntity1 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity2 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity1);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME_2);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity2);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity3);
+
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey =
+            new NamespaceIamRoleAuthorizationKey(mixedCase(NAMESPACE), mixedCase(IAM_ROLE_NAME));
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorization =
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+
+        // Validate results.
+        assertNotNull(namespaceIamRoleAuthorization);
+        assertEquals(namespaceEntity1.getCode(), namespaceIamRoleAuthorization.getNamespace().getCode());
+        assertEquals(namespaceIamRoleAuthorizationEntity1.getIamRoleName(), namespaceIamRoleAuthorization.getIamRoleName());
+        assertEquals(namespaceIamRoleAuthorizationEntity1.getDescription(), namespaceIamRoleAuthorization.getDescription());
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationWithNoMatch()
+    {
+        // Setup the objects needed for testing.
+        NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = new NamespaceIamRoleAuthorizationKey(NAMESPACE, IAM_ROLE_NAME);
+
+        // Call method being tested.
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorization =
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorization(namespaceIamRoleAuthorizationKey);
+
+        // Validate results.
+        assertNull(namespaceIamRoleAuthorization);
+    }
+
+    @Test
     public void testGetNamespaceIamRoleAuthorizationsByIamRoleName()
     {
         // Setup the objects needed for testing.
@@ -114,6 +168,64 @@ public class NamespaceIamRoleAuthorizationDaoTest extends AbstractDaoTest
         assertEquals(namespaceEntity2.getCode(), validateNamespaceIamRoleAuthorizationEntity2.getNamespace().getCode());
         assertEquals(namespaceIamRoleAuthorizationEntity3.getIamRoleName(), validateNamespaceIamRoleAuthorizationEntity2.getIamRoleName());
         assertEquals(namespaceIamRoleAuthorizationEntity3.getDescription(), validateNamespaceIamRoleAuthorizationEntity2.getDescription());
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationsByIamRoleNameWithMixedCase()
+    {
+        // Setup the objects needed for testing.
+        NamespaceEntity namespaceEntity1 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity2 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity1.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity1.setDescription(IAM_ROLE_DESCRIPTION);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity1);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity2 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity2.setNamespace(namespaceEntity1);
+        namespaceIamRoleAuthorizationEntity2.setIamRoleName(IAM_ROLE_NAME_2);
+        namespaceIamRoleAuthorizationEntity2.setDescription(IAM_ROLE_DESCRIPTION_2);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity2);
+
+        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity3 = new NamespaceIamRoleAuthorizationEntity();
+        namespaceIamRoleAuthorizationEntity3.setNamespace(namespaceEntity2);
+        namespaceIamRoleAuthorizationEntity3.setIamRoleName(IAM_ROLE_NAME);
+        namespaceIamRoleAuthorizationEntity3.setDescription(IAM_ROLE_DESCRIPTION);
+        namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity3);
+
+        // Call method being tested.
+        List<NamespaceIamRoleAuthorizationEntity> namespaceIamRoleAuthorizations =
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(mixedCase(IAM_ROLE_NAME));
+
+        // Validate results.
+        assertNotNull(namespaceIamRoleAuthorizations);
+        assertEquals(2, namespaceIamRoleAuthorizations.size());
+
+        NamespaceIamRoleAuthorizationEntity validateNamespaceIamRoleAuthorizationEntity1 = namespaceIamRoleAuthorizations.get(0);
+        assertNotNull(validateNamespaceIamRoleAuthorizationEntity1);
+        assertEquals(namespaceEntity1.getCode(), validateNamespaceIamRoleAuthorizationEntity1.getNamespace().getCode());
+        assertEquals(namespaceIamRoleAuthorizationEntity1.getIamRoleName(), validateNamespaceIamRoleAuthorizationEntity1.getIamRoleName());
+        assertEquals(namespaceIamRoleAuthorizationEntity1.getDescription(), validateNamespaceIamRoleAuthorizationEntity1.getDescription());
+
+        NamespaceIamRoleAuthorizationEntity validateNamespaceIamRoleAuthorizationEntity2 = namespaceIamRoleAuthorizations.get(1);
+        assertNotNull(validateNamespaceIamRoleAuthorizationEntity2);
+        assertEquals(namespaceEntity2.getCode(), validateNamespaceIamRoleAuthorizationEntity2.getNamespace().getCode());
+        assertEquals(namespaceIamRoleAuthorizationEntity3.getIamRoleName(), validateNamespaceIamRoleAuthorizationEntity2.getIamRoleName());
+        assertEquals(namespaceIamRoleAuthorizationEntity3.getDescription(), validateNamespaceIamRoleAuthorizationEntity2.getDescription());
+    }
+
+    @Test
+    public void testGetNamespaceIamRoleAuthorizationsByIamRoleNameWithNoMatch()
+    {
+        // Call method being tested.
+        List<NamespaceIamRoleAuthorizationEntity> namespaceIamRoleAuthorizations =
+            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(IAM_ROLE_NAME);
+
+        // Validate results.
+        assertNotNull(namespaceIamRoleAuthorizations);
+        assertEquals(0, namespaceIamRoleAuthorizations.size());
     }
 
     @Test

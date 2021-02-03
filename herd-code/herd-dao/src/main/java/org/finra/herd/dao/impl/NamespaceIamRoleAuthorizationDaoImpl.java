@@ -53,9 +53,9 @@ public class NamespaceIamRoleAuthorizationDaoImpl extends AbstractHerdDao implem
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(criteriaBuilder
-            .equal(namespaceEntity.get(NamespaceEntity_.code), namespaceIamRoleAuthorizationKey.getNamespace()));
-        predicates.add(criteriaBuilder
-            .equal(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName), namespaceIamRoleAuthorizationKey.getIamRoleName()));
+            .equal(criteriaBuilder.upper(namespaceEntity.get(NamespaceEntity_.code)), namespaceIamRoleAuthorizationKey.getNamespace().toUpperCase()));
+        predicates.add(criteriaBuilder.equal(criteriaBuilder.upper(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName)),
+            namespaceIamRoleAuthorizationKey.getIamRoleName().toUpperCase()));
 
         // Add the clauses for the query.
         criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()])));
@@ -98,7 +98,7 @@ public class NamespaceIamRoleAuthorizationDaoImpl extends AbstractHerdDao implem
 
         // Create the standard restrictions (i.e. the standard where clauses).
         criteriaQuery
-            .where(criteriaBuilder.equal(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName), iamRoleName));
+            .where(criteriaBuilder.equal(criteriaBuilder.upper(root.get(NamespaceIamRoleAuthorizationEntity_.iamRoleName)), iamRoleName.toUpperCase()));
 
         // Order the namespace IAM role authorization entities by namespace code.
         criteriaQuery.orderBy(criteriaBuilder.asc(namespaceJoin.get(NamespaceEntity_.code)), criteriaBuilder.asc(root.get(

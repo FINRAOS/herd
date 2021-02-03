@@ -17,7 +17,6 @@ package org.finra.herd.service.impl;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +37,7 @@ import org.finra.herd.model.jpa.NamespaceIamRoleAuthorizationEntity;
 import org.finra.herd.service.NamespaceIamRoleAuthorizationService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 
 @Service
 @Transactional
@@ -52,6 +52,9 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     @Autowired
     private NamespaceIamRoleAuthorizationDao namespaceIamRoleAuthorizationDao;
 
+    @Autowired
+    private NamespaceIamRoleAuthorizationHelper namespaceIamRoleAuthorizationHelper;
+
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.GRANT)
     @Override
     public NamespaceIamRoleAuthorization createNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationCreateRequest request)
@@ -59,20 +62,14 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
         // Validate the namespace IAM role authorization create request.
         Assert.notNull(request, "NamespaceIamRoleAuthorizationCreateRequest must be specified");
         NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey = request.getNamespaceIamRoleAuthorizationKey();
-        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
-
-        // Retrieve the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
+        namespaceIamRoleAuthorizationHelper.validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
 
         // Verify that a namespace IAM role authorization for this namespace and IAM role name does not already exist.
         assertNamespaceIamRoleAuthorizationEntityNotExist(namespaceIamRoleAuthorizationKey);
 
         // Create the new namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
-            createNamespaceIamRoleAuthorizationEntity(namespaceEntity, request.getNamespaceIamRoleAuthorizationKey().getIamRoleName(),
-                request.getIamRoleDescription());
+            namespaceIamRoleAuthorizationHelper.createNamespaceIamRoleAuthorizationEntity(namespaceIamRoleAuthorizationKey, request.getIamRoleDescription());
 
         // Persist the namespace IAM role authorization entity.
         namespaceIamRoleAuthorizationDao.saveAndRefresh(namespaceIamRoleAuthorizationEntity);
@@ -85,10 +82,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     public NamespaceIamRoleAuthorization deleteNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
         // Validate the namespace IAM role authorization key.
-        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
-        namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
+        namespaceIamRoleAuthorizationHelper.validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
 
         // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
@@ -104,7 +98,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     public NamespaceIamRoleAuthorization getNamespaceIamRoleAuthorization(final NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey)
     {
         // Validate and trim the namespace IAM role authorization key.
-        validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
+        namespaceIamRoleAuthorizationHelper.validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
 
         // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
@@ -123,12 +117,9 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     @Override
     public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByIamRoleName(String iamRoleName)
     {
-        // Validate the IAM role name.
-        iamRoleName = alternateKeyHelper.validateStringParameter("An", "IAM role name", iamRoleName);
-
         // Get the namespace IAM role authorization entities by IAM role name.
-        return getNamespaceIamRoleAuthorizationKeysFromEntityLists(
-            namespaceIamRoleAuthorizationDao.getNamespaceIamRoleAuthorizationsByIamRoleName(iamRoleName));
+        return getNamespaceIamRoleAuthorizationKeysFromEntityLists(namespaceIamRoleAuthorizationDao
+            .getNamespaceIamRoleAuthorizationsByIamRoleName(alternateKeyHelper.validateStringParameter("An", "IAM role name", iamRoleName)));
     }
 
     @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
@@ -136,8 +127,7 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
     public NamespaceIamRoleAuthorizationKeys getNamespaceIamRoleAuthorizationsByNamespace(String namespace)
     {
         // Validate the namespace.
-        namespace = alternateKeyHelper.validateStringParameter("namespace", namespace);
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespace);
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(alternateKeyHelper.validateStringParameter("namespace", namespace));
 
         // Get the namespace IAM role authorization entities by namespace.
         return getNamespaceIamRoleAuthorizationKeysFromEntityLists(
@@ -150,11 +140,8 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
         final NamespaceIamRoleAuthorizationUpdateRequest request)
     {
         // Validate the namespace IAM role authorization key and namespace IAM role authorization update request.
-        Assert.notNull(namespaceIamRoleAuthorizationKey, "NamespaceIamRoleAuthorizationKey must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getNamespace(), "Namespace must be specified");
-        Assert.hasText(namespaceIamRoleAuthorizationKey.getIamRoleName(), "IAM role name must be specified");
+        namespaceIamRoleAuthorizationHelper.validateAndTrimNamespaceIamRoleAuthorizationKey(namespaceIamRoleAuthorizationKey);
         Assert.notNull(request, "NamespaceIamRoleAuthorizationUpdateRequest must be specified");
-        namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace().trim());
 
         // Get the namespace IAM role authorization entity.
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity =
@@ -185,28 +172,6 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
             throw new AlreadyExistsException(String.format("Namespace IAM role authorization with namespace \"%s\" and IAM role name \"%s\" already exists",
                 namespaceIamRoleAuthorizationKey.getNamespace(), namespaceIamRoleAuthorizationKey.getIamRoleName()));
         }
-    }
-
-    /**
-     * Creates a new NamespaceIamRoleAuthorizationEntity from the given parameters.
-     *
-     * @param namespaceEntity The namespace entity
-     * @param iamRoleName The IAM role name
-     * @param iamRoleDescription The IAM role description
-     *
-     * @return The NamespaceIamRoleAuthorizationEntity
-     */
-    private NamespaceIamRoleAuthorizationEntity createNamespaceIamRoleAuthorizationEntity(final NamespaceEntity namespaceEntity, final String iamRoleName,
-        final String iamRoleDescription)
-    {
-        NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = new NamespaceIamRoleAuthorizationEntity();
-        namespaceIamRoleAuthorizationEntity.setNamespace(namespaceEntity);
-        namespaceIamRoleAuthorizationEntity.setIamRoleName(iamRoleName.trim());
-        if (StringUtils.isNotBlank(iamRoleDescription))
-        {
-            namespaceIamRoleAuthorizationEntity.setDescription(iamRoleDescription.trim());
-        }
-        return namespaceIamRoleAuthorizationEntity;
     }
 
     /**
@@ -275,21 +240,5 @@ public class NamespaceIamRoleAuthorizationServiceImpl implements NamespaceIamRol
         }
 
         return namespaceIamRoleAuthorizationEntity;
-    }
-
-    /**
-     * Validates a namespace IAM role authorization key. This method also trims the key parameters.
-     *
-     * @param namespaceIamRoleAuthorizationKey the namespace IAM role key
-     *
-     * @throws IllegalArgumentException if any validation errors were found
-     */
-    void validateAndTrimNamespaceIamRoleAuthorizationKey(NamespaceIamRoleAuthorizationKey namespaceIamRoleAuthorizationKey) throws IllegalArgumentException
-    {
-        Assert.notNull(namespaceIamRoleAuthorizationKey, "A namespace IAM role authorization key must be specified.");
-        namespaceIamRoleAuthorizationKey.setNamespace(
-            alternateKeyHelper.validateStringParameter("namespace", namespaceIamRoleAuthorizationKey.getNamespace()));
-        namespaceIamRoleAuthorizationKey.setIamRoleName(
-            alternateKeyHelper.validateStringParameter("An", "IAM role name", namespaceIamRoleAuthorizationKey.getIamRoleName()));
     }
 }

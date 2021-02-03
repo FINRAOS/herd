@@ -45,7 +45,7 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     private NamespaceIamRoleAuthorizationService namespaceIamRoleAuthorizationService;
 
     /**
-     * Authorizes a namespace to use IAM roles.
+     * Authorizes a namespace to use an IAM role.
      *
      * @param request The namespace IAM role create request
      *
@@ -59,9 +59,10 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     }
 
     /**
-     * Get the IAM roles that a namespace is authorized to use.
+     * Get the namespace IAM role authorization.
      *
      * @param namespace The namespace
+     * @param iamRoleName The IAM role name
      *
      * @return The namespace IAM role authorization
      */
@@ -76,7 +77,7 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     /**
      * Get a list of namespace IAM role authorization keys.
      *
-     * @return The list of namespace IAM role authorization keys.
+     * @return The list of namespace IAM role authorization keys
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_NAMESPACE_IAM_ROLE_AUTHORIZATIONS_ALL_GET)
@@ -86,11 +87,11 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     }
 
     /**
-     * Get a list of namespace IAM role authorization keys by IAM role name code.
+     * Get a list of namespace IAM role authorization keys by IAM role name.
      *
      * @param iamRoleName The IAM role name
      *
-     * @return The list of namespace IAM role authorization keys.
+     * @return The list of namespace IAM role authorization keys
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations/iamRoleNames/{iamRoleName}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_NAMESPACE_IAM_ROLE_AUTHORIZATIONS_BY_IAM_ROLE_NAME_GET)
@@ -104,7 +105,7 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
      *
      * @param namespace The namespace
      *
-     * @return The list of namespace IAM role authorization keys.
+     * @return The list of namespace IAM role authorization keys
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_NAMESPACE_IAM_ROLE_AUTHORIZATIONS_BY_NAMESPACE_GET)
@@ -114,14 +115,15 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     }
 
     /**
-     * Sets the authorizations a namespace has to use IAM roles.
+     * Sets the IAM role description for a namespace IAM role authorization.
      *
-     * @param namespace The namespace to update authorizations
+     * @param namespace The namespace
+     * @param iamRoleName The IAM role name
      * @param request The namespace IAM role update request
      *
      * @return The namespace IAM role authorization
      */
-    @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.PUT,
+    @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}/iamRoleNames/{iamRoleName}", method = RequestMethod.PUT,
         consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_NAMESPACE_IAM_ROLE_AUTHORIZATIONS_PUT)
     public NamespaceIamRoleAuthorization updateNamespaceIamRoleAuthorization(@PathVariable("namespace") String namespace,
@@ -131,9 +133,9 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
     }
 
     /**
-     * Removes IAM roles a namespace has authorizations to use.
+     * Removes a namespace IAM role authorization.
      *
-     * @param namespace The namespace of the authorizations to remove
+     * @param namespace The namespace
      * @param iamRoleName The IAM role name
      *
      * @return The namespace IAM role authorization

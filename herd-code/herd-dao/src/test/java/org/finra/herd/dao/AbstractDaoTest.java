@@ -1764,6 +1764,42 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     }
 
     /**
+     * Returns a mixed case string.
+     *
+     * @param input a string
+     *
+     * @return a mixed case string
+     */
+    public String mixedCase(String input)
+    {
+        StringBuilder result = new StringBuilder(input.length());
+
+        int index = 0;
+
+        for (char character : input.toCharArray())
+        {
+            if (Character.isLetter(character))
+            {
+                if (index % 2 == 0)
+                {
+                    result.append(Character.toUpperCase(character));
+                }
+                else
+                {
+                    result.append(Character.toLowerCase(character));
+                }
+                index++;
+            }
+            else
+            {
+                result.append(character);
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.
      *
      * @param overrideMap a map containing the properties.
