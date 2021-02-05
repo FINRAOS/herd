@@ -518,6 +518,22 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer HTTP_PROXY_PORT_2 = (int) (Math.random() * (Short.MAX_VALUE << 1));
 
+    public static final String IAM_ROLE_DESCRIPTION = "UT_IamRoleDescription_1_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_DESCRIPTION_2 = "UT_IamRoleDescription_2_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_DESCRIPTION_3 = "UT_IamRoleDescription_3_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_DESCRIPTION_4 = "UT_IamRoleDescription_4_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_NAME = "UT_IamRoleName_1_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_NAME_2 = "UT_IamRoleName_2_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_NAME_3 = "UT_IamRoleName_3_" + RANDOM_SUFFIX;
+
+    public static final String IAM_ROLE_NAME_4 = "UT_IamRoleName_4_" + RANDOM_SUFFIX;
+
     public static final Boolean INCLUDE_BUSINESS_OBJECT_DEFINITION_UPDATE_HISTORY = true;
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
@@ -1745,6 +1761,42 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     {
         DateTime dt = new DateTime(new Random().nextLong()).withMillisOfSecond(0);
         return dt.withYear(2019);
+    }
+
+    /**
+     * Returns a mixed case string.
+     *
+     * @param input a string
+     *
+     * @return a mixed case string
+     */
+    public String mixedCase(String input)
+    {
+        StringBuilder result = new StringBuilder(input.length());
+
+        int index = 0;
+
+        for (char character : input.toCharArray())
+        {
+            if (Character.isLetter(character))
+            {
+                if (index % 2 == 0)
+                {
+                    result.append(Character.toUpperCase(character));
+                }
+                else
+                {
+                    result.append(Character.toLowerCase(character));
+                }
+                index++;
+            }
+            else
+            {
+                result.append(character);
+            }
+        }
+
+        return result.toString();
     }
 
     /**

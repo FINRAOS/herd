@@ -8052,44 +8052,40 @@
 
    <!-- ***** Namespace IAM Role Authorization ***** -->
 
-   <xs:element name="namespaceIamRoleAuthorizations" type="namespaceIamRoleAuthorizations"/>
-   <xs:complexType name="namespaceIamRoleAuthorizations">
-      <xs:sequence>
-         <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization"/>
-   <xs:complexType name="namespaceIamRoleAuthorization">
+   <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey"/>
+   <xs:complexType name="namespaceIamRoleAuthorizationKey">
       <xs:sequence>
          <xs:element name="namespace" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The namespace</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The list of IAM roles the namespace is authorized to use</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:complexType name="iamRoles">
-      <xs:sequence>
-         <xs:element name="iamRole" type="iamRole" minOccurs="0" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>An IAM role</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:complexType name="iamRole">
-      <xs:sequence>
          <xs:element name="iamRoleName" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The name of the IAM role</xs:documentation>
+               <xs:documentation>The IAM role name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="namespaceIamRoleAuthorizationKeys" type="namespaceIamRoleAuthorizationKeys"/>
+   <xs:complexType name="namespaceIamRoleAuthorizationKeys">
+      <xs:sequence>
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization"/>
+   <xs:complexType name="namespaceIamRoleAuthorization">
+      <xs:sequence>
+         <xs:element name="id" type="xs:long">
+            <xs:annotation>
+               <xs:documentation>A system unique ID of this user namespace authorization</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The namespace IAM role authorization key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
@@ -8103,14 +8099,14 @@
    <xs:element name="namespaceIamRoleAuthorizationCreateRequest" type="namespaceIamRoleAuthorizationCreateRequest"/>
    <xs:complexType name="namespaceIamRoleAuthorizationCreateRequest">
       <xs:sequence>
-         <xs:element name="namespace" type="xs:string" minOccurs="0">
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The namespace to give authorizations to</xs:documentation>
+               <xs:documentation>The namespace IAM role authorization key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
+         <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The list of IAM roles to authorize</xs:documentation>
+               <xs:documentation>A description of the IAM role</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -8119,9 +8115,9 @@
    <xs:element name="namespaceIamRoleAuthorizationUpdateRequest" type="namespaceIamRoleAuthorizationUpdateRequest"/>
    <xs:complexType name="namespaceIamRoleAuthorizationUpdateRequest">
       <xs:sequence>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
+         <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The list of IAM roles to authorize</xs:documentation>
+               <xs:documentation>A description of the IAM role</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
