@@ -117,10 +117,7 @@ public class NamespaceIamRoleAuthorizationHelper
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity = new NamespaceIamRoleAuthorizationEntity();
         namespaceIamRoleAuthorizationEntity.setNamespace(namespaceDaoHelper.getNamespaceEntity(namespaceIamRoleAuthorizationKey.getNamespace()));
         namespaceIamRoleAuthorizationEntity.setIamRoleName(namespaceIamRoleAuthorizationKey.getIamRoleName());
-        if (StringUtils.isNotBlank(iamRoleDescription))
-        {
-            namespaceIamRoleAuthorizationEntity.setDescription(iamRoleDescription);
-        }
+        namespaceIamRoleAuthorizationEntity.setDescription(iamRoleDescription);
         return namespaceIamRoleAuthorizationEntity;
     }
 

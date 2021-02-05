@@ -16,7 +16,6 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -323,7 +322,7 @@ public class NamespaceIamRoleAuthorizationHelperTest extends AbstractServiceTest
         // Validate the results.
         assertEquals(NAMESPACE, namespaceIamRoleAuthorizationEntity.getNamespace().getCode());
         assertEquals(IAM_ROLE_NAME, namespaceIamRoleAuthorizationEntity.getIamRoleName());
-        assertNull(namespaceIamRoleAuthorizationEntity.getDescription());
+        assertEquals(BLANK_TEXT, namespaceIamRoleAuthorizationEntity.getDescription());
 
         // Verify the external calls.
         verify(namespaceDaoHelper).getNamespaceEntity(NAMESPACE);
