@@ -28,6 +28,7 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.execution.datasources.{FileIndex, PartitionPath, PartitionSpec}
 import org.apache.spark.sql.types._
 import org.apache.spark.util.SerializableConfiguration
+import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -61,13 +62,16 @@ private[sql] abstract class HerdFileIndexBase(
                                              formatFileType: String,
                                              partitionKey: String,
                                              herdPartitionSchema: StructType,
-                                             storagePathPrefix: String) extends FileIndex with Logging {
+                                             storagePathPrefix: String) extends FileIndex with Logging with Serializable {
 
   import HerdFileIndexBase._
 
-  protected val hadoopConf = sparkSession.sessionState.newHadoopConf()
+  @transient protected val hadoopConf = sparkSession.sessionState.newHadoopConf()
 
-  protected val partitionSpec = {
+  // used for logging
+  @transient protected val logger = LoggerFactory.getLogger(getClass)
+
+  @transient protected val partitionSpec = {
     val partitions = herdPartitions.map {
       case (formatVersion, partitionValue, subPartitionValues, dataVersion) =>
         val row = if (herdPartitionSchema.nonEmpty) {
@@ -116,6 +120,10 @@ private[sql] abstract class HerdFileIndexBase(
    */
   protected def bulkListLeafFiles(paths: Seq[Path], formatFileType: String): Seq[(Path, Array[FileStatus])] = {
     val localApiFactory = api
+    logger.debug("paths.size={}", paths.size)
+    logger.debug("sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold={}", sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold)
+    logger
+      .debug("sparkSession.sessionState.conf.parallelPartitionDiscoveryParallelism={}", sparkSession.sessionState.conf.parallelPartitionDiscoveryParallelism)
     val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
       listS3KeyPrefixes(localApiFactory(), paths.map(_.toString), storagePathPrefix)
         .map {
@@ -175,7 +183,7 @@ private[sql] abstract class HerdFileIndexBase(
   def filterPartitions(filters: Seq[Expression]): FileIndex
 }
 
-private object HerdFileIndexBase extends Logging {
+private object HerdFileIndexBase extends Logging with Serializable {
 
   def parsePartitionPath(path: String): Map[String, Option[String]] = {
     path.split("/").map(_.split("=")).map(i => i.head -> i.drop(1).headOption).toMap
