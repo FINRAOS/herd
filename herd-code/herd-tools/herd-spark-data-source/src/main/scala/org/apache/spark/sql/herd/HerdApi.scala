@@ -502,7 +502,8 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
           (status.getBusinessObjectFormatVersion,
             status.getPartitionValue,
             status.getSubPartitionValues.asScala,
-            status.getBusinessObjectDataVersion)
+            status.getBusinessObjectDataVersion
+          )
         }
     }
   }

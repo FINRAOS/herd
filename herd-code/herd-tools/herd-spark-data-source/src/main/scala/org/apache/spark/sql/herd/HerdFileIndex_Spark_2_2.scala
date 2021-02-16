@@ -25,7 +25,7 @@ import org.apache.spark.sql.types.StructType
 private[sql] class HerdFileIndex(
                                   sparkSession: SparkSession,
                                   api: () => HerdApi,
-                                  herdPartitions: Seq[(Integer, String, Seq[String], Integer)],
+                                  herdPartitions: Seq[(Integer, String, Seq[String], Integer, String)],
                                   namespace: String,
                                   businessObjectName: String,
                                   formatUsage: String,
@@ -67,7 +67,7 @@ private[sql] class HerdFileIndex(
 
     }
 
-    if (isTraceEnabled()) {
+    /* if (isTraceEnabled()) {
       val auditInfo = prunedPartitions.map(p =>
         HerdFileIndexBase.parsePartitionPath(p.path.toString)).zip(selectedPartitions)
 
@@ -82,7 +82,7 @@ private[sql] class HerdFileIndex(
             s"${dir.files.asInstanceOf[Seq[Any]].map(FileStatusShim.getPath(_).toUri.getPath).mkString(",")}\t" +
             "AVAILABLE")
       }
-    }
+    } */
 
     selectedPartitions
   }

@@ -28,13 +28,12 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.execution.datasources.{FileIndex, PartitionPath, PartitionSpec}
 import org.apache.spark.sql.types._
 import org.apache.spark.util.SerializableConfiguration
-import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.util.{Failure, Success, Try}
 
 import org.finra.herd.sdk.model.Partition
+
 
 /** A custom [[org.apache.spark.sql.execution.datasources.FileIndex]] to use the partition paths provided by Herd, vs Spark's auto-discovery
  *
@@ -55,7 +54,7 @@ import org.finra.herd.sdk.model.Partition
 private[sql] abstract class HerdFileIndexBase(
                                              sparkSession: SparkSession,
                                              api: () => HerdApi,
-                                             herdPartitions: Seq[(Integer, String, Seq[String], Integer)],
+                                             herdPartitions: Seq[(Integer, String, Seq[String], Integer, String)],
                                              namespace: String,
                                              businessObjectName: String,
                                              formatUsage: String,
@@ -68,12 +67,9 @@ private[sql] abstract class HerdFileIndexBase(
 
   @transient protected val hadoopConf = sparkSession.sessionState.newHadoopConf()
 
-  // used for logging
-  @transient protected val logger = LoggerFactory.getLogger(getClass)
-
   @transient protected val partitionSpec = {
     val partitions = herdPartitions.map {
-      case (formatVersion, partitionValue, subPartitionValues, dataVersion) =>
+      case (formatVersion, partitionValue, subPartitionValues, dataVersion, partitionLocation) =>
         val row = if (herdPartitionSchema.nonEmpty) {
           val partValues = partitionValue +: subPartitionValues
           val values = partValues.zipWithIndex.map {
@@ -100,7 +96,7 @@ private[sql] abstract class HerdFileIndexBase(
           s"dataVersion=$dataVersion"
         )
 
-        val path = pathSettings.mkString("/")
+        val path = partitionLocation
 
         PartitionPath(row, path)
     }
@@ -120,10 +116,6 @@ private[sql] abstract class HerdFileIndexBase(
    */
   protected def bulkListLeafFiles(paths: Seq[Path], formatFileType: String): Seq[(Path, Array[FileStatus])] = {
     val localApiFactory = api
-    logger.debug("paths.size={}", paths.size)
-    logger.debug("sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold={}", sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold)
-    logger
-      .debug("sparkSession.sessionState.conf.parallelPartitionDiscoveryParallelism={}", sparkSession.sessionState.conf.parallelPartitionDiscoveryParallelism)
     val fileStatuses = if (paths.size < sparkSession.sessionState.conf.parallelPartitionDiscoveryThreshold) {
       listS3KeyPrefixes(localApiFactory(), paths.map(_.toString), storagePathPrefix)
         .map {
@@ -189,6 +181,14 @@ private object HerdFileIndexBase extends Logging with Serializable {
     path.split("/").map(_.split("=")).map(i => i.head -> i.drop(1).headOption).toMap
   }
 
+  def getPathByAddingStoragePrefix(path: String, storagePathPrefix: String): String = {
+    if (StringUtils.isNotEmpty(storagePathPrefix) && !storagePathPrefix.toLowerCase().startsWith("s3a")) {
+      "/" + storagePathPrefix + "/" + path
+    }
+    else {
+      "s3a://" + path
+    }
+  }
   /**
    * Find all S3 directories(aka s3 key prefixes) specified by the paths
    *
@@ -201,7 +201,11 @@ private object HerdFileIndexBase extends Logging with Serializable {
       return Seq.empty
     }
 
-    val parts = parsePartitionPath(paths(0))
+    paths.map (
+      path => (path, Seq(getPathByAddingStoragePrefix(path, storagePathPrefix)))
+    )
+
+  /*  val parts = parsePartitionPath(paths(0))
     val partitionKey = parts("partitionKey").get
     val partitionValues = paths.map(path => parsePartitionPath(path)("partitionValue").get).toList
 
@@ -219,7 +223,7 @@ private object HerdFileIndexBase extends Logging with Serializable {
       case Failure(error) =>
         log.error(s"Could not fetch object data DDL request for $partitionValues", error)
         throw new RuntimeException(error)
-    }
+    } */
   }
 
   /**

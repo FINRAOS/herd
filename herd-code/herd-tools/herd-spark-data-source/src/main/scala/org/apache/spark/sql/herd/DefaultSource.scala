@@ -349,7 +349,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
 
-    var allData = api.getBusinessObjectPartitions(
+    var allDataPartitions = api.getBusinessObjectPartitions(
       params.namespace,
       params.businessObjectName,
       formatUsage,
@@ -358,8 +358,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       params.partitionFilter
     )
 
-    try {
-      val partitionList = allData.map(_._2)
+   // val allData = Seq[(Integer, String, Any, Integer, String)]
+    // try {
+      val partitionList = allDataPartitions.map(_._2)
       val partitionsFromDDL = api.getBusinessObjectDataPartitions(
         params.namespace,
         params.businessObjectName,
@@ -370,22 +371,25 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
         partitionList,
         null
       )
-      val versionPattern = new Regex("/data-v([0-9]+)/")
-      allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map { partition =>
-        (
-          new Integer(formatVersion),
-          if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) "none"
-          else partition.getPartitionColumns.get(0).getPartitionColumnValue,
-          partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
-          versionPattern.findFirstMatchIn(partition.getPartitionLocation) match {
-            case Some(i) => new Integer(i.group(1).toInt)
-            case None => new Integer(0)
-          })
+        val versionPattern = new Regex("/data-v([0-9]+)/")
+        val allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map { partition =>
+          (
+            new Integer(formatVersion),
+            if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) "none"
+            else partition.getPartitionColumns.get(0).getPartitionColumnValue,
+            partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
+            versionPattern.findFirstMatchIn(partition.getPartitionLocation) match {
+              case Some(i) => new Integer(i.group(1).toInt)
+              case None => new Integer(0)
+            },
+          partition.getPartitionLocation
+        )
       }
-    }
-    catch {
-      case e: Throwable => log.info("getBusinessObjectDataPartitions failed for all data " + e.getMessage)
-    }
+    // }
+    // catch {
+     // case e: Throwable => log.info("getBusinessObjectDataPartitions failed for all data " + e.getMessage)
+    //    throw e
+    // }
 
     log.info(s"Got ${allData.size} results")
 
