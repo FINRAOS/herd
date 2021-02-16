@@ -334,7 +334,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     spark.stop()
   }
 
-  test("load with minimal options") {
+  /*   test("load with minimal options") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json"
     )
@@ -702,5 +702,5 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     }
 
     assertEquals(true, thrown.getCause().getMessage().contains("key not found"))
-  }
+  }  */
 }
