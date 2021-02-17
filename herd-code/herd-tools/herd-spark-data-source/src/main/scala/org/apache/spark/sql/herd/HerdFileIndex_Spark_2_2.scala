@@ -67,23 +67,6 @@ private[sql] class HerdFileIndex(
 
     }
 
-    /* if (isTraceEnabled()) {
-      val auditInfo = prunedPartitions.map(p =>
-        HerdFileIndexBase.parsePartitionPath(p.path.toString)).zip(selectedPartitions)
-
-      auditInfo.foreach {
-        case (objInfo, dir) =>
-          log.trace(s"INPUT\t${businessObjectName}\t${namespace}\t" +
-            s"${formatUsage}\t${formatFileType}\t" +
-            s"${objInfo("formatVersion").get}\t${objInfo("dataVersion").get}\t" +
-            s"${objInfo("partitionValue").get}\t${objInfo("subPartitionValues").getOrElse("")}\t" +
-            s"${"S3"}\t" +
-            "\t" +
-            s"${dir.files.asInstanceOf[Seq[Any]].map(FileStatusShim.getPath(_).toUri.getPath).mkString(",")}\t" +
-            "AVAILABLE")
-      }
-    } */
-
     selectedPartitions
   }
 
