@@ -502,7 +502,8 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
           (status.getBusinessObjectFormatVersion,
             status.getPartitionValue,
             status.getSubPartitionValues.asScala,
-            status.getBusinessObjectDataVersion)
+            status.getBusinessObjectDataVersion
+          )
         }
     }
   }
@@ -581,6 +582,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
     businessObjectDataPartitionsRequest.setBusinessObjectFormatUsage(formatUsage)
     businessObjectDataPartitionsRequest.setBusinessObjectFormatFileType(formatFileType)
     businessObjectDataPartitionsRequest.setBusinessObjectFormatVersion(formatVersion)
+    businessObjectDataPartitionsRequest.setAllowMissingData(true)
 
     val partitionValueFilter = new PartitionValueFilter()
     partitionValueFilter.setPartitionKey(partitionKey)
