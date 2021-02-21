@@ -17,18 +17,15 @@ package org.apache.spark.sql.herd
 
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.{expressions, InternalRow}
-import org.apache.spark.sql.catalyst.catalog.ExternalCatalogUtils.unescapePathName
-import org.apache.spark.sql.catalyst.expressions.{AttributeReference, BoundReference, Cast, Expression, InterpretedPredicate, Literal}
+import org.apache.spark.sql.catalyst.expressions
+import org.apache.spark.sql.catalyst.expressions.{AttributeReference, BoundReference, Expression, InterpretedPredicate}
 import org.apache.spark.sql.execution.datasources.{PartitionDirectoryShim, _}
-import org.apache.spark.sql.types.{StringType, StructType}
-import scala.collection.mutable.ArrayBuffer
-import scala.util.matching.Regex
+import org.apache.spark.sql.types.StructType
 
 private[sql] class HerdFileIndex(
                                   sparkSession: SparkSession,
                                   api: () => HerdApi,
-                                  herdPartitions: Seq[(Integer, String, Seq[String], Integer)],
+                                  herdPartitions: Seq[(Integer, String, Seq[String], Integer, String)],
                                   namespace: String,
                                   businessObjectName: String,
                                   formatUsage: String,
@@ -51,57 +48,26 @@ private[sql] class HerdFileIndex(
   override def listFiles(
                           filters: Seq[Expression],
                           dataFilters: scala.Seq[org.apache.spark.sql.catalyst.expressions.Expression]
-                        ): Seq[PartitionDirectory] =
-  {
+                        ): Seq[PartitionDirectory] = {
 
     val prunedPartitions = if (partitionSpec.partitionColumns.isEmpty) {
       partitionSpec.partitions
-    }
-    else {
+    } else {
       prunePartitions(filters, partitionSpec)
     }
 
-    // val pathsToFetch = prunedPartitions.filter(p => cachedAllFiles.get(p.path).isEmpty).map(_.path)
-    val partitionDirectories: ArrayBuffer[PartitionDirectory] = new ArrayBuffer[PartitionDirectory]()
+    val selectedPartitions = {
 
-    for (partitionPath <- prunedPartitions) {
-      cachedAllFiles ++= bulkListLeafFiles(Seq(partitionPath.path), formatFileType)
-      val partitionPattern = new Regex("(?i)/partitionValue=(.*?)/")
-      val subPartitionPattern = new Regex("(?i)/subPartitionValues=(.*?)/")
-      // there is unregistered subpartition here
-      if (cachedAllFiles.size != 0 && cachedAllFiles.get(partitionPath.path) == None) {
-        for (elem <- cachedAllFiles) {
-          val pathString = elem._1.toString
-          val partitionValue = partitionPattern.findFirstMatchIn(pathString) match {
-            case Some(i) => i.group(1)
-            case None => ""
-          }
+      cachedAllFiles ++= bulkListLeafFiles(prunedPartitions.map(partitionPath => Seq(partitionPath.path)).flatten, formatFileType)
 
-          val subPartitionValuesString = subPartitionPattern.findFirstMatchIn(pathString) match {
-            case Some(i) => i.group(1)
-            case None => ""
-          }
-
-          val subPartitionValues = subPartitionValuesString.split(",")
-          val row = if (herdPartitionSchema.nonEmpty) {
-            val partValues = partitionValue +: subPartitionValues
-            val values = partValues.zipWithIndex.map { case (rawValue, index) => val field = herdPartitionSchema(index)
-              Cast(Literal.create(unescapePathName(rawValue), StringType), field.dataType).eval()
-            }
-            InternalRow.fromSeq(values)
-          }
-          else {
-            InternalRow.empty
-          }
-          partitionDirectories += PartitionDirectoryShim(row, elem._2)
-        }
+      prunedPartitions.map {
+        case PartitionPath(values, path) =>
+          PartitionDirectoryShim(values, cachedAllFiles(path))
       }
-      else {
-        partitionDirectories += PartitionDirectoryShim(partitionPath.values, cachedAllFiles(partitionPath.path))
-      }
+
     }
 
-    partitionDirectories
+    selectedPartitions
   }
 
   protected def prunePartitions(
