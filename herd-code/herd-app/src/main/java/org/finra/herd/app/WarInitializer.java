@@ -30,7 +30,6 @@ import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import org.finra.herd.app.config.AppSpringModuleConfig;
-import org.finra.herd.app.security.WebSecurityConfig;
 import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.dao.config.DaoEnvSpringModuleConfig;
@@ -58,6 +57,7 @@ public class WarInitializer implements WebApplicationInitializer
         initLog4JMdcLoggingFilter(servletContext);
         initCharacterEncodingFilter(servletContext);
         initRequestLoggingFilter(servletContext);
+        initCacheControlFilter(servletContext);
         initServletMapping(servletContext);
     }
 
@@ -78,7 +78,7 @@ public class WarInitializer implements WebApplicationInitializer
         contextLoaderListenerContext
             .register(CoreSpringModuleConfig.class, DaoSpringModuleConfig.class, DaoEnvSpringModuleConfig.class, ServiceSpringModuleConfig.class,
                 ServiceEnvSpringModuleConfig.class, UiSpringModuleConfig.class, UiEnvSpringModuleConfig.class, RestSpringModuleConfig.class,
-                AppSpringModuleConfig.class, WebSecurityConfig.class);
+                AppSpringModuleConfig.class);
         servletContext.addListener(new ContextLoaderListener(contextLoaderListenerContext));
     }
 
@@ -158,5 +158,16 @@ public class WarInitializer implements WebApplicationInitializer
         // Activiti uses ".svg" resources.
         servletContext.getServletRegistration("default")
             .addMapping("*.html", "*.jpg", "*.png", "*.gif", "*.css", "*.js", "*.svg", "*.map", "*.yaml", "*.woff", "*.woff2", "*.ttf");
+    }
+
+    /**
+     * Initializes the Cache Control filter which provides secure cache control headers for all incoming HTTP request.
+     *
+     * @param servletContext the servlet context.
+     */
+    protected void initCacheControlFilter(ServletContext servletContext) {
+        // Add a cache control filter for HTTP request.
+        FilterRegistration.Dynamic cacheControlFilter = servletContext.addFilter("cacheControlFilter", CacheControlFilter.class);
+        cacheControlFilter.addMappingForUrlPatterns(null, true, "/rest/*");
     }
 }
