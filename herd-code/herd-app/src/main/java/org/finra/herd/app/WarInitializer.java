@@ -30,6 +30,7 @@ import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import org.finra.herd.app.config.AppSpringModuleConfig;
+import org.finra.herd.app.security.WebSecurityConfig;
 import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.dao.config.DaoEnvSpringModuleConfig;
@@ -77,7 +78,7 @@ public class WarInitializer implements WebApplicationInitializer
         contextLoaderListenerContext
             .register(CoreSpringModuleConfig.class, DaoSpringModuleConfig.class, DaoEnvSpringModuleConfig.class, ServiceSpringModuleConfig.class,
                 ServiceEnvSpringModuleConfig.class, UiSpringModuleConfig.class, UiEnvSpringModuleConfig.class, RestSpringModuleConfig.class,
-                AppSpringModuleConfig.class);
+                AppSpringModuleConfig.class, WebSecurityConfig.class);
         servletContext.addListener(new ContextLoaderListener(contextLoaderListenerContext));
     }
 
