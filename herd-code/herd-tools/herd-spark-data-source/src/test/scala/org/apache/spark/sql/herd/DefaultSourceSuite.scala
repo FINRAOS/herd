@@ -334,18 +334,6 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     spark.stop()
   }
 
-  test("load with minimal options") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
-    val thrown = intercept[Exception] {
-      val result = df.collect()
-    }
-
-    assertEquals(true, thrown.getMessage().contains("key not found"))
-  }
-
   test("load all partitions and filter") {
     val parts = Map(
       ("2017-01-01", "2017-01-02") -> "businessObjectDataPartitions.json",
@@ -361,45 +349,6 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val expected = EXPECTED_ROWS.filter(_.getDate(0) == sdate)
 
     result should contain theSameElementsAs(expected)
-  }
-
-  test("load sub-partitioned data") {
-
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
-    val thrown = intercept[Exception] {
-      val result = df.collect()
-    }
-    assertEquals(true, thrown.getMessage().contains("key not found"))
-  }
-
-  test("load sub-partitioned data and prune by partition columns") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
-
-    val thrown = intercept[Exception] {
-      val result = df.select("sdate", "symbol").collect()
-    }
-
-    assertEquals(true, thrown.getMessage().contains("key not found"))
-  }
-
-  test("load sub-partitioned data and filter") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-3", parts), defaultParams)
-
-    val thrown = intercept[Exception] {
-      val result = df.filter($"symbol" === "A").collect()
-    }
-
-    assertEquals(true, thrown.getMessage().contains("key not found"))
-
   }
 
   test("load non-partitioned data") {
@@ -420,30 +369,6 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val expected = EXPECTED_ROWS.filter(_.getString(1).equalsIgnoreCase("A"))
 
     result should contain theSameElementsAs(expected)
-  }
-
-  test("load from S3 storage platform") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-4", parts), defaultParams)
-    val thrown = intercept[Exception] {
-      val result = df.collect()
-    }
-
-    assertEquals(true, thrown.getMessage().contains("key not found"))
-  }
-
-  test("load ORC files") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-5", parts), defaultParams)
-    val thrown = intercept[Exception] {
-      val rows = df.collect()
-    }
-
-    assertEquals(true, thrown.getMessage().contains("key not found"))
   }
 
   test("load ORC files, prune and filter") {
@@ -689,18 +614,5 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
                         )
     assertEquals("struct<s:string,f:float,m:map<double,array<bigint>>>", source.toComplexHerdType(s1).toString)
 
-  }
-
-  test("metadata only query") {
-    val parts = Map(
-      ("2017-01-01", "2017-01-02") -> "businessObjectDataDdl.json"
-    )
-    val df = getDataFrame(new BaseHerdApi("test-case-1", parts), defaultParams)
-
-    val thrown = intercept[Exception] {
-      val result = df.selectExpr("min(sdate)", "max(sdate)").collect()
-    }
-
-    assertEquals(true, thrown.getCause().getMessage().contains("key not found"))
   }
 }
