@@ -4,9 +4,6 @@ import java.io.IOException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
 /*
  * Copyright 2015 herd contributors
  *
@@ -22,6 +19,9 @@ import javax.servlet.ServletRequest;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
