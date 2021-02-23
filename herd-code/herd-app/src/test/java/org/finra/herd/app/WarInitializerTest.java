@@ -43,6 +43,7 @@ public class WarInitializerTest
         warInitializer.initLog4JMdcLoggingFilter(servletContext);
         warInitializer.initCharacterEncodingFilter(servletContext);
         warInitializer.initRequestLoggingFilter(servletContext);
+        warInitializer.initCacheControlFilter(servletContext);
         warInitializer.initServletMapping(servletContext);
     }
 }

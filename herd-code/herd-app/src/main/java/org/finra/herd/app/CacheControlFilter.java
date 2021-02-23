@@ -27,22 +27,26 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-public class CacheControlFilter implements Filter {
+public class CacheControlFilter implements Filter
+{
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) throws ServletException
+    {
         // Nothing to do in init method.
     }
 
     @Override
-    public void destroy() {
+    public void destroy()
+    {
         // Nothing to do.
     }
 
     @Override
-    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST", justification = "The ServletRequest is cast to an HttpServletRequest which is always the case since all requests use the HTTP protocol.")
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST",
+        justification = "The ServletRequest is cast to an HttpServletRequest which is always the case since all requests use the HTTP protocol.")
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+    {
         HttpServletResponse resp = (HttpServletResponse) response;
         resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         resp.setHeader("Pragma", "no-cache");

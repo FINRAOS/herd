@@ -165,7 +165,8 @@ public class WarInitializer implements WebApplicationInitializer
      *
      * @param servletContext the servlet context.
      */
-    protected void initCacheControlFilter(ServletContext servletContext) {
+    protected void initCacheControlFilter(ServletContext servletContext)
+    {
         // Add a cache control filter for HTTP request.
         FilterRegistration.Dynamic cacheControlFilter = servletContext.addFilter("cacheControlFilter", CacheControlFilter.class);
         cacheControlFilter.addMappingForUrlPatterns(null, true, "/rest/*");
