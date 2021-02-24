@@ -161,13 +161,14 @@ public class WarInitializer implements WebApplicationInitializer
     }
 
     /**
-     * Initializes the Cache Control filter which provides secure cache control headers for all incoming HTTP request.
+     * Initializes the Cache Control filter which provides secure cache control headers for all incoming HTTP request with "/rest" url pattern
      *
      * @param servletContext the servlet context.
      */
     protected void initCacheControlFilter(ServletContext servletContext)
     {
-        // Add a cache control filter for HTTP request.
+        // Add a cache control filter for HTTP request with "/rest" url pattern only instead of all url paths to avoid performance degradation on swagger static
+        // contents
         FilterRegistration.Dynamic cacheControlFilter = servletContext.addFilter("cacheControlFilter", CacheControlFilter.class);
         cacheControlFilter.addMappingForUrlPatterns(null, true, "/rest/*");
     }
