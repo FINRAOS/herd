@@ -21,13 +21,10 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
@@ -37,8 +34,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -180,125 +175,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Create and return the business object definition object from the persisted entity.
         return businessObjectDefinitionHelper.createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, false);
-    }
-
-    @Override
-    public boolean indexSizeCheckValidationBusinessObjectDefinitions(String indexName)
-    {
-        // Simple count validation, index size should equal entity list size
-        final long indexSize = indexFunctionsDao.getNumberOfTypesInIndex(indexName);
-        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions();
-        if (businessObjectDefinitionDatabaseTableSize != indexSize)
-        {
-            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
-                businessObjectDefinitionDatabaseTableSize, indexSize);
-        }
-
-        return businessObjectDefinitionDatabaseTableSize == indexSize;
-    }
-
-    @Override
-    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions(String indexName)
-    {
-        final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE, Double.class);
-
-        // Get a list of all business object definitions
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
-            Collections.unmodifiableList(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(spotCheckPercentage));
-
-        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList, indexName);
-    }
-
-    @Override
-    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions(String indexName)
-    {
-        final Integer spotCheckMostRecentNumber =
-            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
-
-        // Get a list of all business object definitions
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
-            Collections.unmodifiableList(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(spotCheckMostRecentNumber));
-
-        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList, indexName);
-    }
-
-    @Override
-    @Async
-    public Future<Void> indexValidateAllBusinessObjectDefinitions(String indexName)
-    {
-        // Get a list of all business object definitions
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
-            Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
-
-        // Remove any index documents that are not in the database
-        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(indexName, businessObjectDefinitionEntityList);
-
-        // Validate all Business Object Definitions
-        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, businessObjectDefinitionEntityList,
-            indexFunctionsDao::validateDocumentIndex);
-
-        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
-        // can call "get" to see if any exceptions were thrown.
-        return new AsyncResult<>(null);
-    }
-
-    /**
-     * Method to remove business object definitions in the index that don't exist in the database
-     *
-     * @param indexName the name of the index
-     * @param businessObjectDefinitionEntityList list of business object definitions in the database
-     */
-    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(final String indexName,
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
-    {
-        // Get a list of business object definition ids from the list of business object definition entities in the database
-        List<String> databaseBusinessObjectDefinitionIdList = new ArrayList<>();
-        businessObjectDefinitionEntityList
-            .forEach(businessObjectDefinitionEntity -> databaseBusinessObjectDefinitionIdList.add(businessObjectDefinitionEntity.getId().toString()));
-
-        // Get a list of business object definition ids in the search index
-        List<String> indexDocumentBusinessObjectDefinitionIdList = indexFunctionsDao.getIdsInIndex(indexName);
-
-        // Remove the database ids from the index ids
-        indexDocumentBusinessObjectDefinitionIdList.removeAll(databaseBusinessObjectDefinitionIdList);
-
-        // If there are any ids left in the index list they need to be removed
-        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> indexFunctionsDao.deleteDocumentById(indexName, id));
-    }
-
-    /**
-     * A helper method that will validate a list of business object definitions
-     *
-     * @param businessObjectDefinitionEntityList the list of business object definitions that will be validated
-     *
-     * @return true all of the business object definitions are valid in the index
-     */
-    private boolean indexValidateBusinessObjectDefinitionsList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList, String indexName)
-    {
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
-            // Fetch Join with .size()
-            businessObjectDefinitionEntity.getAttributes().size();
-            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
-            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
-            businessObjectDefinitionEntity.getColumns().size();
-            businessObjectDefinitionEntity.getSampleDataFiles().size();
-
-            // Convert the business object definition entity to a JSON string
-            final String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
-
-            return indexFunctionsDao.isValidDocumentIndex(indexName, businessObjectDefinitionEntity.getId().toString(), jsonString);
-        };
-
-        boolean isValid = true;
-        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
-        {
-            if (!validInIndexPredicate.test(businessObjectDefinitionEntity))
-            {
-                isValid = false;
-            }
-        }
-
-        return isValid;
     }
 
     /**
