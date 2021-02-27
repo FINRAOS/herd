@@ -945,6 +945,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String PARTITION_VALUE_3 = "UT_2015-08-20" + RANDOM_SUFFIX;
 
+    public static final String PARTITION_VALUE_4 = "UT_2020-01-05" + RANDOM_SUFFIX;
+
     public static final String PASSWORD = "UT_Password_" + RANDOM_SUFFIX;
 
     public static final Boolean PUBLISH_ATTRIBUTE = true;

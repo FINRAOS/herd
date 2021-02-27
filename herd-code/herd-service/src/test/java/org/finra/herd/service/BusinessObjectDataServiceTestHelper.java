@@ -1565,6 +1565,19 @@ public class BusinessObjectDataServiceTestHelper
      */
     public String getExpectedBusinessObjectDataDdlTwoPartitionLevels(List<List<String>> partitions)
     {
+        return getExpectedBusinessObjectDataDdlTwoPartitionLevels(Collections.singletonList(partitions.get(0).get(0)), partitions);
+    }
+
+    /**
+     * Returns the actual HIVE DDL expected to be generated.
+     *
+     * @param primaryPartitionsToDrop the list of primary partitions to drop
+     * @param partitions the list of partitions, where each is represented by a primary value and a sub-partition value
+     *
+     * @return the actual HIVE DDL expected to be generated
+     */
+    public String getExpectedBusinessObjectDataDdlTwoPartitionLevels(List<String> primaryPartitionsToDrop, List<List<String>> partitions)
+    {
         // Build ddl expected to be generated.
         StringBuilder ddlBuilder = new StringBuilder();
         ddlBuilder.append("DROP TABLE IF EXISTS `" + AbstractServiceTest.TABLE_NAME + "`;\n");
@@ -1584,10 +1597,12 @@ public class BusinessObjectDataServiceTestHelper
 
         // Add the alter table drop partition statement.
         ddlBuilder.append("\n\n");
-        ddlBuilder.append(
-            "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" +
-                partitions.get(0).get(0) + "');");
-        ddlBuilder.append("\n");
+        for (String primaryPartitionToDrop : primaryPartitionsToDrop)
+        {
+            ddlBuilder.append(
+                "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" +
+                    primaryPartitionToDrop + "');\n");
+        }
 
         for (List<String> partition : partitions)
         {
@@ -1624,6 +1639,22 @@ public class BusinessObjectDataServiceTestHelper
     public String getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(List<String> primaryPartitionsToDrop,
         List<List<String>> partitionsToAdd)
     {
+        return getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(primaryPartitionsToDrop, partitionsToAdd,
+            null);
+    }
+
+    /**
+     * Returns the actual HIVE DDL expected to be generated.
+     *
+     * @param primaryPartitionsToDrop the list of primary partitions to drop
+     * @param partitionsToAdd the list of partitions to add, where each is represented by a primary value and a sub-partition value
+     * @param chunkSize the maximum number of partitions in combined alter table statement
+     *
+     * @return the actual HIVE DDL expected to be generated
+     */
+    public String getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(List<String> primaryPartitionsToDrop,
+        List<List<String>> partitionsToAdd, Integer chunkSize)
+    {
         // Build ddl expected to be generated.
         StringBuilder ddlBuilder = new StringBuilder();
         ddlBuilder.append("DROP TABLE IF EXISTS `" + AbstractServiceTest.TABLE_NAME + "`;\n");
@@ -1641,39 +1672,48 @@ public class BusinessObjectDataServiceTestHelper
             "NULL DEFINED AS '\\N'\n");
         ddlBuilder.append("STORED AS TEXTFILE;");
 
-        // Add the alter table to drop partitions.
-        ddlBuilder.append("\n\n");
-        ddlBuilder.append("ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS\n");
-        for (String primaryPartitionToDrop : primaryPartitionsToDrop)
+        // Add alter table in separate chunks as specified by chunkSize.
+        int dropPartitionsChunkSize = chunkSize == null ? partitionsToAdd.size() : chunkSize;
+        for (int i = 0; i < primaryPartitionsToDrop.size(); i += dropPartitionsChunkSize)
         {
-            ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + primaryPartitionToDrop + "'),\n");
+            ddlBuilder.append("\n\nALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS\n");
+
+            for (String primaryPartitionToDrop : primaryPartitionsToDrop.subList(i, Math.min(i + dropPartitionsChunkSize, primaryPartitionsToDrop.size())))
+            {
+                ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + primaryPartitionToDrop + "'),\n");
+            }
+
+            // Replace the last comma with a semicolon.
+            ddlBuilder.setLength(ddlBuilder.length() - 2);
+            ddlBuilder.append(";");
         }
 
-        // Replace the last comma with a semicolon.
-        ddlBuilder.setLength(ddlBuilder.length() - 2);
-        ddlBuilder.append(";\n\n");
-
-        ddlBuilder.append("ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS");
-
-        for (List<String> partition : partitionsToAdd)
+        // Add alter table in separate chunks as specified by chunkSize.
+        int addPartitionsChunkSize = chunkSize == null ? partitionsToAdd.size() : chunkSize;
+        for (int i = 0; i < partitionsToAdd.size(); i += addPartitionsChunkSize)
         {
-            // Build an expected S3 key prefix.
-            String expectedS3KeyPrefix = AbstractServiceTest
-                .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
-                    AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
-                    AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
-                        new SchemaColumn(AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME, "STRING", AbstractServiceTest.NO_COLUMN_SIZE,
-                            AbstractServiceTest.COLUMN_REQUIRED, AbstractServiceTest.NO_COLUMN_DEFAULT_VALUE, AbstractServiceTest.NO_COLUMN_DESCRIPTION))
-                        .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), AbstractServiceTest.DATA_VERSION);
+            ddlBuilder.append("\n\nALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS");
 
-            // Add the alter table add partition statement.
-            ddlBuilder.append("\n");
-            ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
-                AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" +
-                expectedS3KeyPrefix + "'");
+            for (List<String> partition : partitionsToAdd.subList(i, Math.min(i + addPartitionsChunkSize, partitionsToAdd.size())))
+            {
+                // Build an expected S3 key prefix.
+                String expectedS3KeyPrefix = AbstractServiceTest
+                    .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
+                        AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
+                        AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
+                            new SchemaColumn(AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME, "STRING", AbstractServiceTest.NO_COLUMN_SIZE,
+                                AbstractServiceTest.COLUMN_REQUIRED, AbstractServiceTest.NO_COLUMN_DEFAULT_VALUE, AbstractServiceTest.NO_COLUMN_DESCRIPTION))
+                            .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), AbstractServiceTest.DATA_VERSION);
+
+                // Add the alter table add partition statement.
+                ddlBuilder.append("\n");
+                ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
+                    AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME +
+                    "/" + expectedS3KeyPrefix + "'");
+            }
+
+            ddlBuilder.append(";");
         }
-
-        ddlBuilder.append(";");
 
         // Return the expected DDL.
         return ddlBuilder.toString();

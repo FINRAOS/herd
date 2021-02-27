@@ -526,6 +526,40 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         {
             assertEquals("A table name must be specified.", e.getMessage());
         }
+
+        // Try to retrieve business object data ddl when maximum number of partitions in combined alter
+        // table statement is specified without combineMultiplePartitionsInSingleAlterTable being enabled.
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        request.setCombineMultiplePartitionsInSingleAlterTable(NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE);
+        request.setCombinedAlterTableMaxPartitions(COMBINED_ALTER_TABLE_MAX_PARTITIONS);
+        try
+        {
+            businessObjectDataService.generateBusinessObjectDataDdl(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("CombineMultiplePartitionsInSingleAlterTable must be enabled when combinedAlterTableMaxPartitions is specified.", e.getMessage());
+        }
+
+        // Try to retrieve business object data ddl when maximum number of partitions in combined alter
+        // table statement is zero or a negative integer.
+        for (Integer combinedAlterTableMaxPartitions : Arrays.asList(0, -1))
+        {
+            request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+            request.setCombineMultiplePartitionsInSingleAlterTable(COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE);
+            request.setCombinedAlterTableMaxPartitions(combinedAlterTableMaxPartitions);
+            try
+            {
+
+                businessObjectDataService.generateBusinessObjectDataDdl(request);
+                fail();
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Maximum number of partitions in combined alter table statement must be a positive integer.", e.getMessage());
+            }
+        }
     }
 
     @Test
@@ -3463,7 +3497,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTable()
+    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTableWithoutCombinedAlterTableMaxPartitions()
     {
         // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
         businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(Arrays
@@ -3481,15 +3515,151 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS, AbstractServiceTest.NO_AS_OF_TIME));
 
         // Validate the response object. Both sub-partitions should be present in the generated DDL.
-        assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-            new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
-            NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(
-                Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), Arrays
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(
+                    Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), Arrays
+                        .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                            Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4))),
+                AbstractServiceTest.NO_AS_OF_TIME);
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTableWithCombinedAlterTableMaxPartitionsEqualTo1()
+    {
+        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(Arrays
+            .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4)));
+
+        // Retrieve business object data DDL with flag set to suppress scan for unregistered sub-partitions.
+        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
+            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
+                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
+                SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, 1,
+                AbstractServiceTest.NO_AS_OF_TIME));
+
+        // Validate the response object. Both sub-partitions should be present in the generated DDL.
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlTwoPartitionLevels(Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), Arrays
                     .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
                         Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4))),
-            AbstractServiceTest.NO_AS_OF_TIME), resultBusinessObjectDataDdl);
+                AbstractServiceTest.NO_AS_OF_TIME);
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTableWithCombinedAlterTableMaxPartitionsEqualTo2AndEqualChunks()
+    {
+        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(Arrays
+            .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4),
+                Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_3),
+                Arrays.asList(PARTITION_VALUE_4, SUB_PARTITION_VALUE_2), Arrays.asList(PARTITION_VALUE_4, SUB_PARTITION_VALUE_4)));
+
+        // Retrieve business object data DDL with flag set to suppress scan for unregistered sub-partitions.
+        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
+            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4),
+                    NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER,
+                NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME,
+                NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
+                AbstractServiceTest.COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, 2, AbstractServiceTest.NO_AS_OF_TIME));
+
+        // Validate the response object. Both sub-partitions should be present in the generated DDL.
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4),
+                    NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER,
+                NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME,
+                NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(
+                    Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4), Arrays
+                        .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                            Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4),
+                            Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_3),
+                            Arrays.asList(PARTITION_VALUE_4, SUB_PARTITION_VALUE_2), Arrays.asList(PARTITION_VALUE_4, SUB_PARTITION_VALUE_4)), 2),
+                AbstractServiceTest.NO_AS_OF_TIME);
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTableWithCombinedAlterTableMaxPartitionsEqualTo2AndUnequalChunks()
+    {
+        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(Arrays
+            .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4),
+                Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_1)));
+
+        // Retrieve business object data DDL with flag set to suppress scan for unregistered sub-partitions.
+        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
+            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3),
+                    NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER,
+                NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME,
+                NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA,
+                NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
+                AbstractServiceTest.COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, 2, AbstractServiceTest.NO_AS_OF_TIME));
+
+        // Validate the response object. Both sub-partitions should be present in the generated DDL.
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3),
+                    NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER,
+                NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME,
+                NO_CUSTOM_DDL_NAME, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(
+                    Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2, PARTITION_VALUE_3), Arrays
+                        .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                            Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4),
+                            Arrays.asList(PARTITION_VALUE_3, SUB_PARTITION_VALUE_1)), 2), AbstractServiceTest.NO_AS_OF_TIME);
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlCombineMultiplePartitionsInSingleAlterTableWithCombinedAlterTableMaxPartitionsGreaterThanPartitionsCount()
+    {
+        // Create two VALID sub-partitions both with "available" storage units in a non-Glacier storage.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTestingTwoPartitionLevels(Arrays
+            .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4)));
+
+        // Retrieve business object data DDL with flag set to suppress scan for unregistered sub-partitions.
+        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
+            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
+                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
+                SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, 1000,
+                AbstractServiceTest.NO_AS_OF_TIME));
+
+        // Validate the response object. Both sub-partitions should be present in the generated DDL.
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE,
+                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION, NO_BDATA_STATUS,
+                NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(
+                    Arrays.asList(PARTITION_VALUE, PARTITION_VALUE_2), Arrays
+                        .asList(Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_1), Arrays.asList(PARTITION_VALUE, SUB_PARTITION_VALUE_2),
+                            Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_3), Arrays.asList(PARTITION_VALUE_2, SUB_PARTITION_VALUE_4))),
+                AbstractServiceTest.NO_AS_OF_TIME);
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
     }
 
     @Test
