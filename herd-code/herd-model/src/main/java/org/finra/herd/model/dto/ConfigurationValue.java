@@ -571,7 +571,7 @@ public enum ConfigurationValue
     /**
      * Indicates whether the namespace IAM role authorization is enabled
      */
-    NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "false"),
+    NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "true"),
 
     /**
      * Indicates whether the herd events are posted to AWS SNS.
