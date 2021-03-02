@@ -355,15 +355,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final Integer COMBINED_ALTER_TABLE_MAX_PARTITIONS = getRandomInteger();
+
     public static final Boolean COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = true;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
-    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
-
     public static final String CUSTOM_CLUSTERED_BY_VALUE = "CLUSTERED BY " + SCHEMA_CUSTOM_CLUSTERED_BY_VALUE;
+
+    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
     public static final Boolean DELETE_FILES = true;
 
@@ -542,6 +544,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_COLUMN_SIZE = null;
 
+    public static final Integer NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS = null;
+
     public static final Boolean NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = false;
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
@@ -567,6 +571,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
+
+    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
+
+    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
 
     public static final Long NO_ID = null;
 
@@ -645,10 +653,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_USE_FULL_FILE_PATH = false;
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
-
-    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
-
-    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
 

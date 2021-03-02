@@ -456,7 +456,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         else
         {
             // Use the custom DDL in place of the create table statement.
-            sb.append(String.format("%s\n\n", generateDdlRequest.getCustomDdlEntity().getDdl()));
+            sb.append(String.format("%s\n", generateDdlRequest.getCustomDdlEntity().getDdl()));
 
             // We need to substitute the relative custom DDL token with an actual table name.
             replacements.put(TABLE_NAME_CUSTOM_DDL_TOKEN, generateDdlRequest.getTableName());
@@ -601,8 +601,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         }
 
         // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
-        sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
-            generateDdlRequest.getPartitioned() ? ";\n" : ""));
+        sb.append(String
+            .format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()), generateDdlRequest.getPartitioned() ? ";" : ""));
     }
 
     /**
@@ -754,8 +754,7 @@ public class Hive13DdlGenerator extends DdlGenerator
                 {
                     // Start building a drop partition statement for this partition filter.
                     StringBuilder dropPartitionStatement = new StringBuilder();
-                    dropPartitionStatement.append(String.format("%s PARTITION (",
-                        BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()) ? "   " : alterTableFirstToken));
+                    dropPartitionStatement.append("PARTITION (");
 
                     // Specify all partition column values as per this partition filter.
                     List<String> partitionKeyValuePairs = new ArrayList<>();
@@ -780,14 +779,38 @@ public class Hive13DdlGenerator extends DdlGenerator
                 // Add all drop partition statements to the main string builder.
                 if (CollectionUtils.isNotEmpty(dropPartitionStatements))
                 {
-                    // If specified, combine dropping multiple partitions in a single ALTER TABLE statement.
-                    if (BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()))
-                    {
-                        sb.append(alterTableFirstToken).append('\n');
-                    }
+                    // Get the size on the list.
+                    int listSize = CollectionUtils.size(dropPartitionStatements);
 
-                    sb.append(StringUtils.join(dropPartitionStatements,
-                        BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()) ? ",\n" : ";\n")).append(";\n\n");
+                    // Append partition statements in chunks as determined by the optionally
+                    // specified maximum number of partitions in combined alter table statement.
+                    int chunkSize = generateDdlRequest.getCombinedAlterTableMaxPartitions() != null ? generateDdlRequest.getCombinedAlterTableMaxPartitions() :
+                        BooleanUtils.isTrue(generateDdlRequest.getCombineMultiplePartitionsInSingleAlterTable()) ? listSize : 1;
+
+                    // Add a blank line before the first alter table statement.
+                    sb.append('\n');
+
+                    // Loop through each chunk until we have reached the end of the list.
+                    for (int i = 0; i < listSize; i += chunkSize)
+                    {
+                        // If chunk size is greater than 1, add an extra blank line as a separator between the chunks.
+                        if (chunkSize > 1 && i > 0)
+                        {
+                            sb.append('\n');
+                        }
+
+                        // Add first token for alter table statement.
+                        sb.append(alterTableFirstToken);
+
+                        // Add end of line along with an indent if chunk size is greater than 1 or one space character otherwise.
+                        sb.append(chunkSize > 1 ? "\n    " : " ");
+
+                        // Add all statements in this chunk.
+                        sb.append(StringUtils.join(dropPartitionStatements.subList(i, Math.min(listSize, i + chunkSize)), chunkSize > 1 ? ",\n    " : ""));
+
+                        // Complete this alter table statement.
+                        sb.append(";\n");
+                    }
                 }
             }
 

@@ -4521,6 +4521,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="combinedAlterTableMaxPartitions" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the maximum number of add partition statements to include in a single ALTER TABLE statement. If includeDropPartitions
+                  is set to true, this parameter also applies to maximum number of drop partition statements in a single ALTER TABLE statement
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="asOfTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Specifies the date and time when the business object status was effective at that time, (ex 2015-12-30T11:08:40).
