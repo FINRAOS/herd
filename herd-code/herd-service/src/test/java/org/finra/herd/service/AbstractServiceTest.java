@@ -790,6 +790,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final String TEST_ACTIVITY_WORKFLOW_ID = TEST_ACTIVITI_NAMESPACE_CD + "." + TEST_ACTIVITI_JOB_NAME;
 
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME = "test_ec2NodeIamProfileName";
+
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION = "test_ec2NodeIamProfileName_description";
+
     public static final String TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH = "testContextMessageTypeToPublish";
 
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
@@ -1049,6 +1053,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected MessageTypeDaoHelper messageTypeDaoHelper;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationService namespaceIamRoleAuthorizationService;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationServiceTestHelper namespaceIamRoleAuthorizationServiceTestHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

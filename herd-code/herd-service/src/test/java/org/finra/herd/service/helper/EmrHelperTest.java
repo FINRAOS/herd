@@ -85,6 +85,10 @@ public class EmrHelperTest extends AbstractServiceTest
         // Create a namespace entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
+        // Create a namespace IAM role authorization.
+        namespaceIamRoleAuthorizationServiceTestHelper
+            .createNamespaceIamRoleAuthorization(NAMESPACE, TEST_EC2_NODE_IAM_PROFILE_NAME, TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
+
         // Create an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
