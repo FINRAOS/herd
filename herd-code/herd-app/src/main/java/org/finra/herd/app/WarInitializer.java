@@ -161,7 +161,7 @@ public class WarInitializer implements WebApplicationInitializer
     }
 
     /**
-     * Initializes the Cache Control filter which provides secure cache control headers for all incoming HTTP request with "/rest" url pattern
+     * Initializes custom HTTP security filter which provides secure headers for all incoming HTTP request with "/rest" url pattern
      *
      * @param servletContext the servlet context.
      */
