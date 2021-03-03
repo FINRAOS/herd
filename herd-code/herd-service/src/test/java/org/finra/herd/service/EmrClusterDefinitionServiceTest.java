@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.model.AlreadyExistsException;
@@ -50,12 +51,25 @@ import org.finra.herd.service.impl.EmrClusterDefinitionServiceImpl;
  */
 public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 {
+    private NamespaceEntity namespaceEntity = null;
+
+    @Before
+    public void before()
+    {
+        if (namespaceEntity == null)
+        {
+            // Create and persist the namespace entity.
+            namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+            // Create a namespace IAM role authorization.
+            namespaceIamRoleAuthorizationServiceTestHelper
+                .createNamespaceIamRoleAuthorization(NAMESPACE, TEST_EC2_NODE_IAM_PROFILE_NAME, TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
+        }
+    }
+
     @Test
     public void testCreateEmrClusterDefinition() throws Exception
     {
-        // Create and persist the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create an EMR cluster definition create request.
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -243,9 +257,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionTrimParameters() throws Exception
     {
-        // Create and persist the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create an EMR cluster definition create request by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
         EmrClusterDefinitionCreateRequest request =
             createEmrClusterDefinitionCreateRequest(addWhitespace(NAMESPACE), addWhitespace(EMR_CLUSTER_DEFINITION_NAME),
@@ -262,9 +273,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with a lowercase name.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
-
         // Create an EMR cluster definition create request by passing the EMR cluster definition name key parameters in upper case.
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -273,16 +281,13 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+        validateEmrClusterDefinition(null, NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
     @Test
     public void testCreateEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with an uppercase name.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
-
         // Create an EMR cluster definition create request by passing the EMR cluster definition name key parameters in lower case.
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -291,7 +296,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+        validateEmrClusterDefinition(null, NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -343,9 +348,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionEmrClusterDefinitionAlreadyExists() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -368,9 +370,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionMaxInstancesSetToZero() throws Exception
     {
-        // Create and persist the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Override configuration to set the maximum allowed number of EMR instances to zero.
         Map<String, Object> overrideMap = new HashMap<>();
         overrideMap.put(ConfigurationValue.MAX_EMR_INSTANCES_COUNT.getKey(), "0");
@@ -496,9 +495,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionCoreInstanceCount0AssertResponseCoreInstanceDefinitionIsNull() throws Exception
     {
-        // Create and persist the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create an EMR cluster definition create request.
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -519,9 +515,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionCoreInstanceCountNegativeAssertException() throws Exception
     {
-        // Create and persist the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create an EMR cluster definition create request.
         EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
@@ -546,9 +539,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterDefinition() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -592,9 +582,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterDefinitionTrimParameters() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -612,9 +599,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
-
         // Create and persist the EMR cluster definition entity with a lowercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
@@ -625,16 +609,13 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
     @Test
     public void testGetEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
-
         // Create and persist the EMR cluster definition entity with an uppercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
@@ -645,7 +626,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -669,9 +650,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateEmrClusterDefinition() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -868,9 +846,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateEmrClusterDefinitionTrimParameters() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -892,9 +867,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
-
         // Create and persist the EMR cluster definition entity with a lowercase name using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
@@ -907,7 +879,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                     createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
 
             // Validate the returned object.
-            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
         });
     }
@@ -915,9 +887,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
-
         // Create and persist the EMR cluster definition entity with an uppercase name using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
@@ -930,7 +899,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                     createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
 
             // Validate the returned object.
-            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
         });
     }
@@ -1050,9 +1019,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testDeleteEmrClusterDefinition() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -1104,9 +1070,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testDeleteEmrClusterDefinitionTrimParameters() throws Exception
     {
-        // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -1132,9 +1095,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testDeleteEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
-
         // Create and persist the EMR cluster definition entity with a lowercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
@@ -1149,7 +1109,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
             // Validate the returned object.
-            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
@@ -1160,9 +1120,6 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testDeleteEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
-        // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
-
         // Create and persist the EMR cluster definition entity with an uppercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
@@ -1177,7 +1134,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
             // Validate the returned object.
-            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
             // Ensure that this EMR cluster definition is no longer there.
@@ -1206,7 +1163,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitions() throws Exception
     {
         // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Create an EMR cluster definition key.
@@ -1235,7 +1192,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionsTrimParameters() throws Exception
     {
         // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Create an EMR cluster definition key.
@@ -1250,7 +1207,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionsUpperCaseParameters() throws Exception
     {
         // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Create an EMR cluster definition key.
@@ -1265,7 +1222,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionsLowerCaseParameters() throws Exception
     {
         // Create and persist an EMR cluster definition entity.
-        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Create an EMR cluster definition key.
