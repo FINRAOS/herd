@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-public class CacheControlFilter implements Filter
+public class HttpSecurityHeadersFilter implements Filter
 {
 
     @Override
@@ -50,6 +50,7 @@ public class CacheControlFilter implements Filter
         HttpServletResponse resp = (HttpServletResponse) response;
         resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         resp.setHeader("Pragma", "no-cache");
+        resp.setHeader("Content-Security-Policy", "frame-ancestors 'none';");
 
         chain.doFilter(request, response);
     }
