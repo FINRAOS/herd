@@ -27,21 +27,22 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import org.finra.herd.app.AbstractAppTest;
-import org.finra.herd.app.CacheControlFilter;
+import org.finra.herd.app.HttpSecurityHeadersFilter;
 
 /**
  * This class tests functionality of the Cache Control Filter.
  */
-public class CacheControlFilterTest extends AbstractAppTest
+public class HttpSecurityHeadersFilterTest extends AbstractAppTest
 {
     @Test
     public void testCacheControl() throws IOException, ServletException
     {
-        CacheControlFilter cacheControlFilter = new CacheControlFilter();
+        HttpSecurityHeadersFilter httpSecurityHeadersFilter = new HttpSecurityHeadersFilter();
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-        cacheControlFilter.doFilter(new MockHttpServletRequest(), mockHttpServletResponse, new MockFilterChain());
+        httpSecurityHeadersFilter.doFilter(new MockHttpServletRequest(), mockHttpServletResponse, new MockFilterChain());
         assertEquals(200, mockHttpServletResponse.getStatus());
         assertEquals("no-store, no-cache, must-revalidate, max-age=0", mockHttpServletResponse.getHeader("Cache-Control"));
         assertEquals("no-cache", mockHttpServletResponse.getHeader("Pragma"));
+        assertEquals("frame-ancestors 'none'", mockHttpServletResponse.getHeader("Content-Security-Policy"));
     }
 }
