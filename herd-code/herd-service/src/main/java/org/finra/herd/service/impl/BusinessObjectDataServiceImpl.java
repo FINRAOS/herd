@@ -1785,6 +1785,19 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         {
             request.setCustomDdlName(request.getCustomDdlName().trim());
         }
+
+        if (request.getCombinedAlterTableMaxPartitions() != null)
+        {
+            if (BooleanUtils.isNotTrue(request.isCombineMultiplePartitionsInSingleAlterTable()))
+            {
+                throw (new IllegalArgumentException(
+                    "CombineMultiplePartitionsInSingleAlterTable must be enabled when combinedAlterTableMaxPartitions is specified."));
+            }
+            else if (request.getCombinedAlterTableMaxPartitions() <= 0)
+            {
+                throw (new IllegalArgumentException("Maximum number of partitions in combined alter table statement must be a positive integer."));
+            }
+        }
     }
 
     /**

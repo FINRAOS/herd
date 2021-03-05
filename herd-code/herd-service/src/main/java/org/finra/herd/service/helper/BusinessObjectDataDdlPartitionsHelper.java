@@ -216,6 +216,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         generateDdlRequest.requestedStorageEntities = requestedStorageEntities;
         generateDdlRequest.suppressScanForUnregisteredSubPartitions = request.isSuppressScanForUnregisteredSubPartitions();
         generateDdlRequest.combineMultiplePartitionsInSingleAlterTable = request.isCombineMultiplePartitionsInSingleAlterTable();
+        generateDdlRequest.combinedAlterTableMaxPartitions = request.getCombinedAlterTableMaxPartitions();
         generateDdlRequest.tableName = request.getTableName();
         generateDdlRequest.asOfTime = request.getAsOfTime();
 
@@ -552,8 +553,8 @@ public class BusinessObjectDataDdlPartitionsHelper
                     {
                         // Build an add partition statement for this hive partition.
                         StringBuilder addPartitionStatement = new StringBuilder();
-                        addPartitionStatement.append(String.format("%s PARTITION (",
-                            BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "   " : alterTableFirstToken));
+                        addPartitionStatement.append("PARTITION (");
+
                         // Specify all partition column values.
                         List<String> partitionKeyValuePairs = new ArrayList<>();
                         for (int i = 0; i < businessObjectFormatForSchema.getSchema().getPartitions().size(); i++)
@@ -621,15 +622,37 @@ public class BusinessObjectDataDdlPartitionsHelper
         // Add all add partition statements to the main string builder.
         if (CollectionUtils.isNotEmpty(addPartitionStatements))
         {
-            // If specified, combine adding multiple partitions in a single ALTER TABLE statement.
-            if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable))
-            {
-                sb.append(alterTableFirstToken).append('\n');
-            }
+            // Get the size on the list.
+            int listSize = CollectionUtils.size(addPartitionStatements);
 
-            sb.append(
-                StringUtils.join(addPartitionStatements, BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "\n" : ";\n"))
-                .append(";\n");
+            // Append partition statements in chunks as determined by the optionally specified maximum number of partitions in combined alter table statement.
+            int chunkSize = generateDdlRequest.combinedAlterTableMaxPartitions != null ? generateDdlRequest.combinedAlterTableMaxPartitions :
+                BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? listSize : 1;
+
+            // Add a blank line before the first alter table statement.
+            sb.append('\n');
+
+            // Loop through each chunk until we have reached the end of the list.
+            for (int i = 0; i < listSize; i += chunkSize)
+            {
+                // If chunk size is greater than 1, add an extra blank line as a separator between the chunks.
+                if (chunkSize > 1 && i > 0)
+                {
+                    sb.append('\n');
+                }
+
+                // Add first token for alter table statement.
+                sb.append(alterTableFirstToken);
+
+                // Add end of line along with an indent if chunk size is greater than 1 or one space character otherwise.
+                sb.append(chunkSize > 1 ? "\n    " : " ");
+
+                // Add all statements in this chunk.
+                sb.append(StringUtils.join(addPartitionStatements.subList(i, Math.min(listSize, i + chunkSize)), chunkSize > 1 ? "\n    " : ""));
+
+                // Complete this alter table statement.
+                sb.append(";\n");
+            }
         }
     }
 
@@ -1089,6 +1112,8 @@ public class BusinessObjectDataDdlPartitionsHelper
 
         private Boolean combineMultiplePartitionsInSingleAlterTable;
 
+        private Integer combinedAlterTableMaxPartitions;
+
         private String tableName;
 
         private XMLGregorianCalendar asOfTime;
@@ -1271,6 +1296,16 @@ public class BusinessObjectDataDdlPartitionsHelper
         public void setCombineMultiplePartitionsInSingleAlterTable(Boolean combineMultiplePartitionsInSingleAlterTable)
         {
             this.combineMultiplePartitionsInSingleAlterTable = combineMultiplePartitionsInSingleAlterTable;
+        }
+
+        public Integer getCombinedAlterTableMaxPartitions()
+        {
+            return combinedAlterTableMaxPartitions;
+        }
+
+        public void setCombinedAlterTableMaxPartitions(Integer combinedAlterTableMaxPartitions)
+        {
+            this.combinedAlterTableMaxPartitions = combinedAlterTableMaxPartitions;
         }
 
         public String getTableName()
