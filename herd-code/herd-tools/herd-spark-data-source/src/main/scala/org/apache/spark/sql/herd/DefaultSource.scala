@@ -360,21 +360,28 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val partitionList = allAvailableDataPartitions.map(_._2)
     val partitionsFromDDL = api
-      .getBusinessObjectDataPartitions(params.namespace, params.businessObjectName, formatUsage, formatFileType, formatVersion, fmt.getPartitionKey,
+      .getBusinessObjectDataPartitions(params.namespace, params.businessObjectName, formatUsage, formatFileType, null, fmt.getPartitionKey,
         partitionList, null)
     val versionPattern = new Regex("/data-v([0-9]+)/")
-    val allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map { partition =>
+    val allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map {
+      partition =>
       (
-        new Integer(formatVersion), if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) {
-        "none"
-      }
-      else {
-        partition.getPartitionColumns.get(0).getPartitionColumnValue
-      }, partition.getPartitionColumns.asScala.drop(1)
-        .map(_.getPartitionColumnValue), versionPattern.findFirstMatchIn(partition.getPartitionLocation) match {
-        case Some(i) => new Integer(i.group(1).toInt)
-        case None => new Integer(0)
-      }, partition.getPartitionLocation
+        new Integer(formatVersion),
+
+        if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) {
+          "none" } else {
+          partition.getPartitionColumns.get(0).getPartitionColumnValue
+        },
+
+        partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
+
+        versionPattern.findFirstMatchIn(partition.getPartitionLocation)
+        match {
+          case Some(i) => new Integer(i.group(1).toInt)
+          case None => new Integer(0)
+        },
+
+        partition.getPartitionLocation
       )
     }
 

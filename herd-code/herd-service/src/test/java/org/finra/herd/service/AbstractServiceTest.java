@@ -355,15 +355,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final Integer COMBINED_ALTER_TABLE_MAX_PARTITIONS = getRandomInteger();
+
     public static final Boolean COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = true;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
-    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
-
     public static final String CUSTOM_CLUSTERED_BY_VALUE = "CLUSTERED BY " + SCHEMA_CUSTOM_CLUSTERED_BY_VALUE;
+
+    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
     public static final Boolean DELETE_FILES = true;
 
@@ -542,6 +544,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_COLUMN_SIZE = null;
 
+    public static final Integer NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS = null;
+
     public static final Boolean NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = false;
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
@@ -567,6 +571,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
 
     public static final Long NO_FILE_SIZE = null;
+
+    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
+
+    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
 
     public static final Long NO_ID = null;
 
@@ -645,10 +653,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_USE_FULL_FILE_PATH = false;
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
-
-    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
-
-    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
 
     public static final Boolean OVERRIDE_TERMINATION_PROTECTION = true;
 
@@ -785,6 +789,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * This is the test Activiti workflow Id which is the test app name + "." + the test activity job name.
      */
     public static final String TEST_ACTIVITY_WORKFLOW_ID = TEST_ACTIVITI_NAMESPACE_CD + "." + TEST_ACTIVITI_JOB_NAME;
+
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME = "test_ec2NodeIamProfileName";
+
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION = "test_ec2NodeIamProfileName_description";
 
     public static final String TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH = "testContextMessageTypeToPublish";
 
@@ -1045,6 +1053,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected MessageTypeDaoHelper messageTypeDaoHelper;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationService namespaceIamRoleAuthorizationService;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationServiceTestHelper namespaceIamRoleAuthorizationServiceTestHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

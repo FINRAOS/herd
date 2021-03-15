@@ -4521,6 +4521,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="combinedAlterTableMaxPartitions" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the maximum number of add partition statements to include in a single ALTER TABLE statement. If includeDropPartitions
+                  is set to true, this parameter also applies to maximum number of drop partition statements in a single ALTER TABLE statement
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="asOfTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Specifies the date and time when the business object status was effective at that time, (ex 2015-12-30T11:08:40).
@@ -8122,61 +8129,6 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-
-   <!-- ***** Search Index Validation *****-->
-   <xs:element name="searchIndexValidationCreateRequest" type="searchIndexValidationCreateRequest"/>
-   <xs:complexType name="searchIndexValidationCreateRequest">
-      <xs:all>
-         <xs:element name="searchIndexKey" type="searchIndexKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="performFullSearchIndexValidation" type="xs:boolean" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>An optional boolean flag that specifies if full-validation should be run on the index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="searchIndexValidation" type="searchIndexValidation"/>
-   <xs:complexType name="searchIndexValidation">
-      <xs:all>
-         <xs:element name="searchIndexKey" type="searchIndexKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="sizeCheckPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
 
    <!-- ***** Search Index ***** -->
 
