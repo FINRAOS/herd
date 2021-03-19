@@ -57,7 +57,7 @@ public class WarInitializer implements WebApplicationInitializer
         initLog4JMdcLoggingFilter(servletContext);
         initCharacterEncodingFilter(servletContext);
         initRequestLoggingFilter(servletContext);
-        initCacheControlFilter(servletContext);
+        initHttpSecurityHeadersFilter(servletContext);
         initServletMapping(servletContext);
     }
 
@@ -161,15 +161,15 @@ public class WarInitializer implements WebApplicationInitializer
     }
 
     /**
-     * Initializes the Cache Control filter which provides secure cache control headers for all incoming HTTP request with "/rest" url pattern
+     * Initializes custom HTTP security filter which provides secure headers for all incoming HTTP request with "/rest" url pattern
      *
      * @param servletContext the servlet context.
      */
-    protected void initCacheControlFilter(ServletContext servletContext)
+    protected void initHttpSecurityHeadersFilter(ServletContext servletContext)
     {
         // Add a cache control filter for HTTP request with "/rest" url pattern only instead of all url paths to avoid performance degradation on swagger static
         // contents
-        FilterRegistration.Dynamic cacheControlFilter = servletContext.addFilter("cacheControlFilter", CacheControlFilter.class);
-        cacheControlFilter.addMappingForUrlPatterns(null, true, "/rest/*");
+        FilterRegistration.Dynamic httpSecurityHeadersFilter = servletContext.addFilter("httpSecurityHeadersFilter", HttpSecurityHeadersFilter.class);
+        httpSecurityHeadersFilter.addMappingForUrlPatterns(null, true, "/rest/*");
     }
 }
