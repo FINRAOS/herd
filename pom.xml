@@ -1045,6 +1045,14 @@
                   <artifactId>zookeeper</artifactId>
                </exclusion>
                <exclusion>
+                  <groupId>org.eclipse.jetty.aggregate</groupId>
+                  <artifactId>jetty-all</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.mortbay.jetty</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
                   <groupId>tomcat</groupId>
                   <artifactId>*</artifactId>
                </exclusion>
@@ -1484,6 +1492,17 @@
          <organizationUrl>https://www.linkedin.com/in/nateweisz</organizationUrl>
          <roles>
             <role>product manager</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>K25693</id>
+         <name>Maggie Wang</name>
+         <email>rongwang0930@gmail.com</email>
+         <url>https://github.com/rongwang0930</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/rongwang0930</organizationUrl>
+         <roles>
+            <role>developer, tester</role>
          </roles>
       </developer>
    </developers>
