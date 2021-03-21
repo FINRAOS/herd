@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -59,8 +59,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     {
         try
         {
-            businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS,
-                ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperServiceImpl
+                .prepareToInitiateRestore(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
             fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException e)
@@ -87,36 +87,6 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             assertNull(e.getMessage());
         }
-    }
-
-    @Test
-    public void testPrepareToInitiateRestore() throws Exception
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
-
-        // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
-
-        // Get the current time and compute the expected timestamp value.
-        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-        Timestamp expectedTimestamp = HerdDateUtils.addDays(currentTime, EXPIRATION_IN_DAYS);
-
-        // Execute a before step for the initiate a business object data restore request.
-        BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
-
-        // Validate the returned object.
-        assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
-
-        // Validate that restore expiration time is set correctly on the storage unit.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
-        assertNotNull(storageUnitEntity.getRestoreExpirationOn());
-        Long differenceInMilliseconds = storageUnitEntity.getRestoreExpirationOn().getTime() - expectedTimestamp.getTime();
-        assertTrue(Math.abs(differenceInMilliseconds) < 1000);
     }
 
     @Test
@@ -315,7 +285,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreMissingOptionalParameters() throws Exception
+    public void testPrepareToInitiateRestoreMissingOptionalParameters()
     {
         // Create a business object data key without sub-partition values.
         BusinessObjectDataKey businessObjectDataKey =
@@ -480,7 +450,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreMultipleS3StorageUnitsExist() throws Exception
+    public void testPrepareToInitiateRestoreMultipleS3StorageUnitsExist()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -512,7 +482,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageHasNoS3BucketName() throws Exception
+    public void testPrepareToInitiateRestoreStorageHasNoS3BucketName()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -539,7 +509,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageUnitAlreadyRestoring() throws Exception
+    public void testPrepareToInitiateRestoreStorageUnitAlreadyRestoring()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -565,7 +535,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageUnitHasNoStorageFiles() throws Exception
+    public void testPrepareToInitiateRestoreStorageUnitHasNoStorageFiles()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -597,7 +567,83 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageUnitNoExists() throws Exception
+    public void testPrepareToInitiateRestoreStorageUnitInArchivedState()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create database entities required for testing.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+
+        // Get the current time and compute the expected timestamp value.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        Timestamp expectedTimestamp = HerdDateUtils.addDays(currentTime, EXPIRATION_IN_DAYS);
+
+        // Execute a before step for the initiate a business object data restore request.
+        BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+
+        // Validate the returned object.
+        assertNotNull(storagePolicyTransitionParamsDto);
+        assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+        assertEquals(StorageUnitStatusEntity.RESTORING, storagePolicyTransitionParamsDto.getNewStorageUnitStatus());
+        assertEquals(StorageUnitStatusEntity.ARCHIVED, storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
+        assertNull(storagePolicyTransitionParamsDto.getBusinessObjectData());
+
+        // Validate that restore expiration time is set correctly on the storage unit.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
+        assertNotNull(storageUnitEntity.getRestoreExpirationOn());
+        long differenceInMilliseconds = storageUnitEntity.getRestoreExpirationOn().getTime() - expectedTimestamp.getTime();
+        assertTrue(Math.abs(differenceInMilliseconds) < 1000);
+
+        // Validate that storage unit status is set to RESTORING.
+        assertEquals(StorageUnitStatusEntity.RESTORING, storageUnitEntity.getStatus().getCode());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreStorageUnitInRestoredState()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create database entities required for testing.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
+                StorageUnitStatusEntity.RESTORED, AbstractServiceTest.LOCAL_FILES);
+
+        // Get the current time and compute the expected timestamp value.
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+        Timestamp expectedTimestamp = HerdDateUtils.addDays(currentTime, EXPIRATION_IN_DAYS);
+
+        // Execute a before step for the initiate a business object data restore request.
+        BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+
+        // Validate the returned object.
+        assertNotNull(storagePolicyTransitionParamsDto);
+        assertNull(storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+        assertNull(storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+        assertNull(storagePolicyTransitionParamsDto.getNewStorageUnitStatus());
+        assertNull(storagePolicyTransitionParamsDto.getOldStorageUnitStatus());
+        assertNotNull(storagePolicyTransitionParamsDto.getBusinessObjectData());
+
+        // Validate that restore expiration time is set correctly on the storage unit.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
+        assertNotNull(storageUnitEntity.getRestoreExpirationOn());
+        long differenceInMilliseconds = storageUnitEntity.getRestoreExpirationOn().getTime() - expectedTimestamp.getTime();
+        assertTrue(Math.abs(differenceInMilliseconds) < 1000);
+
+        // Validate that storage unit status is still set to RESTORED.
+        assertEquals(StorageUnitStatusEntity.RESTORED, storageUnitEntity.getStatus().getCode());
+    }
+
+    @Test
+    public void testPrepareToInitiateRestoreStorageUnitNoExists()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -621,7 +667,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageUnitNotInArchivedState() throws Exception
+    public void testPrepareToInitiateRestoreStorageUnitNotInArchivedOrRestoredState()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -641,9 +687,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format(
-                "Business object data is not archived. S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. " +
-                    "Business object data: {%s}", STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, STORAGE_UNIT_STATUS,
+            assertEquals(String.format("Business object data is not archived or restored. " +
+                    "S3 storage unit in \"%s\" storage must have \"%s\" or \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
+                STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.RESTORED, STORAGE_UNIT_STATUS,
                 businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
@@ -662,8 +708,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         // Execute a before step for the initiate a business object data restore request using input parameters with leading and trailing empty spaces.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto = businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
             new BusinessObjectDataKey(addWhitespace(BDEF_NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
-                addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION),
-            EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS,
+            ARCHIVE_RETRIEVAL_OPTION);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());

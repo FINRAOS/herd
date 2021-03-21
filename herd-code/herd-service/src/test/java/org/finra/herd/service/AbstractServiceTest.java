@@ -50,6 +50,7 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
@@ -517,6 +518,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<BusinessObjectDataStatus> NO_AVAILABLE_STATUSES = new ArrayList<>();
 
     public static final Boolean NO_BOOLEAN_DEFAULT_VALUE = null;
+
+    public static final BusinessObjectData NO_BUSINESS_OBJECT_DATA = null;
 
     public static final List<BusinessObjectDataKey> NO_BUSINESS_OBJECT_DATA_CHILDREN = new ArrayList<>();
 
