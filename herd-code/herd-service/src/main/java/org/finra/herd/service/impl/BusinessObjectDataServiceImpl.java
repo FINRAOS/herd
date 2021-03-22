@@ -1098,6 +1098,13 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
 
+        // If business object data is already set in the DTO that means that storage unit is already in RESTORED state
+        // and we do not need to continue with the restore steps below and simply return the business object data information.
+        if (businessObjectDataRestoreDto.getBusinessObjectData() != null)
+        {
+            return businessObjectDataRestoreDto.getBusinessObjectData();
+        }
+
         // Create storage unit notification for the origin storage unit.
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
             businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getStorageName(),

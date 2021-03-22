@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -109,7 +109,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
+                NO_BUSINESS_OBJECT_DATA);
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
@@ -160,7 +161,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, STORAGE_UNIT_STATUS_2,
-                STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         // Create an initial instance of S3 file transfer parameters DTO.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();

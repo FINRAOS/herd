@@ -137,7 +137,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -188,7 +188,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
         // Validate the results. The business object data restore DTO is expected not to be updated.
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -205,7 +205,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -246,7 +246,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             businessObjectDataRestoreDto.getException().getMessage());
         businessObjectDataRestoreDto.setException(NO_EXCEPTION);
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -426,7 +426,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
     }
 
     @Test
-    public void testGetStorageUnitStorageUnitNotArchived()
+    public void testGetStorageUnitStorageUnitNotArchivedOrRestored()
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
@@ -458,9 +458,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format(
-                "Business object data is not archived. S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. " +
-                    "Business object data: {%s}", STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, STORAGE_UNIT_STATUS, BUSINESS_OBJECT_DATA_KEY_AS_STRING),
+            assertEquals(String.format("Business object data is not archived or restored. " +
+                    "S3 storage unit in \"%s\" storage must have \"%s\" or \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
+                STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.RESTORED, STORAGE_UNIT_STATUS, BUSINESS_OBJECT_DATA_KEY_AS_STRING),
                 e.getMessage());
         }
 
