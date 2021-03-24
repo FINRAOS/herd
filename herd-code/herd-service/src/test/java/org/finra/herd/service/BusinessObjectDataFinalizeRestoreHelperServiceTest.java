@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -86,7 +86,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(storageFile), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, Arrays.asList(storageFile), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         try
         {
@@ -132,7 +132,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
                 NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
-                ARCHIVE_RETRIEVAL_OPTION);
+                ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         // Enable origin storage unit to finalize a restore for business object data.
         businessObjectDataFinalizeRestoreHelperService.completeFinalizeRestore(businessObjectDataRestoreDto);
@@ -164,7 +164,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         try
         {
@@ -212,8 +212,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)),
-                NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION);
+                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
+                ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         try
         {
@@ -275,8 +275,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, result.getS3KeyPrefix(),
-            NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS, storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles()),
-            NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), result);
+            NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS, storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles()), NO_EXCEPTION,
+            ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), result);
     }
 
     @Test
@@ -376,8 +376,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         try
         {
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(
-                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
+                new BusinessObjectDataStorageUnitKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -477,8 +477,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, result.getS3KeyPrefix(),
-            NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS, storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles()),
-            NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION), result);
+            NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS, storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles()), NO_EXCEPTION,
+            ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), result);
     }
 
     @Test
