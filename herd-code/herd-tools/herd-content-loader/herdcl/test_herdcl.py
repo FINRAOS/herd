@@ -18,10 +18,10 @@ import configparser
 import random
 import string
 import unittest
+import os
 from unittest import mock
 
 # Third party imports
-import xlrd
 import pandas as pd
 
 # Herd imports
@@ -207,21 +207,26 @@ class TestUtilityMethods(unittest.TestCase):
         Test of the load worksheet with no file found
 
         """
+        self.controller.excel_file = 'not_found.xlsx'
+
         # Run scenario and check values
         with self.assertRaises(FileNotFoundError):
             self.controller.load_worksheet('Sheet')
 
-    @mock.patch('pandas.read_excel')
-    def test_load_worksheet_no_sheet(self, mock_pd):
+    def test_load_worksheet_no_sheet(self):
         """
         Test of the load worksheet with no worksheet found
 
         """
-        mock_pd.side_effect = xlrd.biffh.XLRDError()
+        temp_file = 'temp.xlsx'
+        pd.DataFrame().to_excel(temp_file)
+        self.controller.excel_file = temp_file
 
         # Run scenario and check values
-        with self.assertRaises(xlrd.biffh.XLRDError):
+        with self.assertRaises(ValueError):
             self.controller.load_worksheet('Sheet')
+
+        os.remove(temp_file)
 
     @mock.patch('herdsdk.CurrentUserApi.current_user_get_current_user')
     def test_run(self, mock_user):
