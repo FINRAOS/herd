@@ -51,7 +51,7 @@
       <commons.codec.version>1.11</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
       <commons.collections.version>3.2.2</commons.collections.version>
-      <commons.compress.version>1.18</commons.compress.version>
+      <commons.compress.version>1.20</commons.compress.version>
       <commons.configuration.version>1.10</commons.configuration.version>
       <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
       <commons.io.version>2.6</commons.io.version>
@@ -71,7 +71,7 @@
       <jodatime.version>2.10.1</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
-      <log4j.version>2.11.2</log4j.version>
+      <log4j.version>2.14.1</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
