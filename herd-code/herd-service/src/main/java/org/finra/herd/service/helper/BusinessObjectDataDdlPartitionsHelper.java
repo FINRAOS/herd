@@ -635,8 +635,8 @@ public class BusinessObjectDataDdlPartitionsHelper
             // Loop through each chunk until we have reached the end of the list.
             for (int i = 0; i < listSize; i += chunkSize)
             {
-                // If chunk size is greater than 1, add an extra blank line as a separator between the chunks.
-                if (chunkSize > 1 && i > 0)
+                // If we are combining multiple partitions into single alter table statement, add an extra blank line as a separator between the chunks.
+                if (BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) && i > 0)
                 {
                     sb.append('\n');
                 }
@@ -644,8 +644,9 @@ public class BusinessObjectDataDdlPartitionsHelper
                 // Add first token for alter table statement.
                 sb.append(alterTableFirstToken);
 
-                // Add end of line along with an indent if chunk size is greater than 1 or one space character otherwise.
-                sb.append(chunkSize > 1 ? "\n    " : " ");
+                // Add end-of-line along with an indent if we are combining multiple partitions
+                // into single alter table statement or one space character otherwise.
+                sb.append(BooleanUtils.isTrue(generateDdlRequest.combineMultiplePartitionsInSingleAlterTable) ? "\n    " : " ");
 
                 // Add all statements in this chunk.
                 sb.append(StringUtils.join(addPartitionStatements.subList(i, Math.min(listSize, i + chunkSize)), chunkSize > 1 ? "\n    " : ""));
