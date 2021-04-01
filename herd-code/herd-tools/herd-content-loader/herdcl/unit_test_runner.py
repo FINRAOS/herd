@@ -16,15 +16,7 @@
 
 import unittest
 import sys
-import multiprocessing
-
 
 # Run the tests
-def main():
-    sys.exit(not unittest.TextTestRunner(). \
-             run(unittest.TestLoader().discover('.', 'test_*.py')).wasSuccessful())
-
-
-if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn')
-    main()
+sys.exit(not unittest.TextTestRunner(). \
+    run(unittest.TestLoader().discover('.', 'test_*.py')).wasSuccessful())
