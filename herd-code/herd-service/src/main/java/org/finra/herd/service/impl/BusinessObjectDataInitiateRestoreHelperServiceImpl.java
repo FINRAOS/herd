@@ -244,7 +244,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
 
     /**
      * Retrieves storage unit for the business object data. The method validates that there one and only one storage unit for this business object data in
-     * "ARCHIVED" state.
+     * "ARCHIVED" or "RESTORED" state.
      *
      * @param businessObjectDataEntity the business object data entity
      *
@@ -278,7 +278,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         String storageUnitStatus = storageUnitEntity.getStatus().getCode();
 
         // Validate that this business object data has its S3 storage unit in "ARCHIVED" state.
-        if (!StorageUnitStatusEntity.ARCHIVED.equals(storageUnitStatus))
+        if (!StorageUnitStatusEntity.ARCHIVED.equals(storageUnitStatus) && !StorageUnitStatusEntity.RESTORED.equals(storageUnitStatus))
         {
             // Get the storage name.
             String storageName = storageUnitEntity.getStorage().getName();
@@ -300,9 +300,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             // Else, fail and report the actual S3 storage unit status.
             else
             {
-                throw new IllegalArgumentException(String.format("Business object data is not archived. " +
-                        "S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}", storageName,
-                    StorageUnitStatusEntity.ARCHIVED, storageUnitStatus,
+                throw new IllegalArgumentException(String.format("Business object data is not archived or restored. " +
+                        "S3 storage unit in \"%s\" storage must have \"%s\" or \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
+                    storageName, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.RESTORED, storageUnitStatus,
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(storageUnitEntity.getBusinessObjectData())));
             }
         }
@@ -360,51 +360,73 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         // Retrieve and validate a Glacier storage unit for this business object data.
         StorageUnitEntity storageUnitEntity = getStorageUnit(businessObjectDataEntity);
 
-        // Get the storage name.
-        String storageName = storageUnitEntity.getStorage().getName();
-
-        // Validate that S3 storage has S3 bucket name configured.
-        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        String s3BucketName = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageUnitEntity.getStorage(),
-                true);
-
-        // Get storage specific S3 key prefix for this business object data.
-        String s3KeyPrefix =
-            s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
-
-        // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
-
-        // Validate that this storage does not have any other registered storage files that
-        // start with the S3 key prefix, but belong to other business object data instances.
-        storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
-            businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
-
-        // Set the expiration time for the restored storage unit.
+        // Get current time.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-        storageUnitEntity.setRestoreExpirationOn(HerdDateUtils.addDays(currentTime, localExpirationInDays));
 
-        // Retrieve and ensure the RESTORING storage unit status entity exists.
-        StorageUnitStatusEntity newStorageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING);
-
-        // Save the old storage unit status value.
-        String oldOriginStorageUnitStatus = storageUnitEntity.getStatus().getCode();
-
-        // Update the S3 storage unit status to RESTORING.
-        storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, newStorageUnitStatusEntity, StorageUnitStatusEntity.RESTORING);
+        // Compute the expiration timestamp.
+        Timestamp restoreExpirationOn = HerdDateUtils.addDays(currentTime, localExpirationInDays);
 
         // Build the business object data restore parameters DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto = new BusinessObjectDataRestoreDto();
-        businessObjectDataRestoreDto.setBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity));
-        businessObjectDataRestoreDto.setStorageName(storageName);
-        businessObjectDataRestoreDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
-        businessObjectDataRestoreDto.setS3BucketName(s3BucketName);
-        businessObjectDataRestoreDto.setS3KeyPrefix(s3KeyPrefix);
-        businessObjectDataRestoreDto.setStorageFiles(storageFiles);
-        businessObjectDataRestoreDto.setArchiveRetrievalOption(archiveRetrievalOption);
-        businessObjectDataRestoreDto.setNewStorageUnitStatus(newStorageUnitStatusEntity.getCode());
-        businessObjectDataRestoreDto.setOldStorageUnitStatus(oldOriginStorageUnitStatus);
+
+        // If storage unit is already in RESTORED state, we just need to update expiration time for the restored storage unit and get the business object data
+        // information populated the business object data restore parameters DTO.
+        if (StorageUnitStatusEntity.RESTORED.equals(storageUnitEntity.getStatusCode()))
+        {
+            // Update the expiration time for the restored storage unit and persist the entity.
+            storageUnitEntity.setRestoreExpirationOn(restoreExpirationOn);
+            storageUnitDao.saveAndRefresh(storageUnitEntity);
+
+            // Populate business object data restore parameters DTO with business object data information.
+            businessObjectDataRestoreDto.setBusinessObjectData(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity));
+        }
+        // Otherwise, storage unit is in ARCHIVED stare and we continue with steps required to restore this business object data.
+        else
+        {
+            // Get the storage name.
+            String storageName = storageUnitEntity.getStorage().getName();
+
+            // Validate that S3 storage has S3 bucket name configured.
+            // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
+            String s3BucketName = storageHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    storageUnitEntity.getStorage(), true);
+
+            // Get storage specific S3 key prefix for this business object data.
+            String s3KeyPrefix =
+                s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
+
+            // Retrieve and validate storage files registered with the storage unit.
+            List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+
+            // Validate that this storage does not have any other registered storage files that
+            // start with the S3 key prefix, but belong to other business object data instances.
+            storageUnitDaoHelper.validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageUnitEntity.getStorage(),
+                businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey, s3KeyPrefix);
+
+            // Set the expiration time for the restored storage unit.
+            storageUnitEntity.setRestoreExpirationOn(restoreExpirationOn);
+
+            // Retrieve and ensure the RESTORING storage unit status entity exists.
+            StorageUnitStatusEntity newStorageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING);
+
+            // Save the old storage unit status value.
+            String oldOriginStorageUnitStatus = storageUnitEntity.getStatus().getCode();
+
+            // Update the S3 storage unit status to RESTORING.
+            storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, newStorageUnitStatusEntity, StorageUnitStatusEntity.RESTORING);
+
+            // Populate business object data restore parameters DTO with information needed to initiate the restore.
+            businessObjectDataRestoreDto.setBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity));
+            businessObjectDataRestoreDto.setStorageName(storageName);
+            businessObjectDataRestoreDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+            businessObjectDataRestoreDto.setS3BucketName(s3BucketName);
+            businessObjectDataRestoreDto.setS3KeyPrefix(s3KeyPrefix);
+            businessObjectDataRestoreDto.setStorageFiles(storageFiles);
+            businessObjectDataRestoreDto.setArchiveRetrievalOption(archiveRetrievalOption);
+            businessObjectDataRestoreDto.setNewStorageUnitStatus(newStorageUnitStatusEntity.getCode());
+            businessObjectDataRestoreDto.setOldStorageUnitStatus(oldOriginStorageUnitStatus);
+        }
 
         // Return the parameters DTO.
         return businessObjectDataRestoreDto;

@@ -1633,21 +1633,6 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @param primaryPartitionsToDrop the list of primary partitions to drop
      * @param partitionsToAdd the list of partitions to add, where each is represented by a primary value and a sub-partition value
-     *
-     * @return the actual HIVE DDL expected to be generated
-     */
-    public String getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(List<String> primaryPartitionsToDrop,
-        List<List<String>> partitionsToAdd)
-    {
-        return getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(primaryPartitionsToDrop, partitionsToAdd,
-            null);
-    }
-
-    /**
-     * Returns the actual HIVE DDL expected to be generated.
-     *
-     * @param primaryPartitionsToDrop the list of primary partitions to drop
-     * @param partitionsToAdd the list of partitions to add, where each is represented by a primary value and a sub-partition value
      * @param chunkSize the maximum number of partitions in combined alter table statement
      *
      * @return the actual HIVE DDL expected to be generated
