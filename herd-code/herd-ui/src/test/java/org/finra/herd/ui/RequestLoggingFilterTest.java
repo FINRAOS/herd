@@ -29,6 +29,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.entity.ContentType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockFilterChain;
@@ -107,14 +108,30 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     }
 
     @Test
-    public void testDoFilterLongPayload() throws Exception
+    public void testDoFilterLongSingleLineXMLPayload() throws Exception
     {
-        String fileName = "long_filter_payload.txt";
+        String fileName = "long_filter_xml_payload.txt";
         File file = new File(getClass().getClassLoader().getResource(fileName).getFile());
         byte[] payload = Files.readAllBytes(file.toPath());
 
         MockHttpServletRequest request = createServletRequest();
         request.setContent(payload);
+        request.setContentType(ContentType.APPLICATION_XML.toString());
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+    }
+
+    @Test
+    public void testDoFilterLongSingleLineJSONPayload() throws Exception
+    {
+        String fileName = "long_filter_json_payload.txt";
+        File file = new File(getClass().getClassLoader().getResource(fileName).getFile());
+        byte[] payload = Files.readAllBytes(file.toPath());
+
+        MockHttpServletRequest request = createServletRequest();
+        request.setContent(payload);
+        request.setContentType(ContentType.APPLICATION_JSON.toString());
 
         // Run the filter.
         createFilter().doFilter(request, createServletResponse(), createFilterChain());
