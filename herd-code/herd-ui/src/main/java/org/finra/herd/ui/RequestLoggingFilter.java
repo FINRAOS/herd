@@ -30,6 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.ParseException;
@@ -304,14 +306,23 @@ public class RequestLoggingFilter extends OncePerRequestFilter
                         }
                         catch (ParseException e)
                         {
-                            LOGGER.debug("Unable to interpret request content type");
+                            LOGGER.warn("Unable to interpret request content type: contentTypeRaw={}", contentTypeRaw, e);
                         }
 
-                        if (contentType != null)
+                        if (contentType != null &&
+                            org.apache.commons.lang3.StringUtils.equalsIgnoreCase(ContentType.APPLICATION_XML.getMimeType(), contentType.getMimeType()))
                         {
-                            if (contentType.getMimeType().equalsIgnoreCase(ContentType.APPLICATION_XML.getMimeType()))
+                            try
                             {
-                                payloadString = XmlHelper.createPrettyPrint(payloadString, 2);
+                                payloadString = XmlHelper.createPrettyPrint(payloadString);
+                            }
+                            catch (TransformerFactoryConfigurationError e)
+                            {
+                                LOGGER.warn("Unable to configure transformation service to reformat payload", e);
+                            }
+                            catch (TransformerException e)
+                            {
+                                LOGGER.warn("Unable to reformat payload", e);
                             }
                         }
                     }
@@ -321,6 +332,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
             {
                 payloadString = "[Unknown]";
             }
+
 
             // Append the request payload if present.
             if (isIncludePayload() && StringUtils.hasLength(payloadString))

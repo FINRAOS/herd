@@ -39,7 +39,6 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.util.WebUtils;
 
 import org.finra.herd.core.helper.LogLevel;
-
 /**
  * Test driver for the RequestLoggingFilter class. Since the filter's main functionality logs messages which is difficult to test, the majority of test cases
  * will simply ensure that exceptions are not thrown under various configuration approaches.
@@ -108,6 +107,16 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     }
 
     @Test
+    public void testDoFilterEmptyContentType() throws Exception
+    {
+        MockHttpServletRequest request = createServletRequest();
+        request.setContentType("");
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+    }
+
+    @Test(timeout = 1000)
     public void testDoFilterLongSingleLineXMLPayload() throws Exception
     {
         String fileName = "long_filter_xml_payload.txt";
@@ -122,7 +131,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
         createFilter().doFilter(request, createServletResponse(), createFilterChain());
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void testDoFilterLongSingleLineJSONPayload() throws Exception
     {
         String fileName = "long_filter_json_payload.txt";

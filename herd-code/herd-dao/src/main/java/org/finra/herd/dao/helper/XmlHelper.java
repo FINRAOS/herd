@@ -27,7 +27,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -113,29 +115,26 @@ public class XmlHelper
      * Reformat xml string to indented "pretty printed" view
      *
      * @param input the xml string to be reformatted
-     * @param indent the number of spaces to insert as indent
      *
      * @return the reformatted multiline xml representation
+     *
+     * @throws javax.xml.transform.TransformerFactoryConfigurationError in case of TransformerFactory configuration error
+     * or if the implementation is not available or cannot be instantiated.
+     *
+     * @throws javax.xml.transform.TransformerException when unable to perform indent transformation
+     *
      */
-    public static String createPrettyPrint(String input, int indent)
+    public static String createPrettyPrint(String input) throws TransformerFactoryConfigurationError, TransformerException
     {
         Source xmlInput = new StreamSource(new StringReader(input));
         StringWriter stringWriter = new StringWriter();
-        try
-        {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", String.valueOf(indent));
-            transformer.transform(xmlInput, new StreamResult(stringWriter));
 
-            String pretty = stringWriter.toString();
-            pretty = pretty.replace("\r\n", "\n");
-            return pretty;
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.transform(xmlInput, new StreamResult(stringWriter));
+
+        return stringWriter.toString();
     }
 }
