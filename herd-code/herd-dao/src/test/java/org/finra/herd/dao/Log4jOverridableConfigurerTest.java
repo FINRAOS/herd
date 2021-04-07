@@ -146,6 +146,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
 
             // Initialize Log4J with a refresh interval of 1/2 second. This will cause Log4J to check for configuration updates every second.
             Log4jOverridableConfigurer log4jConfigurer = getLog4jOverridableConfigurerForDb(configKey);
+            log4jConfigurer.setRefreshIntervalSeconds(1);
             log4jConfigurer.postProcessBeforeInitialization(null, null);
 
             // First ensure that the Log4J output file doesn't exist.
@@ -512,6 +513,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         log4jConfigurer.setWhereValue(configKey);
         log4jConfigurer.setDataSource(DaoSpringModuleConfig.getHerdDataSource());
         log4jConfigurer.setApplicationContext(applicationContext);
+        log4jConfigurer.setRefreshIntervalSeconds((Integer) ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION_MONITOR_INTERVAL_SECONDS.getDefaultValue());
         return log4jConfigurer;
     }
 
