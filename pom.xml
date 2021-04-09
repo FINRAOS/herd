@@ -51,7 +51,8 @@
       <commons.codec.version>1.11</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
       <commons.collections.version>3.2.2</commons.collections.version>
-      <commons.compress.version>1.18</commons.compress.version>
+      <commons.compress.version>1.20</commons.compress.version>
+      <commons.email.version>1.5</commons.email.version>
       <commons.configuration.version>1.10</commons.configuration.version>
       <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
       <commons.io.version>2.6</commons.io.version>
@@ -71,7 +72,7 @@
       <jodatime.version>2.10.1</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
-      <log4j.version>2.11.2</log4j.version>
+      <log4j.version>2.14.1</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
@@ -379,6 +380,11 @@
             <version>${commons.compress.version}</version>
          </dependency>
          <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-email</artifactId>
+            <version>${commons.email.version}</version>
+         </dependency>
+         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>${commons.configuration.version}</version>
@@ -419,6 +425,12 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>dom4j</groupId>
+                  <artifactId>dom4j</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
          <dependency>
             <groupId>org.hibernate</groupId>
@@ -444,6 +456,11 @@
                   <artifactId>dom4j</artifactId>
                </exclusion>
             </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>${dom4j.version}</version>
          </dependency>
          <dependency>
             <groupId>org.hibernate</groupId>
@@ -827,6 +844,10 @@
                   <groupId>joda-time</groupId>
                   <artifactId>joda-time</artifactId>
                </exclusion>
+               <exclusion>
+                  <groupId>org.apache.commons</groupId>
+                  <artifactId>commons-email</artifactId>
+               </exclusion>
             </exclusions>
          </dependency>
 
@@ -952,12 +973,24 @@
                   <artifactId>avro</artifactId>
                </exclusion>
                <exclusion>
+                  <groupId>org.apache.directory.api</groupId>
+                  <artifactId>api-util</artifactId>
+               </exclusion>
+               <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-shims</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-service-rpc</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.orc</groupId>
+                  <artifactId>orc-core</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-xc</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>net.sf.opencsv</groupId>
@@ -1010,6 +1043,14 @@
                <exclusion>
                   <groupId>org.apache.zookeeper</groupId>
                   <artifactId>zookeeper</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.eclipse.jetty.aggregate</groupId>
+                  <artifactId>jetty-all</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.mortbay.jetty</groupId>
+                  <artifactId>*</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>tomcat</groupId>
@@ -1451,6 +1492,17 @@
          <organizationUrl>https://www.linkedin.com/in/nateweisz</organizationUrl>
          <roles>
             <role>product manager</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>K25693</id>
+         <name>Maggie Wang</name>
+         <email>rongwang0930@gmail.com</email>
+         <url>https://github.com/rongwang0930</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/rongwang0930</organizationUrl>
+         <roles>
+            <role>developer, tester</role>
          </roles>
       </developer>
    </developers>

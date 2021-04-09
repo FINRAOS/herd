@@ -15,10 +15,8 @@
 */
 package org.finra.herd.dao;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Clob;
@@ -34,9 +32,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -118,6 +114,8 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     private Log4jDbWatchdog watchdog;
 
     private LoggerContext loggerContext;
+
+    private int refreshIntervalSeconds;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
@@ -479,6 +477,16 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     }
 
     /**
+     * Sets the interval seconds for refreshing log4j configuration configuration.
+     *
+     * @param refreshIntervalSeconds the refresh interval seconds.
+     */
+    public void setRefreshIntervalSeconds(int refreshIntervalSeconds)
+    {
+        this.refreshIntervalSeconds = refreshIntervalSeconds;
+    }
+
+    /**
      * Initializes a Log4J configuration based on the specified configuration string.
      *
      * @param xmlConfigurationString the configuration string.
@@ -506,9 +514,6 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
                 IOUtils.write(xmlConfigurationString, fileOutputStream);
             }
 
-            // Get the refresh interval from the configuration.
-            int refreshIntervalSeconds = getRefreshIntervalSeconds(xmlConfigurationString);
-
             if (initialConfiguration)
             {
                 System.out.println("Initial logging refresh interval: " + refreshIntervalSeconds + " second(s).");
@@ -534,22 +539,6 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
         {
             throw new IllegalStateException("Unable to initialize Log4J with configuration: \"" + xmlConfigurationString + "\".", ex);
         }
-    }
-
-    /**
-     * Gets the refresh interval in seconds from the Log4J XML configuration.
-     *
-     * @param xmlConfigurationString the XML configuration.
-     *
-     * @return the refresh interval in seconds.
-     * @throws IOException if there were any errors parsing the configuration file.
-     */
-    private int getRefreshIntervalSeconds(String xmlConfigurationString) throws IOException
-    {
-        // Create the Log4J configuration object from the configuration string and get the refresh interval in seconds from the configuration.
-        XmlConfiguration xmlConfiguration =
-            new XmlConfiguration(loggerContext, new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
-        return xmlConfiguration.getWatchManager().getIntervalSeconds();
     }
 
     /**
