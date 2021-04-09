@@ -55,7 +55,8 @@ class Controller:
     configuration = herdsdk.Configuration()
 
     # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
-    actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.LINEAGE.value, Menu.SAMPLES.value, Menu.TAGS.value]
+    actions = [Menu.OBJECTS.value, Menu.SME.value, Menu.OBJECT_TAG.value, Menu.COLUMNS.value, Menu.LINEAGE.value,
+               Menu.SAMPLES.value, Menu.TAGS.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -80,6 +81,8 @@ class Controller:
 
         self.acts = {
             str.lower(Menu.OBJECTS.value): self.load_object,
+            str.lower(Menu.SME.value): self.load_sme,
+            str.lower(Menu.OBJECT_TAG.value): self.load_object_tags,
             str.lower(Menu.COLUMNS.value): self.load_columns,
             str.lower(Menu.LINEAGE.value): self.load_lineage,
             str.lower(Menu.SAMPLES.value): self.load_samples,
@@ -137,11 +140,11 @@ class Controller:
             self.configuration.password = config['userPwd']
         else:
             self.action = str.lower(self.config.get('console', 'action'))
-            if self.action in ['objects', 'columns', 'lineage', 'tags']:
-                self.excel_file = self.config.get('console', 'excelFile')
-            elif self.action == 'samples':
+            if self.action == 'samples':
                 self.excel_file = self.config.get('console', 'excelFile')
                 self.sample_dir = self.config.get('console', 'sampleDir')
+            else:
+                self.excel_file = self.config.get('console', 'excelFile')
             env = self.config.get('console', 'env')
             self.configuration.host = self.config.get('url', env)
             self.configuration.username = self.config.get('credentials', 'userName')
@@ -176,41 +179,92 @@ class Controller:
     ############################################################################
     def load_object(self):
         """
-        One of the controller actions. Loads business object definitions
-
-        Steps involved:
-        1) Get all tag types and compare with worksheet
-        2) Update business object definition descriptive information
-        3) Update subject matter experts
-        4) Update business object definition tags
+        One of the controller actions. Loads business object definition descriptive information
 
         :return: Run Summary dict
 
         """
         self.data_frame = self.load_worksheet(Objects.WORKSHEET.value)
         self.run_summary['total_rows'] = len(self.data_frame.index)
-        self.load_worksheet_tag_types()
-
-        self.run_steps = [
-            self.update_bdef_descriptive_info,
-            self.update_sme,
-            self.update_bdef_tags
-        ]
 
         for index, row in self.data_frame.iterrows():
             row_pass = True
-            for step in self.run_steps:
-                if row_pass:
-                    try:
-                        step(index, row)
-                    except ApiException as e:
-                        LOGGER.error(e)
-                        self.update_run_summary_batch([index], e, Summary.ERRORS.value)
-                        row_pass = False
-                    except Exception:
-                        LOGGER.error(traceback.format_exc())
-                        self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
-                        row_pass = False
+
+            try:
+                self.update_bdef_descriptive_info(index, row)
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+                row_pass = False
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+                row_pass = False
+
+            if row_pass:
+                self.run_summary['success_rows'] += 1
+
+        return self.run_summary
+
+    ############################################################################
+    def load_sme(self):
+        """
+        One of the controller actions. Loads business object definition subject matter experts
+
+        :return: Run Summary dict
+
+        """
+        self.data_frame = self.load_worksheet(SubjectMatterExpert.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
+
+        for index, row in self.data_frame.iterrows():
+            row_pass = True
+
+            try:
+                self.update_sme(index, row)
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+                row_pass = False
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+                row_pass = False
+
+            if row_pass:
+                self.run_summary['success_rows'] += 1
+
+        return self.run_summary
+
+    ############################################################################
+    def load_object_tags(self):
+        """
+        One of the controller actions. Loads business object definition tags
+
+        Steps involved:
+        1) Get all tag types and compare with worksheet
+        2) Update business object definition tags
+
+        :return: Run Summary dict
+
+        """
+        self.data_frame = self.load_worksheet(ObjectTags.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
+        self.load_worksheet_tag_types()
+
+        for index, row in self.data_frame.iterrows():
+            row_pass = True
+
+            try:
+                self.update_bdef_tags(index, row)
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+                row_pass = False
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+                row_pass = False
 
             if row_pass:
                 self.run_summary['success_rows'] += 1
@@ -291,7 +345,7 @@ class Controller:
         :return: Run Summary dict
 
         """
-        self.data_frame = self.load_worksheet(Objects.WORKSHEET.value)
+        self.data_frame = self.load_worksheet(Samples.WORKSHEET.value)
         self.run_summary['total_rows'] = len(self.data_frame.index)
 
         self.check_sample_files()
@@ -311,7 +365,13 @@ class Controller:
     ############################################################################
     def load_tags(self):
         """
-        One of the controller actions. Loads business object sample files
+        One of the controller actions. Loads tag types and tag entities
+
+        Steps involved:
+        1) Get Tag Type Codes
+        2) Update any changes to Tag Type Codes
+        3) Get Tag Entities
+        4) Update any changes to Tag Entities
 
         :return: Run Summary dict
 
@@ -409,7 +469,8 @@ class Controller:
 
         """
         # Descriptive format information is inside the business object definition
-        namespace, usage, file_type, bdef_name, logical_name, description = row[:6]
+        namespace, bdef_name, usage, file_type, logical_name, description = row[:6]
+        description = description.replace('\n', '<br>')
         LOGGER.info('Getting BDef for {}'.format((namespace, bdef_name)))
         resp = self.get_business_object_definition(namespace, bdef_name)
         LOGGER.debug(resp)
@@ -469,7 +530,7 @@ class Controller:
         :param row: A row inside the Pandas DataFrame
 
         """
-        namespace, _, _, bdef_name = row[:4]
+        namespace, bdef_name = row[:2]
 
         # Business Object Definition SMEs Get
         LOGGER.info('Getting SME for {}'.format((namespace, bdef_name)))
@@ -477,7 +538,7 @@ class Controller:
         LOGGER.debug(resp)
         LOGGER.info('Success')
 
-        user = row[Objects.SME.value]
+        user = row[SubjectMatterExpert.SME.value]
         if user:
             user = set([u.strip(" ,\t") for u in user.strip().split(',')])
 
@@ -557,7 +618,7 @@ class Controller:
         :param row: A row inside the Pandas DataFrame
 
         """
-        namespace, _, _, bdef_name = row[:4]
+        namespace, bdef_name = row[:2]
 
         # Check worksheet for tags in each tag type code
         LOGGER.info('Checking worksheet for BDef tags to add')
@@ -736,6 +797,7 @@ class Controller:
                     xls_schema_name = str.upper(self.data_frame.at[index, Columns.SCHEMA_NAME.value]).strip()
                     xls_column_name = self.data_frame.at[index, Columns.COLUMN_NAME.value]
                     xls_description = self.data_frame.at[index, Columns.DESCRIPTION.value]
+                    xls_description = xls_description.replace('\n', '<br>')
 
                     # Check if schema name in worksheet matches existing schema name
                     schema_match_filter = self.format_columns[key][Columns.SCHEMA_NAME.value] == xls_schema_name
@@ -917,8 +979,7 @@ class Controller:
                 sorted(l, key=lambda x: (x[columns[0]], x[columns[1]], x[columns[2]], x[columns[3]]))
                 for l in (format_parents, xls_parent_list)
             ]
-            pairs = zip(format_parents, xls_parent_list)
-            if all(x == y for x, y in pairs):
+            if format_parents == xls_parent_list:
                 LOGGER.info('No parent changes made')
                 self.run_summary['success_rows'] += len(df.index)
                 return
@@ -940,7 +1001,7 @@ class Controller:
 
         """
         LOGGER.info('Checking samples worksheet for empty values')
-        empty_sample_filter = self.data_frame[Objects.SAMPLE.value] == ''
+        empty_sample_filter = self.data_frame[Samples.SAMPLE.value] == ''
         empty_df = self.data_frame[empty_sample_filter]
         good_df = self.data_frame[~empty_sample_filter]
 
@@ -1001,7 +1062,7 @@ class Controller:
 
             for index in index_array:
                 try:
-                    file = self.data_frame.at[index, Objects.SAMPLE.value]
+                    file = self.data_frame.at[index, Samples.SAMPLE.value]
                     path = self.sample_dir + os.sep + file
 
                     if not os.path.exists(path):
@@ -1349,6 +1410,7 @@ class Controller:
                 xls_tag = str.upper(row[Tags.TAG.value]).strip()
                 xls_tag_type = str.upper(row[Tags.TAGTYPE.value]).strip()
                 xls_description = row[Tags.DESCRIPTION.value]
+                xls_description = xls_description.replace('\n', '<br>')
                 xls_parent = row[Tags.PARENT.value]
 
                 xls_description, xls_parent = self.get_tag_optional_fields(xls_description,

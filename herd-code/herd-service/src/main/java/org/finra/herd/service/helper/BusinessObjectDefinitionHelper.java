@@ -1,24 +1,26 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.helper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +28,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.functional.TriConsumer;
 
 /**
@@ -57,6 +69,85 @@ public class BusinessObjectDefinitionHelper
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\"", businessObjectDefinitionKey.getNamespace(),
             businessObjectDefinitionKey.getBusinessObjectDefinitionName());
+    }
+
+    /**
+     * Creates a business object definition from the persisted entity.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param includeBusinessObjectDefinitionUpdateHistory the include business object definition update history
+     *
+     * @return the business object definition
+     */
+    public BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        Boolean includeBusinessObjectDefinitionUpdateHistory)
+    {
+        // Create a business object definition.
+        BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+        businessObjectDefinition.setId(businessObjectDefinitionEntity.getId());
+        businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+        businessObjectDefinition.setDescription(businessObjectDefinitionEntity.getDescription());
+        businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+
+        // Add attributes.
+        List<Attribute> attributes = new ArrayList<>();
+
+        businessObjectDefinition.setAttributes(attributes);
+
+        for (BusinessObjectDefinitionAttributeEntity attributeEntity : businessObjectDefinitionEntity.getAttributes())
+        {
+            attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+        }
+
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() != null)
+        {
+            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat();
+            DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat();
+            businessObjectDefinition.setDescriptiveBusinessObjectFormat(descriptiveBusinessObjectFormat);
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatUsage(descriptiveFormatEntity.getUsage());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatFileType(descriptiveFormatEntity.getFileType().getCode());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatVersion(descriptiveFormatEntity.getBusinessObjectFormatVersion());
+        }
+
+        // Add sample data files.
+        List<SampleDataFile> sampleDataFiles = new ArrayList<>();
+
+        businessObjectDefinition.setSampleDataFiles(sampleDataFiles);
+
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : businessObjectDefinitionEntity.getSampleDataFiles())
+        {
+            sampleDataFiles.add(new SampleDataFile(sampleDataFileEntity.getDirectoryPath(), sampleDataFileEntity.getFileName()));
+        }
+
+        // Add auditable fields.
+        businessObjectDefinition.setCreatedByUserId(businessObjectDefinitionEntity.getCreatedBy());
+        businessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinitionEntity.getUpdatedBy());
+        businessObjectDefinition.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()));
+
+        // Add change events.
+        final List<BusinessObjectDefinitionChangeEvent> businessObjectDefinitionChangeEvents = new ArrayList<>();
+
+        if (BooleanUtils.isTrue(includeBusinessObjectDefinitionUpdateHistory))
+        {
+            businessObjectDefinitionEntity.getChangeEvents().forEach(businessObjectDefinitionChangeEventEntity -> {
+                DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest = null;
+                if (businessObjectDefinitionChangeEventEntity.getFileType() != null)
+                {
+                    descriptiveBusinessObjectFormatUpdateRequest =
+                        new DescriptiveBusinessObjectFormatUpdateRequest(businessObjectDefinitionChangeEventEntity.getUsage(),
+                            businessObjectDefinitionChangeEventEntity.getFileType());
+                }
+                businessObjectDefinitionChangeEvents.add(new BusinessObjectDefinitionChangeEvent(businessObjectDefinitionChangeEventEntity.getDisplayName(),
+                    businessObjectDefinitionChangeEventEntity.getDescription(), descriptiveBusinessObjectFormatUpdateRequest,
+                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionChangeEventEntity.getCreatedOn()),
+                    businessObjectDefinitionChangeEventEntity.getCreatedBy()));
+            });
+        }
+        businessObjectDefinition.setBusinessObjectDefinitionChangeEvents(businessObjectDefinitionChangeEvents);
+
+        return businessObjectDefinition;
     }
 
     /**

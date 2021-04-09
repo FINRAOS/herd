@@ -13,23 +13,5 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.service;
 
-import org.finra.herd.model.api.xml.SearchIndexValidation;
-import org.finra.herd.model.api.xml.SearchIndexValidationCreateRequest;
-
-/**
- * The search index validation service.
- */
-public interface SearchIndexValidationService
-{
-    /**
-     * Validates the specified search index.
-     *
-     * @param request the information needed to validate a search index
-     *
-     * @return the validation response of the search index
-     */
-    public SearchIndexValidation createSearchIndexValidation(SearchIndexValidationCreateRequest request);
-
-}
+alter table schm_clmn drop column bus_objct_dfntn_clmn_id;

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.model.jpa;
 
 import java.util.Collection;
@@ -31,7 +31,6 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
  * Column associated with business object definition.
@@ -51,7 +50,7 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Long id;
 
-    @JsonBackReference(value="businessObjectDefinition-columns")
+    @JsonBackReference(value = "businessObjectDefinition-columns")
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
@@ -68,9 +67,11 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @Column(name = "clmn_ds")
     private String description;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "businessObjectDefinitionColumn")
-    private Collection<SchemaColumnEntity> schemaColumns;
+    /**
+     * The business object definition column schema column name.
+     */
+    @Column(name = "schm_clmn_name_tx")
+    private String schemaColumnName;
 
     @JsonIgnore
     @OneToMany(mappedBy = "businessObjectDefinitionColumn", orphanRemoval = true, cascade = {CascadeType.ALL})
@@ -117,14 +118,14 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
         this.description = description;
     }
 
-    public Collection<SchemaColumnEntity> getSchemaColumns()
+    public String getSchemaColumnName()
     {
-        return schemaColumns;
+        return schemaColumnName;
     }
 
-    public void setSchemaColumns(Collection<SchemaColumnEntity> schemaColumns)
+    public void setSchemaColumnName(String schemaColumnName)
     {
-        this.schemaColumns = schemaColumns;
+        this.schemaColumnName = schemaColumnName;
     }
 
     public Collection<BusinessObjectDefinitionColumnChangeEventEntity> getChangeEvents()

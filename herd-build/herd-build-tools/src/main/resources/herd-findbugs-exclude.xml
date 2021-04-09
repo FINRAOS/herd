@@ -58,6 +58,7 @@
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataStorageFilesDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataVersionLessKey"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto"/>

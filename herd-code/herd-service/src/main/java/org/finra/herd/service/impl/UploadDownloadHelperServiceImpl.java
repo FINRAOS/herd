@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.Arrays;
@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -42,6 +43,7 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -108,6 +110,9 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
     @Autowired
     private StorageUnitDaoHelper storageUnitDaoHelper;
 
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
     @PublishNotificationMessages
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -151,7 +156,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 if (!BusinessObjectDataStatusEntity.UPLOADING.equals(businessObjectDataEntity.getStatus().getCode()))
                 {
                     LOGGER.info("Ignoring S3 notification since business object data status \"{}\" does not match the expected status \"{}\". " +
-                        "businessObjectDataKey={}", businessObjectDataEntity.getStatus().getCode(), BusinessObjectDataStatusEntity.UPLOADING,
+                            "businessObjectDataKey={}", businessObjectDataEntity.getStatus().getCode(), BusinessObjectDataStatusEntity.UPLOADING,
                         jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
 
                     // Exit from the method without setting the new status values in the completeUploadSingleParamsDto to "RE-ENCRYPTING".
@@ -180,12 +185,13 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             // Get the AWS parameters.
             AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
             completeUploadSingleParamsDto.setAwsParams(awsParamsDto);
+            completeUploadSingleParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
 
             // Validate the source S3 file.
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
                 S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
                     .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath()).withHttpProxyHost(awsParamsDto.getHttpProxyHost())
-                    .withHttpProxyPort(awsParamsDto.getHttpProxyPort()).build();
+                    .withHttpProxyPort(awsParamsDto.getHttpProxyPort()).withAwsRegionName(awsParamsDto.getAwsRegionName()).build();
             s3Dao.validateS3File(s3FileTransferRequestParamsDto, sourceStorageFileEntity.getFileSizeBytes());
 
             // Get the S3 managed "external" storage entity and make sure it exists.
@@ -215,7 +221,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             catch (OptimisticLockException e)
             {
                 LOGGER.info("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
-                    "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
+                        "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
                     jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
                     jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()));
 
@@ -286,8 +292,10 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         params.setSourceObjectKey(completeUploadSingleParamsDto.getSourceFilePath());
         params.setTargetObjectKey(completeUploadSingleParamsDto.getTargetFilePath());
         params.setKmsKeyId(completeUploadSingleParamsDto.getKmsKeyId());
+        params.setAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName());
         params.setHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost());
         params.setHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort());
+        params.setS3Endpoint(completeUploadSingleParamsDto.getS3Endpoint());
 
         String targetStatus;
 
@@ -303,7 +311,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         {
             // Log the error.
             LOGGER.error("Failed to copy the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3BucketName=\"{}\" " +
-                "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}", completeUploadSingleParamsDto.getSourceFilePath(),
+                    "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}", completeUploadSingleParamsDto.getSourceFilePath(),
                 completeUploadSingleParamsDto.getSourceBucketName(), completeUploadSingleParamsDto.getTargetBucketName(),
                 jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
                 jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()), e);
@@ -423,7 +431,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 S3FileTransferRequestParamsDto.builder().withS3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
                     .withS3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
                     .withHttpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
-                    .withHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
+                    .withHttpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort())
+                    .withAwsRegionName(completeUploadSingleParamsDto.getAwsParams().getAwsRegionName()).build();
 
             s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
         }
@@ -464,6 +473,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
         s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
         Integer httpProxyPort = awsParamsDto.getHttpProxyPort();
         s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+        s3FileTransferRequestParamsDto.setAwsRegionName(awsParamsDto.getAwsRegionName());
+
         Assert.isTrue(!s3Dao.s3FileExists(s3FileTransferRequestParamsDto),
             String.format("A S3 object already exists in bucket \"%s\" and key \"%s\".", bucketName, key));
     }
@@ -549,7 +560,8 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
                 S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
                     S3FileTransferRequestParamsDto.builder().withS3BucketName(s3BucketName).withS3KeyPrefix(storageFilePath)
-                        .withHttpProxyHost(awsParams.getHttpProxyHost()).withHttpProxyPort(awsParams.getHttpProxyPort()).build();
+                        .withHttpProxyHost(awsParams.getHttpProxyHost()).withHttpProxyPort(awsParams.getHttpProxyPort())
+                        .withAwsRegionName(awsParams.getAwsRegionName()).build();
 
                 s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
             }

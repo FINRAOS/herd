@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 
 /**
@@ -32,7 +33,7 @@ public interface StoragePolicyService
      *
      * @return the newly created storage policy
      */
-    public StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request);
+    StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request);
 
     /**
      * Updates an existing storage policy by key.
@@ -42,7 +43,7 @@ public interface StoragePolicyService
      *
      * @return the updated storage policy
      */
-    public StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request);
+    StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request);
 
     /**
      * Gets an existing storage policy by key.
@@ -51,5 +52,24 @@ public interface StoragePolicyService
      *
      * @return the storage policy information
      */
-    public StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
+    StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
+
+
+    /**
+     * Gets a list of keys for all storage policies defined in the system for the specified namespace.
+     *
+     * @param namespace the namespace
+     *
+     * @return the storage policy keys
+     */
+    StoragePolicyKeys getStoragePolicyKeys(String namespace);
+
+    /**
+     * Deletes an existing storage policy by key.
+     *
+     * @param storagePolicyKey the storage policy key
+     *
+     * @return the storage policy information
+     */
+    StoragePolicy deleteStoragePolicy(StoragePolicyKey storagePolicyKey);
 }

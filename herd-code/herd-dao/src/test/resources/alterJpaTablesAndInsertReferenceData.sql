@@ -19,11 +19,17 @@ ALTER TABLE EMR_CLSTR_CRTN_LOG ALTER COLUMN EMR_CLSTR_DFNTN_CL CLOB;
 ALTER TABLE EMR_CLSTR_DFNTN ALTER COLUMN CNFGN_CL CLOB;
 ALTER TABLE NTFCN_MSG ALTER COLUMN MSG_TX CLOB;
 
+ALTER TABLE BUS_OBJCT_DATA_PRNT DROP CONSTRAINT IF EXISTS BUS_OBJCT_DATA_PRNT_PK;
+
 -- Add a constraint to ensure each row in "Business Object Data Parents" is unique. This is needed for a JUnit that ensures duplicate parents aren't allowed.
 ALTER TABLE BUS_OBJCT_DATA_PRNT ADD CONSTRAINT BUS_OBJCT_DATA_PRNT_PK PRIMARY KEY (BUS_OBJCT_DATA_ID, PRNT_BUS_OBJCT_DATA_ID);
 
+ALTER TABLE BUS_OBJCT_FRMT DROP CONSTRAINT IF EXISTS BUS_OBJCT_FRMT_CK1;
+
 -- Ensure only "Y" or "N" can be used for the business object format latest version flag.
 ALTER TABLE BUS_OBJCT_FRMT ADD CONSTRAINT BUS_OBJCT_FRMT_CK1 CHECK (LTST_VRSN_FL = 'Y' OR LTST_VRSN_FL = 'N');
+
+DROP INDEX IF EXISTS BUS_OBJCT_FRMT_AK;
 
 -- Create a composite key. This is tested in a JUnit by attempting to insert 2 rows with the same format and format version.
 CREATE UNIQUE INDEX BUS_OBJCT_FRMT_AK ON BUS_OBJCT_FRMT (BUS_OBJCT_DFNTN_ID, USAGE_CD, FILE_TYPE_CD, FRMT_VRSN_NB);
@@ -42,6 +48,18 @@ CREATE UNIQUE INDEX BUS_OBJCT_FRMT_AK ON BUS_OBJCT_FRMT (BUS_OBJCT_DFNTN_ID, USA
 --     JOIN bus_objct_data d ON su.bus_objct_data_id = d.bus_objct_data_id
 --     JOIN bus_objct_frmt f ON d.bus_objct_frmt_id = f.bus_objct_frmt_id
 --     JOIN bus_objct_dfntn df ON f.bus_objct_dfntn_id = df.bus_objct_dfntn_id;
+
+DELETE FROM bus_objct_dfntn_dscr_sgstn_stts_cd_lk;
+DELETE FROM rtntn_type_cd_lk;
+DELETE FROM msg_type_cd_lk;
+DELETE FROM ntfcn_rgstn_stts_cd_lk;
+DELETE FROM SCRTY_FN_LK;
+DELETE FROM STRGE_PLCY_STTS_CD_LK;
+DELETE FROM STRGE_UNIT_STTS_CD_LK;
+DELETE FROM BUS_OBJCT_DATA_STTS_CD_LK;
+DELETE FROM STRGE_ATRBT;
+DELETE FROM STRGE;
+DELETE FROM STRGE_PLTFM;
 
 -- Insert reference data. --
 

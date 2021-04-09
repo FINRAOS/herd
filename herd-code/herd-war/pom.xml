@@ -162,6 +162,7 @@
                <warName>herd-app</warName>
                <!-- In case our entire web.xml configuration has been migrated to Java. -->
                <failOnMissingWebXml>false</failOnMissingWebXml>
+               <packagingExcludes>**.h2-1.4.200.jar,*h2database*</packagingExcludes>
             </configuration>
          </plugin>
       </plugins>

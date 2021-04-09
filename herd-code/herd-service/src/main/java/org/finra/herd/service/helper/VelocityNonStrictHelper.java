@@ -24,6 +24,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.util.introspection.SecureUberspector;
 import org.springframework.stereotype.Component;
 
 /**
@@ -47,6 +48,7 @@ public class VelocityNonStrictHelper
         /*  Get and initialize a velocity engine  */
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.setProperty(RuntimeConstants.RUNTIME_REFERENCES_STRICT, strict);
+        velocityEngine.setProperty(RuntimeConstants.UBERSPECT_CLASSNAME, SecureUberspector.class.getName());
         velocityEngine.init();
 
         VelocityContext velocityContext = new VelocityContext(variables);

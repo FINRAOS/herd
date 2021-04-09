@@ -14,11 +14,13 @@
   limitations under the License.
 """
 # Standard library imports
-import argparse, traceback
+import argparse
+import traceback
 
 # Local imports
 try:
-    import logger, otags
+    import logger
+    import otags
 except ImportError:
     from herdcl import logger, otags
 
@@ -95,10 +97,13 @@ def main():
         main_app.run()
     else:
         main_app.controller.gui_enabled = True
-        import gui
+        try:
+            import gui
+        except ModuleNotFoundError:
+            from herdcl import gui
         app = gui.MainUI()
         LOGGER.info('Opening GUI')
-        app.master.title('Herd Content Loader  v.20200101')
+        app.master.title('Herd Content Loader')
         app.mainloop()
 
 

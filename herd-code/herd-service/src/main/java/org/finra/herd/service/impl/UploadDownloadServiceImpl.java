@@ -216,8 +216,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), sourceStorageEntity, sourceStorageDirectoryPath, sourceStorageFilePath,
                 uploadSingleInitiationRequest.getFile().getFileSizeBytes(), null);
 
-        // Create a new business object data instance. Set the flag to false, since for the file upload service the file size value is optional.
-        BusinessObjectData sourceBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(sourceBusinessObjectDataCreateRequest, false);
+        // Create a new business object data instance.
+        // Set the file size required flag to false, since for the file upload service the file size value is optional.
+        // Set the use full file path flag to true, since for the file upload service we will use the full file path.
+        BusinessObjectData sourceBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(sourceBusinessObjectDataCreateRequest, false, true);
 
         // Get a file upload specific S3 key prefix for the target storage based on the generated UUID.
         String targetStorageDirectoryPath = s3KeyPrefixHelper.buildS3KeyPrefix(targetStorageEntity, targetBusinessObjectFormatEntity, businessObjectDataKey);
@@ -231,8 +233,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), targetStorageEntity, targetStorageDirectoryPath, targetStorageFilePath,
                 uploadSingleInitiationRequest.getFile().getFileSizeBytes(), null);
 
-        // Create a target business object data instance. Set the flag to false, since for the file upload service the file size value is optional.
-        BusinessObjectData targetBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(targetBusinessObjectDataCreateRequest, false);
+        // Create a target business object data instance.
+        // Set the file size required flag to false, since for the file upload service the file size value is optional.
+        // Set the use full file path flag to true, since for the file upload service we will use the full file path.
+        BusinessObjectData targetBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(targetBusinessObjectDataCreateRequest, false, true);
 
         // Get decrypted AWS ARN of the role that is required to provide access to S3_MANAGED_LOADING_DOCK storage.
         String awsRoleArn = getStorageUploadRoleArn(sourceStorageEntity);

@@ -343,9 +343,13 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       formatVersion
     )
 
-    log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
+    if (fmt.getSchema == null) {
+      throw new Exception("Schema not found")
+    }
 
-    var allData = api.getBusinessObjectPartitions(
+    log.info(s"Using PartitionKey ${fmt.getPartitionKey}, PartitionKeyGroup ${fmt.getSchema.getPartitionKeyGroup}")
+    // all data partitions from DM availability call
+    val allAvailableDataPartitions = api.getBusinessObjectPartitions(
       params.namespace,
       params.businessObjectName,
       formatUsage,
@@ -354,33 +358,31 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       params.partitionFilter
     )
 
-    try {
-      val partitionList = allData.map(_._2)
-      val partitionsFromDDL = api.getBusinessObjectDataPartitions(
-        params.namespace,
-        params.businessObjectName,
-        formatUsage,
-        formatFileType,
-        formatVersion,
-        fmt.getPartitionKey,
-        partitionList,
-        null
+    val partitionList = allAvailableDataPartitions.map(_._2)
+    val partitionsFromDDL = api
+      .getBusinessObjectDataPartitions(params.namespace, params.businessObjectName, formatUsage, formatFileType, null, fmt.getPartitionKey,
+        partitionList, null)
+    val versionPattern = new Regex("/data-v([0-9]+)/")
+    val allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map {
+      partition =>
+      (
+        new Integer(formatVersion),
+
+        if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) {
+          "none" } else {
+          partition.getPartitionColumns.get(0).getPartitionColumnValue
+        },
+
+        partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
+
+        versionPattern.findFirstMatchIn(partition.getPartitionLocation)
+        match {
+          case Some(i) => new Integer(i.group(1).toInt)
+          case None => new Integer(0)
+        },
+
+        partition.getPartitionLocation
       )
-      val versionPattern = new Regex("/data-v([0-9]+)/")
-      allData = Seq.empty ++ partitionsFromDDL.getPartitions.asScala.map { partition =>
-        (
-          new Integer(formatVersion),
-          if (partition.getPartitionColumns.get(0).getPartitionColumnValue == null) "none"
-          else partition.getPartitionColumns.get(0).getPartitionColumnValue,
-          partition.getPartitionColumns.asScala.drop(1).map(_.getPartitionColumnValue),
-          versionPattern.findFirstMatchIn(partition.getPartitionLocation) match {
-            case Some(i) => new Integer(i.group(1).toInt)
-            case None => new Integer(0)
-          })
-      }
-    }
-    catch {
-      case e: Throwable => log.info("getBusinessObjectDataPartitions failed for all data " + e.getMessage)
     }
 
     log.info(s"Got ${allData.size} results")
@@ -413,9 +415,14 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
     )
 
     val useHerdOrcFormat = sparkSession.version < "2.3.0"
+    val sparkV3 = sparkSession.version >= "3.0.0"
 
     val correctedDataSourceFormat = dataSourceFormat match {
       case "orc" if useHerdOrcFormat => "org.apache.spark.sql.hive.orc.HerdOrcFileFormat"
+      case "orc" if sparkV3 && sparkSession.conf.get("spark.sql.orc.impl") == "native" => "org.apache.spark.sql.execution.datasources.orc"
+      case "orc" if sparkV3 => "org.apache.spark.sql.hive.orc"
+      case "csv" if sparkV3 => "com.databricks.spark.csv"
+      case "parquet" if sparkV3 => "org.apache.spark.sql.parquet"
       case _ => dataSourceFormat
     }
 

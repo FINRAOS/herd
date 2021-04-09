@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
@@ -315,15 +315,21 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         // Get the business object format entity for this relation table registration.
         BusinessObjectFormatEntity businessObjectFormatEntity = storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat();
 
-        // Get relational schema name from the business object format. This business object format attribute is required and must have a non-blank value.
-        String relationalSchemaName = businessObjectFormatDaoHelper.getBusinessObjectFormatAttributeValueByName(
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME), businessObjectFormatEntity, true,
-            true);
+        // Get relational schema name from the business object format. This value is required and must have a non-blank value.
+        if (StringUtils.isBlank(businessObjectFormatEntity.getRelationalSchemaName()))
+        {
+            throw new IllegalArgumentException(String
+                .format("Relational Schema Name for business object format must have a value that is not blank. Business object format: {%s}",
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+        }
 
-        // Get relational table name from the business object format. This business object format attribute is required and must have a non-blank value.
-        String relationalTableName = businessObjectFormatDaoHelper.getBusinessObjectFormatAttributeValueByName(
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME), businessObjectFormatEntity, true,
-            true);
+        // Get relational table name from the business object format. This value is required and must have a non-blank value.
+        if (StringUtils.isBlank(businessObjectFormatEntity.getRelationalTableName()))
+        {
+            throw new IllegalArgumentException(String
+                .format("Relational Table Name for business object format must have a value that is not blank. Business object format: {%s}",
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+        }
 
         // Get relational storage attributes required to access relation table schema.
         RelationalStorageAttributesDto relationalStorageAttributesDto = getRelationalStorageAttributes(storageUnitEntity.getStorage());
@@ -332,8 +338,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
         // Create and return a relational storage attributes DTO.
-        return new RelationalTableRegistrationDto(storageUnitKey, relationalStorageAttributesDto, relationalSchemaName, relationalTableName,
-            businessObjectFormat);
+        return new RelationalTableRegistrationDto(storageUnitKey, relationalStorageAttributesDto, businessObjectFormatEntity.getRelationalSchemaName(),
+            businessObjectFormatEntity.getRelationalTableName(), businessObjectFormat);
     }
 
     /**
@@ -384,11 +390,9 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setBusinessObjectFormatUsage(relationalTableRegistrationCreateRequest.getBusinessObjectFormatUsage());
         businessObjectFormatCreateRequest.setBusinessObjectFormatFileType(FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE);
         businessObjectFormatCreateRequest.setPartitionKey(BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY);
-        businessObjectFormatCreateRequest.setAttributes(Arrays.asList(
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_SCHEMA_NAME),
-                relationalTableRegistrationCreateRequest.getRelationalSchemaName()),
-            new Attribute(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_FORMAT_ATTRIBUTE_NAME_RELATIONAL_TABLE_NAME),
-                relationalTableRegistrationCreateRequest.getRelationalTableName())));
+        businessObjectFormatCreateRequest.setRelationalSchemaName(relationalTableRegistrationCreateRequest.getRelationalSchemaName());
+        businessObjectFormatCreateRequest.setRelationalTableName(relationalTableRegistrationCreateRequest.getRelationalTableName());
+
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
 
         // Log the business object format create request.
@@ -514,6 +518,8 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setPartitionKey(relationalTableRegistrationDto.getBusinessObjectFormat().getPartitionKey());
         businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
         businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setRelationalSchemaName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalSchemaName());
+        businessObjectFormatCreateRequest.setRelationalTableName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalTableName());
 
         // Log the relational table registration DTO along with the business object format create request.
         LOGGER.info("Updating relational table schema... relationalTableRegistrationDto={} businessObjectFormatCreateRequest={}",

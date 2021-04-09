@@ -50,6 +50,7 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
@@ -355,15 +356,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
 
+    public static final Integer COMBINED_ALTER_TABLE_MAX_PARTITIONS = getRandomInteger();
+
     public static final Boolean COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = true;
 
     public static final Boolean CONTINUE_ON_ERROR = true;
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
-    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
-
     public static final String CUSTOM_CLUSTERED_BY_VALUE = "CLUSTERED BY " + SCHEMA_CUSTOM_CLUSTERED_BY_VALUE;
+
+    public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
     public static final Boolean DELETE_FILES = true;
 
@@ -444,6 +447,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Boolean FILE_SIZE_REQUIRED = true;
+
     public static final Boolean FILTER_ON_LATEST_VALID_VERSION = true;
 
     public static final String HERD_OUTGOING_QUEUE = "HERD_OUTGOING_QUEUE";
@@ -463,8 +468,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
-
-    public static final Boolean INCLUDE_ROW_FORMAT_STATEMENT = true;
 
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
 
@@ -516,6 +519,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_BOOLEAN_DEFAULT_VALUE = null;
 
+    public static final BusinessObjectData NO_BUSINESS_OBJECT_DATA = null;
+
     public static final List<BusinessObjectDataKey> NO_BUSINESS_OBJECT_DATA_CHILDREN = new ArrayList<>();
 
     public static final List<BusinessObjectDataKey> NO_BUSINESS_OBJECT_DATA_PARENTS = new ArrayList<>();
@@ -542,6 +547,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String NO_COLUMN_SIZE = null;
 
+    public static final Integer NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS = null;
+
     public static final Boolean NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE = false;
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
@@ -551,6 +558,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
 
     public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
+
+    public static final String NO_DIRECTORY_PATH = null;
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
@@ -566,6 +575,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_FILE_SIZE = null;
 
+    public static final String NO_FORMAT_RELATIONAL_SCHEMA_NAME = null;
+
+    public static final String NO_FORMAT_RELATIONAL_TABLE_NAME = null;
+
     public static final Long NO_ID = null;
 
     public static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
@@ -577,8 +590,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_INCLUDE_DROP_TABLE_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
-
-    public static final Boolean NO_INCLUDE_ROW_FORMAT_STATEMENT = false;
 
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 
@@ -641,6 +652,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
+
+    public static final Boolean NO_USE_FULL_FILE_PATH = false;
 
     public static final Boolean NO_VARIABLE_REQUIRED = false;
 
@@ -780,6 +793,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     public static final String TEST_ACTIVITY_WORKFLOW_ID = TEST_ACTIVITI_NAMESPACE_CD + "." + TEST_ACTIVITI_JOB_NAME;
 
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME = "test_ec2NodeIamProfileName";
+
+    public static final String TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION = "test_ec2NodeIamProfileName_description";
+
     public static final String TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH = "testContextMessageTypeToPublish";
 
     public static final String TEST_SQS_ENVIRONMENT = "testEnvironment";
@@ -823,6 +840,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         "      <transmission-id>$uuid</transmission-id>\n" +
         "   </soa-audit>\n" +
         "</datamgt:TestApplicationEvent>";
+
+    public static final Boolean USE_FULL_FILE_PATH = true;
 
     public static final String UUID_VALUE = "UT_UUID_Value_" + RANDOM_SUFFIX;
 
@@ -1037,6 +1056,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected MessageTypeDaoHelper messageTypeDaoHelper;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationService namespaceIamRoleAuthorizationService;
+
+    @Autowired
+    protected NamespaceIamRoleAuthorizationServiceTestHelper namespaceIamRoleAuthorizationServiceTestHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

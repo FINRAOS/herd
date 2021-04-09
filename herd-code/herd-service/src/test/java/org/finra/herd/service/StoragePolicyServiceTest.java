@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -31,6 +32,7 @@ import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyFilter;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyKeys;
 import org.finra.herd.model.api.xml.StoragePolicyRule;
 import org.finra.herd.model.api.xml.StoragePolicyTransition;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
@@ -58,12 +60,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create a storage policy.
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -78,8 +81,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(new StoragePolicyKey(BLANK_TEXT, STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE,
-                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE,
-                    StoragePolicyStatusEntity.ENABLED));
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                    STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -93,7 +96,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, BLANK_TEXT), STORAGE_POLICY_RULE_TYPE,
                     STORAGE_POLICY_RULE_VALUE, STORAGE_POLICY_NAMESPACE_CD, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
-                    STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -106,7 +109,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, BLANK_TEXT, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy rule type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -119,7 +122,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, null, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy rule value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -132,7 +135,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BLANK_TEXT, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object definition name is specified without business object definition namespace.");
         }
         catch (IllegalArgumentException e)
@@ -145,7 +149,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BLANK_TEXT,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object definition namespace is specified without business object definition name.");
         }
         catch (IllegalArgumentException e)
@@ -158,7 +163,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object format file type is specified without business object format usage.");
         }
         catch (IllegalArgumentException e)
@@ -171,7 +176,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, BLANK_TEXT, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, BLANK_TEXT, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object format usage is specified without business object format file type.");
         }
         catch (IllegalArgumentException e)
@@ -184,7 +190,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, BLANK_TEXT, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, BLANK_TEXT, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -197,7 +204,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, BLANK_TEXT, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, BLANK_TEXT, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy transition type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -210,7 +217,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, BLANK_TEXT));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when storage policy status is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -231,13 +238,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create a storage policy without specifying any of the optional parameters (passing them as whitespace characters).
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BLANK_TEXT, BLANK_TEXT, BLANK_TEXT,
-                BLANK_TEXT, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                BLANK_TEXT, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE),
-                StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
     @Test
@@ -251,14 +258,14 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
 
         // Create a storage policy without specifying any of the optional parameters (passing them as null values).
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
-            .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, null, null, null, null, STORAGE_NAME,
+            .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, null, null, null, null, STORAGE_NAME, null,
                 STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE),
-                StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
     @Test
@@ -271,13 +278,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(new StoragePolicyKey(addWhitespace(STORAGE_POLICY_NAMESPACE_CD), addWhitespace(STORAGE_POLICY_NAME)),
                 addWhitespace(STORAGE_POLICY_RULE_TYPE), STORAGE_POLICY_RULE_VALUE, addWhitespace(BDEF_NAMESPACE), addWhitespace(BDEF_NAME),
-                addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE), addWhitespace(STORAGE_NAME),
+                addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE), addWhitespace(STORAGE_NAME), NO_DO_NOT_TRANSITION_LATEST_VALID,
                 addWhitespace(STORAGE_POLICY_TRANSITION_TYPE), addWhitespace(StoragePolicyStatusEntity.ENABLED)));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
             new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -291,14 +298,15 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toUpperCase(), STORAGE_POLICY_NAME.toUpperCase()),
                 STORAGE_POLICY_RULE_TYPE.toUpperCase(), STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-                FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), STORAGE_NAME.toUpperCase(), STORAGE_POLICY_TRANSITION_TYPE.toUpperCase(),
-                StoragePolicyStatusEntity.ENABLED.toUpperCase()));
+                FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), STORAGE_NAME.toUpperCase(), NO_DO_NOT_TRANSITION_LATEST_VALID,
+                STORAGE_POLICY_TRANSITION_TYPE.toUpperCase(), StoragePolicyStatusEntity.ENABLED.toUpperCase()));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME.toUpperCase()),
-            new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
-            new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+                new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+                    NO_DO_NOT_TRANSITION_LATEST_VALID), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED),
+            resultStoragePolicy);
     }
 
     @Test
@@ -311,14 +319,15 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicy resultStoragePolicy = storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toLowerCase(), STORAGE_POLICY_NAME.toLowerCase()),
                 STORAGE_POLICY_RULE_TYPE.toLowerCase(), STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-                FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), STORAGE_NAME.toLowerCase(), STORAGE_POLICY_TRANSITION_TYPE.toLowerCase(),
-                StoragePolicyStatusEntity.ENABLED.toLowerCase()));
+                FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), STORAGE_NAME.toLowerCase(), NO_DO_NOT_TRANSITION_LATEST_VALID,
+                STORAGE_POLICY_TRANSITION_TYPE.toLowerCase(), StoragePolicyStatusEntity.ENABLED.toLowerCase()));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME.toLowerCase()),
-            new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
-            new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+                new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+                    NO_DO_NOT_TRANSITION_LATEST_VALID), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED),
+            resultStoragePolicy);
     }
 
     @Test
@@ -335,8 +344,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing storage policy namespace.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(new StoragePolicyKey("I_DO_NOT_EXIST", STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE,
-                StoragePolicyStatusEntity.ENABLED);
+                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID,
+                STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -353,7 +362,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(new StoragePolicyKey(addSlash(STORAGE_POLICY_NAMESPACE_CD), STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE,
                     STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
-                    STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -367,7 +376,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, addSlash(STORAGE_POLICY_NAME)), STORAGE_POLICY_RULE_TYPE,
                     STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
-                    STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -378,7 +387,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing storage policy rule type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, "I_DO_NOT_EXIST", STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -393,7 +402,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using a negative storage policy rule value.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, -1, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -407,7 +416,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing business object definition namespace.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, "I_DO_NOT_EXIST", BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -422,7 +432,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing business object definition name.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, "I_DO_NOT_EXIST",
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -437,7 +448,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing business object format file type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -452,7 +464,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing storage name.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, "I_DO_NOT_EXIST", STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, "I_DO_NOT_EXIST", DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -466,7 +479,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing destination storage name.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, I_DO_NOT_EXIST, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, I_DO_NOT_EXIST, StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -482,7 +495,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using non-existing storage policy status.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, "I_DO_NOT_EXIST");
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, "I_DO_NOT_EXIST");
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -509,7 +522,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy using storage of a non-S3 storage platform type.
         StoragePolicyCreateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -537,7 +551,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy when storage policy filter storage has no S3 bucket name attribute configured.
         StoragePolicyCreateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -567,7 +582,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy when storage policy filter storage has no S3 path prefix validation enabled.
         StoragePolicyCreateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -599,7 +615,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to create a storage policy when storage policy filter storage has no S3 file existence validation enabled.
         StoragePolicyCreateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                StoragePolicyStatusEntity.ENABLED);
         try
         {
             storagePolicyService.createStoragePolicy(request);
@@ -621,15 +638,16 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to create a storage policy when it already exists.
         try
         {
             storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
                 .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an AlreadyExistsException when storage policy already exists.");
         }
         catch (AlreadyExistsException e)
@@ -653,18 +671,18 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy.
         StoragePolicy resultStoragePolicy = storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
@@ -678,15 +696,15 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to update a storage policy when storage policy namespace is not specified.
         try
         {
             storagePolicyService.updateStoragePolicy(new StoragePolicyKey(BLANK_TEXT, STORAGE_POLICY_NAME), storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -699,7 +717,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, BLANK_TEXT), storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, STORAGE_POLICY_NAMESPACE_CD, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE,
+                    StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -712,7 +731,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(BLANK_TEXT, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy rule type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -725,7 +744,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, null, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy rule value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -738,7 +757,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BLANK_TEXT, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object definition name is specified without business object definition namespace.");
         }
         catch (IllegalArgumentException e)
@@ -751,7 +770,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object definition namespace is specified without business object definition name.");
         }
         catch (IllegalArgumentException e)
@@ -764,7 +783,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object format file type is specified without business object format usage.");
         }
         catch (IllegalArgumentException e)
@@ -777,7 +796,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT,
-                    STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when business object format usage is specified without business object format file type.");
         }
         catch (IllegalArgumentException e)
@@ -790,7 +809,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, BLANK_TEXT, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, BLANK_TEXT, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -803,7 +822,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, BLANK_TEXT, StoragePolicyStatusEntity.ENABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, BLANK_TEXT, StoragePolicyStatusEntity.ENABLED));
             fail("Should throw an IllegalArgumentException when storage policy transition type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -816,7 +835,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, BLANK_TEXT));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when storage policy status is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -837,19 +856,19 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy without specifying any of the optional parameters (passing them as whitespace characters).
         StoragePolicy resultStoragePolicy = storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BLANK_TEXT, BLANK_TEXT, BLANK_TEXT, BLANK_TEXT, STORAGE_NAME,
-                STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
+                NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE),
-                StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
+                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
 
@@ -865,19 +884,19 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy without specifying any of the optional parameters (passing them as null values).
         StoragePolicy resultStoragePolicy = storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
-            .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, null, null, null, null, STORAGE_NAME,
+            .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, null, null, null, null, STORAGE_NAME, null,
                 STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
 
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(resultStoragePolicy.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE),
-                StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
+                new StoragePolicyFilter(null, null, null, null, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
 
@@ -893,8 +912,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy using input parameters with leading and trailing empty spaces.
         StoragePolicy resultStoragePolicy = storagePolicyService
@@ -902,12 +921,12 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
                 storagePolicyServiceTestHelper
                     .createStoragePolicyUpdateRequest(addWhitespace(STORAGE_POLICY_RULE_TYPE), STORAGE_POLICY_RULE_VALUE, addWhitespace(BDEF_NAMESPACE),
                         addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE), addWhitespace(STORAGE_NAME),
-                        addWhitespace(STORAGE_POLICY_TRANSITION_TYPE), addWhitespace(StoragePolicyStatusEntity.DISABLED)));
+                        DO_NOT_TRANSITION_LATEST_VALID, addWhitespace(STORAGE_POLICY_TRANSITION_TYPE), addWhitespace(StoragePolicyStatusEntity.DISABLED)));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
             new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
@@ -924,8 +943,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy using upper case input parameters.
         StoragePolicy resultStoragePolicy = storagePolicyService
@@ -933,13 +952,14 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
                 storagePolicyServiceTestHelper
                     .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE.toUpperCase(), STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE.toUpperCase(),
                         BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), STORAGE_NAME.toUpperCase(),
-                        STORAGE_POLICY_TRANSITION_TYPE.toUpperCase(), StoragePolicyStatusEntity.DISABLED.toUpperCase()));
+                        DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE.toUpperCase(), StoragePolicyStatusEntity.DISABLED.toUpperCase()));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
-            new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
+                new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+                    DO_NOT_TRANSITION_LATEST_VALID), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED),
+            resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
 
@@ -955,8 +975,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Update a storage policy using lower case input parameters.
         StoragePolicy resultStoragePolicy = storagePolicyService
@@ -964,13 +984,14 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
                 storagePolicyServiceTestHelper
                     .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE.toLowerCase(), STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE.toLowerCase(),
                         BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), STORAGE_NAME.toLowerCase(),
-                        STORAGE_POLICY_TRANSITION_TYPE.toLowerCase(), StoragePolicyStatusEntity.DISABLED.toLowerCase()));
+                        DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE.toLowerCase(), StoragePolicyStatusEntity.DISABLED.toLowerCase()));
 
         // Validate the returned object.
         assertEquals(new StoragePolicy(resultStoragePolicy.getId(), new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-            new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
-            new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED), resultStoragePolicy);
+                new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+                    DO_NOT_TRANSITION_LATEST_VALID), new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.DISABLED),
+            resultStoragePolicy);
         assertTrue(resultStoragePolicy.getId() > storagePolicyEntity.getId());
     }
 
@@ -986,15 +1007,15 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         StoragePolicyUpdateRequest request;
 
         // Try to update a storage policy using non-existing storage policy rule type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest("I_DO_NOT_EXIST", STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1011,7 +1032,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, -1, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                    STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
+                    STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
             fail("Should throw an IllegalArgumentException when using a negative storage policy rule value.");
         }
         catch (IllegalArgumentException e)
@@ -1022,7 +1043,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing business object definition namespace.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, "I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1037,7 +1058,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing business object definition name.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1052,7 +1073,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing business object format file type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                "I_DO_NOT_EXIST", STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                "I_DO_NOT_EXIST", STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1067,7 +1088,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing storage name.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, "I_DO_NOT_EXIST", STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, "I_DO_NOT_EXIST", DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1081,7 +1102,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing storage policy transition type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, I_DO_NOT_EXIST, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, I_DO_NOT_EXIST, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1097,7 +1118,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy using non-existing storage policy status.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, "I_DO_NOT_EXIST");
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, "I_DO_NOT_EXIST");
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1124,13 +1145,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to update a storage policy using storage of a non-S3 storage platform type.
         StoragePolicyUpdateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_3, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1155,8 +1176,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create an S3 storage without any attributes.
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3);
@@ -1164,7 +1185,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy when storage policy filter storage has no S3 bucket name attribute configured.
         StoragePolicyUpdateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1190,8 +1211,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create an S3 storage with the bucket name configured, but without the S3 path prefix validation option configured.
         storageDaoTestHelper
@@ -1201,7 +1222,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy when storage policy filter storage has no S3 path prefix validation enabled.
         StoragePolicyUpdateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1226,8 +1247,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, STORAGE_POLICY_TRANSITION_TYPE_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_2, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE_2,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
 
         // Create an S3 storage with the bucket name configured, the S3 path prefix validation enabled, but without S3 file existence validation enabled.
@@ -1240,7 +1261,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Try to update a storage policy when storage policy filter storage has no S3 file existence validation enabled.
         StoragePolicyUpdateRequest request = storagePolicyServiceTestHelper
             .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME_5, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED);
         try
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, request);
@@ -1264,7 +1285,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         {
             storagePolicyService.updateStoragePolicy(storagePolicyKey, storagePolicyServiceTestHelper
                 .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.DISABLED));
             fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
         }
         catch (ObjectNotFoundException e)
@@ -1286,8 +1307,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy.
         StoragePolicy resultStoragePolicy = storagePolicyService.getStoragePolicy(storagePolicyKey);
@@ -1295,7 +1316,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -1334,8 +1355,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using input parameters with leading and trailing empty spaces.
         StoragePolicy resultStoragePolicy =
@@ -1344,7 +1365,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -1357,8 +1378,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using upper case input parameters.
         StoragePolicy resultStoragePolicy =
@@ -1367,7 +1388,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -1380,8 +1401,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using lower case input parameters.
         StoragePolicy resultStoragePolicy =
@@ -1390,7 +1411,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertEquals(
             new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
-                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
                 new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
     }
 
@@ -1409,5 +1430,265 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
                 String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
                 e.getMessage());
         }
+    }
+
+    // Unit tests for deleteStoragePolicy().
+
+    @Test
+    public void testDeleteStoragePolicy()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy.
+        StoragePolicy resultStoragePolicy = storagePolicyService.deleteStoragePolicy(storagePolicyKey);
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyMissingRequiredParameters()
+    {
+        // Try to delete a storage policy when namespace is not specified.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(BLANK_TEXT, STORAGE_POLICY_NAME));
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to delete a storage policy when storage policy name is not specified.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, BLANK_TEXT));
+            fail("Should throw an IllegalArgumentException when storage policy name is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A storage policy name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyTrimParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using input parameters with leading and trailing empty spaces.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(addWhitespace(STORAGE_POLICY_NAMESPACE_CD), addWhitespace(STORAGE_POLICY_NAME)));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyUpperCaseParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using upper case input parameters.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toUpperCase(), STORAGE_POLICY_NAME.toUpperCase()));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyLowerCaseParameters()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using lower case input parameters.
+        StoragePolicy resultStoragePolicy =
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD.toLowerCase(), STORAGE_POLICY_NAME.toLowerCase()));
+
+        // Validate the returned object.
+        assertEquals(
+            new StoragePolicy(storagePolicyEntity.getId(), storagePolicyKey, new StoragePolicyRule(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE),
+                new StoragePolicyFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID),
+                new StoragePolicyTransition(STORAGE_POLICY_TRANSITION_TYPE), StoragePolicyStatusEntity.ENABLED), resultStoragePolicy);
+
+        // Try to retrieve the deleted storage policy.
+        try
+        {
+            storagePolicyService.getStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteStoragePolicyNoExists()
+    {
+        // Try to delete a non-existing storage policy.
+        try
+        {
+            storagePolicyService.deleteStoragePolicy(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME));
+            fail("Should throw an ObjectNotFoundException when trying to retrieve a non-existing storage policy.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(
+                String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", STORAGE_POLICY_NAME, STORAGE_POLICY_NAMESPACE_CD),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetStoragePolicyKeys()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        StoragePolicyKey storagePolicyKey2 = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey2, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Retrieve the storage policy using input parameter.
+        StoragePolicyKeys resultStoragePolicyKeys =
+            storagePolicyService.getStoragePolicyKeys(STORAGE_POLICY_NAMESPACE_CD);
+
+        StoragePolicyKeys expectedStoragePolicyKeys =  new StoragePolicyKeys(Arrays.asList(storagePolicyKey, storagePolicyKey2));
+
+        // Validate the returned object.
+        assertEquals(expectedStoragePolicyKeys, resultStoragePolicyKeys);
+
+        // Retrieve the storage policy using input parameter with leading and trailing empty spaces.
+        StoragePolicyKeys resultStoragePolicyKeys2 =
+            storagePolicyService.getStoragePolicyKeys(" " + STORAGE_POLICY_NAMESPACE_CD + "   ");
+
+        // Validate the returned object.
+        assertEquals(expectedStoragePolicyKeys, resultStoragePolicyKeys2);
+
+        // Retrieve the storage policy using input parameter with lower case.
+        StoragePolicyKeys resultStoragePolicyKeys3 =
+            storagePolicyService.getStoragePolicyKeys(STORAGE_POLICY_NAMESPACE_CD.toLowerCase());
+
+        // Validate the returned object.
+        assertEquals(expectedStoragePolicyKeys, resultStoragePolicyKeys3);
+
+        // Retrieve the storage policy using input parameter with upper case.
+        StoragePolicyKeys resultStoragePolicyKeys4 =
+            storagePolicyService.getStoragePolicyKeys(STORAGE_POLICY_NAMESPACE_CD.toUpperCase());
+
+        // Validate the returned object.
+        assertEquals(expectedStoragePolicyKeys, resultStoragePolicyKeys4);
+    }
+
+    @Test
+    public void testGetStoragePolicyKeysMissingRequiredParameters() throws Exception
+    {
+        // Try to perform a get without specifying a namespace.
+        try
+        {
+            storagePolicyService.getStoragePolicyKeys(BLANK_TEXT);
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetStoragePolicyKeysNamespaceNoExists() throws Exception
+    {
+        // Try to get all storage policies for a non-existing namespace.
+        assertEquals(new StoragePolicyKeys(new ArrayList<>()), storagePolicyService.getStoragePolicyKeys("I_DO_NOT_EXIST"));
     }
 }

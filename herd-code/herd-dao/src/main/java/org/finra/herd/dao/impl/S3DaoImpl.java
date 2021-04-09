@@ -39,6 +39,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -1067,8 +1069,12 @@ public class S3DaoImpl implements S3Dao
         // Set the optional endpoint, if specified.
         if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
-            LOGGER.info("Configured S3 Endpoint: " + params.getS3Endpoint());
             amazonS3Client.setEndpoint(params.getS3Endpoint());
+        }
+        // Otherwise, set AWS region, if specified.
+        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
+        {
+            amazonS3Client.setRegion(Region.getRegion(Regions.fromName(params.getAwsRegionName())));
         }
 
         // Return the newly created client.

@@ -14,7 +14,9 @@
   limitations under the License.
 """
 # Standard library imports
-import configparser, string, random
+import configparser
+import random
+import string
 import unittest
 from unittest import mock
 
@@ -123,7 +125,8 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         # Mock config.get so each call returns a different value
-        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername',
+                     'dGVzdHBhc3N3b3Jk']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
@@ -139,11 +142,15 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
         # Check other actions
-        actions = ['objects', 'columns', 'lineage', 'samples', 'tags']
+        actions = ['descriptive info', 'sme', 'bus obj def tags', 'columns', 'lineage', 'samples', 'tags']
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
-        test_vars = ['testdomain', 'ObJects', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+        test_vars = ['testdomain', 'descriptive info', 'testexcel', 'testenv', 'testurl', 'testusername',
+                     'dGVzdHBhc3N3b3Jk',
+                     'testdomain', 'SmE', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+                     'testdomain', 'bus obj def tags', 'testexcel', 'testenv', 'testurl', 'testusername',
+                     'dGVzdHBhc3N3b3Jk',
                      'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
                      'testdomain', 'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
                      'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
@@ -233,7 +240,7 @@ class TestUtilityMethods(unittest.TestCase):
 
 class TestObjectAction(unittest.TestCase):
     """
-    Test Suite for Action Objects
+    Test Suite for Action Descriptive Info
 
     """
 
@@ -275,17 +282,337 @@ class TestObjectAction(unittest.TestCase):
         self.controller.load_worksheet = mock.Mock(
             return_value=pd.DataFrame(data=[['item1'], ['item2'], ['item3']], columns=['column1'])
         )
-        self.controller.load_worksheet_tag_types = mock.Mock()
         self.controller.update_bdef_descriptive_info = mock.Mock(
-            side_effect=[mock.DEFAULT, rest.ApiException(reason='Error'), mock.DEFAULT]
+            side_effect=[mock.DEFAULT, rest.ApiException(reason='Error'), Exception('Exception Thrown 1')]
         )
-        self.controller.update_sme = mock.Mock(
-            side_effect=[Exception('Exception Thrown 1'), mock.DEFAULT]
-        )
-        self.controller.update_bdef_tags = mock.Mock()
 
         # Run scenario and check values
         self.controller.load_object()
+        self.assertEqual(self.controller.run_summary['total_rows'], 3)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info(self, mock_descr_info, mock_bdef):
+        """
+        Test of updating business object definition descriptive info
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description=string_generator(string_length=10),
+            descriptive_business_object_format=mock.Mock(
+                business_object_format_file_type=string_generator(string_length=11),
+                business_object_format_usage=string_generator(string_length=12)
+            ),
+            display_name=string_generator(string_length=13)
+        )
+        row = ['namespace', 'bdef_name', string_generator(), string_generator(), string_generator(), string_generator()]
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        mock_descr_info.assert_called_once()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info_no_format(self, mock_descr_info, mock_bdef):
+        """
+        Test of updating business object definition with no descriptive info
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description=string_generator(string_length=10),
+            descriptive_business_object_format=None,
+            display_name=string_generator(string_length=13)
+        )
+        row = ['namespace', 'bdef_name', string_generator(), string_generator(), string_generator(), string_generator()]
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        mock_descr_info.assert_called_once()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info_no_update(self, mock_descr_info, mock_bdef):
+        """
+        Test of no update to business object definition descriptive info
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description='description',
+            descriptive_business_object_format=mock.Mock(
+                business_object_format_file_type='file_type',
+                business_object_format_usage='usage'
+            ),
+            display_name='logical_name',
+            namespace='namespace'
+        )
+        row = ['namespace', 'bdef_name', 'usage', 'file_type', 'logical_name', 'description']
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        mock_descr_info.assert_not_called()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_update_business_object_definition_descriptive_information')
+    def test_update_bdef_descriptive_info_newline_no_update(self, mock_descr_info, mock_bdef):
+        """
+        Test of no update to business object definition descriptive info with new line in description
+
+        """
+        mock_bdef.return_value = mock.Mock(
+            description='description<br>',
+            descriptive_business_object_format=mock.Mock(
+                business_object_format_file_type='file_type',
+                business_object_format_usage='usage'
+            ),
+            display_name='logical_name',
+            namespace='namespace'
+        )
+        row = ['namespace', 'bdef_name', 'usage', 'file_type', 'logical_name', 'description\n']
+
+        # Run scenario and check values
+        self.controller.update_bdef_descriptive_info(0, row)
+        mock_bdef.assert_called_once()
+        mock_descr_info.assert_not_called()
+
+
+class TestSMEAction(unittest.TestCase):
+    """
+    Test Suite for Action SME
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    def test_load_sme_exception(self):
+        """
+        Test of the main load object action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['item1'], ['item2'], ['item3']], columns=['column1'])
+        )
+        self.controller.update_sme = mock.Mock(
+            side_effect=[Exception('Exception Thrown 1'), mock.DEFAULT, rest.ApiException(reason='Error')]
+        )
+
+        # Run scenario and check values
+        self.controller.load_sme()
+        self.assertEqual(self.controller.run_summary['total_rows'], 3)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 4])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1]['message']))
+
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
+    def test_update_sme(self, mock_create_sme, mock_delete_sme, mock_get_sme):
+        """
+        Test of updating business object definition subject matter expert
+
+        """
+        mock_get_sme.return_value = mock.Mock(
+            business_object_definition_subject_matter_expert_keys=[
+                mock.Mock(user_id=string_generator(string_length=9))
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', string_generator()]],
+                          columns=['column1', 'column2', SubjectMatterExpert.SME.value])
+        row = df.iloc[0]
+
+        # Run scenario and check values
+        self.controller.update_sme(0, row)
+        mock_get_sme.assert_called_once()
+        mock_delete_sme.assert_called_once()
+        mock_create_sme.assert_called_once()
+
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
+    def test_update_sme_no_delete(self, mock_create_sme, mock_delete_sme, mock_get_sme):
+        """
+        Test of updating business object definition subject matter expert. No user deleted
+
+        """
+        mock_get_sme.return_value = mock.Mock(
+            business_object_definition_subject_matter_expert_keys=[
+                mock.Mock(user_id='user')
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', 'user, ' + string_generator()]],
+                          columns=['column1', 'column2', SubjectMatterExpert.SME.value])
+        row = df.iloc[0]
+
+        # Run scenario and check values
+        self.controller.update_sme(0, row)
+        mock_get_sme.assert_called_once()
+        mock_delete_sme.assert_not_called()
+        mock_create_sme.assert_called_once()
+
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
+    def test_update_sme_no_create(self, mock_create_sme, mock_delete_sme, mock_get_sme):
+        """
+        Test of updating business object definition subject matter expert. No new user created
+
+        """
+        mock_get_sme.return_value = mock.Mock(
+            business_object_definition_subject_matter_expert_keys=[
+                mock.Mock(user_id=string_generator())
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', '']],
+                          columns=['column1', 'column2', SubjectMatterExpert.SME.value])
+        row = df.iloc[0]
+
+        # Run scenario and check values
+        self.controller.update_sme(0, row)
+        mock_get_sme.assert_called_once()
+        mock_delete_sme.assert_called_once()
+        mock_create_sme.assert_not_called()
+
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
+    def test_update_sme_no_update(self, mock_create_sme, mock_delete_sme, mock_get_sme):
+        """
+        Test of no update to business object definition subject matter expert
+
+        """
+
+        mock_get_sme.return_value = mock.Mock(
+            business_object_definition_subject_matter_expert_keys=[
+                mock.Mock(user_id='user@something.com')
+            ]
+        )
+
+        df = pd.DataFrame(data=[['item1', 'item2', 'user']],
+                          columns=['column1', 'column2', SubjectMatterExpert.SME.value])
+        row = df.iloc[0]
+
+        # Run scenario and check values
+        self.controller.update_sme(0, row)
+        mock_get_sme.assert_called_once()
+        mock_delete_sme.assert_not_called()
+        mock_create_sme.assert_not_called()
+
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
+    @mock.patch(
+        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
+        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
+    def test_update_sme_special_characters(self, mock_create_sme, mock_delete_sme, mock_get_sme):
+        """
+        Test of updating business object definition subject matter expert with special characters
+
+        """
+        mock_get_sme.return_value = mock.Mock(
+            business_object_definition_subject_matter_expert_keys=[
+                mock.Mock(user_id='–user_deleted')
+            ]
+        )
+
+        users = ', '.join([string_generator(), string_generator(), '‘–’', u'\xa0', u'\u2026', u'\u2014'])
+        df = pd.DataFrame(data=[['item1', 'item2', users]],
+                          columns=['column1', 'column2', SubjectMatterExpert.SME.value])
+        row = df.iloc[0]
+
+        # Run scenario and check values
+        self.controller.update_sme(0, row)
+        mock_get_sme.assert_called_once()
+        mock_delete_sme.assert_called_once()
+        self.assertEqual(mock_create_sme.call_count, 6)
+
+
+class TestObjectTagAction(unittest.TestCase):
+    """
+    Test Suite for Action Bus Obj Def Tags
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    def test_load_object_tag_exception(self):
+        """
+        Test of the main load object action with exceptions
+
+        """
+        self.controller.load_worksheet = mock.Mock(
+            return_value=pd.DataFrame(data=[['item1'], ['item2'], ['item3']], columns=['column1'])
+        )
+        self.controller.load_worksheet_tag_types = mock.Mock()
+        self.controller.update_bdef_tags = mock.Mock(
+            side_effect=[Exception('Exception Thrown 1'), rest.ApiException(reason='Error'), mock.DEFAULT]
+        )
+        # Run scenario and check values
+        self.controller.load_object_tags()
         self.assertEqual(self.controller.run_summary['total_rows'], 3)
         self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
                          self.controller.run_summary['total_rows'])
@@ -333,228 +660,6 @@ class TestObjectAction(unittest.TestCase):
         self.assertEqual(mock_tag_api.call_count, 2)
         self.assertEqual(self.controller.tag_types['columns'], [code_1])
 
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_get_business_object_definition')
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_update_business_object_definition_descriptive_information')
-    def test_update_bdef_descriptive_info(self, mock_descr_info, mock_bdef):
-        """
-        Test of updating business object definition descriptive info
-
-        """
-        mock_bdef.return_value = mock.Mock(
-            description=string_generator(string_length=10),
-            descriptive_business_object_format=mock.Mock(
-                business_object_format_file_type=string_generator(string_length=11),
-                business_object_format_usage=string_generator(string_length=12)
-            ),
-            display_name=string_generator(string_length=13)
-        )
-        row = ['namespace', string_generator(), string_generator(), 'bdef_name', string_generator(), string_generator()]
-
-        # Run scenario and check values
-        self.controller.update_bdef_descriptive_info(0, row)
-        mock_bdef.assert_called_once()
-        mock_descr_info.assert_called_once()
-
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_get_business_object_definition')
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_update_business_object_definition_descriptive_information')
-    def test_update_bdef_descriptive_info_no_format(self, mock_descr_info, mock_bdef):
-        """
-        Test of updating business object definition with no descriptive info
-
-        """
-        mock_bdef.return_value = mock.Mock(
-            description=string_generator(string_length=10),
-            descriptive_business_object_format=None,
-            display_name=string_generator(string_length=13)
-        )
-        row = ['namespace', string_generator(), string_generator(), 'bdef_name', string_generator(), string_generator()]
-
-        # Run scenario and check values
-        self.controller.update_bdef_descriptive_info(0, row)
-        mock_bdef.assert_called_once()
-        mock_descr_info.assert_called_once()
-
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_get_business_object_definition')
-    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
-                'business_object_definition_update_business_object_definition_descriptive_information')
-    def test_update_bdef_descriptive_info_no_update(self, mock_descr_info, mock_bdef):
-        """
-        Test of no update to business object definition descriptive info
-
-        """
-        mock_bdef.return_value = mock.Mock(
-            description='description',
-            descriptive_business_object_format=mock.Mock(
-                business_object_format_file_type='file_type',
-                business_object_format_usage='usage'
-            ),
-            display_name='logical_name',
-            namespace='namespace'
-        )
-        row = ['namespace', 'usage', 'file_type', 'bdef_name', 'logical_name', 'description']
-
-        # Run scenario and check values
-        self.controller.update_bdef_descriptive_info(0, row)
-        mock_bdef.assert_called_once()
-        self.assertEqual(mock_descr_info.get.call_count, 0)
-
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
-    def test_update_sme(self, mock_create_sme, mock_delete_sme, mock_get_sme):
-        """
-        Test of updating business object definition subject matter expert
-
-        """
-        mock_get_sme.return_value = mock.Mock(
-            business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id=string_generator(string_length=9))
-            ]
-        )
-
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', string_generator()]],
-                          columns=['column1', 'column2', 'column3', 'column4', Objects.SME.value])
-        row = df.iloc[0]
-
-        # Run scenario and check values
-        self.controller.update_sme(0, row)
-        mock_get_sme.assert_called_once()
-        mock_delete_sme.assert_called_once()
-        mock_create_sme.assert_called_once()
-
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
-    def test_update_sme_no_delete(self, mock_create_sme, mock_delete_sme, mock_get_sme):
-        """
-        Test of updating business object definition subject matter expert. No user deleted
-
-        """
-        mock_get_sme.return_value = mock.Mock(
-            business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='user')
-            ]
-        )
-
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'user, ' + string_generator()]],
-                          columns=['column1', 'column2', 'column3', 'column4', Objects.SME.value])
-        row = df.iloc[0]
-
-        # Run scenario and check values
-        self.controller.update_sme(0, row)
-        mock_get_sme.assert_called_once()
-        self.assertEqual(mock_delete_sme.call_count, 0)
-        mock_create_sme.assert_called_once()
-
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
-    def test_update_sme_no_create(self, mock_create_sme, mock_delete_sme, mock_get_sme):
-        """
-        Test of updating business object definition subject matter expert. No new user created
-
-        """
-        mock_get_sme.return_value = mock.Mock(
-            business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id=string_generator())
-            ]
-        )
-
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', '']],
-                          columns=['column1', 'column2', 'column3', 'column4', Objects.SME.value])
-        row = df.iloc[0]
-
-        # Run scenario and check values
-        self.controller.update_sme(0, row)
-        mock_get_sme.assert_called_once()
-        mock_delete_sme.assert_called_once()
-        self.assertEqual(mock_create_sme.call_count, 0)
-
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
-    def test_update_sme_no_update(self, mock_create_sme, mock_delete_sme, mock_get_sme):
-        """
-        Test of no update to business object definition subject matter expert
-
-        """
-
-        mock_get_sme.return_value = mock.Mock(
-            business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='user@something.com')
-            ]
-        )
-
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'user']],
-                          columns=['column1', 'column2', 'column3', 'column4', Objects.SME.value])
-        row = df.iloc[0]
-
-        # Run scenario and check values
-        self.controller.update_sme(0, row)
-        mock_get_sme.assert_called_once()
-        self.assertEqual(mock_delete_sme.call_count, 0)
-        self.assertEqual(mock_create_sme.call_count, 0)
-
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_get_business_object_definition_subject_matter_experts_by_business_object_definition')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_delete_business_object_definition_subject_matter_expert')
-    @mock.patch(
-        'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
-        'business_object_definition_subject_matter_expert_create_business_object_definition_subject_matter_expert')
-    def test_update_sme_special_characters(self, mock_create_sme, mock_delete_sme, mock_get_sme):
-        """
-        Test of updating business object definition subject matter expert with special characters
-
-        """
-        mock_get_sme.return_value = mock.Mock(
-            business_object_definition_subject_matter_expert_keys=[
-                mock.Mock(user_id='–user_deleted')
-            ]
-        )
-
-        users = ', '.join([string_generator(), string_generator(), '‘–’', u'\xa0', u'\u2026', u'\u2014'])
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', users]],
-                          columns=['column1', 'column2', 'column3', 'column4', Objects.SME.value])
-        row = df.iloc[0]
-
-        # Run scenario and check values
-        self.controller.update_sme(0, row)
-        mock_get_sme.assert_called_once()
-        mock_delete_sme.assert_called_once()
-        self.assertEqual(mock_create_sme.call_count, 6)
-
     @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
                 'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
     @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
@@ -583,8 +688,8 @@ class TestObjectAction(unittest.TestCase):
             ]
         )
 
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ']],
-                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1'])
+        df = pd.DataFrame(data=[['item1', 'item2', 'tag1, tag2 ']],
+                          columns=['Column1', 'column2', 'Display Name 1'])
         row = df.iloc[0]
 
         # Tag Type Code has a corresponding Excel Worksheel Display Column Name
@@ -622,8 +727,8 @@ class TestObjectAction(unittest.TestCase):
             ]
         )
 
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ', tag_code_1]],
-                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1', 'Display Name 2'])
+        df = pd.DataFrame(data=[['item1', 'item2', 'tag1, tag2 ', tag_code_1]],
+                          columns=['Column1', 'column2', 'Display Name 1', 'Display Name 2'])
         row = df.iloc[0]
 
         # Tag Type Code has a corresponding Excel Worksheel Display Column Name
@@ -670,8 +775,8 @@ class TestObjectAction(unittest.TestCase):
             ]
         )
 
-        df = pd.DataFrame(data=[['item1', 'item2', 'item3', 'item4', 'tag1, tag2 ']],
-                          columns=['Column1', 'column2', 'column3', 'column4', 'Display Name 1'])
+        df = pd.DataFrame(data=[['item1', 'item2', 'tag1, tag2 ']],
+                          columns=['Column1', 'column2', 'Display Name 1'])
         row = df.iloc[0]
 
         # Tag Type Code has a corresponding Excel Worksheel Display Column Name
@@ -1106,6 +1211,38 @@ class TestColumnAction(unittest.TestCase):
                 'business_object_definition_column_delete_business_object_definition_column')
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_create_business_object_definition_column')
+    def test_update_bdef_columns_newline_no_update(self, mock_create_column, mock_delete_column):
+        """
+        Test of no update to schema columns with new line in description
+
+        """
+        key = (string_generator(), string_generator())
+        schema = str.upper(string_generator()).strip()
+        column = string_generator()
+        description = string_generator()
+        self.controller.format_columns[key] = pd.DataFrame(
+            data=[[schema, column, description + '<br>', True]],
+            columns=[Columns.SCHEMA_NAME.value, Columns.COLUMN_NAME.value, Columns.DESCRIPTION.value, 'Found'])
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[schema, column, description + '\n']],
+            columns=[Columns.SCHEMA_NAME.value, Columns.COLUMN_NAME.value, Columns.DESCRIPTION.value])
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_bdef_columns(key, index_array)
+        self.assertEqual(mock_create_column.call_count, 0)
+        self.assertEqual(mock_delete_column.call_count, 0)
+        self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         len(index_array))
+        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_delete_business_object_definition_column')
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_create_business_object_definition_column')
     def test_update_bdef_columns_add_column(self, mock_create_column, mock_delete_column):
         """
         Test of updating schema columns by adding a new bdef column
@@ -1435,6 +1572,114 @@ class TestLineageAction(unittest.TestCase):
                 'business_object_format_update_business_object_format_parents')
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_get_business_object_format')
+    def test_update_lineage_row_difference_bdata(self, mock_format, mock_update):
+        """
+        Test of business object format lineage with difference in list length between return value and dataframe
+
+        """
+        namespace = ['namespace_a', 'namespace_b', 'namespace_c']
+        bdef_name = ['bdef_name_a', 'bdef_name_b', 'bdef_name_c']
+        usage = ['usage_a', 'usage_b', 'usage_c']
+        file_type = ['file_type_a', 'file_type_b', 'file_type_c']
+
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[
+                mock.Mock(
+                    namespace=namespace[0],
+                    business_object_definition_name=bdef_name[0],
+                    business_object_format_usage=usage[0],
+                    business_object_format_file_type=file_type[0]
+                ),
+                mock.Mock(
+                    namespace=namespace[1],
+                    business_object_definition_name=bdef_name[1],
+                    business_object_format_usage=usage[1],
+                    business_object_format_file_type=file_type[1]
+                ),
+                mock.Mock(
+                    namespace=namespace[2],
+                    business_object_definition_name=bdef_name[2],
+                    business_object_format_usage=usage[2],
+                    business_object_format_file_type=file_type[2]
+                )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[['namespace', 'definition', 'usage', 'file type', namespace[1], bdef_name[1], usage[1],
+                   file_type[1]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[0], bdef_name[0], usage[0],
+                   file_type[0]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', '']],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
+    def test_update_lineage_row_difference_excel(self, mock_format, mock_update):
+        """
+        Test of business object format lineage with difference in list length between return value and dataframe
+
+        """
+        namespace = ['namespace_a', 'namespace_b', 'namespace_c']
+        bdef_name = ['bdef_name_a', 'bdef_name_b', 'bdef_name_c']
+        usage = ['usage_a', 'usage_b', 'usage_c']
+        file_type = ['file_type_a', 'file_type_b', 'file_type_c']
+
+        mock_format.return_value = mock.Mock(
+            business_object_format_parents=[
+                mock.Mock(
+                    namespace=namespace[0],
+                    business_object_definition_name=bdef_name[0],
+                    business_object_format_usage=usage[0],
+                    business_object_format_file_type=file_type[0]
+                ),
+                mock.Mock(
+                    namespace=namespace[1],
+                    business_object_definition_name=bdef_name[1],
+                    business_object_format_usage=usage[1],
+                    business_object_format_file_type=file_type[1]
+                )]
+        )
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[['namespace', 'definition', 'usage', 'file type', namespace[1], bdef_name[1], usage[1],
+                   file_type[1]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[0], bdef_name[0], usage[0],
+                   file_type[0]],
+                  ['namespace', 'definition', 'usage', 'file type', '', '', '', ''],
+                  ['namespace', 'definition', 'usage', 'file type', namespace[2], bdef_name[2], usage[2],
+                   file_type[2]]],
+            columns=self.parent_columns)
+
+        key = ('namespace', 'definition', 'usage', 'file type')
+        index_array = self.controller.data_frame.index.tolist()
+
+        # Run scenario and check values
+        self.controller.update_lineage(key, index_array)
+        self.assertEqual(mock_update.call_count, 1)
+        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
+        self.assertTrue(
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_update_business_object_format_parents')
+    @mock.patch('herdsdk.BusinessObjectFormatApi.'
+                'business_object_format_get_business_object_format')
     def test_update_lineage_empty(self, mock_format, mock_update):
         """
         Test of updating business object format lineage removing all parents
@@ -1512,7 +1757,7 @@ class TestSampleAction(unittest.TestCase):
         """
         self.controller.load_worksheet = mock.Mock(
             return_value=pd.DataFrame(data=[['namespace', 'definition']],
-                                      columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value])
+                                      columns=[Samples.NAMESPACE.value, Samples.DEFINITION_NAME.value])
         )
         self.controller.check_sample_files = mock.Mock()
         self.controller.get_bdef_sample_files = mock.Mock()
@@ -1529,7 +1774,7 @@ class TestSampleAction(unittest.TestCase):
         """
         self.controller.load_worksheet = mock.Mock(
             return_value=pd.DataFrame(data=[['namespace1', 'definition1'], ['namespace2', 'definition2']],
-                                      columns=[Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value]
+                                      columns=[Samples.NAMESPACE.value, Samples.DEFINITION_NAME.value]
                                       )
         )
 
@@ -1559,27 +1804,11 @@ class TestSampleAction(unittest.TestCase):
         """
         self.controller.data_frame = pd.DataFrame(
             data=[[string_generator()], [''], ['']],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
 
         # Run scenario and check values
         self.controller.check_sample_files()
         self.assertEqual(self.controller.run_summary['success_rows'], 2)
-
-    def test_run_aws_command_no_command_found(self):
-        """
-        Test of getting aws method with no commmand found
-
-        """
-        resp = mock.Mock(
-            aws_access_key='access',
-            aws_secret_key='secret',
-            aws_session_token='token',
-            aws_s3_bucket_name='bucket',
-            s3_key_prefix='prefix'
-        )
-
-        return_value = self.controller.run_aws_command('s3_err', resp, 'path', 'file')
-        self.assertTrue('Command s3_err not found' in return_value)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1650,7 +1879,7 @@ class TestSampleAction(unittest.TestCase):
 
         self.controller.data_frame = pd.DataFrame(
             data=[[file_name]],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
         key = (string_generator(), string_generator())
         index_array = self.controller.data_frame.index.tolist()
 
@@ -1701,7 +1930,7 @@ class TestSampleAction(unittest.TestCase):
 
         self.controller.data_frame = pd.DataFrame(
             data=[[file_name]],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
         key = (string_generator(), string_generator())
         index_array = self.controller.data_frame.index.tolist()
 
@@ -1753,7 +1982,7 @@ class TestSampleAction(unittest.TestCase):
 
         self.controller.data_frame = pd.DataFrame(
             data=[[file_name], [file_name]],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
         key = (string_generator(), string_generator())
         index_array = self.controller.data_frame.index.tolist()
 
@@ -1804,7 +2033,7 @@ class TestSampleAction(unittest.TestCase):
 
         self.controller.data_frame = pd.DataFrame(
             data=[[file_name]],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
         key = (string_generator(), string_generator())
         index_array = self.controller.data_frame.index.tolist()
 
@@ -1855,7 +2084,7 @@ class TestSampleAction(unittest.TestCase):
 
         self.controller.data_frame = pd.DataFrame(
             data=[[file_name]],
-            columns=[Objects.SAMPLE.value])
+            columns=[Samples.SAMPLE.value])
         key = (string_generator(), string_generator())
         index_array = self.controller.data_frame.index.tolist()
 
@@ -1877,6 +2106,97 @@ class TestSampleAction(unittest.TestCase):
         self.assertEqual(mock_remove.call_count, 0)
         self.assertEqual(mock_upload.call_count, 0)
         self.assertEqual(mock_download.call_count, 1)
+
+    def test_run_aws_command_no_command_found(self):
+        """
+        Test of getting aws method with no commmand found
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix'
+        )
+
+        return_value = self.controller.run_aws_command('s3_err', resp, 'path', 'file')
+        self.assertTrue('Command s3_err not found' in return_value)
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.upload_file')
+    def test_upload_file(self, mock_upload):
+        """
+        Test of boto3 upload_file method getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id=''
+        )
+        args = {
+            'ServerSideEncryption': 'AES256'
+        }
+        mock_upload.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_upload', resp, 'path', 'file')
+        mock_upload.assert_called_with(filename='path',
+                                       bucket=resp.aws_s3_bucket_name,
+                                       key=resp.s3_key_prefix + 'file',
+                                       extra_args=args)
+        mock_upload.assert_called_once()
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.upload_file')
+    def test_upload_file_kms(self, mock_upload):
+        """
+        Test of boto3 upload_file method with kms key getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id='id'
+        )
+        args = {
+            'ServerSideEncryption': 'aws:kms',
+            'SSEKMSKeyId': resp.aws_kms_key_id
+        }
+        mock_upload.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_upload', resp, 'path', 'file')
+        mock_upload.assert_called_with(filename='path',
+                                       bucket=resp.aws_s3_bucket_name,
+                                       key=resp.s3_key_prefix + 'file',
+                                       extra_args=args)
+        mock_upload.assert_called_once()
+
+    @mock.patch('boto3.s3.transfer.S3Transfer.download_file')
+    def test_download_file(self, mock_download):
+        """
+        Test of boto3 download_file method getting correct args
+
+        """
+        resp = mock.Mock(
+            aws_access_key='access',
+            aws_secret_key='secret',
+            aws_session_token='token',
+            aws_s3_bucket_name='bucket',
+            s3_key_prefix='prefix',
+            aws_kms_key_id='id'
+        )
+        mock_download.return_value = mock.Mock()
+
+        self.controller.run_aws_command('s3_download', resp, 'path', 'file')
+        mock_download.assert_called_with(bucket=resp.aws_s3_bucket_name,
+                                         key=resp.s3_key_prefix + 'file',
+                                         filename='path')
+        mock_download.assert_called_once()
 
 
 class TestTagAction(unittest.TestCase):
@@ -2388,6 +2708,56 @@ class TestTagAction(unittest.TestCase):
             mock.Mock(
                 display_name=name_2,
                 description=None,
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
+                parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                search_score_multiplier=None
+            )
+        ]
+
+        # Run scenario and check values
+        run_fail = self.controller.update_tag_list()
+        self.assertFalse(run_fail)
+        self.assertEqual(mock_tags.call_count, 2)
+        self.assertEqual(mock_update.call_count, 0)
+        self.assertEqual(mock_create.call_count, 0)
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+
+    @mock.patch('herdsdk.TagApi.tag_create_tag')
+    @mock.patch('herdsdk.TagApi.tag_update_tag')
+    @mock.patch('herdsdk.TagApi.tag_get_tag')
+    def test_update_tag_list_newline_no_update(self, mock_tags, mock_update, mock_create):
+        """
+        Test of the updating tag list with no update to description with new line
+
+        """
+        name_1 = 'name'
+        name_2 = 'name 2'
+        tag_type = str.upper(string_generator()).strip()
+        parent_tag = str.upper(string_generator()).strip()
+        child_tag = str.upper(string_generator()).strip()
+        description = string_generator()
+
+        self.controller.tag_list = {
+            tag_type: [parent_tag, child_tag],
+            'remove': []
+        }
+
+        self.controller.data_frame = pd.DataFrame(
+            data=[[name_1, tag_type, parent_tag, description + '\n', ''],
+                  [name_2, tag_type, child_tag, description + '\n', name_1]],
+            columns=[Tags.NAME.value, Tags.TAGTYPE.value, Tags.TAG.value, Tags.DESCRIPTION.value, Tags.PARENT.value])
+
+        mock_tags.side_effect = [
+            mock.Mock(
+                display_name=name_1,
+                description=description + '<br>',
+                tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
+                parent_tag_key=None,
+                search_score_multiplier=None
+            ),
+            mock.Mock(
+                display_name=name_2,
+                description=description + '<br>',
                 tag_key=mock.Mock(tag_type_code=tag_type, tag_code=child_tag),
                 parent_tag_key=mock.Mock(tag_type_code=tag_type, tag_code=parent_tag),
                 search_score_multiplier=None

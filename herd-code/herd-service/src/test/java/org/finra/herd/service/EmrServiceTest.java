@@ -47,6 +47,7 @@ import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsResult;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -108,15 +109,28 @@ public class EmrServiceTest extends AbstractServiceTest
     @Qualifier(value = "emrServiceImpl")
     private EmrService emrServiceImpl;
 
+    protected NamespaceEntity namespaceEntity = null;
+
+    @Before
+    public void before()
+    {
+        if (namespaceEntity == null)
+        {
+            // Create and persist the namespace entity.
+            namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+            // Create a namespace IAM role authorization.
+            namespaceIamRoleAuthorizationServiceTestHelper
+                .createNamespaceIamRoleAuthorization(NAMESPACE, TEST_EC2_NODE_IAM_PROFILE_NAME, TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
+        }
+    }
+
     /**
      * This method tests the happy path scenario by providing all the parameters
      */
     @Test
     public void testCreateEmrCluster() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         assertEquals("scaleDownBehavior", expectedEmrClusterDefinition.getScaleDownBehavior());
@@ -148,9 +162,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterAdditionalInfo() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -174,9 +185,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testCreateEmrClusterAmazonBadRequest() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -197,9 +205,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testCreateEmrClusterAmazonObjectNotFound() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -220,9 +225,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = AmazonServiceException.class)
     public void testCreateEmrClusterAmazonOtherException() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -243,9 +245,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterBlankParams() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -274,9 +273,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDryRunFalseNoOverride() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -307,9 +303,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDryRunTrueNoOverride() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -340,9 +333,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDuplicate() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -372,9 +362,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterInstanceNotDefined() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create the test EMR cluster definition entity with missing instance definitions.
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -401,9 +388,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testCreateEmrClusterInvalidDefinition() throws Exception
     {
-        // Create the namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create the emr cluster request without registering the namespace entity - ${TEST_ACTIVITI_NAMESPACE_CD}
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
 
@@ -473,9 +457,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterMandatoryTagsNull() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -504,9 +485,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterMultipleBootstrap() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -541,9 +519,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideAllNull() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -573,9 +548,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceTo0InstanceCountAssertSuccess() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
@@ -597,9 +569,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceToNegativeInstanceCountAssertException() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
@@ -628,9 +597,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceToNullAssertSuccess() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
@@ -652,9 +618,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideHadoopConfigurations() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -689,9 +652,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideList() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -748,9 +708,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideObject() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -784,9 +741,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideInstanceDefinitionsWithInstanceFleets() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -822,9 +776,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideInstanceFleetsWithInstanceDefinitions() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create an EMR cluster definition that uses instance fleets instead of instance definitions.
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -869,7 +820,6 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideScalar() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -884,7 +834,11 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setAdditionalInfo(emrClusterDefinitionOverride.getAdditionalInfo());
         emrClusterDefinitionOverride.setAmiVersion("test" + Math.random());
         expectedEmrClusterDefinition.setAmiVersion(emrClusterDefinitionOverride.getAmiVersion());
-        emrClusterDefinitionOverride.setEc2NodeIamProfileName("test" + Math.random());
+        String ec2NodeIamProfileName = "test" + Math.random();
+        // Create a namespace IAM role authorization.
+        namespaceIamRoleAuthorizationServiceTestHelper
+            .createNamespaceIamRoleAuthorization(NAMESPACE, ec2NodeIamProfileName, TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
+        emrClusterDefinitionOverride.setEc2NodeIamProfileName(ec2NodeIamProfileName);
         expectedEmrClusterDefinition.setEc2NodeIamProfileName(emrClusterDefinitionOverride.getEc2NodeIamProfileName());
         emrClusterDefinitionOverride.setEncryptionEnabled(!expectedEmrClusterDefinition.isEncryptionEnabled());
         expectedEmrClusterDefinition.setEncryptionEnabled(emrClusterDefinitionOverride.isEncryptionEnabled());
@@ -900,7 +854,11 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setLogBucket(emrClusterDefinitionOverride.getLogBucket());
         emrClusterDefinitionOverride.setPigVersion("test" + Math.random());
         expectedEmrClusterDefinition.setPigVersion(emrClusterDefinitionOverride.getPigVersion());
-        emrClusterDefinitionOverride.setServiceIamRole("test" + Math.random());
+        String serviceIamRole = "test" + Math.random();
+        // Create a namespace IAM role authorization.
+        namespaceIamRoleAuthorizationServiceTestHelper
+            .createNamespaceIamRoleAuthorization(NAMESPACE, serviceIamRole, TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
+        emrClusterDefinitionOverride.setServiceIamRole(serviceIamRole);
         expectedEmrClusterDefinition.setServiceIamRole(emrClusterDefinitionOverride.getServiceIamRole());
         emrClusterDefinitionOverride.setSshKeyPairName("test" + Math.random());
         expectedEmrClusterDefinition.setSshKeyPairName(emrClusterDefinitionOverride.getSshKeyPairName());
@@ -944,9 +902,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfiguration() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -967,9 +922,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationInvalidReleaseLabel() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -994,9 +946,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationNoReleaseLabel() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1021,9 +970,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationReleaseLabelWithPrefix() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1047,9 +993,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterServiceRole() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1070,9 +1013,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterStartupSteps() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -1123,9 +1063,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSupportedProduct() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1147,9 +1084,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterWithTaskInstances() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1181,9 +1115,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterWithInstanceFleets() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Retrieve the EMR cluster definition.
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1210,9 +1141,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterWithSecurityGroups() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Retrieve the EMR cluster definition.
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1241,9 +1169,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideSecurityGroups() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         expectedEmrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
@@ -1282,9 +1207,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterWrongInstanceConfigs() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
 
@@ -1308,9 +1230,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testEmrAddSteps() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1334,9 +1253,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testEmrAddStepsAllTypes() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1423,9 +1339,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testEmrAddStepsAmazonBadRequest() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1444,9 +1357,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testEmrAddStepsAmazonObjectNotFound() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1465,9 +1375,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = AmazonServiceException.class)
     public void testEmrAddStepsAmazonOtherException() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1486,9 +1393,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testEmrAddStepsHadoopNoMainClass() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1518,9 +1422,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testEmrAddStepsInvalidCluster() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1598,9 +1499,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterById() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1648,9 +1546,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterByIdWithFleetInstance() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -1687,9 +1582,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = AmazonServiceException.class)
     public void testGetEmrClusterByIdAmazonException() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1708,9 +1600,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testGetEmrClusterByIdDoesNotExist() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1729,9 +1618,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testGetEmrClusterByIdDoesNotExistForNamespace() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1764,9 +1650,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterByIdWithStepId() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1818,9 +1701,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterByName() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1848,9 +1728,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterIdByNameForBlank() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
 
@@ -1865,9 +1742,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testTerminateEmrCluster() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1895,9 +1769,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = AmazonServiceException.class)
     public void testTerminateEmrClusterAmazonException() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -1918,9 +1789,6 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testTerminateEmrClusterNoCluster() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 

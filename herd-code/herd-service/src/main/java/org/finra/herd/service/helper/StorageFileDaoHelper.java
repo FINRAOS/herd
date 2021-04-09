@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -46,10 +47,12 @@ public class StorageFileDaoHelper
      *
      * @param storageUnitEntity the storage unit entity
      * @param storageFiles the list of storage files
+     * @param directoryPath the directory path for the storage file
      *
      * @return the list storage file entities
      */
-    public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles)
+    public List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(StorageUnitEntity storageUnitEntity, List<StorageFile> storageFiles,
+        String directoryPath)
     {
         List<StorageFileEntity> storageFileEntities = new ArrayList<>();
 
@@ -58,7 +61,26 @@ public class StorageFileDaoHelper
             StorageFileEntity storageFileEntity = new StorageFileEntity();
             storageFileEntities.add(storageFileEntity);
             storageFileEntity.setStorageUnit(storageUnitEntity);
-            storageFileEntity.setPath(storageFile.getFilePath());
+
+            if (StringUtils.isNotBlank(directoryPath))
+            {
+                // Handle empty folder S3 marker as a special case.
+                if (StringUtils.equals(storageFile.getFilePath(), directoryPath + StorageFileEntity.S3_EMPTY_PARTITION))
+                {
+                    storageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+                }
+                // Otherwise, minimize the file path.
+                else
+                {
+                    // Minimize the file path.
+                    storageFileEntity.setPath(HerdStringUtils.getMinimizedFilePath(storageFile.getFilePath(), directoryPath));
+                }
+            }
+            else
+            {
+                storageFileEntity.setPath(storageFile.getFilePath());
+            }
+
             storageFileEntity.setFileSizeBytes(storageFile.getFileSizeBytes());
             storageFileEntity.setRowCount(storageFile.getRowCount());
         }

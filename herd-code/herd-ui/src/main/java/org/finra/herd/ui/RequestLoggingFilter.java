@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.ui;
 
 import java.io.BufferedReader;
@@ -30,8 +30,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.ParseException;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -39,6 +43,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import org.finra.herd.core.HerdStringUtils;
+import org.finra.herd.dao.helper.XmlHelper;
 
 /**
  * A servlet filter that logs incoming HTTP requests. This approach is similar to the Spring CommonsRequestLoggingFilter, but is customized to ensure that the
@@ -258,7 +263,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter
 
             // Append the HTTP method.
             message.append(";method=").append(request.getMethod());
-           
+
             // Append the client information.
             if (isIncludeClientInfo())
             {
@@ -291,12 +296,43 @@ public class RequestLoggingFilter extends OncePerRequestFilter
                 if (payload != null && payload.length > 0)
                 {
                     payloadString = new String(payload, 0, payload.length, getCharacterEncoding());
+                    String contentTypeRaw = request.getContentType();
+                    if (contentTypeRaw != null)
+                    {
+                        ContentType contentType = null;
+                        try
+                        {
+                            contentType = ContentType.parse(contentTypeRaw);
+                        }
+                        catch (ParseException e)
+                        {
+                            LOGGER.warn("Unable to interpret request content type: contentTypeRaw={}", contentTypeRaw, e);
+                        }
+
+                        if (contentType != null &&
+                            org.apache.commons.lang3.StringUtils.equalsIgnoreCase(ContentType.APPLICATION_XML.getMimeType(), contentType.getMimeType()))
+                        {
+                            try
+                            {
+                                payloadString = XmlHelper.createPrettyPrint(payloadString);
+                            }
+                            catch (TransformerFactoryConfigurationError e)
+                            {
+                                LOGGER.warn("Unable to configure transformation service to reformat payload", e);
+                            }
+                            catch (TransformerException e)
+                            {
+                                LOGGER.warn("Unable to reformat payload", e);
+                            }
+                        }
+                    }
                 }
             }
             catch (UnsupportedEncodingException e)
             {
                 payloadString = "[Unknown]";
             }
+
 
             // Append the request payload if present.
             if (isIncludePayload() && StringUtils.hasLength(payloadString))

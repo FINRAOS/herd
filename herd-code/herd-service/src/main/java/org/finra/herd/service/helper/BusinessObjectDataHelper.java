@@ -21,8 +21,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -48,8 +52,10 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
+import org.finra.herd.model.dto.BusinessObjectDataVersionLessKey;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -434,6 +440,62 @@ public class BusinessObjectDataHelper
     }
 
     /**
+     * Select all latest valid business object data from the specified list of business object data entities. This method does not look at entities outside of
+     * the specified list.
+     *
+     * @param businessObjectDataEntities the list of business object data entities
+     *
+     * @return the set of latest valid business object data entities selected from the specified list of entities
+     */
+    public Set<BusinessObjectDataEntity> getLatestValidBusinessObjectDataEntities(List<BusinessObjectDataEntity> businessObjectDataEntities)
+    {
+        // Use hash map to filter in entries using version-less business object data alternate key as map key.
+        Map<BusinessObjectDataVersionLessKey, BusinessObjectDataEntity> latestValidBusinessObjectDataEntities = new HashMap<>();
+
+        // Process each business object data entity in the list.
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
+        {
+            // Only process business object data entities that are in VALID state.
+            if (StringUtils.equals(businessObjectDataEntity.getStatusCode(), BusinessObjectDataStatusEntity.VALID))
+            {
+                // Get business object data version-less key from the entity.
+                BusinessObjectDataVersionLessKey businessObjectDataVersionLessKey =
+                    getBusinessObjectDataVersionLessKeyFromBusinessObjectDataEntity(businessObjectDataEntity);
+
+                // Try to retrieve latest valid business object data entity that is currently associated with this business object data version-less key.
+                BusinessObjectDataEntity latestValidBusinessObjectDataEntity = latestValidBusinessObjectDataEntities.get(businessObjectDataVersionLessKey);
+
+                // If this business object data version-less key is not in the map, add it along with the relative business object data entity.
+                if (latestValidBusinessObjectDataEntity == null)
+                {
+                    latestValidBusinessObjectDataEntities.put(businessObjectDataVersionLessKey, businessObjectDataEntity);
+                }
+                // Otherwise, check if this business object data entity is the latest found so far for this business object data version-less key.
+                else
+                {
+                    // If this business object data entity has greater format version, store it as the latest valid for this version-less key.
+                    if (businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion() >
+                        latestValidBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion())
+                    {
+                        latestValidBusinessObjectDataEntities.put(businessObjectDataVersionLessKey, businessObjectDataEntity);
+                    }
+                    // Otherwise, if business object format versions are equal, then compare business object data versions and
+                    // if this business object data entity has greater data version, store it as the latest valid for this version-less key.
+                    else if (businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion()
+                        .equals(latestValidBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion()) &&
+                        businessObjectDataEntity.getVersion() > latestValidBusinessObjectDataEntity.getVersion())
+                    {
+                        latestValidBusinessObjectDataEntities.put(businessObjectDataVersionLessKey, businessObjectDataEntity);
+                    }
+                }
+            }
+        }
+
+        // Return a set of the latest valid business object data entities.
+        return new HashSet<>(latestValidBusinessObjectDataEntities.values());
+    }
+
+    /**
      * Returns a partition filter that the specified business object data key would match to. The filter is build as per specified sample partition filter.
      *
      * @param businessObjectDataKey the business object data key
@@ -531,7 +593,6 @@ public class BusinessObjectDataHelper
      * @param storageName the storage name
      *
      * @return the storage unit
-     *
      * @throws IllegalStateException if business object data has no storage unit with the specified storage name
      */
     public StorageUnit getStorageUnitByStorageName(BusinessObjectData businessObjectData, String storageName) throws IllegalStateException
@@ -751,7 +812,7 @@ public class BusinessObjectDataHelper
      *
      * @param registrationDateRangeFilter the registration date range
      */
-    public void validateRegistrationDateRangeFilter(RegistrationDateRangeFilter registrationDateRangeFilter)
+    void validateRegistrationDateRangeFilter(RegistrationDateRangeFilter registrationDateRangeFilter)
     {
         Assert.isTrue(registrationDateRangeFilter.getStartRegistrationDate() != null || registrationDateRangeFilter.getEndRegistrationDate() != null,
             "Either start registration date or end registration date must be specified.");
@@ -771,7 +832,7 @@ public class BusinessObjectDataHelper
      *
      * @throws IllegalArgumentException if a sub-partition value is missing or not valid
      */
-    public void validateSubPartitionValues(List<String> subPartitionValues) throws IllegalArgumentException
+    void validateSubPartitionValues(List<String> subPartitionValues) throws IllegalArgumentException
     {
         int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
 
@@ -782,5 +843,33 @@ public class BusinessObjectDataHelper
         {
             subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
         }
+    }
+
+    /**
+     * Returns all parts of business object data alternate key without business object format and business object data versions. Please note that business
+     * object format usage is returned in all uppercase, since it is not a database lookup value.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the business object data version-less alternate key
+     */
+    private BusinessObjectDataVersionLessKey getBusinessObjectDataVersionLessKeyFromBusinessObjectDataEntity(BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        return getBusinessObjectDataVersionLessKeyFromBusinessObjectDataKey(getBusinessObjectDataKey(businessObjectDataEntity));
+    }
+
+    /**
+     * Returns all parts of business object data alternate key without business object format and business object data versions. Please note that business
+     * object format usage is returned in all uppercase, since it is not a database lookup value.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object data version-less alternate key
+     */
+    private BusinessObjectDataVersionLessKey getBusinessObjectDataVersionLessKeyFromBusinessObjectDataKey(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return new BusinessObjectDataVersionLessKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+            StringUtils.upperCase(businessObjectDataKey.getBusinessObjectFormatUsage()), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues());
     }
 }

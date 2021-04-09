@@ -16,13 +16,15 @@
 from enum import Enum
 
 class Menu(Enum):
-    OBJECTS = 'Objects'
+    OBJECTS = 'Descriptive Info'
+    SME = 'SME'
+    OBJECT_TAG = 'Bus Obj Def Tags'
     COLUMNS = 'Columns'
     LINEAGE = 'Lineage'
     SAMPLES = 'Samples'
     TAGS = 'Tags'
     EXPORT = 'Export BDef'
-    ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PROD-CT']
+    ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PRODY-DI', 'PRODY-QI']
 
 class Summary(Enum):
     CHANGES = 'changes'
@@ -30,10 +32,25 @@ class Summary(Enum):
     ERRORS = 'errors'
 
 class Objects(Enum):
-    WORKSHEET = 'Bus Obj Definition'
+    WORKSHEET = 'Bus Obj Def Descriptive Info'
+    NAMESPACE = 'Bus Obj Def Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
+
+class SubjectMatterExpert(Enum):
+    WORKSHEET = 'Bus Obj Def SME'
     NAMESPACE = 'Bus Obj Def Namespace'
     DEFINITION_NAME = 'Bus Obj Def Name'
     SME = 'Bus Obj Def SME User ID'
+
+class ObjectTags(Enum):
+    WORKSHEET = 'Bus Obj Def Tags'
+    NAMESPACE = 'Bus Obj Def Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
+
+class Samples(Enum):
+    WORKSHEET = 'Bus Obj Def Samples'
+    NAMESPACE = 'Bus Obj Def Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
     SAMPLE = 'Link to Sample Data'
 
 class Columns(Enum):

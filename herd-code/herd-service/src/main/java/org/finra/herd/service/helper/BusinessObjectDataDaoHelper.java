@@ -15,6 +15,7 @@
  */
 package org.finra.herd.service.helper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,14 +29,18 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.ExpectedPartitionValueDao;
 import org.finra.herd.dao.StorageUnitDao;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
@@ -76,6 +81,8 @@ import org.finra.herd.service.S3Service;
 @Component
 public class BusinessObjectDataDaoHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataDaoHelper.class);
+
     private static final List<String> NULL_VALUE_LIST = Arrays.asList((String) null);
 
     @Autowired
@@ -107,6 +114,9 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private ExpectedPartitionValueDao expectedPartitionValueDao;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private MessageNotificationEventService messageNotificationEventService;
@@ -146,7 +156,9 @@ public class BusinessObjectDataDaoHelper
      * @param partitionValueFilters the list of partition value filters
      * @param standalonePartitionValueFilter the standalone partition value filter
      * @param businessObjectFormatKey the business object format key
-     * @param businessObjectDataVersion the business object data version
+     * @param businessObjectDataVersion the optional business object data version, maybe null
+     * @param businessObjectDataStatusEntity the optional business object data status entity, maybe null. This parameter is ignored when the business object
+     * data version is specified
      * @param storageEntities the optional list of storage entities
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
@@ -156,8 +168,9 @@ public class BusinessObjectDataDaoHelper
      * @return the list of partition filters
      */
     public List<List<String>> buildPartitionFilters(List<PartitionValueFilter> partitionValueFilters, PartitionValueFilter standalonePartitionValueFilter,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, BusinessObjectFormatEntity businessObjectFormatEntity)
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         // Build a list of partition value filters to process based on the specified partition value filters.
         List<PartitionValueFilter> partitionValueFiltersToProcess = getPartitionValuesToProcess(partitionValueFilters, standalonePartitionValueFilter);
@@ -184,7 +197,7 @@ public class BusinessObjectDataDaoHelper
             // Get unique and sorted list of partition values to check the availability for.
             List<String> uniqueAndSortedPartitionValues =
                 getPartitionValues(partitionValueFilter, partitionKey, partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, businessObjectFormatEntity);
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, businessObjectFormatEntity);
 
             // Add this partition value filter to the map.
             List<String> previousPartitionValues = partitionValues.put(partitionColumnPosition - 1, uniqueAndSortedPartitionValues);
@@ -218,7 +231,7 @@ public class BusinessObjectDataDaoHelper
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request)
     {
         // By default, fileSize value is required.
-        return createBusinessObjectData(request, true);
+        return createBusinessObjectData(request, true, false);
     }
 
     /**
@@ -226,10 +239,11 @@ public class BusinessObjectDataDaoHelper
      *
      * @param request the request
      * @param fileSizeRequired specifies if fileSizeBytes value is required or not
+     * @param useFullFilePath specifies if a full file path is used
      *
      * @return the newly created and persisted business object data
      */
-    public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request, boolean fileSizeRequired)
+    public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request, boolean fileSizeRequired, boolean useFullFilePath)
     {
         if (StringUtils.isBlank(request.getStatus()))
         {
@@ -288,7 +302,7 @@ public class BusinessObjectDataDaoHelper
         Integer businessObjectDataVersion = existingBusinessObjectDataEntity == null ? BusinessObjectDataEntity.BUSINESS_OBJECT_DATA_INITIAL_VERSION :
             existingBusinessObjectDataEntity.getVersion() + 1;
         BusinessObjectDataEntity newVersionBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(request, businessObjectFormatEntity, businessObjectDataVersion, businessObjectDataStatusEntity);
+            createBusinessObjectDataEntity(request, businessObjectFormatEntity, businessObjectDataVersion, businessObjectDataStatusEntity, useFullFilePath);
 
         // Update the existing latest business object data version entity, so it would not be flagged as the latest version anymore.
         if (existingBusinessObjectDataEntity != null)
@@ -324,12 +338,13 @@ public class BusinessObjectDataDaoHelper
      * @param storageEntity the storage entity
      * @param storageDirectory the storage directory
      * @param storageFiles the list of storage files
-     * @param isDiscoverStorageFiles specifies if
+     * @param isDiscoverStorageFiles specifies if we will discover storage files
+     * @param isUseFullFilePath specifies if we use the full file path
      *
      * @return the newly created storage unit entity
      */
     public StorageUnitEntity createStorageUnitEntity(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity,
-        StorageDirectory storageDirectory, List<StorageFile> storageFiles, Boolean isDiscoverStorageFiles)
+        StorageDirectory storageDirectory, List<StorageFile> storageFiles, Boolean isDiscoverStorageFiles, Boolean isUseFullFilePath)
     {
         // Get the storage unit status entity for the ENABLED status.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
@@ -408,7 +423,9 @@ public class BusinessObjectDataDaoHelper
                 }
             }
         }
-        else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()))
+        // We will minimize the storage file path if the prefix validation is configured.
+        // In which case it is necessary to store the expectedS3KeyPrefix in the storage unit directory path.
+        else if (Boolean.TRUE.equals(businessObjectDataEntity.getStatus().getPreRegistrationStatus()) || validatePathPrefix)
         {
             directoryPath = expectedS3KeyPrefix;
         }
@@ -426,9 +443,176 @@ public class BusinessObjectDataDaoHelper
         // Create the storage file entities.
         createStorageFileEntitiesFromStorageFiles(resultStorageFiles, storageEntity, BooleanUtils.isTrue(isDiscoverStorageFiles), expectedS3KeyPrefix,
             storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, validateFileSize, isS3StoragePlatform, businessObjectFormat,
-            businessObjectDataKey);
+            businessObjectDataKey, isUseFullFilePath);
 
         return storageUnitEntity;
+    }
+
+    /**
+     * Deletes an existing business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param deleteFiles specifies if data files should be deleted or not
+     *
+     * @return the deleted business object data information
+     */
+    public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles)
+    {
+        // Validate and trim the business object data key.
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+
+        // Validate the mandatory deleteFiles flag.
+        Assert.notNull(deleteFiles, "A delete files flag must be specified.");
+
+        // Retrieve the business object data and ensure it exists.
+        BusinessObjectDataEntity businessObjectDataEntity = getBusinessObjectDataEntity(businessObjectDataKey);
+
+        // If the business object data has children, remove the parent children relationship.
+        if (!businessObjectDataEntity.getBusinessObjectDataChildren().isEmpty())
+        {
+            for (BusinessObjectDataEntity childBusinessObjectEntity : businessObjectDataEntity.getBusinessObjectDataChildren())
+            {
+                childBusinessObjectEntity.getBusinessObjectDataParents().remove(businessObjectDataEntity);
+            }
+
+            String businessObjectDataChildren = businessObjectDataEntity.getBusinessObjectDataChildren().stream()
+                .map(bData -> String.format("{%s}", businessObjectDataHelper.businessObjectDataEntityAltKeyToString(bData))).collect(Collectors.joining(", "));
+            businessObjectDataEntity.setBusinessObjectDataChildren(new ArrayList<>());
+            businessObjectDataDao.save(businessObjectDataEntity);
+            LOGGER.warn(String
+                .format("Deleting business object data {%s} that has children associated with it. The parent relationship has been removed from: %s.",
+                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), businessObjectDataChildren));
+        }
+
+        // If the flag is set, clean up the data files from all storages of S3 storage platform type.
+        LOGGER.info("deleteFiles={}", deleteFiles);
+        if (deleteFiles)
+        {
+            // Loop over all storage units for this business object data.
+            for (StorageUnitEntity storageUnitEntity : businessObjectDataEntity.getStorageUnits())
+            {
+                StorageEntity storageEntity = storageUnitEntity.getStorage();
+
+                // Currently, we only support data file deletion from S3 platform type.
+                if (storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3))
+                {
+                    LOGGER.info("Deleting business object data files from the storage... storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
+                        jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
+
+                    // Get the S3 validation flags.
+                    boolean validatePathPrefix = storageHelper
+                        .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
+                            storageEntity, false, true);
+
+                    // If this storage conforms to the path prefix validation, then delete all keys found under the S3 key prefix.
+                    if (validatePathPrefix)
+                    {
+                        // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
+                        // Please note that it is not required, so we pass in a "false" flag.
+                        String s3KeyPrefixVelocityTemplate = storageHelper
+                            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                storageEntity, false);
+
+                        // Validate that S3 key prefix velocity template is configured.
+                        Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate), String
+                            .format("Storage \"%s\" has enabled path validation without S3 key prefix velocity template configured.", storageEntity.getName()));
+
+                        // Build the S3 key prefix as per S3 Naming Convention Wiki page.
+                        String s3KeyPrefix = s3KeyPrefixHelper
+                            .buildS3KeyPrefix(s3KeyPrefixVelocityTemplate, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey,
+                                storageEntity.getName());
+
+                        // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
+                        S3FileTransferRequestParamsDto params = storageHelper.getS3BucketAccessParams(storageEntity);
+                        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+                        params.setS3KeyPrefix(s3KeyPrefix + "/");
+                        // Delete a list of all keys/objects from S3 managed bucket matching the expected S3 key prefix.
+                        // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
+                        s3Service.deleteDirectory(params);
+                    }
+                    // For a non S3 prefixed paths, delete the files explicitly or if only directory is registered, delete all files/subfolders found under it.
+                    else
+                    {
+                        // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
+                        S3FileTransferRequestParamsDto params = storageHelper.getS3BucketAccessParams(storageEntity);
+
+                        // If only directory is registered delete all files/sub-folders found under it.
+                        if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) && storageUnitEntity.getStorageFiles().isEmpty())
+                        {
+                            // Since the directory path represents a directory, we add a trailing '/' character to it.
+                            params.setS3KeyPrefix(storageUnitEntity.getDirectoryPath() + "/");
+                            // Delete a list of all keys/objects from S3 bucket matching the directory path.
+                            // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
+                            s3Service.deleteDirectory(params);
+                        }
+                        // Delete the files explicitly.
+                        else
+                        {
+                            // Create a list of files to delete.
+                            List<File> files = new ArrayList<>();
+                            for (StorageFileEntity storageFileEntity : storageUnitEntity.getStorageFiles())
+                            {
+                                String filePath = storageFileEntity.getPath();
+
+                                if (StringUtils.isNotBlank(storageUnitEntity.getDirectoryPath()) &&
+                                    !StringUtils.startsWith(filePath, storageUnitEntity.getDirectoryPath()))
+                                {
+                                    if (StringUtils.equals(filePath, StorageFileEntity.S3_EMPTY_PARTITION))
+                                    {
+                                        filePath = storageUnitEntity.getDirectoryPath() + filePath;
+                                    }
+                                    else
+                                    {
+                                        filePath = StringUtils.appendIfMissing(storageUnitEntity.getDirectoryPath(), "/") + filePath;
+                                    }
+                                }
+
+                                files.add(new File(filePath));
+                            }
+                            params.setFiles(files);
+                            s3Service.deleteFileList(params);
+                        }
+                    }
+                }
+                else
+                {
+                    LOGGER.info("Skipping business object data file removal for a storage unit from the storage since it is not an S3 storage platform. " +
+                            " storageName=\"{}\" businessObjectDataKey={}", storageEntity.getName(),
+                        jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
+                }
+            }
+        }
+
+        // Create the business object data object from the entity.
+        BusinessObjectData deletedBusinessObjectData = businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
+
+        // Delete this business object data.
+        businessObjectDataDao.delete(businessObjectDataEntity);
+
+        // If this business object data version is the latest, set the latest flag on the previous version of this object data, if it exists.
+        if (businessObjectDataEntity.getLatestVersion())
+        {
+            // Get the maximum version for this business object data, if it exists.
+            Integer maxBusinessObjectDataVersion = businessObjectDataDao.getBusinessObjectDataMaxVersion(businessObjectDataKey);
+
+            if (maxBusinessObjectDataVersion != null)
+            {
+                // Retrieve the previous version business object data entity. Since we successfully got the maximum
+                // version for this business object data, the retrieved entity is not expected to be null.
+                BusinessObjectDataEntity previousVersionBusinessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(
+                    new BusinessObjectDataKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                        businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+                        businessObjectDataKey.getSubPartitionValues(), maxBusinessObjectDataVersion));
+
+                // Update the previous version business object data entity.
+                previousVersionBusinessObjectDataEntity.setLatestVersion(true);
+                businessObjectDataDao.saveAndRefresh(previousVersionBusinessObjectDataEntity);
+            }
+        }
+
+        // Return the deleted business object data.
+        return deletedBusinessObjectData;
     }
 
     /**
@@ -483,6 +667,45 @@ public class BusinessObjectDataDaoHelper
     }
 
     /**
+     * Returns business object data status entity that should be used for available business object data as per optionally specified business object data status
+     * value. If business object data status is specified, but it does not exist, the method throws ObjectNotFoundException. If business object data status is
+     * specified, but it is not VALID or one of the pre-registered statuses, the method throws IllegalArgumentException. If business object data status is not
+     * specified, the method returns business object data status entity for VALID business object data status.
+     *
+     * @param businessObjectDataStatus the business object data status value that is optionally specified to be used to select available business object data,
+     * maybe be null or empty
+     *
+     * @return the business object data status entity
+     */
+    public BusinessObjectDataStatusEntity getBusinessObjectStatusEntityForAvailableData(String businessObjectDataStatus)
+    {
+        // Declare the return value.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity;
+
+        // If business object data status is specified, validate that it exists.
+        if (StringUtils.isNotBlank(businessObjectDataStatus))
+        {
+            businessObjectDataStatusEntity = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(businessObjectDataStatus);
+
+            // Validate that business object status is VALID or one is one of the pre-registered states.
+            if (!BusinessObjectDataStatusEntity.VALID.equals(businessObjectDataStatusEntity.getCode()) &&
+                !businessObjectDataStatusEntity.getPreRegistrationStatus())
+            {
+                throw new IllegalArgumentException(String
+                    .format("Business object data status specified in the request must be \"%s\" or one of the pre-registration statuses.",
+                        BusinessObjectDataStatusEntity.VALID));
+            }
+        }
+        // Otherwise, default to using VALID business object data status for available business object data.
+        else
+        {
+            businessObjectDataStatusEntity = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
+        }
+
+        return businessObjectDataStatusEntity;
+    }
+
+    /**
      * Builds a list of partition values from the partition value filter. The partition range takes precedence over the list of partition values in the filter.
      * If a range is specified the list of values will come from the expected partition values table for values within the specified range. If the list is
      * specified, duplicates will be removed. In both cases, the list will be ordered ascending.
@@ -491,7 +714,9 @@ public class BusinessObjectDataDaoHelper
      * @param partitionKey the partition key
      * @param partitionColumnPosition the partition column position (one-based numbering)
      * @param businessObjectFormatKey the business object format key
-     * @param businessObjectDataVersion the business object data version
+     * @param businessObjectDataVersion the optional business object data version, maybe null
+     * @param businessObjectDataStatusEntity the optional business object data status entity, maybe null. This parameter is ignored when the business object
+     * data version is specified
      * @param storageEntities the optional list of storage entities
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage names is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage names is not
@@ -501,36 +726,32 @@ public class BusinessObjectDataDaoHelper
      * @return the unique and sorted partition value list
      */
     public List<String> getPartitionValues(PartitionValueFilter partitionValueFilter, String partitionKey, int partitionColumnPosition,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity, BusinessObjectFormatEntity businessObjectFormatEntity)
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         List<String> partitionValues = new ArrayList<>();
 
+        // Check if "partition value range" filter option is specified.
         if (partitionValueFilter.getPartitionValueRange() != null)
         {
-            // A "partition value range" filter option is specified.
             partitionValues = processPartitionValueRangeFilterOption(partitionValueFilter.getPartitionValueRange(), businessObjectFormatEntity);
         }
+        // Otherwise, check if "partition value list" filter option is specified.
         else if (partitionValueFilter.getPartitionValues() != null)
         {
-            // A "partition value list" filter option is specified.
             partitionValues =
                 processPartitionValueListFilterOption(partitionValueFilter.getPartitionValues(), partitionKey, partitionColumnPosition, businessObjectFormatKey,
-                    businessObjectDataVersion, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity);
+                    businessObjectDataVersion, businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity);
         }
+        // Otherwise, check if "latest before partition value" filter option is specified.
         else if (partitionValueFilter.getLatestBeforePartitionValue() != null)
         {
-            // A "latest before partition value" filter option is specified.
-
-            // Get business object data status entity for the VALID status.
-            BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-                businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
             // Retrieve the maximum partition value before (inclusive) the specified partition value.
             // If a business object data version isn't specified, the latest VALID business object data version will be used.
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    validBusinessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity,
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity,
                     partitionValueFilter.getLatestBeforePartitionValue().getPartitionValue(), null);
             if (maxPartitionValue != null)
             {
@@ -543,19 +764,14 @@ public class BusinessObjectDataDaoHelper
                         partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageEntities));
             }
         }
+        // Otherwise, assume that "latest after partition value" filter option is specified.
         else
         {
-            // A "latest after partition value" filter option is specified.
-
-            // Get business object data status entity for the VALID status.
-            BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-                businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
             // Retrieve the maximum partition value before (inclusive) the specified partition value.
             // If a business object data version isn't specified, the latest VALID business object data version will be used.
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    validBusinessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, null,
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, null,
                     partitionValueFilter.getLatestAfterPartitionValue().getPartitionValue());
             if (maxPartitionValue != null)
             {
@@ -681,11 +897,13 @@ public class BusinessObjectDataDaoHelper
      * @param request the request.
      * @param businessObjectFormatEntity the business object format entity.
      * @param businessObjectDataVersion the business object data version.
+     * @param isUseFullFilePath specifies if we will use the full file path.
      *
      * @return the newly created business object data entity.
      */
     private BusinessObjectDataEntity createBusinessObjectDataEntity(BusinessObjectDataCreateRequest request,
-        BusinessObjectFormatEntity businessObjectFormatEntity, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity)
+        BusinessObjectFormatEntity businessObjectFormatEntity, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        boolean isUseFullFilePath)
     {
         // Create a new entity.
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
@@ -701,7 +919,8 @@ public class BusinessObjectDataDaoHelper
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
 
         // Create the storage unit entities.
-        businessObjectDataEntity.setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectDataEntity));
+        businessObjectDataEntity
+            .setStorageUnits(createStorageUnitEntitiesFromStorageUnits(request.getStorageUnits(), businessObjectDataEntity, isUseFullFilePath));
 
         // Create the attributes.
         List<BusinessObjectDataAttributeEntity> attributeEntities = new ArrayList<>();
@@ -758,13 +977,14 @@ public class BusinessObjectDataDaoHelper
      * @param isS3StoragePlatform specifies whether the storage platform type is S3
      * @param businessObjectFormat the business object format
      * @param businessObjectDataKey the business object data key
+     * @param isUseFullFilePath specifies if we will use the full file path
      *
      * @return the list of storage file entities
      */
     private List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(List<StorageFile> storageFiles, StorageEntity storageEntity,
         boolean storageFilesDiscovered, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity, String directoryPath, boolean validatePathPrefix,
         boolean validateFileExistence, boolean validateFileSize, boolean isS3StoragePlatform, BusinessObjectFormat businessObjectFormat,
-        BusinessObjectDataKey businessObjectDataKey)
+        BusinessObjectDataKey businessObjectDataKey, boolean isUseFullFilePath)
     {
         List<StorageFileEntity> storageFileEntities = null;
 
@@ -840,6 +1060,24 @@ public class BusinessObjectDataDaoHelper
                         storageFileHelper.validateStorageFile(storageFile, params.getS3BucketName(), actualS3Keys, validateFileSize);
                     }
                 }
+
+                // Minimize the file path occurs if
+                //     (a) directory path is specified in the request or
+                //     (b) prefix path template is present in Storage and prefix validation is configured.
+                if (!isUseFullFilePath && StringUtils.isNotBlank(directoryPath))
+                {
+                    // Handle empty folder S3 marker as a special case.
+                    if (StringUtils.equals(storageFile.getFilePath(), directoryPath + StorageFileEntity.S3_EMPTY_PARTITION))
+                    {
+                        storageFileEntity.setPath(StorageFileEntity.S3_EMPTY_PARTITION);
+                    }
+                    // Otherwise, minimize the file path.
+                    else
+                    {
+                        // Minimize the file path.
+                        storageFileEntity.setPath(HerdStringUtils.getMinimizedFilePath(storageFile.getFilePath(), directoryPath));
+                    }
+                }
             }
         }
 
@@ -851,11 +1089,12 @@ public class BusinessObjectDataDaoHelper
      *
      * @param storageUnitCreateRequests the storage unit create requests
      * @param businessObjectDataEntity the business object data entity
+     * @param isUseFullFilePath specifies if we will use the full file path
      *
      * @return the list of storage unit entities.
      */
     private List<StorageUnitEntity> createStorageUnitEntitiesFromStorageUnits(List<StorageUnitCreateRequest> storageUnitCreateRequests,
-        BusinessObjectDataEntity businessObjectDataEntity)
+        BusinessObjectDataEntity businessObjectDataEntity, boolean isUseFullFilePath)
     {
         // Create the storage units for the data.
         List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
@@ -868,7 +1107,7 @@ public class BusinessObjectDataDaoHelper
             // Create storage unit and add it to the result list.
             storageUnitEntities.add(
                 createStorageUnitEntity(businessObjectDataEntity, storageEntity, storageUnit.getStorageDirectory(), storageUnit.getStorageFiles(),
-                    storageUnit.isDiscoverStorageFiles()));
+                    storageUnit.isDiscoverStorageFiles(), isUseFullFilePath));
         }
 
         return storageUnitEntities;
@@ -1101,7 +1340,9 @@ public class BusinessObjectDataDaoHelper
      * @param partitionKey the partition key
      * @param partitionColumnPosition the partition column position (one-based numbering)
      * @param businessObjectFormatKey the business object format key
-     * @param businessObjectDataVersion the business object data version
+     * @param businessObjectDataVersion the optional business object data version, maybe null
+     * @param businessObjectDataStatusEntity the optional business object data status entity, maybe null. This parameter is ignored when the business object
+     * data version is specified
      * @param storageEntities the optional list of storage entities
      * @param storagePlatformEntity the optional storage platform entity, e.g. S3 for Hive DDL. It is ignored when the list of storage entities is not empty
      * @param excludedStoragePlatformEntity the optional storage platform entity to be excluded from search. It is ignored when the list of storage entities is
@@ -1110,8 +1351,8 @@ public class BusinessObjectDataDaoHelper
      * @return the unique and sorted partition value list
      */
     private List<String> processPartitionValueListFilterOption(List<String> partitionValues, String partitionKey, int partitionColumnPosition,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<StorageEntity> storageEntities,
-        StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, BusinessObjectDataStatusEntity businessObjectDataStatusEntity,
+        List<StorageEntity> storageEntities, StoragePlatformEntity storagePlatformEntity, StoragePlatformEntity excludedStoragePlatformEntity)
     {
         List<String> resultPartitionValues = new ArrayList<>();
 
@@ -1126,14 +1367,10 @@ public class BusinessObjectDataDaoHelper
         // If a business object data version isn't specified, the latest VALID business object data version will be used.
         if (uniqueAndSortedPartitionValues.contains(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN))
         {
-            // Get business object data status entity for the VALID status.
-            BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-                businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
             // Get the maximum partition value.
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    validBusinessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, null, null);
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity, null, null);
             if (maxPartitionValue == null)
             {
                 throw new ObjectNotFoundException(
@@ -1148,14 +1385,10 @@ public class BusinessObjectDataDaoHelper
         // If a business object data version isn't specified, the latest VALID business object data version will be used.
         if (uniqueAndSortedPartitionValues.contains(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN))
         {
-            // Get business object data status entity for the VALID status.
-            BusinessObjectDataStatusEntity validBusinessObjectDataStatusEntity =
-                businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(BusinessObjectDataStatusEntity.VALID);
-
             // Get the minimum partition value.
             String minPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMinPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    validBusinessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity);
+                    businessObjectDataStatusEntity, storageEntities, storagePlatformEntity, excludedStoragePlatformEntity);
             if (minPartitionValue == null)
             {
                 throw new ObjectNotFoundException(

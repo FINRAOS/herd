@@ -324,7 +324,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             assertEquals(String.format(
                 "Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
-                    "Reason: Wrong user name or password [28000-196]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
+                    "Reason: Wrong user name or password [28000-200]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
         }
 
         try
@@ -335,7 +335,8 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
                 new BusinessObjectFormat(ID, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                     PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA,
                     NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
-                    NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET)), NO_COLUMNS);
+                    NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME,
+                    FORMAT_RELATIONAL_TABLE_NAME)), NO_COLUMNS);
             fail();
         }
         catch (IllegalArgumentException e)

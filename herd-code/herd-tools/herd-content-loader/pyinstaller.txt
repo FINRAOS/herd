@@ -1,8 +1,9 @@
-pandas >= 0.24.0
+pandas == 0.25.3
 boto3 >= 1.9.50
-xlrd >= 1.1.0
+xlrd == 1.2.0
 xlsxwriter >= 1.1.0
 herdcl
 herdsdk
 pyinstaller
 pypiwin32
+pywin32 == 228

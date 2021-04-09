@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -50,6 +50,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
+import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -226,6 +227,38 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
 
         // Validate the results.
         assertEquals(businessObjectData, result);
+    }
+
+    @Test
+    public void testRestoreBusinessObjectDataStorageUnitInRestoredState()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        // Create business object data restore parameters DTO with populated business object data.
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto = new BusinessObjectDataRestoreDto();
+        businessObjectDataRestoreDto.setBusinessObjectData(businessObjectData);
+
+        // Mock the external calls.
+        when(businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION))
+            .thenReturn(businessObjectDataRestoreDto);
+
+        // Call the method under test.
+        BusinessObjectData result =
+            businessObjectDataServiceImpl.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+
+        // Verify the external calls.
+        verify(businessObjectDataInitiateRestoreHelperService).prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+        verifyNoMoreInteractionsHelper();
     }
 
     @Test

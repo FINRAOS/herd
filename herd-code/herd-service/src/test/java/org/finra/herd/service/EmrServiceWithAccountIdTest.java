@@ -19,12 +19,10 @@ import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
 import org.finra.herd.model.api.xml.EmrHiveStepAddRequest;
-import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.EmrPigStepAddRequest;
 import org.finra.herd.model.api.xml.EmrShellStepAddRequest;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.EmrStepHelper;
 
 /**
@@ -35,9 +33,6 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
     @Test
     public void testCreateEmrClusterWithAccountId() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
 
@@ -75,9 +70,6 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
     @Test
     public void testCreateEmrClusterWithAccountIdAccountNoExists() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -105,9 +97,6 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
     @Test
     public void testEmrAddStepsAllTypes() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
 
@@ -193,9 +182,6 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
     @Test
     public void testGetEmrClusterById() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
 
@@ -249,9 +235,6 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
     @Test
     public void testTerminateEmrCluster() throws Exception
     {
-        // Create the namespace entity.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
