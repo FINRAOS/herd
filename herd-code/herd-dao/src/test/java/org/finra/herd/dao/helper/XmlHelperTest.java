@@ -54,7 +54,7 @@ public class XmlHelperTest extends AbstractDaoTest
     {
         String expected = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?><buildInformation>\n" + "  <buildOs>%s</buildOs>\n" +
             "  <buildUser>%s</buildUser>\n" + "  <buildDate>%s</buildDate>\n" + "  <buildNumber>%s</buildNumber>\n" +
-            "</buildInformation>\n", STRING_VALUE, STRING_VALUE, STRING_VALUE, STRING_VALUE);
+            "</buildInformation>\n", STRING_VALUE, STRING_VALUE, STRING_VALUE, STRING_VALUE).replaceAll("\\n", System.lineSeparator());
 
         assertEquals(XmlHelper.createPrettyPrint(getTestXml()), expected);
     }
