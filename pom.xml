@@ -977,6 +977,10 @@
                   <artifactId>api-util</artifactId>
                </exclusion>
                <exclusion>
+                  <groupId>org.apache.hadoop</groupId>
+                  <artifactId>hadoop-auth</artifactId>
+               </exclusion>
+               <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-shims</artifactId>
                </exclusion>
