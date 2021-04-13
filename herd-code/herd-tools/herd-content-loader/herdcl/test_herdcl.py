@@ -53,6 +53,23 @@ class TestUtilityMethods(unittest.TestCase):
     Test Suite for Utility Methods
 
     """
+    temp_file = 'temp.xlsx'
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        The setup method that will be called once before all tests start
+
+        """
+        pd.DataFrame().to_excel(TestUtilityMethods.temp_file)
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        The tear down method that will be called once after all tests complete
+
+        """
+        os.remove(TestUtilityMethods.temp_file)
 
     def setUp(self):
         """
@@ -218,15 +235,11 @@ class TestUtilityMethods(unittest.TestCase):
         Test of the load worksheet with no worksheet found
 
         """
-        temp_file = 'temp.xlsx'
-        pd.DataFrame().to_excel(temp_file)
-        self.controller.excel_file = temp_file
+        self.controller.excel_file = TestUtilityMethods.temp_file
 
         # Run scenario and check values
         with self.assertRaises(ValueError):
             self.controller.load_worksheet('Sheet')
-
-        os.remove(temp_file)
 
     @mock.patch('herdsdk.CurrentUserApi.current_user_get_current_user')
     def test_run(self, mock_user):
