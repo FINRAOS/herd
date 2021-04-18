@@ -1,23 +1,25 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.ui;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -27,6 +29,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.entity.ContentType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockFilterChain;
@@ -36,7 +39,6 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.util.WebUtils;
 
 import org.finra.herd.core.helper.LogLevel;
-
 /**
  * Test driver for the RequestLoggingFilter class. Since the filter's main functionality logs messages which is difficult to test, the majority of test cases
  * will simply ensure that exceptions are not thrown under various configuration approaches.
@@ -99,6 +101,46 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     {
         MockHttpServletRequest request = createServletRequest();
         request.setContent(null);
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+    }
+
+    @Test
+    public void testDoFilterEmptyContentType() throws Exception
+    {
+        MockHttpServletRequest request = createServletRequest();
+        request.setContentType("");
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+    }
+
+    @Test(timeout = 1000)
+    public void testDoFilterLongSingleLineXMLPayload() throws Exception
+    {
+        String fileName = "long_filter_xml_payload.txt";
+        File file = new File(getClass().getClassLoader().getResource(fileName).getFile());
+        byte[] payload = Files.readAllBytes(file.toPath());
+
+        MockHttpServletRequest request = createServletRequest();
+        request.setContent(payload);
+        request.setContentType(ContentType.APPLICATION_XML.toString());
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+    }
+
+    @Test(timeout = 1000)
+    public void testDoFilterLongSingleLineJSONPayload() throws Exception
+    {
+        String fileName = "long_filter_json_payload.txt";
+        File file = new File(getClass().getClassLoader().getResource(fileName).getFile());
+        byte[] payload = Files.readAllBytes(file.toPath());
+
+        MockHttpServletRequest request = createServletRequest();
+        request.setContent(payload);
+        request.setContentType(ContentType.APPLICATION_JSON.toString());
 
         // Run the filter.
         createFilter().doFilter(request, createServletResponse(), createFilterChain());

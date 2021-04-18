@@ -18,11 +18,14 @@ package org.finra.herd.service.config;
 import java.lang.reflect.ReflectPermission;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
-import java.util.PropertyPermission;
 
 import javax.script.Bindings;
+import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import org.activiti.engine.ActivitiException;
 import org.activiti.engine.impl.scripting.ScriptBindingsFactory;
 import org.activiti.engine.impl.scripting.ScriptingEngines;
 
@@ -35,6 +38,8 @@ import org.finra.herd.core.helper.SecurityManagerHelper;
  */
 public class SecuredScriptingEngines extends ScriptingEngines
 {
+    private ScriptEngine scriptEngine;
+
     public SecuredScriptingEngines(ScriptBindingsFactory scriptBindingsFactory)
     {
         super(scriptBindingsFactory);
@@ -57,12 +62,35 @@ public class SecuredScriptingEngines extends ScriptingEngines
             @Override
             public Object run()
             {
-                return SecuredScriptingEngines.super.evaluate(script, language, bindings);
+                try
+                {
+                    return getScriptEngine().eval(script, bindings);
+                }
+                catch (ScriptException e)
+                {
+                    throw new ActivitiException("Problem evaluating script: " + e.getMessage());
+                }
             }
         }, Arrays.asList(new RuntimePermission("accessDeclaredMembers"),
             // Grants the permission to serialize/deserialize xml data type inside scripting engine
-            new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"),
-            new ReflectPermission("suppressAccessChecks"),
-            new PropertyPermission("socksProxyHost", "read")));
+            new RuntimePermission("accessClassInPackage.com.sun.org.apache.xerces.internal.jaxp.datatype"), new RuntimePermission("nashorn.setConfig"),
+            new ReflectPermission("suppressAccessChecks")));
     }
+
+    private ScriptEngine getScriptEngine()
+    {
+        if (this.scriptEngine == null)
+        {
+            setScriptEngine();
+        }
+        return this.scriptEngine;
+    }
+
+    private void setScriptEngine()
+    {
+        this.scriptEngine = new NashornScriptEngineFactory().getScriptEngine(new String[] {}, null,
+            // Forbid java classes usage, including reflection
+            string -> false);
+    }
+
 }
