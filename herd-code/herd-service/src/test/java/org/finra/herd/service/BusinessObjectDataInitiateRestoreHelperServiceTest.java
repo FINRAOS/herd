@@ -535,7 +535,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToInitiateRestoreStorageUnitHasNoStorageFiles()
+    public void testPrepareToInitiateRestoreDirectoryOnlyRegistration()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -553,17 +553,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         // Remove storage files from the storage unit.
         storageUnitEntity.getStorageFiles().clear();
 
-        // Try to execute a before step for the initiate a business object data restore request when storage unit has no storage files.
-        try
-        {
+        // Execute a before step for the initiate a business object data restore request  when storage unit has no storage files.
+        BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", STORAGE_NAME,
-                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
-        }
+
+        // Validate the returned object.
+        assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
     }
 
     @Test

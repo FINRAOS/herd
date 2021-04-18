@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -166,6 +167,112 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testProcessStoragePolicySelectionMessageDirectoryOnlyRegistration() throws Exception
+    {
+        // Build the expected S3 key prefix for test business object data.
+        String s3KeyPrefix =
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, null, null, DATA_VERSION);
+
+        // Create S3FileTransferRequestParamsDto to access the S3 bucket location.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
+
+        // Create and persist the relative database entities.
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Collections.singletonList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE,
+                BDEF_NAME, Collections.singletonList(FORMAT_FILE_TYPE_CODE), Collections.singletonList(STORAGE_NAME),
+                Collections.singletonList(StoragePolicyTransitionTypeEntity.GLACIER));
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create and persist a storage unit in the storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Storage files that are not registered, but they are needed for testing.
+        List<StorageFile> nonRegisteredStorageFiles = new ArrayList<>();
+        for (String filePath : LOCAL_FILES)
+        {
+            nonRegisteredStorageFiles.add(new StorageFile(s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        }
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, NO_DO_NOT_TRANSITION_LATEST_VALID, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Override configuration to specify some settings required for testing.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Put relative S3 files into the S3 bucket.
+            for (StorageFile storageFile : nonRegisteredStorageFiles)
+            {
+                s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, storageFile.getFilePath(),
+                    new ByteArrayInputStream(new byte[storageFile.getFileSizeBytes().intValue()]), null), null);
+            }
+
+            // Add one more S3 file, which is an unregistered zero byte file.
+            // The validation is expected not to fail when detecting an unregistered zero byte S3 file.
+            String unregisteredS3FilePathZeroByte = s3KeyPrefix + "/unregistered.txt";
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, unregisteredS3FilePathZeroByte, new ByteArrayInputStream(new byte[0]), null), null);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(nonRegisteredStorageFiles.size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
+            // Perform a storage policy transition.
+            storagePolicyProcessorService
+                .processStoragePolicySelectionMessage(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Create an expected S3 tag.
+            Tag expectedTag = new Tag((String) ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY.getDefaultValue(),
+                (String) ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getDefaultValue());
+
+            // Validate that all S3 files are now tagged.
+            for (StorageFile storageFile : nonRegisteredStorageFiles)
+            {
+                GetObjectTaggingResult getObjectTaggingResult =
+                    s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, storageFile.getFilePath()), null);
+                assertEquals(Collections.singletonList(expectedTag), getObjectTaggingResult.getTagSet());
+            }
+
+            // Validate that unregistered zero byte S3 file is now tagged.
+            GetObjectTaggingResult getObjectTaggingResult =
+                s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, unregisteredS3FilePathZeroByte), null);
+            assertEquals(Collections.singletonList(expectedTag), getObjectTaggingResult.getTagSet());
+
+            // Validate the status of the storage unit.
+            assertEquals(StorageUnitStatusEntity.ARCHIVED, storageUnitEntity.getStatus().getCode());
+        }
+        finally
+        {
+            // Delete test files from S3 storage.
+            if (!s3Dao.listDirectory(s3FileTransferRequestParamsDto).isEmpty())
+            {
+                s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+            }
+            s3Operations.rollback();
+
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
     public void testProcessStoragePolicySelectionMessageRuntimeException() throws Exception
     {
         // Build the expected S3 key prefix for test business object data.
@@ -263,7 +370,7 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
      * This method is to get coverage for the storage policy processor service method that has an explicit annotation for transaction propagation.
      */
     @Test
-    public void testStoragePolicyProcessorServiceMethodsNewTransactionPropagation() throws Exception
+    public void testStoragePolicyProcessorServiceMethodsNewTransactionPropagation()
     {
         try
         {
