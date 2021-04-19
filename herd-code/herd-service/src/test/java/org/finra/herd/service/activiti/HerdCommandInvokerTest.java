@@ -126,7 +126,7 @@ public class HerdCommandInvokerTest extends HerdActivitiServiceTaskTest
             assertEquals("bar", persistedVariable.getValue());
 
             // Assert exception message is logged
-            assertEquals("ActivitiException: problem evaluating script: Error in <eval> at line number 1 at column number 0",
+            assertEquals("ActivitiException: Problem evaluating script: Error in <eval> at line number 1 at column number 0",
                 activitiManagementService.createJobQuery().executionId(processInstance.getProcessInstanceId()).singleResult().getExceptionMessage());
         }
         finally
