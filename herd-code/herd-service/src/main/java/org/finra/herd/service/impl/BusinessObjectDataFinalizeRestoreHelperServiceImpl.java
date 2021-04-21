@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -165,10 +166,14 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
         // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
         List<S3ObjectSummary> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
 
-        // Validate existence and file size of the S3 files.
-        storageFileHelper
-            .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
-                businessObjectDataRestoreDto.getBusinessObjectDataKey());
+        // For directory only registration, we have no registered storage files to check against actual S3 files.
+        if (CollectionUtils.isNotEmpty(businessObjectDataRestoreDto.getStorageFiles()))
+        {
+            // Validate existence and file size of the S3 files.
+            storageFileHelper
+                .validateRegisteredS3Files(businessObjectDataRestoreDto.getStorageFiles(), actualS3Files, businessObjectDataRestoreDto.getStorageName(),
+                    businessObjectDataRestoreDto.getBusinessObjectDataKey());
+        }
 
         // Build a list of files to check for restore status by selection only objects that are currently archived in Glacier or DeepArchive storage class.
         List<S3ObjectSummary> glacierS3Files = new ArrayList<>();
@@ -257,7 +262,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
             s3KeyPrefixHelper.buildS3KeyPrefix(storageUnitEntity.getStorage(), businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
 
         // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        // This call supports directory only registration when no storage files are registered.
+        List<StorageFile> storageFiles =
+            storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, false);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
