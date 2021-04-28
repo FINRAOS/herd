@@ -254,19 +254,19 @@ public enum ConfigurationValue
     /**
      * The cron expression to schedule "cleanupLongRunningActivitiWorkflow" system job. The default is to run this system job once a day starting at 7 AM.
      */
-    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_CRON_EXPRESSION("cleanup.long.running.activiti.workflows.job.cron.expression", "0 0 7 * * ?"),
+    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_CRON_EXPRESSION("cleanup.long.running.activiti.workflows.job.cron.expression", "0 0 7 * * ?"),
 
     /**
      * The threshold in days to be used to select long running (dangling) Activiti workflows.  Only the dangling Activiti workflows that are older than this
      * amount of time will be deleted by the job.  The default is 14 days.
      */
-    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_THRESHOLD_DAYS("cleanup.long.running.activiti.workflows.job.threshold.days", "14"),
+    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS("cleanup.long.running.activiti.workflows.job.threshold.days", "14"),
 
     /**
      * The maximum number of Activiti workflows matching threshold that can get processed in a single run of this system job. The default is 1000 Activiti
      * workflows.
      */
-    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS("cleanup.long.running.activiti.workflows.job.max.workflows", "1000"),
+    CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS("cleanup.long.running.activiti.workflows.job.max.workflows", "1000"),
 
     /**
      * The cron expression to schedule "cleanupDestroyedBusinessObjectData" system job. The default is to run this system job every 6 hours every day, starting

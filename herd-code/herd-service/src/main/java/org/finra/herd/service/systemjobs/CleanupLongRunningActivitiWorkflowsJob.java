@@ -64,15 +64,15 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
 
         // Get the parameter values.
         int maxActivitiWorkflowsToProcess =
-            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS);
+            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS);
 
         int activitiJobRunningThresholdInDays =
-            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_THRESHOLD_DAYS);
+            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS);
 
 
         // Log the parameter values.
-        LOGGER.info("systemJobName=\"{}\" {}={} {}={}", JOB_NAME, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS,
-            maxActivitiWorkflowsToProcess, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_THRESHOLD_DAYS, activitiJobRunningThresholdInDays);
+        LOGGER.info("systemJobName=\"{}\" {}={} {}={}", JOB_NAME, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS,
+            maxActivitiWorkflowsToProcess, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS, activitiJobRunningThresholdInDays);
 
         // Continue the processing only if the maximum number of activiti workflows
         // that is allowed to be processed in a single run of this system job is greater than zero.
@@ -144,15 +144,15 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
         if (!CollectionUtils.isEmpty(parameters))
         {
             Assert.isTrue(parameters.size() > 2, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
-            Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS.getKey()) ||
-                    parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_THRESHOLD_DAYS.getKey()),
+            Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS.getKey()) ||
+                    parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS.getKey()),
                 String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), JOB_NAME));
             parameterHelper.getParameterValueAsInteger(parameters.get(0));
             if (parameters.size() > 1)
             {
                 Assert.isTrue(
-                    parameters.get(1).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS.getKey()) ||
-                        parameters.get(1).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_THRESHOLD_DAYS.getKey()),
+                    parameters.get(1).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS.getKey()) ||
+                        parameters.get(1).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS.getKey()),
                     String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), JOB_NAME));
                 parameterHelper.getParameterValueAsInteger(parameters.get(1));
             }
@@ -162,12 +162,13 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
     @Override
     public JobDataMap getJobDataMap()
     {
-        return getJobDataMap(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_MAX_WORKFLOWS);
+        return getJobDataMap(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS,
+            ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS);
     }
 
     @Override
     public String getCronExpression()
     {
-        return configurationHelper.getProperty(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOW_JOB_CRON_EXPRESSION);
+        return configurationHelper.getProperty(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_CRON_EXPRESSION);
     }
 }
