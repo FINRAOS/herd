@@ -143,7 +143,7 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
         // This system job accepts two optional parameters as integer values.
         if (!CollectionUtils.isEmpty(parameters))
         {
-            Assert.isTrue(parameters.size() > 2, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
+            Assert.isTrue(parameters.size() < 3, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
             Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS.getKey()) ||
                     parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS.getKey()),
                 String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), JOB_NAME));
