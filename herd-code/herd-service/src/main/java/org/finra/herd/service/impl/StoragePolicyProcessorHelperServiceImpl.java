@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,7 +190,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             .buildS3KeyPrefix(storagePolicyEntity.getStorage(), storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
         // Retrieve and validate storage files registered with the storage unit.
-        List<StorageFile> storageFiles = storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey);
+        // This call supports directory only registration when no storage files are registered.
+        List<StorageFile> storageFiles =
+            storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, false);
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
@@ -318,13 +321,17 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                 storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleSessionName());
         s3ObjectTaggerParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
 
-        // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
-        // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-        List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
+        // For directory only registration, we have no registered storage files to check against actual S3 files.
+        if (CollectionUtils.isNotEmpty(storagePolicyTransitionParamsDto.getStorageFiles()))
+        {
+            // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
+            // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
+            List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
 
-        // Validate existence of the S3 files.
-        storageFileHelper.validateRegisteredS3Files(storagePolicyTransitionParamsDto.getStorageFiles(), actualS3FilesWithoutZeroByteDirectoryMarkers,
-            storagePolicyTransitionParamsDto.getStorageName(), storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+            // Validate existence of the S3 files.
+            storageFileHelper.validateRegisteredS3Files(storagePolicyTransitionParamsDto.getStorageFiles(), actualS3FilesWithoutZeroByteDirectoryMarkers,
+                storagePolicyTransitionParamsDto.getStorageName(), storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+        }
 
         // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
         // This time, we do not ignore 0 byte objects that represent S3 directories.

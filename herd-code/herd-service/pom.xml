@@ -116,6 +116,10 @@
          <artifactId>activiti-spring</artifactId>
       </dependency>
       <dependency>
+         <groupId>org.activiti</groupId>
+         <artifactId>activiti-secure-javascript</artifactId>
+      </dependency>
+      <dependency>
          <groupId>org.apache.commons</groupId>
          <artifactId>commons-email</artifactId>
       </dependency>

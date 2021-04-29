@@ -32,10 +32,10 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <revision>0.146.0-SNAPSHOT</revision>
+      <revision>0.147.0-SNAPSHOT</revision>
       <!-- NOTE: Match version with herd snapshot version. For herd-sdk python -->
-      <herd.sdk.version>0.146.0</herd.sdk.version>
-      <herd-ui.version>0.116.0</herd-ui.version>
+      <herd.sdk.version>0.147.0</herd.sdk.version>
+      <herd-ui.version>0.117.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -43,7 +43,7 @@
         table modification permissions won't be present. Instead, only upgrade the version when the DB scripts have been run by the DBA. The DB scripts
         are located in the activiti-engine JAR in the org.activiti.db.upgrade package.
        -->
-      <activiti.version>5.19.0.1</activiti.version>
+      <activiti.version>5.21.0</activiti.version>
       <aspectj.version>1.8.11</aspectj.version>
       <aws.sdk.version>1.11.991</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
@@ -97,7 +97,7 @@
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
       <elasticsearch.version>7.8.0</elasticsearch.version>
-      <search-guard-ssl.version>6.5.3-25.5</search-guard-ssl.version>
+      <search-guard-ssl.version>6.8.6-25.7</search-guard-ssl.version>
       <jcredstash.version>0.0.4</jcredstash.version>
       <opencsv.version>4.4</opencsv.version>
       <aws-signing-request-interceptor.version>0.0.22</aws-signing-request-interceptor.version>
@@ -850,7 +850,17 @@
                </exclusion>
             </exclusions>
          </dependency>
-
+         <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-secure-javascript</artifactId>
+            <version>${activiti.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-log4j12</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
          <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -975,6 +985,10 @@
                <exclusion>
                   <groupId>org.apache.directory.api</groupId>
                   <artifactId>api-util</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.hadoop</groupId>
+                  <artifactId>hadoop-auth</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>org.apache.hive</groupId>
