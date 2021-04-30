@@ -21,9 +21,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -87,7 +87,7 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, StorageUnitStatusEntity.EXPIRING,
-                StorageUnitStatusEntity.RESTORED, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
+                StorageUnitStatusEntity.RESTORED, Lists.newArrayList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
                 NO_BUSINESS_OBJECT_DATA);
 
         // Mock the external calls.
@@ -130,7 +130,7 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
 
         // Create a list of storage unit entities.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitEntity);
+        List<StorageUnitEntity> storageUnitEntities = Lists.newArrayList(storageUnitEntity);
 
         // Create a storage unit key.
         BusinessObjectDataStorageUnitKey storageUnitKey =
@@ -150,7 +150,7 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
         verifyNoMoreInteractionsHelper();
 
         // Validate the result.
-        assertEquals(Arrays.asList(storageUnitKey), result);
+        assertEquals(Lists.newArrayList(storageUnitKey), result);
     }
 
     /**

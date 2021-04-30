@@ -21,13 +21,13 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -86,7 +86,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(storageFile), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
+                NO_STORAGE_UNIT_STATUS, Lists.newArrayList(storageFile), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         try
         {
@@ -111,7 +111,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testCompleteFinalizeRestore() throws Exception
+    public void testCompleteFinalizeRestore()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -131,7 +131,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
+                NO_STORAGE_UNIT_STATUS, Lists.newArrayList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
                 ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         // Enable origin storage unit to finalize a restore for business object data.
@@ -142,7 +142,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testExecuteS3SpecificSteps() throws Exception
+    public void testExecuteS3SpecificSteps()
     {
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
@@ -197,7 +197,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testExecuteS3SpecificStepsGlacierS3FileStillRestoring() throws Exception
+    public void testExecuteS3SpecificStepsGlacierS3FileStillRestoring()
     {
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
@@ -212,7 +212,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
+                NO_STORAGE_UNIT_STATUS, Lists.newArrayList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), NO_EXCEPTION,
                 ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
 
         try
@@ -253,7 +253,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestore() throws Exception
+    public void testPrepareToFinalizeRestore()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -455,7 +455,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreMissingOptionalParameters() throws Exception
+    public void testPrepareToFinalizeRestoreMissingOptionalParameters()
     {
         // Create a business object data key without sub-partition values.
         BusinessObjectDataKey businessObjectDataKey =
@@ -482,7 +482,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreNoS3BucketName() throws Exception
+    public void testPrepareToFinalizeRestoreNoS3BucketName()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -510,7 +510,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreStorageUnitAlreadyRestored() throws Exception
+    public void testPrepareToFinalizeRestoreStorageUnitAlreadyRestored()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -538,7 +538,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreStorageUnitHasNoStorageFiles() throws Exception
+    public void testPrepareToFinalizeRestoreDirectoryOnlyRegistration()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -558,21 +558,17 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         // Create a storage unit key.
         BusinessObjectDataStorageUnitKey glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
 
-        // Try to prepare to finalize a restore when storage unit has no storage files.
-        try
-        {
-            businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals(String.format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", STORAGE_NAME,
-                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
-        }
+        // Prepare to finalize a restore when storage unit has no storage files.
+        BusinessObjectDataRestoreDto result = businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, result.getS3KeyPrefix(),
+            NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS, storageFileHelper.createStorageFilesFromEntities(storageUnitEntity.getStorageFiles()), NO_EXCEPTION,
+            ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), result);
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreStorageUnitNoExists() throws Exception
+    public void testPrepareToFinalizeRestoreStorageUnitNoExists()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -599,7 +595,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
     }
 
     @Test
-    public void testPrepareToFinalizeRestoreStorageUnitNotInRestoringState() throws Exception
+    public void testPrepareToFinalizeRestoreStorageUnitNotInRestoringState()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
