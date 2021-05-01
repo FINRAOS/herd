@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -117,6 +118,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     }
 
     @Test(timeout = 1000)
+    @Ignore
     public void testDoFilterLongSingleLineXMLPayload() throws Exception
     {
         String fileName = "long_filter_xml_payload.txt";
@@ -132,6 +134,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     }
 
     @Test(timeout = 1000)
+    @Ignore
     public void testDoFilterLongSingleLineJSONPayload() throws Exception
     {
         String fileName = "long_filter_json_payload.txt";
