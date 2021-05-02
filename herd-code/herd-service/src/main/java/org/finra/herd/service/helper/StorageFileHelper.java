@@ -108,9 +108,12 @@ public class StorageFileHelper
     {
         List<StorageFile> storageFiles = new ArrayList<>();
 
-        for (StorageFileEntity storageFileEntity : storageFileEntities)
+        if (CollectionUtils.isNotEmpty(storageFileEntities))
         {
-            storageFiles.add(createStorageFileFromEntity(storageFileEntity, storageUnitDirectoryPath));
+            for (StorageFileEntity storageFileEntity : storageFileEntities)
+            {
+                storageFiles.add(createStorageFileFromEntity(storageFileEntity, storageUnitDirectoryPath));
+            }
         }
 
         return storageFiles;
@@ -147,6 +150,7 @@ public class StorageFileHelper
         return storageFiles;
     }
 
+
     /**
      * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
      * empty and that all storage files match the expected s3 key prefix value.
@@ -161,8 +165,26 @@ public class StorageFileHelper
     public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
         BusinessObjectDataKey businessObjectDataKey)
     {
+        return getAndValidateStorageFiles(storageUnitEntity, s3KeyPrefix, storageName, businessObjectDataKey, true);
+    }
+
+    /**
+     * Retrieves and validates a list of storage files registered with the specified storage unit. This method makes sure that the list of storage files is not
+     * empty when the require registered storage files flag is true and that all storage files match the expected s3 key prefix value.
+     *
+     * @param storageUnitEntity the storage unit entity the storage file paths to be validated
+     * @param s3KeyPrefix the S3 key prefix that storage file paths are expected to start with
+     * @param storageName the storage name
+     * @param businessObjectDataKey the business object data key
+     * @param requireRegisteredStorageFiles a boolean flag that if specified will fail when no registered storage files are present
+     *
+     * @return the list of storage files
+     */
+    public List<StorageFile> getAndValidateStorageFiles(StorageUnitEntity storageUnitEntity, String s3KeyPrefix, String storageName,
+        BusinessObjectDataKey businessObjectDataKey, boolean requireRegisteredStorageFiles)
+    {
         // Check if the list of storage files is not empty.
-        if (CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()))
+        if (requireRegisteredStorageFiles && CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()))
         {
             throw new IllegalArgumentException(String
                 .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", storageName,

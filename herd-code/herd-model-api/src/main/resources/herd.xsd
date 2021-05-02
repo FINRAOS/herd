@@ -4085,6 +4085,14 @@
                <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Storage Names to include when checking for Business Object Data availability</xs:documentation>
@@ -4311,6 +4319,11 @@
                <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Storage Names to include when checking for Business Object Data availability</xs:documentation>
@@ -4400,7 +4413,6 @@
       </xs:all>
    </xs:complexType>
 
-
    <!-- ***** Business Object Data Availability Collection ***** -->
 
    <xs:element name="businessObjectDataAvailabilityCollectionRequest" type="businessObjectDataAvailabilityCollectionRequest"/>
@@ -4464,6 +4476,14 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
@@ -4501,6 +4521,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="combinedAlterTableMaxPartitions" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies the maximum number of add partition statements to include in a single ALTER TABLE statement. If includeDropPartitions
+                  is set to true, this parameter also applies to maximum number of drop partition statements in a single ALTER TABLE statement
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="asOfTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Specifies the date and time when the business object status was effective at that time, (ex 2015-12-30T11:08:40).
@@ -4523,6 +4550,11 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
@@ -4568,7 +4600,6 @@
       </xs:sequence>
    </xs:complexType>
 
-
    <!-- ***** Business Object Data Partitions ***** -->
 
    <xs:element name="businessObjectDataPartitionsRequest" type="businessObjectDataPartitionsRequest"/>
@@ -4581,6 +4612,14 @@
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional Business Object Data Status value for available Business Object Data. Accepted values are VALID and all
+                  pre-registration status values, such as PROCESSING, UPLOADING, and PENDING_VALID. Default value is VALID. The request cannot
+                  contain both businessObjectDataVersion and businessObjectDataStatus values
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeAllRegisteredSubPartitions" type="xs:boolean" minOccurs="0">
@@ -4616,10 +4655,16 @@
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A Business Object Data Status value specified in the request for available Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="partitions" type="partitions" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
+
    <xs:complexType name="partitions">
       <xs:sequence>
          <xs:element name="partition" type="partition" minOccurs="0" maxOccurs="unbounded">
@@ -4630,6 +4675,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partition">
       <xs:sequence>
          <xs:element name="partitionColumns" type="partitionColumns" minOccurs="0">
@@ -4641,6 +4687,7 @@
          <xs:element name="partitionLocation" type="xs:string"/>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partitionColumns">
       <xs:sequence>
          <xs:element name="partitionColumn" type="partitionColumn" minOccurs="0" maxOccurs="unbounded">
@@ -4651,6 +4698,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <xs:complexType name="partitionColumn">
       <xs:sequence>
          <xs:element name="partitionColumnName" type="xs:string">
@@ -4667,6 +4715,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
    <!-- ***** Business Object Data Notification  ***** -->
 
    <xs:element name="businessObjectDataNotificationRegistrationCreateRequest" type="businessObjectDataNotificationRegistrationCreateRequest"/>
@@ -6233,7 +6282,9 @@
          </xs:element>
          <xs:element name="stepConcurrencyLevel" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The step concurrency level of the cluster</xs:documentation>
+               <xs:documentation>The step concurrency level of the cluster. Default is 1 which is non-concurrent. The maximum value is 256
+                  NOTE: Running multiple steps in parallel is only supported with Amazon EMR version 5.28.0 and later
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -7052,6 +7103,29 @@
             <xs:annotation>
                <xs:documentation>Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is "lowest-price" (the
                   default), which launches the lowest price first
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="capacityReservationOptions" type="emrClusterDefinitionCapacityReservationOptions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Describes the strategy for using unused Capacity Reservations for fulfilling On-Demand capacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionCapacityReservationOptions">
+      <xs:all>
+         <xs:element name="usageStrategy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates whether to use unused Capacity Reservations for fulfilling On-Demand capacity
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="capacityReservationPreference" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Indicates the instance's Capacity Reservation preferences
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -7985,44 +8059,40 @@
 
    <!-- ***** Namespace IAM Role Authorization ***** -->
 
-   <xs:element name="namespaceIamRoleAuthorizations" type="namespaceIamRoleAuthorizations"/>
-   <xs:complexType name="namespaceIamRoleAuthorizations">
-      <xs:sequence>
-         <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization"/>
-   <xs:complexType name="namespaceIamRoleAuthorization">
+   <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey"/>
+   <xs:complexType name="namespaceIamRoleAuthorizationKey">
       <xs:sequence>
          <xs:element name="namespace" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The namespace</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The list of IAM roles the namespace is authorized to use</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:complexType name="iamRoles">
-      <xs:sequence>
-         <xs:element name="iamRole" type="iamRole" minOccurs="0" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>An IAM role</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:complexType name="iamRole">
-      <xs:sequence>
          <xs:element name="iamRoleName" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The name of the IAM role</xs:documentation>
+               <xs:documentation>The IAM role name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="namespaceIamRoleAuthorizationKeys" type="namespaceIamRoleAuthorizationKeys"/>
+   <xs:complexType name="namespaceIamRoleAuthorizationKeys">
+      <xs:sequence>
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="namespaceIamRoleAuthorization" type="namespaceIamRoleAuthorization"/>
+   <xs:complexType name="namespaceIamRoleAuthorization">
+      <xs:sequence>
+         <xs:element name="id" type="xs:long">
+            <xs:annotation>
+               <xs:documentation>A system unique ID of this user namespace authorization</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The namespace IAM role authorization key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
@@ -8036,14 +8106,14 @@
    <xs:element name="namespaceIamRoleAuthorizationCreateRequest" type="namespaceIamRoleAuthorizationCreateRequest"/>
    <xs:complexType name="namespaceIamRoleAuthorizationCreateRequest">
       <xs:sequence>
-         <xs:element name="namespace" type="xs:string" minOccurs="0">
+         <xs:element name="namespaceIamRoleAuthorizationKey" type="namespaceIamRoleAuthorizationKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The namespace to give authorizations to</xs:documentation>
+               <xs:documentation>The namespace IAM role authorization key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
+         <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The list of IAM roles to authorize</xs:documentation>
+               <xs:documentation>A description of the IAM role</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -8052,68 +8122,13 @@
    <xs:element name="namespaceIamRoleAuthorizationUpdateRequest" type="namespaceIamRoleAuthorizationUpdateRequest"/>
    <xs:complexType name="namespaceIamRoleAuthorizationUpdateRequest">
       <xs:sequence>
-         <xs:element name="iamRoles" type="iamRoles" minOccurs="0">
+         <xs:element name="iamRoleDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The list of IAM roles to authorize</xs:documentation>
+               <xs:documentation>A description of the IAM role</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-
-   <!-- ***** Search Index Validation *****-->
-   <xs:element name="searchIndexValidationCreateRequest" type="searchIndexValidationCreateRequest"/>
-   <xs:complexType name="searchIndexValidationCreateRequest">
-      <xs:all>
-         <xs:element name="searchIndexKey" type="searchIndexKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="performFullSearchIndexValidation" type="xs:boolean" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>An optional boolean flag that specifies if full-validation should be run on the index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="searchIndexValidation" type="searchIndexValidation"/>
-   <xs:complexType name="searchIndexValidation">
-      <xs:all>
-         <xs:element name="searchIndexKey" type="searchIndexKey">
-            <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="sizeCheckPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
 
    <!-- ***** Search Index ***** -->
 
@@ -8875,12 +8890,14 @@
          </xs:element>
          <xs:element name="relationalSchemaName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database</xs:documentation>
+               <xs:documentation>The relational schema name. A schema name must match the actual schema name as it is stored in the relational database
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="relationalTableName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database</xs:documentation>
+               <xs:documentation>The relational table name. A table name must match the actual table name as it is stored in the relational database
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageName" type="xs:string">

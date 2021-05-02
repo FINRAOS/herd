@@ -130,6 +130,9 @@ public class DownloaderController extends DataBridgeController
 
             manifest.setBusinessObjectDataVersion(String.valueOf(businessObjectData.getVersion()));
             manifest.setBusinessObjectFormatVersion(String.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
+
+            // Add credential provider. If we fail to get credential first time, tool will exit with exception.
+            downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
             s3FileTransferRequestParamsDto.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
                 @Override

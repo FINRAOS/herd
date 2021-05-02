@@ -22,12 +22,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -144,7 +144,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Lists.newArrayList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Create a storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
@@ -310,7 +310,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyEntity.setStoragePolicyTransitionType(storagePolicyTransitionTypeEntity);
 
         // Create a list of storage file entities.
-        List<StorageFileEntity> storageFileEntities = Arrays.asList(new StorageFileEntity());
+        List<StorageFileEntity> storageFileEntities = Lists.newArrayList(new StorageFileEntity());
 
         // Create a storage unit status entity.
         StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
@@ -324,7 +324,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
         // Create a list of storage files.
-        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        List<StorageFile> storageFiles = Lists.newArrayList(new StorageFile(S3_KEY, FILE_SIZE_1_KB, ROW_COUNT_1000));
 
         // Mock the external calls.
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
@@ -343,7 +343,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
             .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
         when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
-        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey))
+        when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, false))
             .thenReturn(storageFiles);
         doAnswer(new Answer<Void>()
         {
@@ -388,7 +388,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey);
+        verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, false);
         verify(storageUnitDaoHelper)
             .validateNoExplicitlyRegisteredSubPartitionInStorageForBusinessObjectData(storageEntity, businessObjectFormatEntity, businessObjectDataKey,
                 S3_KEY_PREFIX);

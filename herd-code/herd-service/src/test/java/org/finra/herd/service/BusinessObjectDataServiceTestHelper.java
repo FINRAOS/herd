@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import static org.finra.herd.dao.AbstractDaoTest.NO_DO_NOT_TRANSITION_LATEST_VALID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,10 +35,10 @@ import java.util.regex.Pattern;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataAttributeDaoTestHelper;
@@ -372,7 +373,10 @@ public class BusinessObjectDataServiceTestHelper
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                         businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, partitionValue, subPartitionValues, businessObjectVersion,
-                        AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                        AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                        (AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
+                            AbstractServiceTest.STORAGE_2_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ?
+                            BusinessObjectDataStatusEntity.UPLOADING : BusinessObjectDataStatusEntity.VALID));
             }
             else
             {
@@ -382,7 +386,10 @@ public class BusinessObjectDataServiceTestHelper
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
                     .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                         businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, testSubPartitionValues,
-                        businessObjectVersion, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                        businessObjectVersion, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                        (AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
+                            AbstractServiceTest.STORAGE_2_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ?
+                            BusinessObjectDataStatusEntity.UPLOADING : BusinessObjectDataStatusEntity.VALID));
             }
 
             // Get the expected S3 key prefix.
@@ -824,8 +831,24 @@ public class BusinessObjectDataServiceTestHelper
     public BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String storageName,
         String s3BucketName, String s3StorageUnitStatus)
     {
-        // Create
+        return createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, storageName, s3BucketName, s3StorageUnitStatus,
+            AbstractServiceTest.LOCAL_FILES);
+    }
 
+    /**
+     * Create and persist database entities required for the finalize restore testing.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the storage name
+     * @param s3BucketName the S3 bucket name
+     * @param s3StorageUnitStatus the storage unit status
+     * @param localFiles the list of local files to create relative storage files
+     *
+     * @return the business object data entity
+     */
+    public BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String s3BucketName, String s3StorageUnitStatus, List<String> localFiles)
+    {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(businessObjectDataKey, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.BDATA_STATUS);
@@ -854,7 +877,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.NO_SUB_PARTITION_KEYS);
 
         // Create and add storage file entities to the storage unit.
-        for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
+        for (String relativeFilePath : localFiles)
         {
             storageFileDaoTestHelper
                 .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", s3KeyPrefix, relativeFilePath), AbstractServiceTest.FILE_SIZE_1_KB,
@@ -1235,10 +1258,10 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(AbstractServiceTest.PARTITION_KEY, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
-                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES,
-                AbstractServiceTest.STORAGE_NAME, Arrays.asList(
-                new BusinessObjectDataStatus(AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE, AbstractServiceTest.SUBPARTITION_VALUES,
-                    AbstractServiceTest.DATA_VERSION, BusinessObjectDataStatusEntity.VALID)), new ArrayList<>());
+                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                Arrays.asList(new BusinessObjectDataStatus(AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.PARTITION_VALUE,
+                    AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.DATA_VERSION, BusinessObjectDataStatusEntity.VALID)), new ArrayList<>());
         businessObjectDataAvailabilityResponses.add(businessObjectDataAvailability);
 
         // Set the expected values for the flags.
@@ -1535,7 +1558,7 @@ public class BusinessObjectDataServiceTestHelper
                 new PartitionValueFilter(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
-                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME, expectedDdl,
                 AbstractServiceTest.NO_AS_OF_TIME);
 
@@ -1558,6 +1581,19 @@ public class BusinessObjectDataServiceTestHelper
      */
     public String getExpectedBusinessObjectDataDdlTwoPartitionLevels(List<List<String>> partitions)
     {
+        return getExpectedBusinessObjectDataDdlTwoPartitionLevels(Collections.singletonList(partitions.get(0).get(0)), partitions);
+    }
+
+    /**
+     * Returns the actual HIVE DDL expected to be generated.
+     *
+     * @param primaryPartitionsToDrop the list of primary partitions to drop
+     * @param partitions the list of partitions, where each is represented by a primary value and a sub-partition value
+     *
+     * @return the actual HIVE DDL expected to be generated
+     */
+    public String getExpectedBusinessObjectDataDdlTwoPartitionLevels(List<String> primaryPartitionsToDrop, List<List<String>> partitions)
+    {
         // Build ddl expected to be generated.
         StringBuilder ddlBuilder = new StringBuilder();
         ddlBuilder.append("DROP TABLE IF EXISTS `" + AbstractServiceTest.TABLE_NAME + "`;\n");
@@ -1577,10 +1613,12 @@ public class BusinessObjectDataServiceTestHelper
 
         // Add the alter table drop partition statement.
         ddlBuilder.append("\n\n");
-        ddlBuilder.append(
-            "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" +
-                partitions.get(0).get(0) + "');");
-        ddlBuilder.append("\n");
+        for (String primaryPartitionToDrop : primaryPartitionsToDrop)
+        {
+            ddlBuilder.append(
+                "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" +
+                    primaryPartitionToDrop + "');\n");
+        }
 
         for (List<String> partition : partitions)
         {
@@ -1611,11 +1649,12 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @param primaryPartitionsToDrop the list of primary partitions to drop
      * @param partitionsToAdd the list of partitions to add, where each is represented by a primary value and a sub-partition value
+     * @param chunkSize the maximum number of partitions in combined alter table statement
      *
      * @return the actual HIVE DDL expected to be generated
      */
     public String getExpectedBusinessObjectDataDdlTwoPartitionLevelsWithMultiplePartitionsInSingleAlterTableStatement(List<String> primaryPartitionsToDrop,
-        List<List<String>> partitionsToAdd)
+        List<List<String>> partitionsToAdd, Integer chunkSize)
     {
         // Build ddl expected to be generated.
         StringBuilder ddlBuilder = new StringBuilder();
@@ -1634,39 +1673,48 @@ public class BusinessObjectDataServiceTestHelper
             "NULL DEFINED AS '\\N'\n");
         ddlBuilder.append("STORED AS TEXTFILE;");
 
-        // Add the alter table to drop partitions.
-        ddlBuilder.append("\n\n");
-        ddlBuilder.append("ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS\n");
-        for (String primaryPartitionToDrop : primaryPartitionsToDrop)
+        // Add alter table in separate chunks as specified by chunkSize.
+        int dropPartitionsChunkSize = chunkSize == null ? partitionsToAdd.size() : chunkSize;
+        for (int i = 0; i < primaryPartitionsToDrop.size(); i += dropPartitionsChunkSize)
         {
-            ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + primaryPartitionToDrop + "'),\n");
+            ddlBuilder.append("\n\nALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS\n");
+
+            for (String primaryPartitionToDrop : primaryPartitionsToDrop.subList(i, Math.min(i + dropPartitionsChunkSize, primaryPartitionsToDrop.size())))
+            {
+                ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + primaryPartitionToDrop + "'),\n");
+            }
+
+            // Replace the last comma with a semicolon.
+            ddlBuilder.setLength(ddlBuilder.length() - 2);
+            ddlBuilder.append(";");
         }
 
-        // Replace the last comma with a semicolon.
-        ddlBuilder.setLength(ddlBuilder.length() - 2);
-        ddlBuilder.append(";\n\n");
-
-        ddlBuilder.append("ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS");
-
-        for (List<String> partition : partitionsToAdd)
+        // Add alter table in separate chunks as specified by chunkSize.
+        int addPartitionsChunkSize = chunkSize == null ? partitionsToAdd.size() : chunkSize;
+        for (int i = 0; i < partitionsToAdd.size(); i += addPartitionsChunkSize)
         {
-            // Build an expected S3 key prefix.
-            String expectedS3KeyPrefix = AbstractServiceTest
-                .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
-                    AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
-                    AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
-                        new SchemaColumn(AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME, "STRING", AbstractServiceTest.NO_COLUMN_SIZE,
-                            AbstractServiceTest.COLUMN_REQUIRED, AbstractServiceTest.NO_COLUMN_DEFAULT_VALUE, AbstractServiceTest.NO_COLUMN_DESCRIPTION))
-                        .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), AbstractServiceTest.DATA_VERSION);
+            ddlBuilder.append("\n\nALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS");
 
-            // Add the alter table add partition statement.
-            ddlBuilder.append("\n");
-            ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
-                AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" +
-                expectedS3KeyPrefix + "'");
+            for (List<String> partition : partitionsToAdd.subList(i, Math.min(i + addPartitionsChunkSize, partitionsToAdd.size())))
+            {
+                // Build an expected S3 key prefix.
+                String expectedS3KeyPrefix = AbstractServiceTest
+                    .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
+                        AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
+                        AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
+                            new SchemaColumn(AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME, "STRING", AbstractServiceTest.NO_COLUMN_SIZE,
+                                AbstractServiceTest.COLUMN_REQUIRED, AbstractServiceTest.NO_COLUMN_DEFAULT_VALUE, AbstractServiceTest.NO_COLUMN_DESCRIPTION))
+                            .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), AbstractServiceTest.DATA_VERSION);
+
+                // Add the alter table add partition statement.
+                ddlBuilder.append("\n");
+                ddlBuilder.append("    PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
+                    AbstractServiceTest.SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME +
+                    "/" + expectedS3KeyPrefix + "'");
+            }
+
+            ddlBuilder.append(";");
         }
-        
-        ddlBuilder.append(";");
 
         // Return the expected DDL.
         return ddlBuilder.toString();
@@ -1960,6 +2008,7 @@ public class BusinessObjectDataServiceTestHelper
     public String getExpectedS3BucketName(String partitionValue)
     {
         if (AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES.contains(partitionValue) ||
+            AbstractServiceTest.STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES.contains(partitionValue) ||
             Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE.equals(partitionValue))
         {
             return AbstractServiceTest.S3_BUCKET_NAME;
@@ -2154,8 +2203,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.FORMAT_VERSION, Arrays.asList(
                 new PartitionValueFilter(AbstractServiceTest.PARTITION_KEY, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
-                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES,
-                AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+                    AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), null, AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS,
+                AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
         businessObjectDataAvailabilityRequests.add(businessObjectDataAvailabilityRequest);
 
         return businessObjectDataAvailabilityCollectionRequest;
@@ -2265,12 +2314,12 @@ public class BusinessObjectDataServiceTestHelper
                 new PartitionValueFilter(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, Arrays.asList(AbstractServiceTest.PARTITION_VALUE),
                     AbstractServiceTest.NO_PARTITION_VALUE_RANGE, AbstractServiceTest.NO_LATEST_BEFORE_PARTITION_VALUE,
                     AbstractServiceTest.NO_LATEST_AFTER_PARTITION_VALUE)), AbstractServiceTest.NO_STANDALONE_PARTITION_VALUE_FILTER,
-                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
                 AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
                 AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE,
-                AbstractServiceTest.NO_AS_OF_TIME);
+                AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS, AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
@@ -2952,6 +3001,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataAvailability.getBusinessObjectFormatVersion());
         assertEquals(request.getPartitionValueFilter(), actualBusinessObjectDataAvailability.getPartitionValueFilter());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataAvailability.getBusinessObjectDataVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataAvailability.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataAvailability.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getStorageName(), actualBusinessObjectDataAvailability.getStorageName());
         assertEquals(expectedAvailableStatuses, actualBusinessObjectDataAvailability.getAvailableStatuses());
         assertEquals(expectedNotAvailableStatuses, actualBusinessObjectDataAvailability.getNotAvailableStatuses());
@@ -2973,6 +3030,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataDdl.getBusinessObjectFormatVersion());
         assertEquals(request.getPartitionValueFilter(), actualBusinessObjectDataDdl.getPartitionValueFilter());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataDdl.getBusinessObjectDataVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataDdl.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataDdl.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getStorageName(), actualBusinessObjectDataDdl.getStorageName());
         assertEquals(request.getOutputFormat(), actualBusinessObjectDataDdl.getOutputFormat());
         assertEquals(request.getTableName(), actualBusinessObjectDataDdl.getTableName());
@@ -3021,6 +3086,14 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(request.getBusinessObjectFormatUsage(), actualBusinessObjectDataPartitions.getBusinessObjectFormatUsage());
         assertEquals(request.getBusinessObjectFormatFileType(), actualBusinessObjectDataPartitions.getBusinessObjectFormatFileType());
         assertEquals(request.getBusinessObjectFormatVersion(), actualBusinessObjectDataPartitions.getBusinessObjectFormatVersion());
+        if (StringUtils.isNotBlank(request.getBusinessObjectDataStatus()))
+        {
+            assertEquals(request.getBusinessObjectDataStatus().toUpperCase().trim(), actualBusinessObjectDataPartitions.getBusinessObjectDataStatus());
+        }
+        else
+        {
+            assertNull(actualBusinessObjectDataPartitions.getBusinessObjectDataStatus());
+        }
         assertEquals(request.getPartitionValueFilters(), actualBusinessObjectDataPartitions.getPartitionValueFilters());
         assertEquals(request.getBusinessObjectDataVersion(), actualBusinessObjectDataPartitions.getBusinessObjectDataVersion());
         assertEquals(request.getStorageNames(), actualBusinessObjectDataPartitions.getStorageNames());

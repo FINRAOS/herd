@@ -32,11 +32,10 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <revision>0.137.0-SNAPSHOT</revision>
-      <herd-ui.version>0.107.0</herd-ui.version>
-
-      <!-- NOTE: Only increment version if there are updates to herd python tools -->
-      <herd.python.version>0.136.0</herd.python.version>
+      <revision>0.147.0-SNAPSHOT</revision>
+      <!-- NOTE: Match version with herd snapshot version. For herd-sdk python -->
+      <herd.sdk.version>0.147.0</herd.sdk.version>
+      <herd-ui.version>0.117.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -44,15 +43,16 @@
         table modification permissions won't be present. Instead, only upgrade the version when the DB scripts have been run by the DBA. The DB scripts
         are located in the activiti-engine JAR in the org.activiti.db.upgrade package.
        -->
-      <activiti.version>5.19.0.1</activiti.version>
+      <activiti.version>5.21.0</activiti.version>
       <aspectj.version>1.8.11</aspectj.version>
-      <aws.sdk.version>1.11.827</aws.sdk.version>
+      <aws.sdk.version>1.11.991</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
       <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.11</commons.codec.version>
       <commons.collections4.version>4.1</commons.collections4.version>
       <commons.collections.version>3.2.2</commons.collections.version>
-      <commons.compress.version>1.19</commons.compress.version>
+      <commons.compress.version>1.20</commons.compress.version>
+      <commons.email.version>1.5</commons.email.version>
       <commons.configuration.version>1.10</commons.configuration.version>
       <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
       <commons.io.version>2.6</commons.io.version>
@@ -64,7 +64,7 @@
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
       <hibernate.validator.version>5.4.2.Final</hibernate.validator.version>
       <hibernate.version>5.2.12.Final</hibernate.version>
-      <h2db.version>1.4.196</h2db.version>
+      <h2db.version>1.4.200</h2db.version>
       <jackson.version>2.11.0</jackson.version>
       <apache.spark.jackson.version>2.9.10</apache.spark.jackson.version>
       <javax.servlet.version>4.0.1</javax.servlet.version>
@@ -72,7 +72,7 @@
       <jodatime.version>2.10.1</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
-      <log4j.version>2.11.2</log4j.version>
+      <log4j.version>2.14.1</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
@@ -97,7 +97,7 @@
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
       <elasticsearch.version>7.8.0</elasticsearch.version>
-      <search-guard-ssl.version>6.5.3-25.5</search-guard-ssl.version>
+      <search-guard-ssl.version>6.8.6-25.7</search-guard-ssl.version>
       <jcredstash.version>0.0.4</jcredstash.version>
       <opencsv.version>4.4</opencsv.version>
       <aws-signing-request-interceptor.version>0.0.22</aws-signing-request-interceptor.version>
@@ -380,6 +380,11 @@
             <version>${commons.compress.version}</version>
          </dependency>
          <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-email</artifactId>
+            <version>${commons.email.version}</version>
+         </dependency>
+         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>${commons.configuration.version}</version>
@@ -420,6 +425,12 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>dom4j</groupId>
+                  <artifactId>dom4j</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
          <dependency>
             <groupId>org.hibernate</groupId>
@@ -445,6 +456,11 @@
                   <artifactId>dom4j</artifactId>
                </exclusion>
             </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>${dom4j.version}</version>
          </dependency>
          <dependency>
             <groupId>org.hibernate</groupId>
@@ -501,6 +517,7 @@
             <artifactId>h2</artifactId>
             <version>${h2db.version}</version>
             <scope>test</scope>
+            <optional>true</optional>
          </dependency>
          <!-- This is the main SLF4J logging API that is used by the code base when we want to log. -->
          <dependency>
@@ -827,9 +844,23 @@
                   <groupId>joda-time</groupId>
                   <artifactId>joda-time</artifactId>
                </exclusion>
+               <exclusion>
+                  <groupId>org.apache.commons</groupId>
+                  <artifactId>commons-email</artifactId>
+               </exclusion>
             </exclusions>
          </dependency>
-
+         <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-secure-javascript</artifactId>
+            <version>${activiti.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-log4j12</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
          <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -952,12 +983,28 @@
                   <artifactId>avro</artifactId>
                </exclusion>
                <exclusion>
+                  <groupId>org.apache.directory.api</groupId>
+                  <artifactId>api-util</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.hadoop</groupId>
+                  <artifactId>hadoop-auth</artifactId>
+               </exclusion>
+               <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-shims</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-service-rpc</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.apache.orc</groupId>
+                  <artifactId>orc-core</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-xc</artifactId>
                </exclusion>
                <exclusion>
                   <groupId>net.sf.opencsv</groupId>
@@ -1010,6 +1057,22 @@
                <exclusion>
                   <groupId>org.apache.zookeeper</groupId>
                   <artifactId>zookeeper</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.eclipse.jetty.aggregate</groupId>
+                  <artifactId>jetty-all</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.mortbay.jetty</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>tomcat</groupId>
+                  <artifactId>*</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-mapper-asl</artifactId>
                </exclusion>
             </exclusions>
          </dependency>
@@ -1141,6 +1204,9 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-war-plugin</artifactId>
                <version>${maven.war.plugin.version}</version>
+               <configuration>
+                  <packagingExcludes>**.h2-1.4.200.jar,*h2database*</packagingExcludes>
+               </configuration>
             </plugin>
             <plugin>
                <groupId>org.codehaus.mojo</groupId>
@@ -1440,6 +1506,17 @@
          <organizationUrl>https://www.linkedin.com/in/nateweisz</organizationUrl>
          <roles>
             <role>product manager</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>K25693</id>
+         <name>Maggie Wang</name>
+         <email>rongwang0930@gmail.com</email>
+         <url>https://github.com/rongwang0930</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/rongwang0930</organizationUrl>
+         <roles>
+            <role>developer, tester</role>
          </roles>
       </developer>
    </developers>

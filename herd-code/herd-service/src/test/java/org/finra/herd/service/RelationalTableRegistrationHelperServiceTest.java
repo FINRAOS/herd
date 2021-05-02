@@ -324,7 +324,7 @@ public class RelationalTableRegistrationHelperServiceTest extends AbstractServic
         {
             assertEquals(String.format(
                 "Failed to retrieve description of a relational table with \"%s\" name under \"%s\" schema at jdbc.url=\"%s\" using jdbc.username=\"%s\". " +
-                    "Reason: Wrong user name or password [28000-196]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
+                    "Reason: Wrong user name or password [28000-200]", RELATIONAL_TABLE_NAME, RELATIONAL_SCHEMA_NAME, JDBC_URL, USERNAME), e.getMessage());
         }
 
         try

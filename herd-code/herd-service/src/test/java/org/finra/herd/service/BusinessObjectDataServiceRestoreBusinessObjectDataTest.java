@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +20,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -32,6 +34,7 @@ import org.junit.Test;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
@@ -44,7 +47,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends AbstractServiceTest
 {
     @Test
-    public void testRestoreBusinessObjectDataFromGlacier() throws Exception
+    public void testRestoreBusinessObjectDataFromGlacier()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -125,7 +128,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
     }
 
     @Test
-    public void testRestoreBusinessObjectDataFromDeepArchive() throws Exception
+    public void testRestoreBusinessObjectDataFromDeepArchive()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -206,7 +209,97 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
     }
 
     @Test
-    public void testRestoreBusinessObjectDataAmazonServiceException() throws Exception
+    public void testRestoreBusinessObjectDataDirectoryOnlyRegistration()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Get the expected S3 key prefix for the business object data key.
+        String s3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(businessObjectDataKey, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.PARTITION_KEY,
+                AbstractServiceTest.NO_SUB_PARTITION_KEYS);
+
+        // Create S3FileTransferRequestParamsDto to access the S3 bucket.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withS3KeyPrefix(s3KeyPrefix + "/").build();
+
+        // Create database entities required for testing. No storage files are registered.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper
+                .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
+                    StorageUnitStatusEntity.ARCHIVED, new ArrayList<>());
+
+        // Get the storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
+
+        // Storage files that are not registered, but they are needed for testing.
+        List<StorageFile> nonRegisteredStorageFiles = new ArrayList<>();
+        for (String filePath : LOCAL_FILES)
+        {
+            nonRegisteredStorageFiles.add(new StorageFile(s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000));
+        }
+
+        try
+        {
+            // Put relative Glacier storage class files into the S3 bucket flagged as not being currently restored.
+            for (StorageFile storageFile : nonRegisteredStorageFiles)
+            {
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.DeepArchive);
+                metadata.setOngoingRestore(false);
+                s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, storageFile.getFilePath(),
+                    new ByteArrayInputStream(new byte[storageFile.getFileSizeBytes().intValue()]), metadata), NO_S3_CLIENT);
+            }
+
+            // Add one more S3 file, which is an unregistered zero byte file.
+            // The validation is expected not to fail when detecting an unregistered zero byte S3 file.
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.DeepArchive);
+            metadata.setOngoingRestore(false);
+            String unregisteredS3FilePath = s3KeyPrefix + "/unregistered.txt";
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, unregisteredS3FilePath, new ByteArrayInputStream(new byte[0]), metadata), NO_S3_CLIENT);
+
+            // Assert that we got all files listed under the test S3 prefix.
+            assertEquals(nonRegisteredStorageFiles.size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+
+            // Initiate a restore request for the business object data.
+            BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS,
+                ARCHIVE_RETRIEVAL_OPTION);
+
+            // Validate the returned object.
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
+
+            // Validate that the storage unit status is RESTORING.
+            assertEquals(StorageUnitStatusEntity.RESTORING, storageUnitEntity.getStatus().getCode());
+
+            // Validate that there is now ongoing restore request for all S3 files.
+            for (StorageFile storageFile : nonRegisteredStorageFiles)
+            {
+                ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(S3_BUCKET_NAME, storageFile.getFilePath(), NO_S3_CLIENT);
+                assertTrue(objectMetadata.getOngoingRestore());
+            }
+
+            // Validate that there is now ongoing restore request for the unregistered S3 file.
+            ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(S3_BUCKET_NAME, unregisteredS3FilePath, NO_S3_CLIENT);
+            assertTrue(objectMetadata.getOngoingRestore());
+        }
+        finally
+        {
+            // Delete test files from S3 storage.
+            if (!s3Dao.listDirectory(s3FileTransferRequestParamsDto).isEmpty())
+            {
+                s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+            }
+            s3Operations.rollback();
+        }
+    }
+
+    @Test
+    public void testRestoreBusinessObjectDataAmazonServiceException()
     {
         // Create S3FileTransferRequestParamsDto to access the S3 bucket location.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
@@ -275,7 +368,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
     }
 
     @Test
-    public void testRestoreBusinessObjectDataNonGlacierNonDeepArchiveStorageClass() throws Exception
+    public void testRestoreBusinessObjectDataNonGlacierNonDeepArchiveStorageClass()
     {
         // Create S3FileTransferRequestParamsDto to access the S3 bucket.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.

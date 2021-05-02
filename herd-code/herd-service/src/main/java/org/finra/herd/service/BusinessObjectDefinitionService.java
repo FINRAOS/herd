@@ -1,22 +1,21 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -41,7 +40,7 @@ public interface BusinessObjectDefinitionService
      *
      * @return the created business object definition.
      */
-    public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest businessObjectDefinitionCreateRequest);
+    BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest businessObjectDefinitionCreateRequest);
 
     /**
      * Updates a business object definition.
@@ -51,7 +50,7 @@ public interface BusinessObjectDefinitionService
      *
      * @return the updated business object definition
      */
-    public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+    BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest businessObjectDefinitionUpdateRequest);
 
     /**
@@ -62,7 +61,7 @@ public interface BusinessObjectDefinitionService
      *
      * @return the updated business object definition
      */
-    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+    BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest businessObjectDefinitionDescriptiveInformationUpdateRequest);
 
     /**
@@ -70,9 +69,10 @@ public interface BusinessObjectDefinitionService
      *
      * @param businessObjectDefinitionKey the business object definition key
      * @param includeBusinessObjectDefinitionUpdateHistory a flag to indicate if change events are to be included or not
+     *
      * @return the business object definition.
      */
-    public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+    BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         Boolean includeBusinessObjectDefinitionUpdateHistory);
 
     /**
@@ -82,14 +82,14 @@ public interface BusinessObjectDefinitionService
      *
      * @return the business object definition that was deleted.
      */
-    public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+    BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
     /**
      * Gets the list of all business object definitions defined in the system.
      *
      * @return the business object definition keys.
      */
-    public BusinessObjectDefinitionKeys getBusinessObjectDefinitions();
+    BusinessObjectDefinitionKeys getBusinessObjectDefinitions();
 
     /**
      * Gets a list of all business object definitions defined in the system for a specified namespace.
@@ -98,42 +98,14 @@ public interface BusinessObjectDefinitionService
      *
      * @return the business object definition keys
      */
-    public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
-
-    /**
-     * Checks the count of business object definitions in the database against the count of business object definitions in the index.
-     * @param indexName the name of the index
-     * @return boolean value true for valid, false otherwise
-     */
-    public boolean indexSizeCheckValidationBusinessObjectDefinitions(String indexName);
-
-    /**
-     * Spot check a random percentage of business object definitions in the search index
-     * @param indexName the index name
-     * @return boolean value true for valid, false otherwise
-     */
-    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions(String indexName);
-
-    /**
-     * Spot check the most recent business object definitions in the search index
-     * @param indexName the name of the index
-     * @return boolean value true for valid, false otherwise
-     */
-    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions(String indexName);
-
-    /**
-     * Validate that the search index contains all business object definitions
-     * @param  indexName the name of the index
-     * @return result of an asynchronous computation
-     */
-    public Future<Void> indexValidateAllBusinessObjectDefinitions(String indexName);
+    BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
     /**
      * Searches across all business object definitions that are defined in the system per specified search filters and keys
      *
      * @return the retrieved business object definition list
      */
-    public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
+    BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
 
     /**
@@ -142,7 +114,7 @@ public interface BusinessObjectDefinitionService
      * @param businessObjectDefinitionKey business object definition key
      * @param businessObjectDefinitionSampleFileUpdateDto update dto
      */
-    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+    void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
 
     /**
@@ -150,5 +122,5 @@ public interface BusinessObjectDefinitionService
      *
      * @param searchIndexUpdateDto the SearchIndexUpdateDto object
      */
-    public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto);
+    void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto);
 }

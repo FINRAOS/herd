@@ -511,6 +511,11 @@ public enum ConfigurationValue
     LOG4J_OVERRIDE_RESOURCE_LOCATION("log4j.override.resource.location", null),
 
     /**
+     * The optional Log4J override configuration monitor interval seconds. The default is 60 seconds.
+     */
+    LOG4J_OVERRIDE_CONFIGURATION_MONITOR_INTERVAL_SECONDS("log4j.override.configuration.monitor.interval.seconds", 60),
+
+    /**
      * The herd endpoints that are not allowed.
      */
     NOT_ALLOWED_HERD_ENDPOINTS("not.allowed.herd.endpoints", null),
@@ -571,7 +576,7 @@ public enum ConfigurationValue
     /**
      * Indicates whether the namespace IAM role authorization is enabled
      */
-    NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "false"),
+    NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "true"),
 
     /**
      * Indicates whether the herd events are posted to AWS SNS.
