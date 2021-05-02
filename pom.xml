@@ -96,7 +96,7 @@
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
-      <elasticsearch.version>7.8.0</elasticsearch.version>
+      <elasticsearch.version>7.12.1</elasticsearch.version>
       <search-guard-ssl.version>6.8.6-25.7</search-guard-ssl.version>
       <jcredstash.version>0.0.4</jcredstash.version>
       <opencsv.version>4.4</opencsv.version>
