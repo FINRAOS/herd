@@ -61,6 +61,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter
 
     private static final Integer DEFAULT_MAX_PAYLOAD_LENGTH = null; // Default to unlimited.
 
+    public static final String HERD_SDK_VERSION_HEADER_NAME = "X-Herd-Sdk-Version";
+
     private boolean includeQueryString = true;
 
     private boolean includeClientInfo = true;
@@ -263,6 +265,14 @@ public class RequestLoggingFilter extends OncePerRequestFilter
 
             // Append the HTTP method.
             message.append(";method=").append(request.getMethod());
+
+            // Append the herd-sdk header information.
+            // Note that this header only shows up if the request originates from the herd-sdk so a
+            // null-check is necessary before we attempt to log it.
+            if (request.getHeader(HERD_SDK_VERSION_HEADER_NAME) != null)
+            {
+                message.append(";herdSdkVersion=").append(request.getHeader(HERD_SDK_VERSION_HEADER_NAME));
+            }
 
             // Append the client information.
             if (isIncludeClientInfo())
