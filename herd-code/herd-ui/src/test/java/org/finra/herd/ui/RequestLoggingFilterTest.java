@@ -16,6 +16,7 @@
 package org.finra.herd.ui;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +39,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.util.WebUtils;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 import org.finra.herd.core.helper.LogLevel;
 /**
@@ -246,6 +249,25 @@ public class RequestLoggingFilterTest extends AbstractUiTest
         wrapper.getCharacterEncoding();
         wrapper.getReader();
         wrapper.getReader();
+    }
+
+    @Test
+    public void testHerdSdkRequestHeader() throws Exception {
+        // Initialize test logger to capture logging events
+        TestLogger testLogger = TestLoggerFactory.getTestLogger(RequestLoggingFilter.class);
+
+        // create mock servlet request
+        MockHttpServletRequest request = createServletRequest();
+
+        // add herdSdkHeader
+        request.addHeader("X-Herd-Sdk-Version", "FOO");
+
+        // Run the filter.
+        createFilter().doFilter(request, createServletResponse(), createFilterChain());
+
+        // assertion
+        assertTrue(testLogger.getLoggingEvents().stream()
+            .anyMatch(loggingEvent -> loggingEvent.getMessage().contains(";herdSdkVersion=FOO;")));
     }
 
     private MockHttpServletRequest createServletRequest()
