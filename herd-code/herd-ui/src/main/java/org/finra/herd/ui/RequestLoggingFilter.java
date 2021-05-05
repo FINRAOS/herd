@@ -269,7 +269,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter
             // Append the herd-sdk header information.
             // Note that this header only shows up if the request originates from the herd-sdk so a
             // null-check is necessary before we attempt to log it.
-            if (request.getHeader(HERD_SDK_VERSION_HEADER_NAME) != null)
+            if (request.getHeader(HERD_SDK_VERSION_HEADER_NAME) != null &&
+                HerdStringUtils.verifyHerdVersionConformingString(request.getHeader(HERD_SDK_VERSION_HEADER_NAME)))
             {
                 message.append(";herdSdkVersion=").append(request.getHeader(HERD_SDK_VERSION_HEADER_NAME));
             }
