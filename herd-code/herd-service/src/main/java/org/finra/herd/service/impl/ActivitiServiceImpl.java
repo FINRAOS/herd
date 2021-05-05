@@ -130,6 +130,12 @@ public class ActivitiServiceImpl implements ActivitiService
     }
 
     @Override
+    public List<HistoricProcessInstance> getUnfinishedHistoricProcessInstancesByStartBeforeTime(DateTime startBeforeTime)
+    {
+        return createHistoricProcessInstanceQuery(startBeforeTime).list();
+    }
+
+    @Override
     public List<HistoricProcessInstance> getHistoricProcessInstancesByStatusAndProcessDefinitionKeys(JobStatusEnum jobStatus,
         Collection<String> processDefinitionKeys, DateTime startTime, DateTime endTime)
     {
@@ -222,6 +228,30 @@ public class ActivitiServiceImpl implements ActivitiService
         {
             query.finishedBefore(endTime.toDate());
         }
+        return query;
+    }
+
+    /**
+     * Creates a HistoricProcessInstanceQuery in the given the start before time.
+     *
+     * @param startBeforeTime the start before time.
+     *
+     * @return A HistoricProcessInstanceQuery
+     */
+    private HistoricProcessInstanceQuery createHistoricProcessInstanceQuery(DateTime startBeforeTime)
+    {
+        HistoricProcessInstanceQuery query = activitiHistoryService.createHistoricProcessInstanceQuery();
+
+        // Use the "unfinished" query filter.
+        query.unfinished();
+
+        // Add the start before filter.
+        query.startedBefore(startBeforeTime.toDate());
+
+        // Order by start time descending.
+        query.orderByProcessInstanceStartTime();
+        query.desc();
+
         return query;
     }
 }

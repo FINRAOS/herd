@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
 import org.finra.herd.model.api.xml.Parameter;
@@ -86,7 +85,7 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
             {
                 // Select the workflows to cleanup.
                 JobSummaries jobSummaries =
-                    jobService.getJobs(null, null, JobStatusEnum.RUNNING, DateTime.now().minusDays(activitiJobRunningThresholdInDays), null);
+                    jobService.getRunningJobsByStartBeforeTime(DateTime.now().minusDays(activitiJobRunningThresholdInDays));
                 jobSummaryList = jobSummaries.getJobSummaries();
             }
             catch (Exception exception)
