@@ -16,7 +16,6 @@
 package org.finra.herd.ui;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +42,7 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 import org.finra.herd.core.helper.LogLevel;
+
 /**
  * Test driver for the RequestLoggingFilter class. Since the filter's main functionality logs messages which is difficult to test, the majority of test cases
  * will simply ensure that exceptions are not thrown under various configuration approaches.
@@ -252,22 +252,39 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     }
 
     @Test
-    public void testHerdSdkRequestHeader() throws Exception {
+    public void testHerdSdkRequestHeader() throws ServletException, IOException
+    {
         // Initialize test logger to capture logging events
         TestLogger testLogger = TestLoggerFactory.getTestLogger(RequestLoggingFilter.class);
 
+        // valid headers
+        verifyHeaderLoggingEvent(testLogger, "0.140.0", true);
+        verifyHeaderLoggingEvent(testLogger, "0.140.0-SNAPSHOT", true);
+        verifyHeaderLoggingEvent(testLogger, "0.1000.0", true);
+        verifyHeaderLoggingEvent(testLogger, "0.999.0-SNAPSHOT", true);
+
+        // invalid headers
+        verifyHeaderLoggingEvent(testLogger, "randomValue", false);
+        verifyHeaderLoggingEvent(testLogger, "0.140.0%0a%0aDEBUG:+User+logged+out%3dHacker", false);
+        verifyHeaderLoggingEvent(testLogger, "<?php $htmlString= 'exploit'; ?>", false);
+        verifyHeaderLoggingEvent(testLogger, "0.140-SNAPSHOT", false);
+    }
+
+    private void verifyHeaderLoggingEvent(TestLogger testLogger, String headerValue, boolean isValid) throws ServletException, IOException
+    {
         // create mock servlet request
         MockHttpServletRequest request = createServletRequest();
 
         // add herdSdkHeader
-        request.addHeader("X-Herd-Sdk-Version", "FOO");
+        request.addHeader("X-Herd-Sdk-Version", headerValue);
 
         // Run the filter.
         createFilter().doFilter(request, createServletResponse(), createFilterChain());
 
         // assertion
-        assertTrue(testLogger.getLoggingEvents().stream()
-            .anyMatch(loggingEvent -> loggingEvent.getMessage().contains(";herdSdkVersion=FOO;")));
+        assertEquals(testLogger.getLoggingEvents().stream()
+            .anyMatch(loggingEvent -> loggingEvent.getMessage()
+                .contains(String.format(";herdSdkVersion=%s;", headerValue))), isValid);
     }
 
     private MockHttpServletRequest createServletRequest()
