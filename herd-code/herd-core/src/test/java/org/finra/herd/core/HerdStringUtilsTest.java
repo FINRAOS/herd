@@ -17,10 +17,14 @@ package org.finra.herd.core;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -283,5 +287,22 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         String expectedMessage8 = expectedMessageSB.toString();
         String sanitizedMessage8 = HerdStringUtils.sanitizeLogText(message8);
         assertEquals(expectedMessage8, sanitizedMessage8);
+    }
+
+    @Test
+    public void testHerdVersionConformingString()
+    {
+        List<String> conformingStrings = Arrays.asList("0.140.0", "0.140.0-SNAPSHOT", "0.1000.0", "0.10000.0-SNAPSHOT");
+        List<String> nonConformingStrings = Arrays.asList("0.140.0%0a%0aINFO:+User+logged+out%3dMr.+Attacker", "bar\r\n", "\rbar<?php>");
+
+        for (String conformingString : conformingStrings)
+        {
+            assertTrue(HerdStringUtils.verifyHerdVersionConformingString(conformingString));
+        }
+
+        for (String nonConformingString: nonConformingStrings)
+        {
+            assertFalse(HerdStringUtils.verifyHerdVersionConformingString(nonConformingString));
+        }
     }
 }
