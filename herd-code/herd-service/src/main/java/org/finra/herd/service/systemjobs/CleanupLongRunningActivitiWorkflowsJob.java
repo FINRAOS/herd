@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.model.api.xml.JobDeleteRequest;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
 import org.finra.herd.model.api.xml.Parameter;
@@ -114,10 +115,8 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
                 {
                     LOGGER.info("Deleting Activiti workflow. systemJobName=\"{}\" jobId=\"{}\" jobStatus=\"{}\" startTime=\"{}\"", JOB_NAME, jobSummary.getId(),
                         jobSummary.getStatus(), jobSummary.getStartTime());
-                    /*  TODO: uncomment this
                     jobService.deleteJob(jobSummary.getId(), new JobDeleteRequest(
                         "Activiti workflow running longer than " + activitiJobRunningThresholdInDays + " days. Deleted by " + JOB_NAME + "."));
-                     */
                     processedActivitiWorkflows += 1;
                 }
                 catch (Exception exception)
