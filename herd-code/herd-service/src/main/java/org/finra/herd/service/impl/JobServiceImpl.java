@@ -360,6 +360,9 @@ public class JobServiceImpl implements JobService
         // Construct the list of job summaries to return.
         JobSummaries jobSummaries = new JobSummaries();
 
+        // Compile the Regex pattern.
+        Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
+
         // Get a list of historic process instances.
         List<HistoricProcessInstance> historicProcessInstances =
             activitiService.getUnfinishedHistoricProcessInstancesByStartBeforeTime(startBeforeTime);
@@ -380,9 +383,14 @@ public class JobServiceImpl implements JobService
             // Create a new job summary.
             JobSummary jobSummary = new JobSummary();
             jobSummary.setId(historicProcessInstance.getId());
-
+            
+            // Get the job definition key.
+            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper
+                .getJobDefinitionKey(historicProcessInstance.getProcessDefinitionKey(), pattern);
+            
             // Set the namespace and job name on the job summary.
-            jobSummary.setJobName(historicProcessInstance.getName());
+            jobSummary.setJobName(jobDefinitionKey.getJobName());
+            jobSummary.setNamespace(jobDefinitionKey.getNamespace());
 
             // Set the start time always since all jobs will have a start time.
             jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));

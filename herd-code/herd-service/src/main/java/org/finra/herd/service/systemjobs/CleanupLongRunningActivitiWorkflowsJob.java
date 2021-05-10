@@ -69,7 +69,6 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
         int activitiJobRunningThresholdInDays =
             parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS);
 
-
         // Log the parameter values.
         LOGGER.info("systemJobName=\"{}\" {}={} {}={}", JOB_NAME, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_MAX_WORKFLOWS,
             maxActivitiWorkflowsToProcess, ConfigurationValue.CLEANUP_LONG_RUNNING_ACTIVITI_WORKFLOWS_JOB_THRESHOLD_DAYS, activitiJobRunningThresholdInDays);
@@ -113,8 +112,9 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
             {
                 try
                 {
-                    LOGGER.info("Deleting Activiti workflow. systemJobName=\"{}\" jobId=\"{}\" jobStatus=\"{}\" startTime=\"{}\"", JOB_NAME, jobSummary.getId(),
-                        jobSummary.getStatus(), jobSummary.getStartTime());
+                    LOGGER.info(
+                        "Deleting Activiti workflow. systemJobName=\"{}\" jobId=\"{}\" jobName=\"{}\" jobNamespace=\"{}\" jobStatus=\"{}\" startTime=\"{}\"",
+                        JOB_NAME, jobSummary.getId(), jobSummary.getJobName(), jobSummary.getNamespace(), jobSummary.getStatus(), jobSummary.getStartTime());
                     jobService.deleteJob(jobSummary.getId(), new JobDeleteRequest(
                         "Activiti workflow running longer than " + activitiJobRunningThresholdInDays + " days. Deleted by " + JOB_NAME + "."));
                     processedActivitiWorkflows += 1;
@@ -122,10 +122,10 @@ public class CleanupLongRunningActivitiWorkflowsJob extends AbstractSystemJob
                 catch (Exception exception)
                 {
                     // Log the exception.
-                    LOGGER.error("Failed to delete an Activiti workflow. systemJobName=\"{}\" jobId=\"{}\"", JOB_NAME, jobSummary.getId(), exception);
+                    LOGGER.error("Failed to delete an Activiti workflow. systemJobName=\"{}\" jobId=\"{}\" jobName=\"{}\" jobNamespace=\"{}\"",
+                        JOB_NAME, jobSummary.getId(), jobSummary.getJobName(), jobSummary.getNamespace(), exception);
                 }
             }
-
         }
 
         // Log the number of cleanup activiti workflows.
