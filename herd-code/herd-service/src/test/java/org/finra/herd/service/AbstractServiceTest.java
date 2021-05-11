@@ -591,6 +591,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_IF_NOT_EXISTS_OPTION = false;
 
+    public static final Boolean NO_INCLUDE_SINGLE_LOCATION = false;
+
     public static final Boolean NO_INCLUDE_STORAGE_UNIT_STATUS_HISTORY = false;
 
     public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
