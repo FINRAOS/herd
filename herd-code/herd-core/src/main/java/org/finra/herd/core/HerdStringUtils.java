@@ -17,6 +17,7 @@ package org.finra.herd.core;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -183,5 +184,24 @@ public class HerdStringUtils
         sanitizedText = REGEX_XML_PASSWORD.matcher(sanitizedText).replaceAll("$1" + HIDDEN_TEXT + "<");
 
         return sanitizedText;
+    }
+
+    /**
+     * Determines if a String conforms to Herd's versioning scheme
+     *
+     * @param versionString The given input string
+     * @return boolean true if the input conforms, false otherwise
+     */
+    public static boolean verifyHerdVersionConformingString(String versionString)
+    {
+        if (StringUtils.isEmpty(versionString))
+        {
+            return false;
+        }
+
+        Pattern semverPattern = Pattern.compile("\\d+\\.\\d+\\.\\d+(?:-SNAPSHOT)?");
+        Matcher semverPatternMatcher = semverPattern.matcher(versionString);
+
+        return semverPatternMatcher.matches();
     }
 }
