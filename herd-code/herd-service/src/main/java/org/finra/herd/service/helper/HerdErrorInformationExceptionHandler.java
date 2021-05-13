@@ -142,14 +142,38 @@ public class HerdErrorInformationExceptionHandler
 
     /**
      * Handle exceptions that result in a "bad request" status.
+     *
+     * @param exception the exception.
+     *
+     * @return the error information.
      */
-    @ExceptionHandler(value = {IllegalArgumentException.class, HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
-        TypeMismatchException.class, UnsupportedEncodingException.class})
+    @ExceptionHandler(value = {IllegalArgumentException.class, MissingServletRequestParameterException.class, TypeMismatchException.class,
+        UnsupportedEncodingException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorInformation handleBadRequestException(Exception exception)
     {
         return getErrorInformation(HttpStatus.BAD_REQUEST, exception);
+    }
+
+    /**
+     * Handle Spring HttpMessageNotReadableException.
+     *
+     * @param exception the exception.
+     *
+     * @return the error information.
+     */
+    @ExceptionHandler(value = {HttpMessageNotReadableException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorInformation handleNotReadableException(HttpMessageNotReadableException exception)
+    {
+        String errorMessage = exception.getMessage();
+        if (exception.getRootCause() != null)
+        {
+            errorMessage = exception.getRootCause().getMessage();
+        }
+        return getErrorInformation(HttpStatus.BAD_REQUEST, new RuntimeException(errorMessage));
     }
 
     /**
