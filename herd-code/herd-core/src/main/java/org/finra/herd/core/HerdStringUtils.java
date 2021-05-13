@@ -206,11 +206,11 @@ public class HerdStringUtils
     }
 
     /**
-     * Get first level prefix from the path.
+     * Get first level prefix from the relative path. The path is assumed not to start from the "/" character.
      *
      * @param prefix the given prefix
      *
-     * @return if exists, first level prefix including trailing slash, prefix value as it was specified otherwise
+     * @return if exists, first level prefix including trailing slash, path value as it was specified otherwise
      */
     public static String getFirstLevelPrefix(String prefix)
     {
