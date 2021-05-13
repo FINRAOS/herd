@@ -17,6 +17,7 @@ package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -2329,7 +2330,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             String expectedDdl = businessObjectDataServiceTestHelper
                 .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
                     Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, i + 1, STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES,
-                    false, true, true, INCLUDE_DROP_PARTITIONS);
+                    false, true, true, INCLUDE_DROP_PARTITIONS, NO_INCLUDE_SINGLE_LOCATION);
             businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
         }
     }
@@ -3783,8 +3784,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
                 AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null,
-                AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + 99);
+                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, NO_CUSTOM_DDL_NAME,
+                NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA,
+                AbstractServiceTest.DATA_VERSION + 99);
 
         // Validate the results.
         String expectedDllStrVersion2 =
@@ -3888,8 +3890,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
                 AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null,
-                AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + 99);
+                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, NO_CUSTOM_DDL_NAME,
+                NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA,
+                AbstractServiceTest.DATA_VERSION + 99);
 
         // Validate the results.
         String expectedDllStrVersion2 =
@@ -3946,8 +3949,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
                 AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null,
-                AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + 99);
+                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, NO_CUSTOM_DDL_NAME,
+                NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA,
+                AbstractServiceTest.DATA_VERSION + 99);
 
         Calendar cal = Calendar.getInstance();
         java.util.Date dateTime = cal.getTime();
@@ -3976,8 +3980,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
                 AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null,
-                AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, AbstractServiceTest.DATA_VERSION + 199);
+                schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, NO_CUSTOM_DDL_NAME,
+                NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA,
+                AbstractServiceTest.DATA_VERSION + 199);
 
         String expectedDllStrVersion2 =
             expectedDdlStr.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION + 99)));
@@ -4007,5 +4012,321 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         expectedDllStrVersion2 =
             expectedDdlStr2.replaceAll(AbstractServiceTest.DATA_VERSION.toString(), Integer.toString((AbstractServiceTest.DATA_VERSION + 99)));
         businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDllStrVersion2, resultDdl3);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationNonPartitionedTable()
+    {
+        // Prepare non-partitioned test business object data with custom ddl.
+        List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, CUSTOM_DDL_NAME,
+                true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl for a non-partitioned table by
+        // - specifying custom ddl name
+        // - including single location (no impact is expected for non-partitioned tables since their DDL contains location statement regardless of this flag)
+        // - not allowing missing data
+        BusinessObjectDataDdlRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        assertNotNull(request.getCustomDdlName());
+        request.getPartitionValueFilters().get(0).setPartitionKey(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY);
+        request.getPartitionValueFilters().get(0).setPartitionValues(partitionValues);
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(false);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(0, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                UNSORTED_PARTITION_VALUES, STORAGE_1_AVAILABLE_PARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationNonPartitionedTableNoAvailableData()
+    {
+        // Prepare non-partitioned test business object data with custom ddl.
+        List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, CUSTOM_DDL_NAME,
+                true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create a new storage, so we can specify it in the request and result in no data being available for non-partitioned table.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Retrieve business object data ddl for a non-partitioned table by
+        // - specifying custom ddl name
+        // - including single location (no impact is expected for non-partitioned tables since their DDL contains location statement regardless of this flag)
+        // - allowing missing data and specifying storage that has no available data
+        BusinessObjectDataDdlRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        assertNotNull(request.getCustomDdlName());
+        request.getPartitionValueFilters().get(0).setPartitionKey(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY);
+        request.getPartitionValueFilters().get(0).setPartitionValues(partitionValues);
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(true);
+        request.setStorageName(STORAGE_NAME_3);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(0, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                NO_PARTITION_VALUES, STORAGE_1_AVAILABLE_PARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationNonPartitionedTableNoCustomDdl()
+    {
+        // Prepare non-partitioned test business object data without custom ddl.
+        List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, null, true,
+                ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl for a non-partitioned table by
+        // - not specifying custom ddl name
+        // - including single location (no impact is expected for non-partitioned tables since their DDL contains location statement regardless of this flag)
+        // - not allowing missing data
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        assertNull(request.getCustomDdlName());
+        request.getPartitionValueFilters().get(0).setPartitionKey(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY);
+        request.getPartitionValueFilters().get(0).setPartitionValues(partitionValues);
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(false);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(0, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, CUSTOM_ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                UNSORTED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationNonPartitionedTableNoCustomDdlNoAvailableData()
+    {
+        // Prepare non-partitioned test business object data without custom ddl.
+        List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, null, true,
+                ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create a new storage, so we can specify it in the request and result in no data being available for non-partitioned table.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Retrieve business object data ddl for a non-partitioned table by
+        // - not specifying custom ddl name
+        // - including single location (no impact is expected for non-partitioned tables since their DDL contains location statement regardless of this flag)
+        // - allowing missing data and specifying storage that has no available data
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        assertNull(request.getCustomDdlName());
+        request.getPartitionValueFilters().get(0).setPartitionKey(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY);
+        request.getPartitionValueFilters().get(0).setPartitionValues(partitionValues);
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(true);
+        request.setStorageName(STORAGE_NAME_3);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(0, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, CUSTOM_ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                NO_PARTITION_VALUES, NO_SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationPartitionedTable()
+    {
+        // Prepare test data with custom ddl.
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, INCLUDE_SINGLE_LOCATION, LATEST_VERSION_FLAG_SET,
+                ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, DATA_VERSION);
+
+        // Retrieve business object data ddl for partitioned table by
+        // - specifying custom ddl name
+        // - including single location
+        BusinessObjectDataDdlRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        assertNotNull(request.getCustomDdlName());
+        request.setIncludeSingleLocation(true);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true, NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationPartitionedTableNoAvailableData()
+    {
+        // Prepare test data with custom ddl.
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, INCLUDE_SINGLE_LOCATION, LATEST_VERSION_FLAG_SET,
+                ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, DATA_VERSION);
+
+        // Create a new storage, so we can specify it in the request and result in no data being available for non-partitioned table.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Retrieve business object data ddl for partitioned table by
+        // - specifying custom ddl name
+        // - including single location
+        // - allowing missing data and specifying storage that has no available data
+        BusinessObjectDataDdlRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        assertNotNull(request.getCustomDdlName());
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(true);
+        request.setStorageName(STORAGE_NAME_3);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                NO_PARTITION_VALUES, NO_SUBPARTITION_VALUES, false, true, true, NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationPartitionedTableNoCustomDdl()
+    {
+        // Prepare test data without custom ddl.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
+        String partitionKey = partitionColumns.get(0).getName();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+            SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+            SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl for a partitioned table by
+        // - not specifying custom ddl name
+        // - including single location
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        assertNull(request.getCustomDdlName());
+        request.setIncludeSingleLocation(true);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, CUSTOM_ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true, NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationPartitionedTableNoCustomDdlMultipleStorage()
+    {
+        // Prepare database entities required for testing.
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
+                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl for data located in explicitly specified multiple storage with request having:
+        // - business object data version set to a valid value (this forces to select business object data regardless of business object data status)
+        // - not specifying custom ddl name
+        // - including single location
+        // - allowMissingData is set to true
+        BusinessObjectDataDdlRequest request =
+            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_BDATA_STATUS, STORAGE_NAMES, NO_STORAGE_NAME,
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION,
+                NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION, ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
+                NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS,
+                NO_AS_OF_TIME);
+        BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the response object.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION, SUBPARTITION_VALUES, false, true, true, NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION);
+        BusinessObjectDataDdl expectedBusinessObjectDataDdl =
+            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                    NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_BDATA_STATUS, STORAGE_NAMES, NO_STORAGE_NAME,
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, expectedDdl, NO_AS_OF_TIME);
+        assertEquals(expectedDdl, resultBusinessObjectDataDdl.getDdl());
+        assertEquals(expectedBusinessObjectDataDdl, resultBusinessObjectDataDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlIncludeSingleLocationPartitionedTableNoCustomDdlNoAvailableData()
+    {
+        // Prepare test data without custom ddl.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
+        String partitionKey = partitionColumns.get(0).getName();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+            SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+            SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Create a new storage, so we can specify it in the request and result in no data being available for non-partitioned table.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Retrieve business object data ddl for partitioned table by
+        // - not specifying custom ddl name
+        // - including single location
+        // - allowing missing data and specifying storage that has no available data
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        assertNull(request.getCustomDdlName());
+        request.setIncludeSingleLocation(true);
+        request.setAllowMissingData(true);
+        request.setStorageName(STORAGE_NAME_3);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(partitionColumns.size(), FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, CUSTOM_ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                NO_PARTITION_VALUES, NO_SUBPARTITION_VALUES, false, true, true, NO_INCLUDE_DROP_PARTITIONS, INCLUDE_SINGLE_LOCATION);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
     }
 }

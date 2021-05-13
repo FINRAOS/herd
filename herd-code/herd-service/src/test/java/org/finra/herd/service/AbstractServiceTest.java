@@ -469,6 +469,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean INCLUDE_IF_NOT_EXISTS_OPTION = true;
 
+    public static final Boolean INCLUDE_SINGLE_LOCATION = true;
+
     public static final Boolean INCLUDE_STORAGE_UNIT_STATUS_HISTORY = true;
 
     public static final String INDEX_SEARCH_RESULT_TYPE = "UT_IndexSearchResultType" + RANDOM_SUFFIX;
