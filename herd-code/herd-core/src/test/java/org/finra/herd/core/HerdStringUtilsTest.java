@@ -314,6 +314,8 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         assertEquals(EMPTY_STRING, HerdStringUtils.getFirstLevelPrefix(EMPTY_STRING));
         assertEquals(BLANK_TEXT, HerdStringUtils.getFirstLevelPrefix(BLANK_TEXT));
         assertEquals(STRING_VALUE, HerdStringUtils.getFirstLevelPrefix(STRING_VALUE));
+        assertEquals("/", HerdStringUtils.getFirstLevelPrefix("/"));
+        assertEquals("/", HerdStringUtils.getFirstLevelPrefix("/" + STRING_VALUE));
         assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/"));
         assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/" + STRING_VALUE_2));
         assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/" + STRING_VALUE_2 + "/" + RANDOM_SUFFIX));
