@@ -467,18 +467,12 @@ public class Hive13DdlGenerator extends DdlGenerator
         {
             processPartitionFiltersForGenerateDdl(generateDdlRequest, sb, replacements, businessObjectFormat, ifNotExistsOption);
         }
-        // Add a location statement with a token if this is format dll that does not use custom ddl.
-        else if (!generateDdlRequest.getPartitioned() && generateDdlRequest.getCustomDdlEntity() == null)
-        {
-            // Since custom DDL is not specified, there are no partition values, and this table is not partitioned, add a LOCATION clause with a token.
-            sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
-        }
 
         // Trim to remove unnecessary end-of-line characters, if any, from the end of the generated DDL.
         String resultDdl = sb.toString().trim();
 
-        // For custom DDL, substitute the relative custom DDL tokens with their values.
-        if (generateDdlRequest.getCustomDdlEntity() != null)
+        // Substitute the relative custom DDL tokens with their values.
+        if (!replacements.isEmpty())
         {
             for (Map.Entry<String, String> entry : replacements.entrySet())
             {
@@ -600,9 +594,23 @@ public class Hive13DdlGenerator extends DdlGenerator
                 escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
         }
 
-        // If this table is not partitioned, then STORED AS clause will be followed by LOCATION. Otherwise, the CREATE TABLE is complete.
-        sb.append(String
-            .format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()), generateDdlRequest.getPartitioned() ? ";" : ""));
+        // If this table is not partitioned or flag is set to include single location, then STORED AS clause will be followed by LOCATION.
+        // Otherwise, the CREATE TABLE is complete.
+        sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
+            generateDdlRequest.getPartitioned() && BooleanUtils.isNotTrue(generateDdlRequest.getIncludeSingleLocation()) ? ";" : ""));
+
+        // If this is non-partitioned table, add LOCATION statement with non-partitioned table location token.
+        // If this table has available data, the token will be replaced with the table location based on the data location.
+        if (!generateDdlRequest.getPartitioned())
+        {
+            sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
+        }
+        // Otherwise, if flag is set to include single location, add LOCATION statement with partitioned table location token.
+        // If this table has partitions (available data), the token will be replaced with the table location based on the first available partition location.
+        else if (BooleanUtils.isTrue(generateDdlRequest.getIncludeSingleLocation()))
+        {
+            sb.append(String.format("LOCATION '%s';\n", PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
+        }
     }
 
     /**
@@ -732,15 +740,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos =
             businessObjectDataDdlPartitionsHelper.processPartitionFiltersForGenerateDdlPartitions(generateDdlRequest);
 
-        // We still need to close/complete the create table statement when there is no custom DDL,
-        // the table is non-partitioned, and there is no business object data found.
-        if (generateDdlRequest.getCustomDdlEntity() == null && !generateDdlRequest.getPartitioned() && CollectionUtils.isEmpty(storageUnitAvailabilityDtos))
-        {
-            // Add a LOCATION clause with a token.
-            sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
-        }
-        // The table is partitioned, custom DDL is specified, or there is at least one business object data instance found.
-        else
+        // Continue processing only if table is partitioned, custom DDL is specified, or there is at least one business object data instance found.
+        if (generateDdlRequest.getPartitioned() || generateDdlRequest.getCustomDdlEntity() != null || CollectionUtils.isNotEmpty(storageUnitAvailabilityDtos))
         {
             // If drop partitions flag is set and the table is partitioned, drop partitions specified by the partition filters.
             if (generateDdlRequest.getPartitioned() && BooleanUtils.isTrue(generateDdlRequest.getIncludeDropPartitions()))
