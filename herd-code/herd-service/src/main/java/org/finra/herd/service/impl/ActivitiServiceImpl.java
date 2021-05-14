@@ -250,7 +250,7 @@ public class ActivitiServiceImpl implements ActivitiService
 
         // Order by start time descending.
         query.orderByProcessInstanceStartTime();
-        query.desc();
+        query.asc();
 
         return query;
     }
