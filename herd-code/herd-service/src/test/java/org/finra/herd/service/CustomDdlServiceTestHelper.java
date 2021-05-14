@@ -65,6 +65,19 @@ public class CustomDdlServiceTestHelper
      */
     public String getTestCustomDdl(boolean partitioned)
     {
+        return getTestCustomDdl(partitioned, AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION);
+    }
+
+    /**
+     * Returns the Hive custom DDL.
+     *
+     * @param partitioned specifies whether the table the custom DDL is for is partitioned or not
+     * @param includeSingleLocation specifies to include table location statement with partitioned table location custom DDL token
+     *
+     * @return the custom Hive DDL
+     */
+    public String getTestCustomDdl(boolean partitioned, boolean includeSingleLocation)
+    {
         StringBuilder sb = new StringBuilder();
 
         sb.append("CREATE EXTERNAL TABLE IF NOT EXISTS `${table.name}` (\n");
@@ -105,7 +118,15 @@ public class CustomDdlServiceTestHelper
 
         if (partitioned)
         {
-            sb.append("STORED AS TEXTFILE;");
+            if (includeSingleLocation)
+            {
+                sb.append("STORED AS TEXTFILE\n");
+                sb.append("LOCATION '${table.location}';");
+            }
+            else
+            {
+                sb.append("STORED AS TEXTFILE;");
+            }
         }
         else
         {

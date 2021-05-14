@@ -18,6 +18,7 @@ package org.finra.herd.core;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -304,5 +305,19 @@ public class HerdStringUtilsTest extends AbstractCoreTest
         {
             assertFalse(HerdStringUtils.verifyHerdVersionConformingString(nonConformingString));
         }
+    }
+
+    @Test
+    public void testGetFirstLevelPrefix()
+    {
+        assertNull(HerdStringUtils.getFirstLevelPrefix(null));
+        assertEquals(EMPTY_STRING, HerdStringUtils.getFirstLevelPrefix(EMPTY_STRING));
+        assertEquals(BLANK_TEXT, HerdStringUtils.getFirstLevelPrefix(BLANK_TEXT));
+        assertEquals(STRING_VALUE, HerdStringUtils.getFirstLevelPrefix(STRING_VALUE));
+        assertEquals("/", HerdStringUtils.getFirstLevelPrefix("/"));
+        assertEquals("/", HerdStringUtils.getFirstLevelPrefix("/" + STRING_VALUE));
+        assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/"));
+        assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/" + STRING_VALUE_2));
+        assertEquals(STRING_VALUE + "/", HerdStringUtils.getFirstLevelPrefix(STRING_VALUE + "/" + STRING_VALUE_2 + "/" + RANDOM_SUFFIX));
     }
 }

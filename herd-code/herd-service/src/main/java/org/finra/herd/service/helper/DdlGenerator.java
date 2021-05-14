@@ -33,6 +33,8 @@ public abstract class DdlGenerator
 {
     public static final String NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN = "${non-partitioned.table.location}";
 
+    public static final String PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN = "${table.location}";
+
     public static final String TABLE_NAME_CUSTOM_DDL_TOKEN = "${table.name}";
 
     /**
