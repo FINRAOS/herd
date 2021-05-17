@@ -4492,6 +4492,13 @@
          <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeIfNotExistsOption" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeDropPartitions" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeSingleLocation" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, for partitioned table, LOCATION statement will be added to the generated DDL with the value set to the first partition
+                  bucket name followed by the namespace prefix
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeAllRegisteredSubPartitions" type="xs:boolean" minOccurs="0">
             <xs:annotation>

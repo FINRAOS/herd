@@ -33,8 +33,6 @@ import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
-import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataPartitions;
 import org.finra.herd.model.api.xml.BusinessObjectDataPartitionsRequest;
@@ -2190,15 +2188,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataPartitionsTest e
         // repeat the same request, but without specifying business object format and business object data versions.
         try
         {
-            businessObjectDataService.generateBusinessObjectDataDdl(
-                new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, NO_FORMAT_VERSION, Collections
+            businessObjectDataService.generateBusinessObjectDataPartitions(
+                new BusinessObjectDataPartitionsRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, NO_FORMAT_VERSION, Collections
                     .singletonList(new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE,
-                        NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, NO_DATA_VERSION,
-                    NO_BDATA_STATUS, NO_STORAGE_NAMES, NO_STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-                    INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION, NO_INCLUDE_DROP_PARTITIONS, ALLOW_MISSING_DATA,
-                    NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
-                    AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS,
-                    AbstractServiceTest.NO_AS_OF_TIME));
+                        NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_DATA_VERSION, NO_BDATA_STATUS, NO_STORAGE_NAMES,
+                    ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS));
             fail("Suppose to throw an IllegalArgumentException when business object data registered in more than one storage.");
         }
         catch (IllegalArgumentException e)

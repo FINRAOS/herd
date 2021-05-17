@@ -291,11 +291,9 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
     }
 
-
     /**
      * Creates relative database entities required for the unit tests.
      */
-
     public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
@@ -305,7 +303,7 @@ public class BusinessObjectDataServiceTestHelper
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFormatFileType, partitionKey, partitionKeyGroupName, partitionColumnPosition,
             partitionValues, subPartitionValues, schemaDelimiter, schemaCollectionItemsDelimiter, schemaMapKeysDelimiter, schemaEscapeCharacter,
             schemaCustomRowFormat, schemaCustomClusteredByValue, schemaNullValue, schemaColumns, partitionColumns, replaceUnderscoresWithHyphens, customDdlName,
-            generateStorageFileEntities, allowDuplicateBusinessObjectData, null);
+            AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION, generateStorageFileEntities, allowDuplicateBusinessObjectData, AbstractServiceTest.DATA_VERSION);
     }
 
     /**
@@ -315,8 +313,8 @@ public class BusinessObjectDataServiceTestHelper
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
         String schemaCustomClusteredByValue, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
-        boolean replaceUnderscoresWithHyphens, String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData,
-        Integer businessObjectVersion)
+        boolean replaceUnderscoresWithHyphens, String customDdlName, boolean includeSingleLocation, boolean generateStorageFileEntities,
+        boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
     {
         // Use default data version
         if (businessObjectVersion == null)
@@ -341,7 +339,8 @@ public class BusinessObjectDataServiceTestHelper
         if (StringUtils.isNotBlank(customDdlName))
         {
             boolean partitioned = (partitionColumns != null);
-            customDdlDaoTestHelper.createCustomDdlEntity(businessObjectFormatEntity, customDdlName, customDdlServiceTestHelper.getTestCustomDdl(partitioned));
+            customDdlDaoTestHelper.createCustomDdlEntity(businessObjectFormatEntity, customDdlName,
+                customDdlServiceTestHelper.getTestCustomDdl(partitioned, includeSingleLocation));
         }
 
         // Create S3 storages with the relative "bucket.name" attribute configured.
@@ -1295,7 +1294,7 @@ public class BusinessObjectDataServiceTestHelper
     {
         return getExpectedBusinessObjectDataDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveFileFormat,
             businessObjectFormatFileType, partitionColumnPosition, partitionValues, subPartitionValues, replaceUnderscoresWithHyphens, isDropStatementIncluded,
-            isIfNotExistsOptionIncluded, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS);
+            isIfNotExistsOptionIncluded, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS, AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION);
     }
 
     /**
@@ -1315,13 +1314,14 @@ public class BusinessObjectDataServiceTestHelper
      * location path
      * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
      * @param isDropPartitionsStatementsIncluded specifies if expected DDL should include the relative drop partition statements
+     * @param includeSingleLocation specifies to include table location statement. This flag does not apply to non-partitioned tables
      *
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectDataDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
         String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
         List<String> subPartitionValues, boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded,
-        boolean isDropPartitionsStatementsIncluded)
+        boolean isDropPartitionsStatementsIncluded, boolean includeSingleLocation)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -1375,7 +1375,38 @@ public class BusinessObjectDataServiceTestHelper
         }
 
         sb.append("[Row Format]\n");
-        sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
+        sb.append(String.format("STORED AS [Hive File Format]%s\n", (partitionLevels > 0 && !includeSingleLocation) ? ";" : ""));
+
+        // Add table location statement.
+        if (partitionLevels > 0)
+        {
+            if (includeSingleLocation)
+            {
+                if (!CollectionUtils.isEmpty(partitionValues))
+                {
+                    // Add location statement for this partitioned table based on first partition value.
+                    sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/';\n", getExpectedS3BucketName(partitionValues.get(0))));
+                }
+                else
+                {
+                    // Since, there is no available data, add location statement with table location token for partitioned table.
+                    sb.append("LOCATION '${table.location}';\n");
+                }
+            }
+        }
+        else if (!CollectionUtils.isEmpty(partitionValues))
+        {
+            // Add location statement since the table is not partitioned and we have a non-empty list of partition values.
+            sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
+                getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
+        }
+        else
+        {
+            // Add location statement with table location token for non-partitioned table.
+            // This scenario covers unit tests for non-partitioned tables with no available data and generating format DDL for non-partitioned tables.
+            sb.append("LOCATION '${non-partitioned.table.location}';");
+        }
 
         if (partitionLevels > 0)
         {
@@ -1452,18 +1483,6 @@ public class BusinessObjectDataServiceTestHelper
                     }
                 }
             }
-        }
-        else if (!CollectionUtils.isEmpty(partitionValues))
-        {
-            // Add a location statement since the table is not partitioned and we have a non-empty list of partition values.
-            sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
-                getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
-        }
-        else
-        {
-            // Add a location statement for a non-partitioned table for the business object format dll unit tests.
-            sb.append("LOCATION '${non-partitioned.table.location}';");
         }
 
         return replacePartitionsLocation(sb, hiveRowFormat, hiveClusteredByValue, hiveFileFormat, businessObjectFormatFileType, isIfNotExistsOptionIncluded);
@@ -2317,9 +2336,10 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_BDATA_STATUS, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
-                AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
-                AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE,
-                AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS, AbstractServiceTest.NO_AS_OF_TIME);
+                AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.NO_ALLOW_MISSING_DATA,
+                AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
+                AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS,
+                AbstractServiceTest.NO_AS_OF_TIME);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);

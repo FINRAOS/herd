@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.ArrayDeque;
@@ -348,6 +348,61 @@ public class JobServiceImpl implements JobService
                     }
                 }
             }
+        }
+
+        // Return the list of job summaries.
+        return jobSummaries;
+    }
+
+    @Override
+    public JobSummaries getRunningJobsByStartBeforeTime(DateTime startBeforeTime) throws Exception
+    {
+        // Construct the list of job summaries to return.
+        JobSummaries jobSummaries = new JobSummaries();
+
+        // Compile the Regex pattern.
+        Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
+
+        // Get a list of historic process instances.
+        List<HistoricProcessInstance> historicProcessInstances =
+            activitiService.getUnfinishedHistoricProcessInstancesByStartBeforeTime(startBeforeTime);
+
+        // Get a set of all runtime suspended process instance ids.
+        Set<String> suspendedProcessInstanceIds = getSuspendedProcessInstanceIds();
+
+        // Loop over the process instances and build a list of job summaries to return.
+        for (HistoricProcessInstance historicProcessInstance : historicProcessInstances)
+        {
+            // Determine if the process id is suspended.
+            if (suspendedProcessInstanceIds.contains(historicProcessInstance.getId()))
+            {
+                // Only collect the RUNNING instances.
+                continue;
+            }
+
+            // Create a new job summary.
+            JobSummary jobSummary = new JobSummary();
+            jobSummary.setId(historicProcessInstance.getId());
+            
+            // Get the job definition key.
+            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper
+                .getJobDefinitionKey(historicProcessInstance.getProcessDefinitionKey(), pattern);
+            
+            // Set the namespace and job name on the job summary.
+            jobSummary.setJobName(jobDefinitionKey.getJobName());
+            jobSummary.setNamespace(jobDefinitionKey.getNamespace());
+
+            // Set the start time always since all jobs will have a start time.
+            jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
+
+            // Set the status.
+            jobSummary.setStatus(JobStatusEnum.RUNNING);
+
+            // If the end time is null, then determine the status based on the presence of any exceptions.
+            jobSummary.setTotalExceptions(activitiService.getJobsWithExceptionCountByProcessInstanceId(historicProcessInstance.getId()));
+
+            // Add the new summary to the list.
+            jobSummaries.getJobSummaries().add(jobSummary);
         }
 
         // Return the list of job summaries.

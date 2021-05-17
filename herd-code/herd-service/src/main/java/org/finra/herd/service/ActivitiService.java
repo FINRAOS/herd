@@ -130,6 +130,14 @@ public interface ActivitiService
         DateTime startTime, DateTime endTime);
 
     /**
+     * Gets all unfinished historic process instances by start before time.
+     *
+     * @param startBeforeTime the job start before time
+     * @return List of historic process instances
+     */
+    List<HistoricProcessInstance> getUnfinishedHistoricProcessInstancesByStartBeforeTime(DateTime startBeforeTime);
+
+    /**
      * Gets the count of historic process instances by their status and process definition keys. When job status is RUNNING or SUSPENDED, then all "unfinished"
      * process are counted.
      *
