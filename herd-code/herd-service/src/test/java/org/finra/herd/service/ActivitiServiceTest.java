@@ -477,4 +477,35 @@ public class ActivitiServiceTest
         activitiService.deleteProcessInstance(processInstanceId, deleteReason);
         verify(activitiRuntimeService).deleteProcessInstance(processInstanceId, deleteReason);
     }
+
+    @Test
+    public void testGetUnfinishedHistoricProcessInstancesByStartBeforeTime()
+    {
+        // Setup mock objects and expected behavior.
+        DateTime startTime = new DateTime();
+
+        HistoricProcessInstanceQuery historicProcessInstanceQuery = mock(HistoricProcessInstanceQuery.class);
+        when(activitiHistoryService.createHistoricProcessInstanceQuery()).thenReturn(historicProcessInstanceQuery);
+
+        List<HistoricProcessInstance> expectedHistoricProcessInstances = new ArrayList<>();
+        HistoricProcessInstance historicProcessInstance1 = mock(HistoricProcessInstance.class);
+        HistoricProcessInstance historicProcessInstance2 = mock(HistoricProcessInstance.class);
+        expectedHistoricProcessInstances.add(historicProcessInstance1);
+        expectedHistoricProcessInstances.add(historicProcessInstance2);
+        when(historicProcessInstanceQuery.list()).thenReturn(expectedHistoricProcessInstances);
+
+        // Call method being tested.
+        List<HistoricProcessInstance> actualHistoricProcessInstances =
+            activitiService.getUnfinishedHistoricProcessInstancesByStartBeforeTime(startTime);
+
+        // Validate results.
+        assertEquals(expectedHistoricProcessInstances, actualHistoricProcessInstances);
+        InOrder inOrder = inOrder(historicProcessInstanceQuery);
+        inOrder.verify(historicProcessInstanceQuery).unfinished();
+        inOrder.verify(historicProcessInstanceQuery).startedBefore(startTime.toDate());
+        inOrder.verify(historicProcessInstanceQuery).orderByProcessInstanceStartTime();
+        inOrder.verify(historicProcessInstanceQuery).desc();
+        inOrder.verify(historicProcessInstanceQuery).list();
+        inOrder.verifyNoMoreInteractions();
+    }
 }
