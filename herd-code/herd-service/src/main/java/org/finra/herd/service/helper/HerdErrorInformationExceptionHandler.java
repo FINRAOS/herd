@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.ExceptionHandlerMethodResolver;
+import org.xml.sax.SAXParseException;
 
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.MethodNotAllowedException;
@@ -169,9 +170,16 @@ public class HerdErrorInformationExceptionHandler
     public ErrorInformation handleNotReadableException(HttpMessageNotReadableException exception)
     {
         String errorMessage = exception.getMessage();
-        if (exception.getRootCause() != null)
+        // Return clean and meaningful root cause message in case of XML parser error
+        Throwable rootCause = exception.getRootCause();
+        if (rootCause instanceof SAXParseException)
         {
-            errorMessage = exception.getRootCause().getMessage();
+            errorMessage = rootCause.getMessage();
+        }
+        // Get the original JSON parser error message from Spring HttpMessageNotReadableException wrapped message
+        else if (exception.getCause() != null)
+        {
+            errorMessage = errorMessage.replace(String.format("; nested exception is %s", exception.getCause().toString()), "");
         }
         return getErrorInformation(HttpStatus.BAD_REQUEST, new RuntimeException(errorMessage));
     }
