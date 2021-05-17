@@ -167,7 +167,7 @@ public class HerdErrorInformationExceptionHandler
     @ExceptionHandler(value = {HttpMessageNotReadableException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ErrorInformation handleNotReadableException(HttpMessageNotReadableException exception)
+    public ErrorInformation handleHttpMessageNotReadableException(HttpMessageNotReadableException exception)
     {
         String errorMessage = exception.getMessage();
         // Return clean and meaningful root cause message in case of XML parser error
