@@ -504,7 +504,7 @@ public class ActivitiServiceTest
         inOrder.verify(historicProcessInstanceQuery).unfinished();
         inOrder.verify(historicProcessInstanceQuery).startedBefore(startTime.toDate());
         inOrder.verify(historicProcessInstanceQuery).orderByProcessInstanceStartTime();
-        inOrder.verify(historicProcessInstanceQuery).desc();
+        inOrder.verify(historicProcessInstanceQuery).asc();
         inOrder.verify(historicProcessInstanceQuery).list();
         inOrder.verifyNoMoreInteractions();
     }
