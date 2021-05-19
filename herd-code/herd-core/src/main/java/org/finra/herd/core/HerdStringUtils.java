@@ -17,6 +17,7 @@ package org.finra.herd.core;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +45,7 @@ public class HerdStringUtils
         Pattern.compile("(\"name\": \".*?password\", \"value\": \")[\\w\\p{Punct}&&[^&]]*?\"", Pattern.CASE_INSENSITIVE);
     // Regex to check xml password pattern, like "<password>password1</password>
     private static Pattern REGEX_XML_PASSWORD = Pattern.compile("(<.*?password>)[\\w\\p{Punct}&&[^&]]*?<", Pattern.CASE_INSENSITIVE);
-    
+
     /**
      * Decodes and return the base64 encoded string.
      *
@@ -183,5 +184,49 @@ public class HerdStringUtils
         sanitizedText = REGEX_XML_PASSWORD.matcher(sanitizedText).replaceAll("$1" + HIDDEN_TEXT + "<");
 
         return sanitizedText;
+    }
+
+    /**
+     * Determines if a String conforms to Herd's versioning scheme
+     *
+     * @param versionString The given input string
+     * @return boolean true if the input conforms, false otherwise
+     */
+    public static boolean verifyHerdVersionConformingString(String versionString)
+    {
+        if (StringUtils.isEmpty(versionString))
+        {
+            return false;
+        }
+
+        Pattern semverPattern = Pattern.compile("\\d+\\.\\d+\\.\\d+(?:-SNAPSHOT)?");
+        Matcher semverPatternMatcher = semverPattern.matcher(versionString);
+
+        return semverPatternMatcher.matches();
+    }
+
+    /**
+     * Get first level prefix from the relative path. The path is assumed not to start from the "/" character.
+     *
+     * @param prefix the given prefix
+     *
+     * @return if exists, first level prefix including trailing slash, path value as it was specified otherwise
+     */
+    public static String getFirstLevelPrefix(String prefix)
+    {
+        String firstLevelPrefix;
+
+        int firstOccurrenceOfSlash = StringUtils.indexOf(prefix, "/");
+
+        if (firstOccurrenceOfSlash != StringUtils.INDEX_NOT_FOUND)
+        {
+            firstLevelPrefix = prefix.substring(0, firstOccurrenceOfSlash + 1);
+        }
+        else
+        {
+            firstLevelPrefix = prefix;
+        }
+
+        return firstLevelPrefix;
     }
 }

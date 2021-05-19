@@ -51,6 +51,7 @@ public class WarInitializer implements WebApplicationInitializer
     public void onStartup(ServletContext servletContext) throws ServletException
     {
         // Initialize all the parts individually so an extending class can override individual methods as needed.
+        initSessionInvalidationFilter(servletContext);
         initContextLoaderListener(servletContext);
         initDispatchServlet(servletContext);
         initDelegatingFilterProxy(servletContext);
@@ -172,4 +173,16 @@ public class WarInitializer implements WebApplicationInitializer
         FilterRegistration.Dynamic httpSecurityHeadersFilter = servletContext.addFilter("httpSecurityHeadersFilter", HttpSecurityHeadersFilter.class);
         httpSecurityHeadersFilter.addMappingForUrlPatterns(null, true, "/rest/*");
     }
+
+    /**
+    * Initializes filter supposed to invalidate http session after request processed by application
+     *
+     * @param servletContext the servlet context.
+    * */
+    protected void initSessionInvalidationFilter(ServletContext servletContext)
+    {
+        FilterRegistration.Dynamic sessionInvalidationFilter = servletContext.addFilter("sessionInvalidationFilter", SessionInvalidationFilter.class);
+        sessionInvalidationFilter.addMappingForUrlPatterns(null, true, "/rest/*");
+    }
+
 }
