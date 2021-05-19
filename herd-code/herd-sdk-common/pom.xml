@@ -35,7 +35,7 @@
          ${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/${swagger.spec.name}
       </swagger.spec.path>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-
+      <maven.replacer.plugin.version>1.5.3</maven.replacer.plugin.version>
    </properties>
 
    <name>herd sdk common</name>
@@ -98,6 +98,28 @@
 
    <build>
       <plugins>
+
+         <plugin>
+            <groupId>org.commonjava.maven.plugins</groupId>
+            <artifactId>directory-maven-plugin</artifactId>
+            <version>0.1</version>
+            <executions>
+               <execution>
+                  <id>directories</id>
+                  <goals>
+                     <goal>directory-of</goal>
+                  </goals>
+                  <phase>initialize</phase>
+                  <configuration>
+                     <property>herd-sdk-common.basedir</property>
+                     <project>
+                        <groupId>org.finra.herd</groupId>
+                        <artifactId>herd-sdk-common</artifactId>
+                     </project>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
 
          <plugin>
             <artifactId>maven-remote-resources-plugin</artifactId>
@@ -284,6 +306,32 @@
             </executions>
          </plugin>
 
+         <plugin>
+            <groupId>com.google.code.maven-replacer-plugin</groupId>
+            <artifactId>replacer</artifactId>
+            <version>${maven.replacer.plugin.version}</version>
+            <executions>
+               <execution>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>replace</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <includes>
+                  <include>${project.build.directory}/generated-sources/swagger/**/*/ApiClient.java</include>
+               </includes>
+               <replacements>
+                  <replacement>
+                     <token>ClientResponse response = getAPIResponse</token>
+                     <!--suppress UnresolvedMavenProperty -->
+                     <valueFile>${herd-sdk-common.basedir}/src/main/resources/replacement.txt</valueFile>
+                  </replacement>
+               </replacements>
+            </configuration>
+         </plugin>
+
          <!-- Add in the sources. -->
 
          <plugin>
@@ -367,6 +415,20 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
+               <execution>
+                  <id>replace-herd-sdk-version</id>
+                  <phase>initialize</phase>
+                  <configuration>
+                     <tasks>
+                        <replace token="VERSION" value="${project.version}" dir="${herd-sdk-common.basedir}/src/main/resources/">
+                           <include name="replacement.txt" />
+                        </replace>
+                     </tasks>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
                <execution>
                   <id>copy-angular-ts-config</id>
                   <phase>package</phase>

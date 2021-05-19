@@ -696,6 +696,53 @@ public class JobServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetRunningJobsByStartBeforeTime() throws Exception
+    {
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        String activitiXml = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH).getInputStream());
+        // Job should be waiting at User task.
+
+        // Get the start before time.
+        DateTime startBeforeTime = DateTime.now();
+
+        // Get the running jobs before start time.
+        JobSummaries jobSummaries = jobService.getRunningJobsByStartBeforeTime(startBeforeTime);
+        List<JobSummary> jobSummaryList = jobSummaries.getJobSummaries();
+        assertEquals(jobSummaryList.size(), 1);
+        JobSummary jobSummary = jobSummaryList.get(0);
+        assertEquals(JobStatusEnum.RUNNING, jobSummary.getStatus());
+        assertEquals(job.getId(), jobSummary.getId());
+        assertEquals(job.getJobName(), jobSummary.getJobName());
+        assertEquals(job.getNamespace(), jobSummary.getNamespace());
+
+        // Query the pending task.
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+
+        // Suspend the task.
+        activitiService.suspendProcessInstance(tasks.get(0).getProcessInstanceId());
+
+        // There should be no running jobs before the start time.
+        jobSummaries = jobService.getRunningJobsByStartBeforeTime(startBeforeTime);
+        jobSummaryList = jobSummaries.getJobSummaries();
+        assertEquals(jobSummaryList.size(), 0);
+
+        // Resume the task.
+        activitiService.resumeProcessInstance(tasks.get(0).getProcessInstanceId());
+
+        // Complete the task.
+        activitiTaskService.complete(tasks.get(0).getId());
+        // Job should have been completed.
+
+        // There should be no running jobs before the start time.
+        jobSummaries = jobService.getRunningJobsByStartBeforeTime(startBeforeTime);
+        jobSummaryList = jobSummaries.getJobSummaries();
+        assertEquals(jobSummaryList.size(), 0);
+    }
+
+    @Test
     public void testSignalJob() throws Exception
     {
         jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
