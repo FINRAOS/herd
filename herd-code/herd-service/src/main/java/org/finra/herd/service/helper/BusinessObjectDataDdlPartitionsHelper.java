@@ -16,6 +16,7 @@
 package org.finra.herd.service.helper;
 
 import static org.finra.herd.service.helper.DdlGenerator.NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN;
+import static org.finra.herd.service.helper.DdlGenerator.PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.dao.StorageUnitDao;
@@ -208,6 +210,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         generateDdlRequest.includeDropPartitions = request.isIncludeDropPartitions();
         generateDdlRequest.includeDropTableStatement = request.isIncludeDropTableStatement();
         generateDdlRequest.includeIfNotExistsOption = request.isIncludeIfNotExistsOption();
+        generateDdlRequest.includeSingleLocation = request.isIncludeSingleLocation();
         generateDdlRequest.isPartitioned = isPartitioned;
         generateDdlRequest.partitionFilters = partitionFilters;
         generateDdlRequest.cachedS3BucketNames = cachedS3BucketNames;
@@ -569,6 +572,15 @@ public class BusinessObjectDataDdlPartitionsHelper
 
                         // Add this add partition statement to the list.
                         addPartitionStatements.add(addPartitionStatement.toString());
+
+                        // If flag is set to include single table location and this is the first partition in the list, then set value for
+                        // partitioned table custom DDL token based on this partition bucket name and first level S3 key prefix.
+                        if (addPartitionStatements.size() == 1 && BooleanUtils.isTrue(generateDdlRequest.includeSingleLocation))
+                        {
+                            // Set value for partitioned table location custom DDL token based on S3 bucket name and first level S3 key prefix.
+                            String tableLocation = String.format("s3n://%s/%s", s3BucketName, HerdStringUtils.getFirstLevelPrefix(s3KeyPrefix));
+                            replacements.put(PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
+                        }
                     }
                     else
                     {
@@ -595,17 +607,8 @@ public class BusinessObjectDataDdlPartitionsHelper
                     // Get location for this non-partitioned table.
                     String tableLocation = String.format("s3n://%s/%s", s3BucketName, s3KeyPrefix);
 
-                    if (generateDdlRequest.customDdlEntity == null)
-                    {
-                        // Since custom DDL was not specified and this table is not partitioned, add a LOCATION clause.
-                        // This is the last line in the non-partitioned table DDL.
-                        sb.append(String.format("LOCATION '%s';", tableLocation));
-                    }
-                    else
-                    {
-                        // Since custom DDL was used for a non-partitioned table, substitute the relative custom DDL token with the actual table location.
-                        replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
-                    }
+                    // Set value for non-partitioned table location custom DDL token based on the actual table location.
+                    replacements.put(NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, tableLocation);
                 }
                 else
                 {
@@ -1097,6 +1100,8 @@ public class BusinessObjectDataDdlPartitionsHelper
 
         private Boolean includeIfNotExistsOption;
 
+        private Boolean includeSingleLocation;
+
         private Boolean isPartitioned;
 
         private List<List<String>> partitionFilters;
@@ -1217,6 +1222,16 @@ public class BusinessObjectDataDdlPartitionsHelper
         public void setIncludeIfNotExistsOption(Boolean includeIfNotExistsOption)
         {
             this.includeIfNotExistsOption = includeIfNotExistsOption;
+        }
+
+        public Boolean getIncludeSingleLocation()
+        {
+            return includeSingleLocation;
+        }
+
+        public void setIncludeSingleLocation(Boolean includeSingleLocation)
+        {
+            this.includeSingleLocation = includeSingleLocation;
         }
 
         public Boolean getPartitioned()

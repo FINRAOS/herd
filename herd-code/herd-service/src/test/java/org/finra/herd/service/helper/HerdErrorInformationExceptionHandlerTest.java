@@ -22,7 +22,10 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
+import javax.xml.bind.UnmarshalException;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 
 import org.activiti.engine.ActivitiClassLoadingException;
@@ -33,6 +36,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.xml.sax.SAXParseException;
 
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.MethodNotAllowedException;
@@ -93,7 +97,7 @@ public class HerdErrorInformationExceptionHandlerTest extends AbstractServiceTes
     /**
      * Validates that calling handlePersistenceException with a SQL exception with the given SQL state code and error code wrapped in a
      * {@link PersistenceException} returns an {@link ErrorInformation} with a {@link HttpStatus#BAD_REQUEST}.
-     * 
+     *
      * @param sqlState - {@link SQLException#getSQLState()}
      * @param errorCode - {@link SQLException#getErrorCode()}
      */
@@ -148,7 +152,7 @@ public class HerdErrorInformationExceptionHandlerTest extends AbstractServiceTes
     {
         validateErrorInformation(exceptionHandler.handleOperationNotAllowedException(new MethodNotAllowedException(MESSAGE)), HttpStatus.METHOD_NOT_ALLOWED);
     }
-    
+
     @Test
     public void testHandleNotFound() throws Exception
     {
@@ -202,13 +206,56 @@ public class HerdErrorInformationExceptionHandlerTest extends AbstractServiceTes
         Exception ex = new Exception();
         ErrorInformation errorInformation = exceptionHandler.handleBadRequestException(ex);
         assertTrue(errorInformation.getMessageDetails().size() == 0);
-        
+
         ex = new Exception(new Exception("cause_1_exception", new Exception("cause_2_exception")));
         errorInformation = exceptionHandler.handleBadRequestException(ex);
-        
+
         assertTrue(errorInformation.getMessageDetails().size() == 2);
         assertEquals("cause_1_exception", errorInformation.getMessageDetails().get(0));
         assertEquals("cause_2_exception", errorInformation.getMessageDetails().get(1));
+    }
+
+    @Test
+    public void testHttpMessageNotReadableExceptionRootCauseIsSaxParseException()
+    {
+        // XML parser exception
+        String rootErrorMessage = "root error message";
+        HttpMessageNotReadableException ex =
+            new HttpMessageNotReadableException("errorMessage", new UnmarshalException("cause_2_exception", new SAXParseException(rootErrorMessage, null)));
+        ErrorInformation errorInformation = exceptionHandler.handleHttpMessageNotReadableException(ex);
+
+        assertEquals(0, errorInformation.getMessageDetails().size());
+        assertEquals(rootErrorMessage, errorInformation.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), errorInformation.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), errorInformation.getStatusDescription());
+    }
+
+    @Test
+    public void testHttpMessageNotReadableExceptionWithCause()
+    {
+        // JSON parse exception
+        String originalErrorMessage = "original error Message";
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException(originalErrorMessage, new JsonMappingException("cause_1_exception"));
+        // validate original message is wrapped in Spring HttpMessageNotReadableException
+        assertEquals(originalErrorMessage + "; nested exception is com.fasterxml.jackson.databind.JsonMappingException: cause_1_exception", ex.getMessage());
+
+        ErrorInformation errorInformation = exceptionHandler.handleHttpMessageNotReadableException(ex);
+        assertEquals(0, errorInformation.getMessageDetails().size());
+        assertEquals(originalErrorMessage, errorInformation.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), errorInformation.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), errorInformation.getStatusDescription());
+    }
+
+    @Test
+    public void testHttpMessageNotReadableExceptionWithoutCause()
+    {
+        // clean error Message without cause exception
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException("errorMessage");
+        ErrorInformation errorInformation = exceptionHandler.handleHttpMessageNotReadableException(ex);
+        assertEquals(0, errorInformation.getMessageDetails().size());
+        assertEquals("errorMessage", errorInformation.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), errorInformation.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), errorInformation.getStatusDescription());
     }
 
     /**

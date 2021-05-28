@@ -38,7 +38,7 @@ public interface JobService
      * @return the created job information
      * @throws Exception if any problems were encountered
      */
-    public Job createAndStartJob(JobCreateRequest jobCreateRequest) throws Exception;
+    Job createAndStartJob(JobCreateRequest jobCreateRequest) throws Exception;
 
     /**
      * Deletes a currently running job and preserves the job state in history. The method calls org.activiti.engine.RuntimeService.deleteProcessInstance(String,
@@ -50,7 +50,7 @@ public interface JobService
      * @return the job that has been deleted
      * @throws Exception if any problems were encountered
      */
-    public Job deleteJob(String jobId, JobDeleteRequest jobDeleteRequest) throws Exception;
+    Job deleteJob(String jobId, JobDeleteRequest jobDeleteRequest) throws Exception;
 
     /**
      * Gets the details of a previously submitted job.
@@ -60,7 +60,7 @@ public interface JobService
      * @return the job information
      * @throws Exception if any problems were encountered
      */
-    public Job getJob(String id, boolean verbose) throws Exception;
+    Job getJob(String id, boolean verbose) throws Exception;
 
     /**
      * <p>Gets a list of job executions based on the specified filter parameters.</p> <p>Jobs' namespace to which you do not have READ permissions to will be
@@ -75,7 +75,17 @@ public interface JobService
      * @return the list of job summaries
      * @throws Exception if any problems were encountered
      */
-    public JobSummaries getJobs(String namespace, String jobName, JobStatusEnum jobStatus, DateTime startTime, DateTime endTime) throws Exception;
+    JobSummaries getJobs(String namespace, String jobName, JobStatusEnum jobStatus, DateTime startTime, DateTime endTime) throws Exception;
+
+    /**
+     * <p>Gets a list of running job executions based on the start before time filter.</p>
+     *
+     * @param startBeforeTime the job start before time filter
+     *
+     * @return the list of job summaries
+     * @throws Exception if any problems were encountered
+     */
+    JobSummaries getRunningJobsByStartBeforeTime(DateTime startBeforeTime) throws Exception;
 
     /**
      * Signals the job with the receive task.
@@ -84,7 +94,7 @@ public interface JobService
      *
      * @return the created job information
      */
-    public Job signalJob(JobSignalRequest jobSignalRequest) throws Exception;
+    Job signalJob(JobSignalRequest jobSignalRequest) throws Exception;
 
     /**
      * Activates or suspends a job execution.
@@ -94,5 +104,5 @@ public interface JobService
      *
      * @return the job
      */
-    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest);
+    Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest);
 }
