@@ -1241,10 +1241,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     @Override
     public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        Integer maxResults)
+        boolean latestBusinessObjectFormatVersion, Integer maxResults)
     {
-        // Get ids for all business object formats registered with the specified business object definition.
-        List<Long> businessObjectFormatIds = businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntity);
+        // Get ids for business object formats registered with the specified business object definition.
+        List<Long> businessObjectFormatIds =
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntity, latestBusinessObjectFormatVersion);
 
         // Return no results if the business object definition has no business object formats registered with it.
         if (CollectionUtils.isEmpty(businessObjectFormatIds))

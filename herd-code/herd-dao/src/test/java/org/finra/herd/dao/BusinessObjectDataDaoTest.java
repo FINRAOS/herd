@@ -2481,29 +2481,59 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 businessObjectDefinitionDaoTestHelper
                     .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2));
 
-        // Create two business object data entities that belong to the first business object definition, but to two different business object formats.
+        // Create two business object formats under the first business object definition with the second format having its latest version flag set to true.
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, FORMAT_DESCRIPTION_2,
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create business object data entity that belongs to the non-latest format version of the first business object definition.
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create two business object data entities that belong to latest business object format version of the first business object definition.
         businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
                 SUBPARTITION_VALUES, DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
-        // Retrieve business object data keys for the first business object definition without setting a maximum number of results.
+        // Retrieve business object data keys for the first business object definition without setting a maximum number of results and not specifying to select
+        // business object data only from latest business object format versions. We expect all three business object data to be selected.
         assertEquals(Arrays.asList(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES, DATA_VERSION),
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, DATA_VERSION),
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                DATA_VERSION)),
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), false, NO_MAX_RESULTS));
+
+        // Retrieve business object data keys for the first business object definition without setting a maximum number of results, but specifying to select
+        // business object data only from latest business object format versions.  We expect to select business object data registered to the second business
+        // object format, since it is flagged as latest version.
+        assertEquals(Arrays.asList(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES, DATA_VERSION),
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION)),
-            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), NO_MAX_RESULTS));
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), true, NO_MAX_RESULTS));
 
-        // Retrieve business object data keys for the first business object definition with maximum number of results set to 1.
+        // Retrieve business object data keys for the first business object definition with maximum number of results set to 1 and specifying to select business
+        // object data only from latest business object format versions.  We expect to get only one business object data registered with the second business
+        // object format, since it is flagged as latest version.
         assertEquals(Collections.singletonList(
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION)), businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), MAX_RESULTS_1));
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES, DATA_VERSION)),
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), true, MAX_RESULTS_1));
 
-        // Try to retrieve business object data keys for the second business object definition.
+        // Test the edge case, when there is no data to be returned, by trying to retrieve business object data keys for the second business object definition.
         assertEquals(Collections.emptyList(),
-            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), NO_MAX_RESULTS));
+            businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), false, NO_MAX_RESULTS));
     }
 
     @Test
