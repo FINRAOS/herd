@@ -59,14 +59,16 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
         String businessObjectFormatFileType, Integer businessObjectFormatVersion, List<String> partitionKeys);
 
     /**
-     * Gets a list of ids for all business object formats registered under the specified business object definition. The list of business object format ids
-     * returned by this method is sorted by business object format usage ascending, file type ascending, and business object format version descending.
+     * Gets a list of ids for business object formats registered under the specified business object definition. The list of business object format ids returned
+     * by this method is sorted by business object format usage ascending, file type ascending, and business object format version descending.
      *
      * @param businessObjectDefinitionEntity the business object definition
+     * @param latestBusinessObjectFormatVersion specifies to select only latest business object format versions
      *
      * @return the list of business object format ids
      */
-    List<Long> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+    List<Long> getBusinessObjectFormatIdsByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        boolean latestBusinessObjectFormatVersion);
 
     /**
      * Gets the maximum available version of the specified business object format.
