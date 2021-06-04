@@ -321,10 +321,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Get the maximum number of records to return.
         Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
 
-        // Gets the list of keys and return them.
+        // Gets the list of keys for all existing business object data up to the max results limit for all latest business object format versions
+        // registered under specified business object definition.
         BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
         businessObjectDataKeys.getBusinessObjectDataKeys()
-            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults));
+            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, true, maxResults));
         return businessObjectDataKeys;
     }
 

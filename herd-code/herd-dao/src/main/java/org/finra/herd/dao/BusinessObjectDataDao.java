@@ -178,12 +178,13 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * value descending, sub-partition values (if present) descending, and business object data version descending.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
+     * @param latestBusinessObjectFormatVersion specifies to select business object data registered only under latest business object format versions
      * @param maxResults the optional maximum number of results to return
      *
      * @return the list of business object data keys
      */
     List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        Integer maxResults);
+        boolean latestBusinessObjectFormatVersion, Integer maxResults);
 
     /**
      * Gets a list of keys for business object data registered under specified business object format entity.
