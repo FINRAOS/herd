@@ -353,18 +353,24 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
             .asList(businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION),
                 businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
 
-        // Create two business object formats under the first business object definition.
+        // Create two business object formats under the first business object definition with the second format having its latest version flag set to true.
         List<BusinessObjectFormatEntity> businessObjectFormatEntities = Arrays.asList(businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY), businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, FORMAT_DESCRIPTION_2,
-                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY));
+                NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY));
 
-        // Test "less than", "equal", and "greater than" scenario for all three business object definitions.
+        // Select all business object formats registered under the first business object definition.
         assertEquals(Arrays.asList(businessObjectFormatEntities.get(0).getId(), businessObjectFormatEntities.get(1).getId()),
-            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0)));
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), false));
+
+        // Select only latest business object format versions registered under the first business object definition.
+        assertEquals(Arrays.asList(businessObjectFormatEntities.get(1).getId()),
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(0), true));
+
+        // Test edge case when business object definition has no formats registered.
         assertEquals(Collections.emptyList(),
-            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1)));
+            businessObjectFormatDao.getBusinessObjectFormatIdsByBusinessObjectDefinition(businessObjectDefinitionEntities.get(1), false));
     }
 
     @Test

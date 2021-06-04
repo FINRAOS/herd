@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -159,7 +159,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         // Mock the external calls.
         when(businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey)).thenReturn(businessObjectDefinitionEntity);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class)).thenReturn(MAX_RESULTS_1);
-        when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1))
+        when(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, true, MAX_RESULTS_1))
             .thenReturn(businessObjectDataKeys);
 
         // Call the method being tested.
@@ -169,7 +169,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
         verify(businessObjectDefinitionHelper).validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         verify(businessObjectDefinitionDaoHelper).getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         verify(configurationHelper).getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT, Integer.class);
-        verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, MAX_RESULTS_1);
+        verify(businessObjectDataDao).getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, true, MAX_RESULTS_1);
         verifyNoMoreInteractionsHelper();
 
         // Validate the returned object.
