@@ -836,6 +836,8 @@ public class EmrDaoImpl implements EmrDao
                     .setUsageStrategy(emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions().getUsageStrategy());
                 onDemandCapacityReservationOptions.setCapacityReservationPreference(
                     emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions().getCapacityReservationPreference());
+                onDemandCapacityReservationOptions.setCapacityReservationResourceGroupArn(
+                    emrClusterDefinitionOnDemandSpecification.getCapacityReservationOptions().getCapacityReservationResourceGroupArn());
                 onDemandProvisioningSpecification.setCapacityReservationOptions(onDemandCapacityReservationOptions);
             }
         }
