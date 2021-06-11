@@ -420,7 +420,8 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition. <p>
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system for all latest business object format versions
+     * registered under specified business object definition. <p>
      * Results are sorted alphabetically by primary and sub-partition values descending. </p> <p> The limit on how many records this endpoint returns is set by
      * "business.object.data.search.max.results.per.page" configuration value. </p> <p> Requires READ permission on namespace. </p>
      *

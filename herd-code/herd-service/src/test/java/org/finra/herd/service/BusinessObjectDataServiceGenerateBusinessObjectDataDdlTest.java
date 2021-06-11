@@ -1636,7 +1636,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
-    public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaDelimiterCharacter()
+    public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaDelimiterCharacterWithEscapeCharacter()
     {
         // Prepare test data.
         List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
@@ -1645,6 +1645,30 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, null, null, null,
             SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N,
             schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+
+        // Retrieve business object data ddl.
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataDdl resultDdl = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the results.
+        String expectedRowFormat = "ROW FORMAT DELIMITED ESCAPED BY '\\\\' NULL DEFINED AS '\\N'";
+        String expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, expectedRowFormat, CUSTOM_CLUSTERED_BY_VALUE,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaDelimiterCharacterWithoutEscapeCharacter()
+    {
+        // Prepare test data.
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
+        String partitionKey = partitionColumns.get(0).getName();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, null, null, null, null, null,
+            SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
