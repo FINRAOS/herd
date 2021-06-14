@@ -77,7 +77,7 @@
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
       <migbase64.version>2.2</migbase64.version>
-      <google.guava.version>27.0.1-jre</google.guava.version>
+      <google.guava.version>29.0-jre</google.guava.version>
       <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
       <plexus.utils.version>3.1.0</plexus.utils.version>
       <postgresql.driver.version>42.1.4.jre7</postgresql.driver.version>
