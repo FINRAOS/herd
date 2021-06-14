@@ -259,6 +259,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CAPACITY_USAGE_STRATEGY_1 = "use-capacity-reservations-first";
 
+    public static final String CAPACITY_RESERVATION_RESOURCE_GROUP_ARN = "arn:aws:resource-groups:us-east-1:123456789012:group/TestGroup";
+
     public static final String CODE = "code";
 
     public static final String COLUMNS_NAME_FIELD = "columns.name";

@@ -569,16 +569,18 @@ public class Hive13DdlGenerator extends DdlGenerator
         }
         else
         {
-            // We output delimiter character, collection items delimiter, map keys delimiter, escape character, and null value only when they are defined
-            // in the business object format schema.
+            // Output delimiter character, escape character, collection items delimiter, and map keys delimiter only when they are defined in the business
+            // object format schema. No check is needed to add null value, since it is a required parameter when schema is specified.
             sb.append("ROW FORMAT DELIMITED");
             if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter()))
             {
-                // Note that the escape character is only output when the delimiter is present.
-                sb.append(String.format(" FIELDS TERMINATED BY '%s'%s",
-                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true)),
-                    StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()) ? "" : String.format(" ESCAPED BY '%s'",
-                        escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true)))));
+                sb.append(String.format(" FIELDS TERMINATED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getDelimiter(), true))));
+            }
+            if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter()))
+            {
+                sb.append(String.format(" ESCAPED BY '%s'",
+                    escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getEscapeCharacter(), true))));
             }
             if (!StringUtils.isEmpty(generateDdlRequest.getBusinessObjectFormatEntity().getCollectionItemsDelimiter()))
             {

@@ -648,7 +648,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
             new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
         final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
-            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1, CAPACITY_RESERVATION_RESOURCE_GROUP_ARN);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
             new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2, emrClusterDefinitionCapacityReservationOptions);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
@@ -672,8 +672,11 @@ public class EmrDaoImplTest extends AbstractDaoTest
                     new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
                         .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES)).withOnDemandSpecification(
                     new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2).withCapacityReservationOptions(
-                        new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
-                            .withCapacityReservationPreference(CAPACITY_PREFERENCE_1))))), result);
+                        new OnDemandCapacityReservationOptions()
+                            .withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
+                            .withCapacityReservationPreference(CAPACITY_PREFERENCE_1)
+                            .withCapacityReservationResourceGroupArn(CAPACITY_RESERVATION_RESOURCE_GROUP_ARN)
+                    )))), result);
     }
 
     @Test
@@ -856,7 +859,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         final EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification =
             new EmrClusterDefinitionSpotSpecification(TIMEOUT_DURATION_MINUTES, TIMEOUT_ACTION, BLOCK_DURATION_MINUTES, ALLOCATION_STRATEGY_1);
         final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
-            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1, CAPACITY_RESERVATION_RESOURCE_GROUP_ARN);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
             new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_2, emrClusterDefinitionCapacityReservationOptions);
         final EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications =
@@ -873,8 +876,11 @@ public class EmrDaoImplTest extends AbstractDaoTest
             new SpotProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withBlockDurationMinutes(BLOCK_DURATION_MINUTES)
                 .withTimeoutAction(TIMEOUT_ACTION).withTimeoutDurationMinutes(TIMEOUT_DURATION_MINUTES)).withOnDemandSpecification(
             new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_2).withCapacityReservationOptions(
-                new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
-                    .withCapacityReservationPreference(CAPACITY_PREFERENCE_1))), result);
+                new OnDemandCapacityReservationOptions()
+                    .withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
+                    .withCapacityReservationPreference(CAPACITY_PREFERENCE_1)
+                    .withCapacityReservationResourceGroupArn(CAPACITY_RESERVATION_RESOURCE_GROUP_ARN)
+            )), result);
     }
 
     @Test
@@ -997,7 +1003,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
     {
         // Create objects required for testing.
         final EmrClusterDefinitionCapacityReservationOptions emrClusterDefinitionCapacityReservationOptions =
-            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1);
+            new EmrClusterDefinitionCapacityReservationOptions(CAPACITY_USAGE_STRATEGY_1, CAPACITY_PREFERENCE_1, CAPACITY_RESERVATION_RESOURCE_GROUP_ARN);
         final EmrClusterDefinitionOnDemandSpecification emrClusterDefinitionOnDemandSpecification =
             new EmrClusterDefinitionOnDemandSpecification(ALLOCATION_STRATEGY_1, emrClusterDefinitionCapacityReservationOptions);
 
@@ -1009,7 +1015,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(new OnDemandProvisioningSpecification().withAllocationStrategy(ALLOCATION_STRATEGY_1).withCapacityReservationOptions(
-            new OnDemandCapacityReservationOptions().withUsageStrategy(CAPACITY_USAGE_STRATEGY_1).withCapacityReservationPreference(CAPACITY_PREFERENCE_1)),
+            new OnDemandCapacityReservationOptions()
+                .withUsageStrategy(CAPACITY_USAGE_STRATEGY_1)
+                .withCapacityReservationPreference(CAPACITY_PREFERENCE_1)
+                .withCapacityReservationResourceGroupArn(CAPACITY_RESERVATION_RESOURCE_GROUP_ARN)),
             result);
     }
 
