@@ -7136,6 +7136,12 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="capacityReservationResourceGroupArn" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The ARN of the Capacity Reservation resource group in which to run the instance
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
