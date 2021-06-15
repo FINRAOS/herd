@@ -14,6 +14,7 @@
   limitations under the License.
 """
 # Standard library imports
+import base64
 import configparser
 import random
 import string
@@ -46,6 +47,10 @@ def string_generator(string_length=10):
     new_string = ''.join(random.choice(password_characters) for _ in range(string_length))
     rand = random.randint(161, 563)
     return new_string + chr(rand)
+
+
+def string_generator_base64(string_length=10):
+    return base64.b64encode(string_generator(string_length).encode('utf-8')).decode('utf-8')
 
 
 class TestUtilityMethods(unittest.TestCase):
@@ -159,18 +164,25 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
         # Check other actions
-        actions = ['descriptive info', 'sme', 'bus obj def tags', 'columns', 'lineage', 'samples', 'tags']
+        actions = ['descriptive info', 'sme', 'bus obj def tags', 'columns', 'lineage', 'samples', 'tags', 'relational']
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
         test_vars = ['testdomain', 'descriptive info', 'testexcel', 'testenv', 'testurl', 'testusername',
                      'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'SmE', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'bus obj def tags', 'testexcel', 'testenv', 'testurl', 'testusername',
-                     'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'LiNeage', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+                     'testdomain', 'SmE', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64(),
+                     'testdomain', 'bus obj def tags', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64(),
+                     'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64(),
+                     'testdomain', 'LiNeage', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64(),
+                     'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64(),
+                     'testdomain', 'reLATIONal', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     string_generator_base64()
+                     ]
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         for x in range(len(actions) - 1):
@@ -2828,6 +2840,77 @@ class TestTagAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.delete_tag_list()
         self.assertEqual(mock_delete.call_count, 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertTrue(
+            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+
+
+class TestRelationalAction(unittest.TestCase):
+    """
+    Test Suite for Action Relational
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    @mock.patch('herdsdk.RelationalTableRegistrationApi.'
+                'relational_table_registration_create_relational_table_registration')
+    def test_create_relational_table(self, mock_create):
+        """
+        Test of the registering a relational table
+
+        """
+        self.controller.load_worksheet = mock.Mock(side_effect=[
+            pd.DataFrame(data=[[string_generator(), string_generator(), string_generator(), string_generator(),
+                                string_generator(), string_generator(), string_generator(), True],
+                               [string_generator(), string_generator(), string_generator(), string_generator(),
+                                string_generator(), string_generator(), string_generator(), 'TRUE']],
+                         columns=[Relational.NAMESPACE.value, Relational.DEFINITION_NAME.value,
+                                  Relational.FORMAT_USAGE.value, Relational.DATA_PROVIDER_NAME.value,
+                                  Relational.SCHEMA_NAME.value, Relational.TABLE_NAME.value,
+                                  Relational.STORAGE_NAME.value, Relational.APPEND.value])
+        ])
+
+        # Run scenario and check values
+        self.controller.load_relational()
+        self.assertEqual(mock_create.call_count, 2)
+        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
+                         self.controller.run_summary['total_rows'])
+        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+
+    @mock.patch('herdsdk.RelationalTableRegistrationApi.'
+                'relational_table_registration_create_relational_table_registration')
+    def test_create_relational_table_fail(self, mock_create):
+        """
+        Test of the registering a relational table with error
+
+        """
+        self.controller.load_worksheet = mock.Mock(side_effect=[
+            pd.DataFrame(data=[[string_generator(), string_generator(), string_generator(), string_generator(),
+                                string_generator(), string_generator(), string_generator(), True],
+                               [string_generator(), string_generator(), string_generator(), string_generator(),
+                                string_generator(), string_generator(), string_generator(), False]],
+                         columns=[Relational.NAMESPACE.value, Relational.DEFINITION_NAME.value,
+                                  Relational.FORMAT_USAGE.value, Relational.DATA_PROVIDER_NAME.value,
+                                  Relational.SCHEMA_NAME.value, Relational.TABLE_NAME.value,
+                                  Relational.STORAGE_NAME.value, Relational.APPEND.value])
+        ])
+        mock_create.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        self.controller.load_relational()
+        self.assertEqual(mock_create.call_count, 2)
+        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
+        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
         self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
