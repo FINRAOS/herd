@@ -19,12 +19,12 @@ from enum import Enum
 class Menu(Enum):
     OBJECTS = 'Descriptive Info'
     SME = 'SME'
-    OBJECT_TAG = 'Bus Obj Def Tags'
+    OBJECT_TAG = 'BDef Tags'
     COLUMNS = 'Columns'
     LINEAGE = 'Lineage'
     SAMPLES = 'Samples'
     TAGS = 'Tags'
-    RELATIONAL = 'Relational'
+    RELATIONAL = 'Relational Table'
     EXPORT = 'Export BDef'
     ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PRODY-DI', 'PRODY-QI']
 

@@ -164,7 +164,7 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.password, 'testpassword')
 
         # Check other actions
-        actions = ['descriptive info', 'sme', 'bus obj def tags', 'columns', 'lineage', 'samples', 'tags', 'relational']
+        actions = ['descriptive info', 'sme', 'bdef tags', 'columns', 'lineage', 'samples', 'tags', 'relational table']
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
@@ -172,7 +172,7 @@ class TestUtilityMethods(unittest.TestCase):
                      'dGVzdHBhc3N3b3Jk',
                      'testdomain', 'SmE', 'testexcel', 'testenv', 'testurl', string_generator(),
                      string_generator_base64(),
-                     'testdomain', 'bus obj def tags', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     'testdomain', 'Bdef Tags', 'testexcel', 'testenv', 'testurl', string_generator(),
                      string_generator_base64(),
                      'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', string_generator(),
                      string_generator_base64(),
@@ -180,7 +180,7 @@ class TestUtilityMethods(unittest.TestCase):
                      string_generator_base64(),
                      'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', string_generator(),
                      string_generator_base64(),
-                     'testdomain', 'reLATIONal', 'testexcel', 'testenv', 'testurl', string_generator(),
+                     'testdomain', 'reLATIONal tABLE', 'testexcel', 'testenv', 'testurl', string_generator(),
                      string_generator_base64()
                      ]
         mock_config.get.side_effect = test_vars
