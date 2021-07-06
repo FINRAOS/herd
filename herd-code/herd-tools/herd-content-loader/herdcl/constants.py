@@ -15,26 +15,31 @@
 """
 from enum import Enum
 
+
 class Menu(Enum):
     OBJECTS = 'Descriptive Info'
     SME = 'SME'
-    OBJECT_TAG = 'Bus Obj Def Tags'
+    OBJECT_TAG = 'BDef Tags'
     COLUMNS = 'Columns'
     LINEAGE = 'Lineage'
     SAMPLES = 'Samples'
     TAGS = 'Tags'
+    RELATIONAL = 'Relational Table'
     EXPORT = 'Export BDef'
     ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PRODY-DI', 'PRODY-QI']
+
 
 class Summary(Enum):
     CHANGES = 'changes'
     WARNINGS = 'warnings'
     ERRORS = 'errors'
 
+
 class Objects(Enum):
     WORKSHEET = 'Bus Obj Def Descriptive Info'
     NAMESPACE = 'Bus Obj Def Namespace'
     DEFINITION_NAME = 'Bus Obj Def Name'
+
 
 class SubjectMatterExpert(Enum):
     WORKSHEET = 'Bus Obj Def SME'
@@ -42,16 +47,19 @@ class SubjectMatterExpert(Enum):
     DEFINITION_NAME = 'Bus Obj Def Name'
     SME = 'Bus Obj Def SME User ID'
 
+
 class ObjectTags(Enum):
     WORKSHEET = 'Bus Obj Def Tags'
     NAMESPACE = 'Bus Obj Def Namespace'
     DEFINITION_NAME = 'Bus Obj Def Name'
+
 
 class Samples(Enum):
     WORKSHEET = 'Bus Obj Def Samples'
     NAMESPACE = 'Bus Obj Def Namespace'
     DEFINITION_NAME = 'Bus Obj Def Name'
     SAMPLE = 'Link to Sample Data'
+
 
 class Columns(Enum):
     WORKSHEET = 'Business Object Attribute'
@@ -61,6 +69,7 @@ class Columns(Enum):
     COLUMN_NAME = 'Business Object Attribute Logical Name'
     DESCRIPTION = 'Business Object Attribute Description'
 
+
 class Lineage(Enum):
     WORKSHEET = 'Business Object Lineage'
     NAMESPACE = 'Namespace'
@@ -68,11 +77,13 @@ class Lineage(Enum):
     USAGE = 'Format Usage'
     FILE_TYPE = 'Format File Type'
 
+
 class TagTypes(Enum):
     WORKSHEET = 'Tag Type'
     NAME = 'Tag Type Name'
     CODE = 'Tag Type Code'
     DESCRIPTION = 'Tag Type Description'
+
 
 class Tags(Enum):
     WORKSHEET = 'Tag'
@@ -82,3 +93,15 @@ class Tags(Enum):
     DESCRIPTION = 'Tag Desc Text'
     PARENT = 'Parent Tag Name'
     MULTIPLIER = 'Importance'
+
+
+class Relational(Enum):
+    WORKSHEET = 'Relational Table'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Bus Obj Def Name'
+    FORMAT_USAGE = 'Format Usage'
+    DATA_PROVIDER_NAME = 'Data Provider Name'
+    SCHEMA_NAME = 'Relational Schema Name'
+    TABLE_NAME = 'Relational Table Name'
+    STORAGE_NAME = 'Storage Name'
+    APPEND = 'Append To Existing Bus Obj Def'
