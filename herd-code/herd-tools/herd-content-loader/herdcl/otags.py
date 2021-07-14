@@ -56,7 +56,7 @@ class Controller:
 
     # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
     actions = [Menu.OBJECTS.value, Menu.SME.value, Menu.OBJECT_TAG.value, Menu.COLUMNS.value, Menu.LINEAGE.value,
-               Menu.SAMPLES.value, Menu.TAGS.value]
+               Menu.SAMPLES.value, Menu.TAGS.value, Menu.RELATIONAL.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -87,6 +87,7 @@ class Controller:
             str.lower(Menu.LINEAGE.value): self.load_lineage,
             str.lower(Menu.SAMPLES.value): self.load_samples,
             str.lower(Menu.TAGS.value): self.load_tags,
+            str.lower(Menu.RELATIONAL.value): self.load_relational,
             # str.lower(Menu.EXPORT.value): self.get_build_info,
             'test_api': self.test_api
         }
@@ -410,6 +411,36 @@ class Controller:
         return self.run_summary
 
     ############################################################################
+    def load_relational(self):
+        """
+        One of the controller actions. Registers a relational table
+
+        :return: Run Summary dict
+
+        """
+        self.data_frame = self.load_worksheet(Relational.WORKSHEET.value)
+        self.run_summary['total_rows'] = len(self.data_frame.index)
+
+        for index, row in self.data_frame.iterrows():
+            row_pass = True
+
+            try:
+                self.create_relational_table(index, row)
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+                row_pass = False
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+                row_pass = False
+
+            if row_pass:
+                self.run_summary['success_rows'] += 1
+
+        return self.run_summary
+
+    ############################################################################
     def reset_run(self):
         """
         Reset controller variables
@@ -478,7 +509,7 @@ class Controller:
 
         # Check if descriptive format exists
         if not resp.descriptive_business_object_format:
-            json = {
+            request_json = {
                 'description': description,
                 'displayName': logical_name,
                 'formatUsage': usage,
@@ -487,7 +518,7 @@ class Controller:
             LOGGER.info('Adding BDef Descriptive Info')
             resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
                                                                            business_object_definition_name=bdef_name,
-                                                                           update_request=json)
+                                                                           update_request=request_json)
             LOGGER.debug(resp)
             LOGGER.info('Success')
             message = 'Change in row. Old Descriptive Info:\nNone'
@@ -496,16 +527,16 @@ class Controller:
 
         # See if description, display name, usage, or file type in excel differs from UDC
         elif (resp.description != description or
-                      resp.display_name != logical_name or
-                      resp.descriptive_business_object_format.business_object_format_usage != usage or
-                      resp.descriptive_business_object_format.business_object_format_file_type != file_type):
+              resp.display_name != logical_name or
+              resp.descriptive_business_object_format.business_object_format_usage != usage or
+              resp.descriptive_business_object_format.business_object_format_file_type != file_type):
             old_data = {
                 'description': resp.description,
                 'displayName': resp.display_name,
                 'formatUsage': resp.descriptive_business_object_format.business_object_format_usage,
                 'fileType': resp.descriptive_business_object_format.business_object_format_file_type
             }
-            json = {
+            request_json = {
                 'description': description,
                 'displayName': logical_name,
                 'formatUsage': usage,
@@ -514,7 +545,7 @@ class Controller:
             LOGGER.info('Updating BDef Descriptive Info')
             resp = self.update_business_object_definition_descriptive_info(namespace=namespace,
                                                                            business_object_definition_name=bdef_name,
-                                                                           update_request=json)
+                                                                           update_request=request_json)
             LOGGER.debug(resp)
             LOGGER.info('Success')
             message = 'Change in row. Old Descriptive Info:\n{}'.format(old_data)
@@ -819,7 +850,7 @@ class Controller:
                         if not row['Found']:
                             LOGGER.info('Adding bdef column name: {}'.format(xls_column_name))
                             resp = self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
-                                                    xls_description)
+                                                           xls_description)
                             LOGGER.debug(resp)
                             LOGGER.info('Success')
                             self.format_columns[key].at[i, 'Found'] = True
@@ -829,7 +860,7 @@ class Controller:
                             LOGGER.info('Changing bdef column name: {}'.format(xls_column_name))
                             self.delete_bdef_column(namespace, bdef_name, row[Columns.COLUMN_NAME.value])
                             resp = self.create_bdef_column(namespace, bdef_name, xls_column_name, xls_schema_name,
-                                                    xls_description)
+                                                           xls_description)
                             LOGGER.debug(resp)
                             LOGGER.info('Success')
                             row_change = True
@@ -1134,6 +1165,36 @@ class Controller:
                     self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
 
     ############################################################################
+    def create_relational_table(self, index, row):
+        """
+        Registers a relational table. Relational table is mapped to Herd data model
+
+        :param index: Row index in Excel worksheet
+        :param row: A row inside the Pandas DataFrame
+
+        """
+        namespace, bdef_name, usage, data_provider, schema, table_name, storage, append = row[:8]
+
+        # Relational Table Post
+        LOGGER.info('Creating Relational Table')
+        request_json = {
+            'namespace': namespace,
+            'business_object_definition_name': bdef_name,
+            'business_object_format_usage': usage,
+            'data_provider_name': data_provider,
+            'relational_schema_name': schema,
+            'relational_table_name': table_name,
+            'storage_name': storage,
+            'append': str(append).lower()
+        }
+        resp = self.post_relational_table(request_json)
+        LOGGER.debug(resp)
+        LOGGER.info('Success')
+        message = 'Change in row. Created Relational Table:\n{}'.format(json.dumps(request_json))
+        LOGGER.info(message)
+        self.update_run_summary_batch([index], message, Summary.CHANGES.value)
+
+    ############################################################################
     def run_aws_command(self, command, resp, path, file):
         """
         Runs aws command
@@ -1242,7 +1303,7 @@ class Controller:
 
                     # Make updates if there are differences
                     if (xls_name != self.tag_types[xls_code]['name'] or
-                                xls_description != self.tag_types[xls_code]['description']):
+                            xls_description != self.tag_types[xls_code]['description']):
                         # TODO Check order
                         xls_order = self.tag_types[xls_code]['order']
                         LOGGER.info('Updating {}'.format(xls_code))
@@ -1438,10 +1499,10 @@ class Controller:
 
                     # Update if differences
                     if (resp.display_name != xls_name or
-                                resp.tag_key.tag_type_code != xls_tag_type or
-                                resp.tag_key.tag_code != xls_tag or
-                                resp.description != xls_description or
-                                parent != xls_parent):
+                            resp.tag_key.tag_type_code != xls_tag_type or
+                            resp.tag_key.tag_code != xls_tag or
+                            resp.description != xls_description or
+                            parent != xls_parent):
                         # TODO Multiplier
                         xls_multiplier = resp.search_score_multiplier
                         LOGGER.info('Updating Tag: {}'.format(xls_tag))
@@ -1534,7 +1595,6 @@ class Controller:
                 json.dumps(self.delete_tag_children, indent=1))
             LOGGER.info(message)
             self.update_run_summary_batch([ERROR_CODE], message, Summary.CHANGES.value)
-
 
     ############################################################################
     def get_tag_optional_fields(self, description, parent, index):
@@ -2041,6 +2101,27 @@ class Controller:
         LOGGER.info('GET /businessObjectDefinitionTags/tagTypes/{}/tagCodes/{}'.format(tag_type_code, tag_code))
         api_response = api_instance.business_object_definition_tag_get_business_object_definition_tags_by_tag(
             tag_type_code, tag_code)
+        return api_response
+
+    ############################################################################
+    def post_relational_table(self, post_request):
+        api_instance = herdsdk.RelationalTableRegistrationApi(herdsdk.ApiClient(self.configuration))
+
+        LOGGER.info('POST /relationalTableRegistrations?appendToExistingBusinessObjectDefinition={}'.format(
+            post_request['append']))
+        table_create_request = herdsdk.RelationalTableRegistrationCreateRequest(
+            namespace=post_request['namespace'],
+            business_object_definition_name=post_request['business_object_definition_name'],
+            business_object_format_usage=post_request['business_object_format_usage'],
+            data_provider_name=post_request['data_provider_name'],
+            relational_schema_name=post_request['relational_schema_name'],
+            relational_table_name=post_request['relational_table_name'],
+            storage_name=post_request['storage_name']
+        )
+        api_response = api_instance.relational_table_registration_create_relational_table_registration(
+            relational_table_registration_create_request=table_create_request,
+            append_to_existing_business_object_definition=post_request['append']
+        )
         return api_response
 
 
