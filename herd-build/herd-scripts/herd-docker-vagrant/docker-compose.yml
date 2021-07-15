@@ -1,0 +1,48 @@
+version: '3.5'
+
+volumes:
+  herd-pgsql-data:
+    driver: local
+  herd-elasticsearch-data:
+    driver: local
+
+services:
+  herd-pgsql:
+    image: postgres:10
+    restart: always
+    environment:
+      - POSTGRES_USER=finraherd
+      - POSTGRES_PASSWORD=Changeme123
+      - POSTGRES_DB=herd
+    volumes:
+      - herd-pgsql-data:/var/lib/postgresql/data
+      - ./herd-setup-sql:/docker-entrypoint-initdb.d
+
+  herd-elasticsearch:
+    image: herd-elasticsearch:latest
+    build:
+      context: elasticsearch/
+      dockerfile: Dockerfile
+    volumes:
+      - herd-elasticsearch-data:/var/lib/elasticsearch
+
+  herd:
+    image: herdsvc:latest
+    build:
+      context: herd/
+      dockerfile: Dockerfile
+      args:
+        - HERD_RELEASE=0.119.0
+    depends_on:
+      - herd-pgsql
+      - herd-elasticsearch
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_KEY
+      - HERD_UI_HOST=localhost:5443
+    links:
+      - "herd-pgsql"
+      - "herd-elasticsearch"
+    ports:
+      - "8080:8080"
+      - "5443:80"
