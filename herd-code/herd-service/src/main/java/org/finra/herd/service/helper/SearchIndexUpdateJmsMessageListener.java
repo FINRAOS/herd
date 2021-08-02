@@ -129,7 +129,7 @@ public class SearchIndexUpdateJmsMessageListener
      * @param payload the message payload
      * @param allHeaders the JMS headers
      */
-    @Retryable(maxAttempts = 4, value = ListenerExecutionFailedException.class, backoff = @Backoff(delay = 2000, multiplier = 2))
+    @Retryable(maxAttempts = 4, backoff = @Backoff(delay = 2000, multiplier = 2))
     private void processMessageWithRetry(String payload, @Headers Map<Object, Object> allHeaders)
     {
         LOGGER.info("Message received from the JMS queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
