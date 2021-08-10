@@ -641,14 +641,14 @@ class Controller:
         :return: Run Summary dict
 
         """
-        # Get the list of all tag types for column headers
-        if not self.get_all_tags():
-            return self.run_summary
-
         # Get the list of business object definitions
         bdef_keys = self.get_all_bdefs()
 
         if not bdef_keys:
+            return self.run_summary
+
+        # Get the list of all tag types for column headers
+        if not self.get_all_tags():
             return self.run_summary
 
         # For each bdef, get tags
@@ -759,6 +759,11 @@ class Controller:
             LOGGER.debug(resp)
             LOGGER.info('Success')
             bdef_keys = resp.business_object_definition_keys
+
+            if len(bdef_keys) == 0:
+                message = ('No data entities found for namespace {}'.format(self.export_namespace))
+                self.run_summary[Summary.COMMENTS.value] = message
+                return
         except ApiException as e:
             LOGGER.error(e)
             self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)

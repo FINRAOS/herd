@@ -3070,6 +3070,23 @@ class TestExportDescInfoAction(unittest.TestCase):
             Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_get_all_bdefs_empty(self, mock_bdefs):
+        """
+        Test of the herdsdk call get all business object definitions with no bdefs found
+
+        """
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[]
+        )
+
+        # Run scenario and check values
+        self.controller.export_descriptive()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
+        self.assertTrue('No data entities found' in self.controller.run_summary[Summary.COMMENTS.value])
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definitions1')
@@ -3514,13 +3531,27 @@ class TestExportBdefTagsAction(unittest.TestCase):
         Test of exporting business object definition tags with no tags
 
         """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
         mock_tag_types.side_effect = [rest.ApiException(reason='Error')]
 
         # Run scenario and check values
         self.controller.export_bdef_tags()
+        self.assertEqual(mock_bdefs.call_count, 1)
         self.assertEqual(mock_tag_types.call_count, 1)
         self.assertEqual(mock_tag.call_count, 0)
-        self.assertEqual(mock_bdefs.call_count, 0)
         self.assertEqual(mock_bdef_tag.call_count, 0)
         self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
 
@@ -3535,31 +3566,14 @@ class TestExportBdefTagsAction(unittest.TestCase):
         Test of exporting business object definition tags with no bdef
 
         """
-        tag_type_code_1 = string_generator()
-        tag_type_code_2 = string_generator()
-        column_1 = 'display name 1'
-        column_2 = 'display name 2'
-
-        mock_tag_types.return_value = mock.Mock(
-            tag_type_keys=[
-                mock.Mock(tag_type_code=tag_type_code_1),
-                mock.Mock(tag_type_code=tag_type_code_2)
-            ]
-        )
-
-        mock_tag.side_effect = [
-            mock.Mock(display_name=column_1),
-            mock.Mock(display_name=column_2),
-        ]
-
         mock_bdefs.return_value = mock.Mock(
             business_object_definition_keys=[]
         )
 
         # Run scenario and check values
         self.controller.export_bdef_tags()
-        self.assertEqual(mock_tag_types.call_count, 1)
-        self.assertEqual(mock_tag.call_count, 2)
         self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_tag_types.call_count, 0)
+        self.assertEqual(mock_tag.call_count, 0)
         self.assertEqual(mock_bdef_tag.call_count, 0)
         self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
