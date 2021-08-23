@@ -37,3 +37,17 @@ def get_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     return logger
+
+
+def get_level(debug=False):
+    """
+    Get logging level
+
+    :param debug: name of module calling method
+    :type debug: bool
+    :return: the logger
+    """
+    if debug:
+        return logging.DEBUG
+    else:
+        return logging.INFO

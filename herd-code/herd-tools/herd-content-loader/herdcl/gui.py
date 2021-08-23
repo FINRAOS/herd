@@ -14,122 +14,121 @@
   limitations under the License.
 """
 # Standard library imports
+import time
 import traceback
 
-import tkinter as tk
-from tkinter import font, ttk, scrolledtext, filedialog
+# Third party imports
+import PySimpleGUI as sg
 
 # Local imports
 try:
     import logger, otags
+    from constants import *
 except ImportError:
     from herdcl import logger, otags
+    from herdcl.constants import *
 
 LOGGER = logger.get_logger(__name__)
-ALL = tk.N + tk.S + tk.E + tk.W
 
 
 ################################################################################
-class MainUI(tk.Frame):
+class MainUI:
     """
      The GUI Application class.
     """
 
     names = None
-    fileName = ""
+    file_name = ""
     env = None
-    textPad = None
+    text_pad = None
+    window = None
     gui_enabled = True
     controller = otags.Controller()
     controller.load_config()
 
-    def __init__(self, master=None):
+    def __init__(self):
         """
         The init method for the Application class.
 
-        :param master: the parent widget
+        Set global style settings
         """
-        tk.Frame.__init__(self, master)
-        tk.font.nametofont("TkDefaultFont").configure(size=10)
-        tk.font.nametofont("TkTextFont").configure(size=11)
-        tk.font.nametofont("TkFixedFont").configure(size=11)
-
-        self.option_add('*Dialog.msg.font', 'Helvetica 14')
-
-        self.username = tk.StringVar()
-        self.userpwd = tk.StringVar()
-        self.delete = tk.BooleanVar()
-        self.sample_dir = tk.StringVar()
-        self.getfile = tk.StringVar()
-        self.grid(sticky=ALL)
-
-        self.env_name = self.controller.envs[0]
-        self.action = self.controller.actions[0]
-        self.create_widgets()
+        sg.theme(DEFAULT_THEME)
+        sg.theme_background_color(DEFAULT_COLOR)
+        sg.theme_button_color(DEFAULT_BUTTON_COLOR)
+        sg.SetOptions(font=DEFAULT_FONT)
 
     ############################################################################
-    def create_widgets(self):
+    def get_layout(self):
         """
-        Create forms on GUI
+        Returns window layout of forms
         """
+        layout_creds = [
+            [get_input_box(key=WindowElement.USER.value), get_input_box_pwd(key=WindowElement.CRED.value)],
+        ]
 
-        top = self.winfo_toplevel()
-        top.rowconfigure(0, weight=1)
-        top.columnconfigure(0, weight=1)
+        layout_env = [
+            [get_menu(items=self.controller.envs, key=WindowElement.ENV.value)],
+        ]
 
-        self.rowconfigure(2, weight=1)
-        self.columnconfigure(2, weight=1)
+        layout_switch = [
+            [get_menu(items=['Import', 'Export'], key=WindowElement.SWITCH.value, event=True)],
+        ]
 
-        ######## row 0
+        layout_action = [
+            [get_menu(items=self.controller.actions, key=WindowElement.ACTION.value, event=True)],
+        ]
 
-        user_frame = tk.ttk.Labelframe(self, text="UserId and Password")
-        user_frame.grid(row=0, column=0, columnspan=2, sticky=ALL)
+        layout_export_action = [
+            [get_menu(items=self.controller.export_actions, key=WindowElement.EXPORT_ACTION.value)],
+        ]
 
-        username_entry = tk.ttk.Entry(user_frame, width=22, textvariable=self.username)
-        username_entry.grid(row=0, column=0, pady=5, padx=5, sticky=ALL)
-        userpwd_entry = tk.ttk.Entry(user_frame, width=22, show="*", textvariable=self.userpwd)
-        userpwd_entry.grid(row=0, column=1, pady=5, padx=5, sticky=ALL)
+        layout_excel = [
+            [get_file(sg.user_settings_get_entry('-SaveExcel-', ''), key=WindowElement.EXCEL_FILE.value),
+             sg.FileBrowse(size=(int(DEFAULT_WIDTH / 2), 1))],
+        ]
 
-        sample_frame = tk.ttk.Labelframe(self, text='Samples Directory')
-        sample_frame.grid(row=0, column=2, sticky=ALL)
-        sample_entry = tk.ttk.Entry(sample_frame, width=42, textvariable=self.sample_dir)
-        sample_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
-        sample_entry.bind("<Button-1>", self.select_dir)
+        layout_samples = [
+            [get_folder(sg.user_settings_get_entry('-SaveSample-', ''), key=WindowElement.SAMPLE_DIR.value),
+             sg.FolderBrowse(size=(int(DEFAULT_WIDTH / 2), 1))],
+        ]
 
-        ######## row 1
+        layout_namespace = [
+            [get_input_box(key=WindowElement.NAMESPACE.value)],
+        ]
 
-        env = tk.ttk.Labelframe(self, text='Environment')
-        self.env = tk.ttk.Combobox(env, values=self.controller.envs, state='readonly', width=11)
-        self.env.bind("<<ComboboxSelected>>", self.select_env)
-        self.env.current(0)  # set selection
-        self.env.grid(row=0, pady=5, padx=5, sticky=ALL)
-        env.grid(row=1, column=0, sticky=ALL)
+        layout_export = [
+            [get_folder(sg.user_settings_get_entry('-SaveExport-', ''), key=WindowElement.EXPORT_DIR.value),
+             sg.FolderBrowse(size=(int(DEFAULT_WIDTH / 2), 1))],
+        ]
 
-        names = tk.ttk.Labelframe(self, text='Action')
-        self.names = tk.ttk.Combobox(names, values=self.controller.actions, state='readonly', width=11)
-        self.names.bind("<<ComboboxSelected>>", self.select_action)
-        self.names.current(0)  # set selection
-        self.names.grid(row=0, pady=5, padx=5, sticky=ALL)
-        names.grid(row=1, column=1, sticky=ALL)
+        layout_bottom = [
+            [get_checkbox('Debug Mode', key=WindowElement.DEBUG.value), get_button('Run')],
+            [get_text_box(WindowElement.TEXTPAD.value)],
+        ]
 
-        files = tk.ttk.Labelframe(self, text='Excel File')
-        get_file_entry = tk.ttk.Entry(files, width=42, textvariable=self.getfile)
-        get_file_entry.grid(row=0, pady=5, padx=5, sticky=ALL)
-        files.grid(row=1, column=2, sticky=ALL)
-        get_file_entry.bind("<Button-1>", self.select_file)
+        row_1 = [
+            [get_frame('UserId and Password', layout_creds)],
+            [get_frame('Environment', layout_env), get_frame('Mode', layout_switch)],
+        ]
+        row_2a = [
+            [get_frame('Metadata Type', layout_action)],
+            [get_frame('Excel File', layout_excel)],
+            [get_frame('Samples Directory', layout_samples, key='-SamplesFrame-', visible=False)],
+        ]
+        row_2b = [
+            [get_frame('Metadata Type', layout_export_action)],
+            [get_frame('Namespace', layout_namespace)],
+            [get_frame('Export Directory', layout_export)],
+        ]
+        col = [
+            [sg.Column(row_2a, key='-View1-'), sg.Column(row_2b, key='-View2-', visible=False)],
+        ]
+        row_3 = [
+            [get_frame(None, layout_bottom)],
+        ]
 
-        runs = tk.ttk.Labelframe(self, text='Go')
-        lb = tk.ttk.Button(runs, text="Run", command=self.run)
-        lb.grid(row=0, pady=5, padx=5, sticky=ALL)
-        runs.grid(row=1, column=3)
-
-        ######## row 2
-
-        self.textPad = tk.scrolledtext.ScrolledText(self, inactiveselectbackground="grey")
-        self.textPad.grid(row=2, column=0, columnspan=4, sticky=ALL)
-        self.textPad.tag_configure("black", background="black", foreground="white")
-        self.textPad.tag_configure("red", foreground="red")
-        self.textPad.bind_class("Text", "<Control-a>", lambda event: event.widget.tag_add("sel", "1.0", "end"))
+        layout = row_1 + col + row_3
+        return layout
 
     ############################################################################
     def line(self, *args):
@@ -157,47 +156,12 @@ class MainUI(tk.Frame):
             output = str(output)
 
         if "SUMMARY" in output:
-            self.textPad.insert(tk.END, output, "black")
+            self.text_pad.insert("end", output, "black")
         elif "FAILURE" in output:
-            self.textPad.insert(tk.END, output, "red")
+            self.text_pad.insert("end", output, "red")
         else:
-            self.textPad.insert(tk.END, output)
-        self.textPad.see(tk.END)
-        self.after(250, self.textPad.update())
-
-    ############################################################################
-    def select_env(self, *args):
-        """
-        Gets env when user clicks on env dropdown
-        """
-        self.env_name = str(self.env.get())
-
-    ############################################################################
-    def select_action(self, *args):
-        """
-        Gets action when user clicks on action dropdown
-        """
-        self.action = str(self.names.get())
-
-    ############################################################################
-    def select_file(self, *args):
-        """
-        Gets excel file when user clicks on Excel File form
-        """
-        self.fileName = tk.filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx"), ('all files', '.*')])
-        if not self.fileName:
-            return
-        self.getfile.set(str(self.fileName))
-
-    ############################################################################
-    def select_dir(self, *args):
-        """
-        Gets sample file directory when user clicks on Samples Directory form
-        """
-        directory = tk.filedialog.askdirectory(initialdir=self.sample_dir.get())
-        if not directory:
-            return
-        self.sample_dir.set(directory)
+            self.text_pad.insert("end", output)
+        self.text_pad.see("end")
 
     ############################################################################
     def display(self, resp, log=None):
@@ -215,35 +179,42 @@ class MainUI(tk.Frame):
         """
         Runs program when user clicks Run button
         """
-        self.textPad.delete('1.0', tk.END)
+        self.window[WindowElement.TEXTPAD.value].update('')
 
-        if not (self.username.get() and self.userpwd.get()):
-            self.line("Enter credentials")
+        if not (self.window[WindowElement.USER.value].get() and self.window[WindowElement.CRED.value].get()):
+            self.line("Enter credentials.")
             return
 
-        if self.action in ['Objects', 'Columns', 'Lineage', 'Tags']:
-            if not self.getfile.get():
+        action = self.window[WindowElement.ACTION.value].get()
+        if self.window[WindowElement.SWITCH.value].get() == 'Import':
+            if not self.window[WindowElement.EXCEL_FILE.value].get():
                 self.line("Please select a file first.")
                 return
-        elif self.action == 'Samples':
-            if not self.getfile.get():
-                self.line("Please select a file first.")
-                return
-            if not self.sample_dir.get():
-                self.line("Please select a directory.")
+            elif self.window[WindowElement.ACTION.value].get() == Menu.SAMPLES.value:
+                if not self.window[WindowElement.SAMPLE_DIR.value].get():
+                    self.line("Please select a directory.")
+                    return
+        else:
+            action = self.window[WindowElement.EXPORT_ACTION.value].get()
+            if not self.window[WindowElement.NAMESPACE.value].get():
+                self.line("Enter namespace.")
                 return
 
         config = {
             'gui_enabled': True,
-            'env': self.env_name,
-            'action': self.action,
-            'excel_file': self.getfile.get(),
-            'sample_dir': self.sample_dir.get(),
-            'userName': self.username.get(),
-            'userPwd': self.userpwd.get()
+            'debug_mode': self.window[WindowElement.DEBUG.value].get(),
+            'env': self.window[WindowElement.ENV.value].get(),
+            'action': action,
+            'excelFile': self.window[WindowElement.EXCEL_FILE.value].get(),
+            'sampleDir': self.window[WindowElement.SAMPLE_DIR.value].get(),
+            'namespace': self.window[WindowElement.NAMESPACE.value].get(),
+            'exportDir': self.window[WindowElement.EXPORT_DIR.value].get(),
+            'userName': self.window[WindowElement.USER.value].get(),
+            'userPwd': self.window[WindowElement.CRED.value].get()
         }
 
         try:
+            self.controller.start_time = time.time()
             self.controller.setup_run(config)
             method = self.controller.get_action()
             self.display('Connection Check')
@@ -253,28 +224,127 @@ class MainUI(tk.Frame):
             run_summary = method()
 
             self.display('\n\n--- RUN SUMMARY ---')
-            self.display('Processed {} rows'.format(run_summary['total_rows']))
-            self.display('Number of rows succeeded: {}'.format(run_summary['success_rows']))
-            if len(run_summary['changes']) > 0:
-                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+            self.display('Run time: {} sec\n'.format(time.time() - self.controller.start_time))
+            self.display('NOTES: {}\n'.format(run_summary[Summary.COMMENTS.value]))
+            self.display('Processed {} rows'.format(run_summary[Summary.TOTAL.value]))
+            self.display('Number of rows succeeded: {}'.format(run_summary[Summary.SUCCESS.value]))
+            if len(run_summary[Summary.CHANGES.value]) > 0:
+                changes = sorted(run_summary[Summary.CHANGES.value], key=lambda i: i[Summary.INDEX.value])
                 self.display('\n--- RUN CHANGES ---')
                 for e in changes:
-                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']))
-            if len(run_summary['warnings']) > 0:
-                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
+                    self.display('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]))
+            if len(run_summary[Summary.WARNINGS.value]) > 0:
+                warnings = sorted(run_summary[Summary.WARNINGS.value], key=lambda i: i[Summary.INDEX.value])
                 self.display('\n--- RUN WARNINGS ---', log=LOGGER.warning)
                 for e in warnings:
-                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.warning)
-            if run_summary['fail_rows'] == 0:
+                    self.display('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]),
+                                 log=LOGGER.warning)
+            if run_summary[Summary.FAIL.value] == 0:
                 self.display('\n--- RUN COMPLETED ---')
             else:
-                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
+                errors = sorted(run_summary[Summary.ERRORS.value], key=lambda i: i[Summary.INDEX.value])
                 self.display('\n--- RUN FAILURES ---', log=LOGGER.error)
-                self.display('Number of rows failed: {}'.format(run_summary['fail_rows']), log=LOGGER.error)
-                self.display('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])), log=LOGGER.error)
+                self.display('Number of rows failed: {}'.format(run_summary[Summary.FAIL.value]), log=LOGGER.error)
+                self.display('Please check rows: {}\n'.format(sorted(run_summary[Summary.FAIL_INDEX.value])),
+                             log=LOGGER.error)
                 for e in errors:
-                    self.display('Row: {}\nMessage: {}'.format(e['index'], e['message']), log=LOGGER.error)
+                    self.display('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]),
+                                 log=LOGGER.error)
                 self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)
         except Exception:
             self.display(traceback.print_exc(), log=LOGGER.error)
             self.display('\n--- RUN COMPLETED WITH FAILURES ---', log=LOGGER.error)
+
+    ############################################################################
+    def mainloop(self):
+        """
+        Create forms on GUI
+        """
+        self.window = sg.Window(DEFAULT_TITLE, layout=self.get_layout(), finalize=True)
+
+        self.text_pad = self.window.FindElement(WindowElement.TEXTPAD.value).Widget
+        self.text_pad.tag_configure("black", background="black", foreground="white")
+        self.text_pad.tag_configure("red", foreground="red")
+
+        while True:
+            event, values = self.window.read()
+
+            if event == sg.WIN_CLOSED:
+                break
+            elif event == WindowElement.SWITCH.value:
+                if self.window[WindowElement.SWITCH.value].get() == 'Export':
+                    self.window['-View1-'].update(visible=False)
+                    self.window['-View2-'].update(visible=True)
+                else:
+                    self.window['-View1-'].update(visible=True)
+                    self.window['-View2-'].update(visible=False)
+            elif event == WindowElement.ACTION.value:
+                if self.window[WindowElement.ACTION.value].get() == Menu.SAMPLES.value:
+                    self.window['-SamplesFrame-'].update(visible=True)
+                else:
+                    self.window['-SamplesFrame-'].update(visible=False)
+
+            elif event == 'Run':
+                self.window['Run'].update(disabled=True)
+                sg.user_settings_set_entry('-SaveExcel-', values[WindowElement.EXCEL_FILE.value])
+                sg.user_settings_set_entry('-SaveSample-', values[WindowElement.SAMPLE_DIR.value])
+                sg.user_settings_set_entry('-SaveExport-', values[WindowElement.EXPORT_DIR.value])
+
+                self.run()
+                self.window['Run'].update(disabled=False)
+
+        self.window.close()
+
+
+'''
+############################################################################
+--- Styling Section ---
+############################################################################
+'''
+
+DEFAULT_TITLE = 'UDC Content Loader'
+DEFAULT_THEME = 'DefaultNoMoreNagging'
+DEFAULT_COLOR = '#F0F0F0'
+DEFAULT_BUTTON_COLOR = '#007BFF'
+DEFAULT_FONT = 'Helvetica 14'
+DEFAULT_WIDTH = 30
+
+
+def get_input_box(key):
+    return sg.InputText(size=(DEFAULT_WIDTH, 1), key=key)
+
+
+def get_input_box_double(key):
+    return sg.InputText(size=(DEFAULT_WIDTH * 2, 1), key=key)
+
+
+def get_input_box_pwd(key):
+    return sg.InputText(size=(DEFAULT_WIDTH, 1), password_char='*', key=key)
+
+
+def get_menu(items, key, event=False):
+    return sg.Combo(items, size=(DEFAULT_WIDTH - 7, 1), default_value=items[0], key=key, enable_events=event)
+
+
+def get_checkbox(text, key, event=False):
+    return sg.Checkbox(text=text, key=key, enable_events=event, background_color=DEFAULT_COLOR)
+
+
+def get_button(title):
+    return sg.Button(title, size=(int(DEFAULT_WIDTH / 2), 1))
+
+
+def get_file(save, key):
+    return sg.Input(save, key=key)
+
+
+def get_folder(save, key):
+    return sg.Input(save, key=key)
+
+
+def get_text_box(key):
+    return sg.Multiline(size=(DEFAULT_WIDTH * 2 + 2, 20), key=key)
+
+
+def get_frame(title, layout, key=None, visible=True):
+    return sg.Frame(title, layout, border_width=0, key=key, visible=visible, background_color=DEFAULT_COLOR)

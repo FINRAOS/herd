@@ -14,15 +14,17 @@
   limitations under the License.
 """
 # Standard library imports
+import time
 import argparse
 import traceback
 
 # Local imports
 try:
-    import logger
-    import otags
+    import logger, otags
+    from constants import *
 except ImportError:
     from herdcl import logger, otags
+    from herdcl.constants import *
 
 LOGGER = logger.get_logger(__name__)
 
@@ -47,6 +49,7 @@ class Application:
         }
 
         try:
+            self.controller.start_time = time.time()
             self.controller.setup_run(config)
             method = self.controller.get_action()
             LOGGER.info('Connection Check')
@@ -55,27 +58,29 @@ class Application:
             run_summary = method()
 
             LOGGER.info('\n\n--- RUN SUMMARY ---')
-            LOGGER.info('Processed {} rows'.format(run_summary['total_rows']))
-            LOGGER.info('Number of rows succeeded: {}'.format(run_summary['success_rows']))
-            if len(run_summary['changes']) > 0:
-                changes = sorted(run_summary['changes'], key=lambda i: i['index'])
+            LOGGER.info('Run time: {} sec\n'.format(time.time() - self.controller.start_time))
+            LOGGER.info('NOTES: {}\n'.format(run_summary[Summary.COMMENTS.value]))
+            LOGGER.info('Processed {} rows'.format(run_summary[Summary.TOTAL.value]))
+            LOGGER.info('Number of rows succeeded: {}'.format(run_summary[Summary.SUCCESS.value]))
+            if len(run_summary[Summary.CHANGES.value]) > 0:
+                changes = sorted(run_summary[Summary.CHANGES.value], key=lambda i: i[Summary.INDEX.value])
                 LOGGER.info('\n--- RUN CHANGES ---')
                 for e in changes:
-                    LOGGER.info('Row: {}\nMessage: {}'.format(e['index'], e['message']))
-            if len(run_summary['warnings']) > 0:
-                warnings = sorted(run_summary['warnings'], key=lambda i: i['index'])
+                    LOGGER.info('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]))
+            if len(run_summary[Summary.WARNINGS.value]) > 0:
+                warnings = sorted(run_summary[Summary.WARNINGS.value], key=lambda i: i[Summary.INDEX.value])
                 LOGGER.info('\n--- RUN WARNINGS ---')
                 for e in warnings:
-                    LOGGER.warning('Row: {}\nMessage: {}'.format(e['index'], e['message']))
-            if run_summary['fail_rows'] == 0:
+                    LOGGER.warning('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]))
+            if run_summary[Summary.FAIL.value] == 0:
                 LOGGER.info('\n--- RUN COMPLETED ---')
             else:
-                errors = sorted(run_summary['errors'], key=lambda i: i['index'])
+                errors = sorted(run_summary['errors'], key=lambda i: i[Summary.INDEX.value])
                 LOGGER.error('\n--- RUN FAILURES ---')
-                LOGGER.error('Number of rows failed: {}'.format(run_summary['fail_rows']))
-                LOGGER.error('Please check rows: {}\n'.format(sorted(run_summary['fail_index'])))
+                LOGGER.error('Number of rows failed: {}'.format(run_summary[Summary.FAIL.value]))
+                LOGGER.error('Please check rows: {}\n'.format(sorted(run_summary[Summary.FAIL_INDEX.value])))
                 for e in errors:
-                    LOGGER.error('Row: {}\nMessage: {}'.format(e['index'], e['message']))
+                    LOGGER.error('Row: {}\nMessage: {}'.format(e[Summary.INDEX.value], e[Summary.MESSAGE.value]))
                 LOGGER.error('\n--- RUN COMPLETED WITH FAILURES ---')
         except Exception:
             LOGGER.error(traceback.print_exc())
@@ -103,7 +108,6 @@ def main():
             from herdcl import gui
         app = gui.MainUI()
         LOGGER.info('Opening GUI')
-        app.master.title('Herd Content Loader')
         app.mainloop()
 
 
