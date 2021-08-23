@@ -18,62 +18,94 @@ from enum import Enum
 
 class Menu(Enum):
     OBJECTS = 'Descriptive Info'
-    SME = 'SME'
-    OBJECT_TAG = 'BDef Tags'
+    SME = 'Contacts'
+    OBJECT_TAG = 'Data Entity Tags'
     COLUMNS = 'Columns'
     LINEAGE = 'Lineage'
-    SAMPLES = 'Samples'
+    SAMPLES = 'Sample Data'
     TAGS = 'Tags'
     RELATIONAL = 'Relational Table'
-    EXPORT = 'Export BDef'
+    LATEST_DESC = 'Latest Descriptive Info'
+    LATEST_COLUMNS = 'Latest Columns'
+    LATEST_BDEF_TAGS = 'Latest Data Entity Tags'
     ENVS = ['DEV-INT', 'QA-INT', 'CT', 'PROD', 'PRODY-DI', 'PRODY-QI']
 
 
+class WindowElement(Enum):
+    USER = '-User-'
+    CRED = '-Cred-'
+    ENV = '-Env-'
+    SWITCH = '-Switch-'
+    ACTION = '-Action-'
+    EXPORT_ACTION = '-ExportAction-'
+    EXCEL_FILE = '-Excel-'
+    SAMPLE_DIR = '-Sample-'
+    NAMESPACE = '-Namespace-'
+    EXPORT_DIR = '-Export-'
+    TEXTPAD = '-Textpad-'
+    DEBUG = '-Debug-'
+
+
 class Summary(Enum):
+    TOTAL = 'total_rows'
+    SUCCESS = 'success_rows'
+    FAIL = 'fail_rows'
+    FAIL_INDEX = 'fail_index'
+    COMMENTS = 'comments'
     CHANGES = 'changes'
     WARNINGS = 'warnings'
     ERRORS = 'errors'
+    INDEX = 'index'
+    MESSAGE = 'message'
+    TIME = 'start_time'
 
 
 class Objects(Enum):
-    WORKSHEET = 'Bus Obj Def Descriptive Info'
-    NAMESPACE = 'Bus Obj Def Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
+    EXCEL_NAME = 'descinfo.xlsx'
+    WORKSHEET = 'Descriptive Info'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Data Entity Physical Name'
+    FORMAT_USAGE = 'UDC Display Format Usage Type'
+    FILE_TYPE = 'UDC Display Format File Type'
+    DISPLAY_NAME = 'Business Name'
+    DESCRIPTION = 'Description'
 
 
 class SubjectMatterExpert(Enum):
-    WORKSHEET = 'Bus Obj Def SME'
-    NAMESPACE = 'Bus Obj Def Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
-    SME = 'Bus Obj Def SME User ID'
+    WORKSHEET = 'Contacts'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Data Entity Physical Name'
+    SME = 'Contacts User ID'
 
 
 class ObjectTags(Enum):
-    WORKSHEET = 'Bus Obj Def Tags'
-    NAMESPACE = 'Bus Obj Def Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
+    EXCEL_NAME = 'dataentitytags.xlsx'
+    WORKSHEET = 'Data Entity Tags'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Data Entity Physical Name'
 
 
 class Samples(Enum):
-    WORKSHEET = 'Bus Obj Def Samples'
-    NAMESPACE = 'Bus Obj Def Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
-    SAMPLE = 'Link to Sample Data'
+    WORKSHEET = 'Sample Data'
+    NAMESPACE = 'Namespace'
+    DEFINITION_NAME = 'Data Entity Physical Name'
+    SAMPLE = 'Sample Data Files'
 
 
 class Columns(Enum):
-    WORKSHEET = 'Business Object Attribute'
+    EXCEL_NAME = 'columns.xlsx'
+    WORKSHEET = 'Columns'
     NAMESPACE = 'Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
-    SCHEMA_NAME = 'Bus Obj Attribute Name'
-    COLUMN_NAME = 'Business Object Attribute Logical Name'
-    DESCRIPTION = 'Business Object Attribute Description'
+    DEFINITION_NAME = 'Data Entity Physical Name'
+    SCHEMA_NAME = 'Physical Name'
+    COLUMN_NAME = 'Business Name'
+    DESCRIPTION = 'Description'
 
 
 class Lineage(Enum):
-    WORKSHEET = 'Business Object Lineage'
+    WORKSHEET = 'Lineage'
     NAMESPACE = 'Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
+    DEFINITION_NAME = 'Data Entity Physical Name'
     USAGE = 'Format Usage'
     FILE_TYPE = 'Format File Type'
 
@@ -98,10 +130,10 @@ class Tags(Enum):
 class Relational(Enum):
     WORKSHEET = 'Relational Table'
     NAMESPACE = 'Namespace'
-    DEFINITION_NAME = 'Bus Obj Def Name'
+    DEFINITION_NAME = 'Data Entity Physical Name'
     FORMAT_USAGE = 'Format Usage'
     DATA_PROVIDER_NAME = 'Data Provider Name'
     SCHEMA_NAME = 'Relational Schema Name'
     TABLE_NAME = 'Relational Table Name'
     STORAGE_NAME = 'Storage Name'
-    APPEND = 'Append To Existing Bus Obj Def'
+    APPEND = 'Append To Existing Data Entity'
