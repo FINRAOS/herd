@@ -24,9 +24,11 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.NamespaceDao;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
@@ -41,6 +43,7 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
     }
 
     @Override
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public NamespaceEntity getNamespaceByCd(String namespaceCode)
     {
         // Create the criteria builder and the criteria.
