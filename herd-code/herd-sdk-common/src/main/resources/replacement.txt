@@ -1,2 +1,2 @@
-headerParams.put("X-Herd-Sdk-Version", "0.155.0-SNAPSHOT");
+headerParams.put("X-Herd-Sdk-Version", "VERSION");
 ClientResponse response = getAPIResponse
