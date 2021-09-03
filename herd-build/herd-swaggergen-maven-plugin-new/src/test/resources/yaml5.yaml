@@ -1,0 +1,108 @@
+---
+swagger: "2.0"
+info:
+  version: "test_version"
+  title: "test_title"
+basePath: "/test_basePath"
+tags:
+- name: "Person"
+paths:
+  /person:
+    post:
+      tags:
+      - "Person"
+      summary: "create"
+      description: ""
+      operationId: "Person.create"
+      parameters:
+      - in: "body"
+        name: "person"
+        required: true
+        schema:
+          $ref: "#/definitions/person"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/person"
+        default:
+          description: "General Error"
+          schema:
+            $ref: "#/definitions/errorResponse"
+  /person/{id}:
+    get:
+      tags:
+      - "Person"
+      summary: "get"
+      description: ""
+      operationId: "Person.get"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/person"
+        default:
+          description: "General Error"
+          schema:
+            $ref: "#/definitions/errorResponse"
+    put:
+      tags:
+      - "Person"
+      summary: "create"
+      description: ""
+      operationId: "Person.create1"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "person"
+        required: true
+        schema:
+          $ref: "#/definitions/person"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/person"
+        default:
+          description: "General Error"
+          schema:
+            $ref: "#/definitions/errorResponse"
+    delete:
+      tags:
+      - "Person"
+      summary: "delete"
+      description: ""
+      operationId: "Person.delete"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/person"
+        default:
+          description: "General Error"
+          schema:
+            $ref: "#/definitions/errorResponse"
+definitions:
+  errorResponse: {}
+  person:
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<person>\n\
+      \    <id>0</id>\n    <name>string</name>\n</person>\n"
