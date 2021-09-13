@@ -93,6 +93,7 @@ import com.amazonaws.services.s3control.model.JobManifestLocation;
 import com.amazonaws.services.s3control.model.JobManifestSpec;
 import com.amazonaws.services.s3control.model.JobOperation;
 import com.amazonaws.services.s3control.model.JobReport;
+import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -701,7 +702,7 @@ public class S3DaoImpl implements S3Dao
             JobOperation jobOperation = new JobOperation()
                 .withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation()
                     .withExpirationInDays(expirationInDays)
-                    .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
+                    .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
 
             JobManifest manifest = new JobManifest()
                 .withSpec(new JobManifestSpec()
