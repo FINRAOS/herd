@@ -660,7 +660,7 @@ public class S3DaoImpl implements S3Dao
         {
             String uuid = UUID.randomUUID().toString();
 
-            System.out.format("Restore call uuid: %s%n", uuid);
+            LOGGER.debug("Restore call uuid: {}", uuid);
 
             // Create the restore job manifest
             StringBuilder manifestContentBuilder = new StringBuilder();
@@ -672,13 +672,13 @@ public class S3DaoImpl implements S3Dao
             String manifestContent = manifestContentBuilder.toString();
 
             String eTag = DigestUtils.md5Hex(manifestContent);
-            System.out.format("Manifest eTag: %s%n", eTag);
-            String manifestArn = String.format("arn:aws:s3::://%s/%s.csv", params.getS3BucketName(), uuid);
-            System.out.format("Manifest arn: %s%n", manifestArn);
+            LOGGER.debug("Manifest eTag: {}", eTag);
+            String manifestArn = String.format("arn:aws:s3:::%s/%s.csv", params.getS3BucketName(), uuid);
+            LOGGER.debug("Manifest arn: {}", manifestArn);
 
             // Perform the transfer.
             performTransfer(params, transferManager -> {
-                System.out.println("Initiate Manifest transfer");
+                LOGGER.debug("Initiate Manifest transfer");
                 // Create and prepare the metadata.
                 ObjectMetadata metadata = new ObjectMetadata();
                 prepareMetadata(params, metadata);
@@ -693,7 +693,7 @@ public class S3DaoImpl implements S3Dao
                 return s3Operations.upload(putObjectRequest, transferManager);
             });
 
-            System.out.println("Manifest transfer complete");
+            LOGGER.debug("Manifest transfer complete");
 
             // Create an S3 client.
             AWSS3Control s3ControlClient = getAmazonS3Control(params);
@@ -713,7 +713,7 @@ public class S3DaoImpl implements S3Dao
                     .withObjectArn(manifestArn)
                     .withETag(eTag));
 
-            System.out.println("Manifest transfer complete");
+            LOGGER.info("Manifest transfer complete");
 
             JobReport jobReport = new JobReport()
                 .withEnabled(false);
@@ -729,7 +729,7 @@ public class S3DaoImpl implements S3Dao
                 .withDescription(String.format("Restore batch job %s", uuid))
                 .withConfirmationRequired(false);
 
-            System.out.format("Create restore job request: %s%n", createRestoreJobRequest.toString());
+            LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
 
             s3ControlClient.createJob(createRestoreJobRequest);
 
