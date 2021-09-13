@@ -15,6 +15,7 @@
 """
 # Standard library imports
 import os, sys, configparser, base64, traceback, pprint, filecmp, json
+from datetime import datetime
 
 # Third party imports
 import pandas as pd
@@ -43,6 +44,7 @@ class Controller:
      The controller class. Makes calls to herdsdk
     """
     # Class variables
+    start_time = None
     action = None
     excel_file = ''
     sample_dir = ''
@@ -50,13 +52,18 @@ class Controller:
     path = ''
     config = None
     domain = ''
+    export_namespace = ''
+    export_dir = ''
+    export_path = ''
+    debug_mode = False
 
     # Configure HTTP basic authorization: basicAuthentication
     configuration = herdsdk.Configuration()
 
-    # actions = [Menu.OBJECTS.value, Menu.COLUMNS.value, Menu.SAMPLES.value, Menu.TAGS.value, Menu.EXPORT.value]
     actions = [Menu.OBJECTS.value, Menu.SME.value, Menu.OBJECT_TAG.value, Menu.COLUMNS.value, Menu.LINEAGE.value,
                Menu.SAMPLES.value, Menu.TAGS.value, Menu.RELATIONAL.value]
+    # actions = ['test_api']
+    export_actions = [Menu.LATEST_DESC.value, Menu.LATEST_COLUMNS.value, Menu.LATEST_BDEF_TAGS.value]
     envs = Menu.ENVS.value
 
     def __init__(self):
@@ -67,10 +74,11 @@ class Controller:
         }
         self.format_columns = {}
         self.run_summary = {
-            'total_rows': 0,
-            'success_rows': 0,
-            'fail_rows': 0,
-            'fail_index': [],
+            Summary.TOTAL.value: 0,
+            Summary.SUCCESS.value: 0,
+            Summary.FAIL.value: 0,
+            Summary.FAIL_INDEX.value: [],
+            Summary.COMMENTS.value: '',
             Summary.CHANGES.value: [],
             Summary.WARNINGS.value: [],
             Summary.ERRORS.value: []
@@ -88,7 +96,9 @@ class Controller:
             str.lower(Menu.SAMPLES.value): self.load_samples,
             str.lower(Menu.TAGS.value): self.load_tags,
             str.lower(Menu.RELATIONAL.value): self.load_relational,
-            # str.lower(Menu.EXPORT.value): self.get_build_info,
+            str.lower(Menu.LATEST_DESC.value): self.export_descriptive,
+            str.lower(Menu.LATEST_COLUMNS.value): self.export_columns,
+            str.lower(Menu.LATEST_BDEF_TAGS.value): self.export_bdef_tags,
             'test_api': self.test_api
         }
 
@@ -97,20 +107,12 @@ class Controller:
         """
         Load configuration file
 
-        :return: current working directory and configparser
-
         """
         LOGGER.debug(sys.argv)
-        if os.name == 'nt':
-            path = os.getcwd()
-        elif '/' in sys.argv[0]:
-            path = '/'.join(sys.argv[0].split('/')[:-1])
-        else:
-            path = os.getcwd()
-        LOGGER.info('Current working directory: {}'.format(path))
+        self.get_current_directory()
 
         # Get config file
-        config_file = path + "/loader.cfg"
+        config_file = self.path + "/loader.cfg"
         LOGGER.debug('Checking for loader config: {}'.format(config_file))
         if not os.path.exists(config_file):
             message = "Config file loader.cfg not found"
@@ -119,8 +121,39 @@ class Controller:
         config = configparser.ConfigParser()
         config.read(config_file)
 
-        self.path = path
         self.config = config
+
+    ############################################################################
+    def get_current_directory(self):
+        """
+        Get current working directory
+
+        """
+        if os.name == 'nt':
+            path = os.getcwd()
+        elif '/' in sys.argv[0]:
+            path = '/'.join(sys.argv[0].split('/')[:-1])
+        else:
+            path = os.getcwd()
+
+        self.path = path
+        LOGGER.info('Current working directory: {}'.format(self.path))
+
+    ############################################################################
+    def get_save_file_path(self, filename):
+        """
+        Get file path for Excel worksheet
+
+        :param filename: Excel file name
+        :type filename: str
+
+        """
+        now = datetime.now()
+
+        if self.export_dir:
+            self.export_path = self.export_dir + os.sep + 'export_' + now.strftime('%m%d%Y_%H%M%S_') + filename
+        else:
+            self.export_path = self.path + os.sep + 'export_' + now.strftime('%m%d%Y_%H%M%S_') + filename
 
     ############################################################################
     def setup_run(self, config):
@@ -133,23 +166,28 @@ class Controller:
         """
         self.domain = self.config.get('url', 'domain')
         if config['gui_enabled']:
+            self.debug_mode = config['debug_mode']
             self.action = str.lower(config['action'])
-            self.excel_file = config['excel_file']
-            self.sample_dir = config['sample_dir']
+            self.excel_file = config['excelFile']
+            self.sample_dir = config['sampleDir']
+            self.export_namespace = config['namespace']
+            self.export_dir = config['exportDir']
             self.configuration.host = self.config.get('url', config['env'])
             self.configuration.username = config['userName']
             self.configuration.password = config['userPwd']
         else:
+            self.debug_mode = self.config.getboolean('console', 'debug')
             self.action = str.lower(self.config.get('console', 'action'))
-            if self.action == 'samples':
-                self.excel_file = self.config.get('console', 'excelFile')
-                self.sample_dir = self.config.get('console', 'sampleDir')
-            else:
-                self.excel_file = self.config.get('console', 'excelFile')
+            self.excel_file = self.config.get('console', 'excelFile')
+            self.sample_dir = self.config.get('console', 'sampleDir')
+            self.export_namespace = self.config.get('console', 'namespace')
+            self.export_dir = self.config.get('console', 'exportDir')
             env = self.config.get('console', 'env')
             self.configuration.host = self.config.get('url', env)
             self.configuration.username = self.config.get('credentials', 'userName')
             self.configuration.password = base64.b64decode(self.config.get('credentials', 'userPwd')).decode('utf-8')
+
+        LOGGER.setLevel(logger.get_level(self.debug_mode))
 
     ############################################################################
     def get_action(self):
@@ -176,6 +214,41 @@ class Controller:
         """
         LOGGER.info('Loading worksheet name: {}'.format(sheet))
         return pd.read_excel(self.excel_file, sheet_name=sheet).fillna('')
+
+    ############################################################################
+    def save_worksheet(self, sheet, filename):
+        """
+        Saves Pandas DataFrame to Excel worksheet
+
+        :param sheet: Excel sheet name
+        :type sheet: str
+        :param filename: Excel file name
+        :type filename: str
+
+        """
+        self.get_save_file_path(filename)
+        LOGGER.info('Saving worksheet name: {}'.format(sheet))
+        LOGGER.info('Path: {}'.format(self.export_path))
+        writer = pd.ExcelWriter(path=self.export_path, engine='xlsxwriter')
+        self.data_frame.to_excel(excel_writer=writer, sheet_name=sheet, index=False)
+
+        # Formatting
+        # Minus 1 because of zero indexing
+        worksheet = writer.sheets[sheet]
+        worksheet.set_column(first_col=0, last_col=len(self.data_frame.columns) - 1, width=25)
+
+        workbook = writer.book
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'border': 1
+        })
+        # Overwrite first row (header) with new format
+        for col_num, value in enumerate(self.data_frame.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+
+        writer.save()
 
     ############################################################################
     def load_object(self):
@@ -441,6 +514,186 @@ class Controller:
         return self.run_summary
 
     ############################################################################
+    def export_descriptive(self):
+        """
+        One of the controller actions. Gets latest business object definition descriptive information
+        Exports data into excel file
+
+        :return: Run Summary dict
+
+        """
+
+        # Get the list of business object definitions
+        bdef_keys = self.get_all_bdefs()
+
+        if not bdef_keys:
+            return self.run_summary
+
+        # For each bdef, get descriptive info
+        data = []
+        columns = [
+            Objects.NAMESPACE.value, Objects.DEFINITION_NAME.value, Objects.FORMAT_USAGE.value, Objects.FILE_TYPE.value,
+            Objects.DISPLAY_NAME.value, Objects.DESCRIPTION.value
+        ]
+        for index, key in enumerate(bdef_keys):
+            try:
+                LOGGER.info(
+                    'Getting Descriptive Info for {}'.format((key.namespace, key.business_object_definition_name)))
+                resp = self.get_business_object_definition(key.namespace, key.business_object_definition_name)
+                LOGGER.debug(resp)
+
+                if resp.descriptive_business_object_format:
+                    row = [
+                        key.namespace,
+                        key.business_object_definition_name,
+                        resp.descriptive_business_object_format.business_object_format_usage,
+                        resp.descriptive_business_object_format.business_object_format_file_type,
+                        resp.display_name,
+                        resp.description
+                    ]
+                else:
+                    row = [
+                        key.namespace,
+                        key.business_object_definition_name,
+                        '',
+                        '',
+                        resp.display_name,
+                        resp.description
+                    ]
+                data.append(row)
+                self.run_summary[Summary.SUCCESS.value] += 1
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+
+        message = ('Total rows is total number of bdefs in namespace\n' +
+                   'Success rows is total number of rows in excel worksheet')
+        self.run_summary[Summary.COMMENTS.value] = message
+        self.run_summary[Summary.TOTAL.value] = len(bdef_keys)
+        self.data_frame = pd.DataFrame(data, columns=columns)
+        self.save_worksheet(Objects.WORKSHEET.value, Objects.EXCEL_NAME.value)
+        return self.run_summary
+
+    ############################################################################
+    def export_columns(self):
+        """
+        One of the controller actions. Gets latest business object definition columns
+        Exports data into excel file
+
+        :return: Run Summary dict
+
+        """
+        bdef_keys = self.get_all_bdefs()
+
+        if not bdef_keys:
+            return self.run_summary
+
+        # For each bdef, get columns
+        data = []
+        columns = [
+            Columns.NAMESPACE.value, Columns.DEFINITION_NAME.value, Columns.SCHEMA_NAME.value,
+            Columns.COLUMN_NAME.value, Columns.DESCRIPTION.value
+        ]
+        for index, key in enumerate(bdef_keys):
+            try:
+                LOGGER.info(
+                    'Getting BDef Columns for {}'.format((key.namespace, key.business_object_definition_name)))
+                resp = self.post_bdef_column_search(key.namespace, key.business_object_definition_name)
+                LOGGER.debug(resp)
+
+                if len(resp.business_object_definition_columns) > 0:
+                    LOGGER.info('Found {} columns'.format(len(resp.business_object_definition_columns)))
+                    for column in resp.business_object_definition_columns:
+                        row = [
+                            key.namespace,
+                            key.business_object_definition_name,
+                            column.schema_column_name,
+                            column.business_object_definition_column_key.business_object_definition_column_name,
+                            column.description
+                        ]
+                        data.append(row)
+                        self.run_summary[Summary.SUCCESS.value] += 1
+
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+
+        message = ('Total rows is total number of bdefs in namespace\n' +
+                   'Success rows is total number of rows in excel worksheet')
+        self.run_summary[Summary.COMMENTS.value] = message
+        self.run_summary[Summary.TOTAL.value] = len(bdef_keys)
+        self.data_frame = pd.DataFrame(data, columns=columns)
+        self.save_worksheet(Columns.WORKSHEET.value, Columns.EXCEL_NAME.value)
+        return self.run_summary
+
+    ############################################################################
+    def export_bdef_tags(self):
+        """
+        One of the controller actions. Gets latest business object definition tags
+        Exports data into excel file
+
+        :return: Run Summary dict
+
+        """
+        # Get the list of business object definitions
+        bdef_keys = self.get_all_bdefs()
+
+        if not bdef_keys:
+            return self.run_summary
+
+        # Get the list of all tag types for column headers
+        if not self.get_all_tags():
+            return self.run_summary
+
+        # For each bdef, get tags
+        data = []
+        columns = [
+            ObjectTags.NAMESPACE.value, ObjectTags.DEFINITION_NAME.value
+        ]
+        columns.extend(self.tag_types['columns'])
+        for index, key in enumerate(bdef_keys):
+            try:
+                for k in self.tag_types['row_entry'].keys():
+                    self.tag_types['row_entry'][k].clear()
+
+                LOGGER.info(
+                    'Getting BDef Tags for {}'.format((key.namespace, key.business_object_definition_name)))
+                resp = self.get_bdef_tags(key.namespace, key.business_object_definition_name)
+                LOGGER.debug(resp)
+                if len(resp.business_object_definition_tag_keys) > 0:
+                    for bdef_tag in resp.business_object_definition_tag_keys:
+                        tag_key = bdef_tag.tag_key
+                        LOGGER.info('Found Tag Key: {}'.format(tag_key))
+                        tag_type_code, tag_code = tag_key.tag_type_code, tag_key.tag_code
+                        self.tag_types['row_entry'][tag_type_code].append(tag_code)
+
+                    row = [key.namespace, key.business_object_definition_name]
+                    for k in self.tag_types['row_entry'].keys():
+                        row.append(','.join(self.tag_types['row_entry'][k]))
+                    data.append(row)
+                    self.run_summary[Summary.SUCCESS.value] += 1
+            except ApiException as e:
+                LOGGER.error(e)
+                self.update_run_summary_batch([index], e, Summary.ERRORS.value)
+            except Exception:
+                LOGGER.error(traceback.format_exc())
+                self.update_run_summary_batch([index], traceback.format_exc(), Summary.ERRORS.value)
+
+        message = ('Total rows is total number of bdefs in namespace\n' +
+                   'Success rows is total number of rows in excel worksheet')
+        self.run_summary[Summary.COMMENTS.value] = message
+        self.run_summary[Summary.TOTAL.value] = len(bdef_keys)
+        self.data_frame = pd.DataFrame(data, columns=columns)
+        self.save_worksheet(ObjectTags.WORKSHEET.value, ObjectTags.EXCEL_NAME.value)
+        return self.run_summary
+
+    ############################################################################
     def reset_run(self):
         """
         Reset controller variables
@@ -452,10 +705,11 @@ class Controller:
         }
         self.format_columns = {}
         self.run_summary = {
-            'total_rows': 0,
-            'success_rows': 0,
-            'fail_rows': 0,
-            'fail_index': [],
+            Summary.TOTAL.value: 0,
+            Summary.SUCCESS.value: 0,
+            Summary.FAIL.value: 0,
+            Summary.FAIL_INDEX.value: [],
+            Summary.COMMENTS.value: '',
             Summary.CHANGES.value: [],
             Summary.WARNINGS.value: [],
             Summary.ERRORS.value: []
@@ -477,18 +731,85 @@ class Controller:
         for index in index_array:
             if index < 0:
                 item = {
-                    'index': index,
-                    'message': message
+                    Summary.INDEX.value: index,
+                    Summary.MESSAGE.value: message
                 }
             else:
                 item = {
-                    'index': index + 2,
-                    'message': message
+                    Summary.INDEX.value: index + 2,
+                    Summary.MESSAGE.value: message
                 }
                 if category == Summary.ERRORS.value:
-                    self.run_summary['fail_rows'] += 1
-                    self.run_summary['fail_index'].append(index + 2)
+                    self.run_summary[Summary.FAIL.value] += 1
+                    self.run_summary[Summary.FAIL_INDEX.value].append(index + 2)
             self.run_summary[category].append(item)
+
+    ############################################################################
+    def get_all_bdefs(self):
+        """
+        Get all bdefs from user entered namespace
+
+        :return: List of bdef keys
+
+        """
+
+        try:
+            LOGGER.info('Getting list of Bdefs for {}'.format(self.export_namespace))
+            resp = self.get_business_object_definitions(self.export_namespace)
+            LOGGER.debug(resp)
+            LOGGER.info('Success')
+            bdef_keys = resp.business_object_definition_keys
+
+            if len(bdef_keys) == 0:
+                message = ('No data entities found for namespace {}'.format(self.export_namespace))
+                self.run_summary[Summary.COMMENTS.value] = message
+                return
+        except ApiException as e:
+            LOGGER.error(e)
+            self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+            return
+        except Exception:
+            LOGGER.error(traceback.format_exc())
+            self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+            return
+
+        return bdef_keys
+
+    ############################################################################
+    def get_all_tags(self):
+        """
+        Get all tags and tag type codes
+
+        :return: True if success, False if fail
+
+        """
+
+        # There can be multiple tags in each tag type code. Collect a list of tags for each code
+        self.tag_types['row_entry'] = {}
+
+        try:
+            LOGGER.info('Getting list of all tag types')
+            resp = self.get_tag_types().tag_type_keys
+            LOGGER.debug(resp)
+            LOGGER.info('Success')
+
+            for tag in resp:
+                code = tag.tag_type_code
+                LOGGER.info('Getting display name of tag type code: {}'.format(code))
+                display_name = self.get_tag_type_code(code).display_name.strip()
+                self.tag_types[code] = display_name
+                self.tag_types['columns'].append(display_name)
+                self.tag_types['row_entry'][code] = []
+        except ApiException as e:
+            LOGGER.error(e)
+            self.update_run_summary_batch([ERROR_CODE], e, Summary.ERRORS.value)
+            return
+        except Exception:
+            LOGGER.error(traceback.format_exc())
+            self.update_run_summary_batch([ERROR_CODE], traceback.format_exc(), Summary.ERRORS.value)
+            return
+
+        return True
 
     ############################################################################
     def update_bdef_descriptive_info(self, index, row):
@@ -693,7 +1014,7 @@ class Controller:
 
         # Add any changes to run summary
         if row_change:
-            message = 'Change in row. Old tags:\n{}'.format(old_tags)
+            message = 'Change in row. Old tags:\n{}'.format(json.dumps(old_tags, indent=1))
             LOGGER.info(message)
             self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
@@ -817,7 +1138,7 @@ class Controller:
             empty_schema_list = empty_schema_df[Columns.COLUMN_NAME.value].tolist()
             if len(empty_schema_list) > 0:
                 message = 'Could not find a schema name for the following bdef columns:\n{}'.format(
-                    pprint.pformat(empty_schema_list, width=120, compact=True))
+                    pprint.pformat(empty_schema_list, width=60, compact=True))
                 self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
 
             # Compare excel data to UDC data
@@ -890,7 +1211,7 @@ class Controller:
             not_found_list = not_found_df[Columns.SCHEMA_NAME.value].tolist()
             if len(not_found_list) > 0:
                 message = 'Could not find bdef column info for the following schema columns:\n{}'.format(
-                    pprint.pformat(not_found_list, width=120, compact=True))
+                    pprint.pformat(not_found_list, width=60, compact=True))
                 self.update_run_summary_batch([ERROR_CODE], message, Summary.WARNINGS.value)
 
     ############################################################################
@@ -1190,7 +1511,7 @@ class Controller:
         resp = self.post_relational_table(request_json)
         LOGGER.debug(resp)
         LOGGER.info('Success')
-        message = 'Change in row. Created Relational Table:\n{}'.format(json.dumps(request_json))
+        message = 'Change in row. Created Relational Table:\n{}'.format(json.dumps(request_json, indent=1))
         LOGGER.info(message)
         self.update_run_summary_batch([index], message, Summary.CHANGES.value)
 
@@ -1636,7 +1957,8 @@ class Controller:
 
         """
         self.run_summary['total_rows'] = 1
-        self.get_current_user()
+        resp = self.get_current_user()
+        LOGGER.debug(resp)
         return self.run_summary
 
     '''
@@ -1657,6 +1979,15 @@ class Controller:
 
         LOGGER.info('GET /currentUser')
         api_response = api_instance.current_user_get_current_user()
+        return api_response
+
+    ############################################################################
+    def get_business_object_definitions(self, namespace):
+        api_client = ApiClientOverwrite(self.configuration)
+        api_instance = herdsdk.BusinessObjectDefinitionApi(api_client)
+
+        LOGGER.info('GET /businessObjectDefinitions/namespaces/{}'.format(namespace))
+        api_response = api_instance.business_object_definition_get_business_object_definitions1(namespace)
         return api_response
 
     ############################################################################
