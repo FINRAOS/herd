@@ -274,4 +274,7 @@ public interface S3Dao
      * @throws RuntimeException if file validation fails
      */
     void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
+
+    void createRestoreObjectsJob(S3FileTransferRequestParamsDto params, String account, String role, int expirationInDays, String archiveRetrievalOption);
+
 }

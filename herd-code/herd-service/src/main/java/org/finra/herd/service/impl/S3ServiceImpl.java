@@ -26,8 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -46,6 +48,9 @@ public class S3ServiceImpl implements S3Service
 
     @Autowired
     private S3Dao s3Dao;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     @Override
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto params) throws InterruptedException
@@ -124,7 +129,16 @@ public class S3ServiceImpl implements S3Service
     @Override
     public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
     {
-        s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
+        if (configurationHelper.getBooleanProperty(ConfigurationValue.S3_RESTORE_BATCH_MODE_ON))
+        {
+            String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT);
+            String batchRole = configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN);
+            s3Dao.createRestoreObjectsJob(params, account, batchRole, expirationInDays, archiveRetrievalOption);
+        }
+        else
+        {
+            s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
+        }
     }
 
     @Override
