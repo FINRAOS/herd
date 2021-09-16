@@ -1,0 +1,42 @@
+---
+swagger: "2.0"
+definitions:
+  basicCase:
+    required:
+    - "string"
+    properties:
+      string:
+        type: "string"
+      objectInteger:
+        type: "integer"
+        format: "int32"
+      primitiveInteger:
+        type: "integer"
+        format: "int32"
+      objectLong:
+        type: "integer"
+        format: "int64"
+      primitiveLong:
+        type: "integer"
+        format: "int64"
+      bigDecimal:
+        type: "number"
+      objectBoolean:
+        type: "boolean"
+      primitiveBoolean:
+        type: "boolean"
+      enumType:
+        type: "string"
+        enum:
+        - "A"
+        - "B"
+        - "C"
+      list:
+        type: "array"
+        items:
+          type: "string"
+      basicCase:
+        $ref: "#/definitions/basicCase"
+      serializable:
+        type: "string"
+  trivialCase: {}

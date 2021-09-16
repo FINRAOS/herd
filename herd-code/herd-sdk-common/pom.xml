@@ -164,6 +164,14 @@
                            <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
                            <includes>**/${swagger.spec.name}</includes>
                         </artifactItem>
+                        <artifactItem>
+                           <groupId>${project.groupId}</groupId>
+                           <artifactId>herd-docs-swagger-new</artifactId>
+                           <version>${project.version}</version>
+                           <type>zip</type>
+                           <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+                           <includes>**/${swagger.spec.name}</includes>
+                        </artifactItem>
                      </artifactItems>
                   </configuration>
                </execution>
@@ -172,6 +180,11 @@
                <dependency>
                   <groupId>${project.groupId}</groupId>
                   <artifactId>herd-docs-swagger</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-docs-swagger-new</artifactId>
                   <version>${project.version}</version>
                </dependency>
             </dependencies>

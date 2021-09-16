@@ -25,10 +25,12 @@ script:
   - rm -rf public/docs/${HERD_PROJECT_VERSION}
   - mkdir --parents public/docs/${HERD_PROJECT_VERSION}
   - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest/. public/docs/${HERD_PROJECT_VERSION}/rest
+  - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-new-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest-new/. public/docs/${HERD_PROJECT_VERSION}/rest-new
   - cp -a herd-code/herd-war/target/generated-resources/javadoc/docs/javadoc/. public/docs/${HERD_PROJECT_VERSION}/javadoc
   - rm -rf public/docs/latest
   - mkdir --parents public/docs/latest
   - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest/. public/docs/latest/rest
+  - cp -a herd-code/herd-war/target/generated-resources/herd-docs-swagger-new-${HERD_PROJECT_VERSION}-SNAPSHOT/docs/rest-new/. public/docs/latest/rest-new
   - cp -a herd-code/herd-war/target/generated-resources/javadoc/docs/javadoc/. public/docs/latest/javadoc
 deploy:
   provider: pages
