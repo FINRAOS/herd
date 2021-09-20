@@ -698,6 +698,10 @@
       "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/herd-app/docs/rest/index.html"]]},
       "Description" : "Herd REST API documentation"
     },
+    "HerdRESTAPINew" : {
+        "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/herd-app/docs/rest-new/index.html"]]},
+        "Description" : "Herd REST API documentation new"
+    },
     "HerdUI" : {
       "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },"/"]]},
       "Description" : "Herd UI"

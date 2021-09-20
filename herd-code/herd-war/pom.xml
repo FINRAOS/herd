@@ -51,7 +51,10 @@
          <groupId>${project.groupId}</groupId>
          <artifactId>herd-docs-swagger</artifactId>
       </dependency>
-
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>herd-docs-swagger-new</artifactId>
+      </dependency>
       <dependency>
          <groupId>commons-configuration</groupId>
          <artifactId>commons-configuration</artifactId>
@@ -130,6 +133,12 @@
                         </artifactItem>
                         <artifactItem>
                            <groupId>${project.groupId}</groupId>
+                           <artifactId>herd-docs-swagger-new</artifactId>
+                           <type>zip</type>
+                           <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+                        </artifactItem>
+                        <artifactItem>
+                           <groupId>${project.groupId}</groupId>
                            <artifactId>herd-docs-javadoc</artifactId>
                            <version>${project.version}</version>
                            <classifier>javadoc</classifier>
@@ -153,6 +162,9 @@
                   </resource>
                   <resource>
                      <directory>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}</directory>
+                  </resource>
+                  <resource>
+                     <directory>${project.build.directory}/generated-resources/herd-docs-swagger-new-${project.version}</directory>
                   </resource>
                   <resource>
                      <directory>${project.build.directory}/generated-resources/javadoc</directory>
