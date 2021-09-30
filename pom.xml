@@ -87,7 +87,7 @@
       <scala.tools.version>2.11</scala.tools.version>
       <scalastyle.version>1.0.0</scalastyle.version>
       <scalatest.version>2.2.6</scalatest.version>
-      <slf4j.version>1.7.25</slf4j.version>
+      <slf4j.version>1.7.26</slf4j.version>
       <spring.ldap.version>2.3.2.RELEASE</spring.ldap.version>
       <spring.security.version>4.2.17.RELEASE</spring.security.version>
       <spring.version>4.3.30.RELEASE</spring.version>
