@@ -102,7 +102,7 @@ securityDefinitions:
   oauth2Authentication:
     type: "oauth2"
     tokenUrl: "https://{{TOKEN_URL}}"
-    flow: "password"
+    flow: "application"
   basicAuthentication:
     type: "basic"
 definitions:
