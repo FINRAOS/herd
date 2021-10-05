@@ -48,7 +48,7 @@ import org.springframework.util.CollectionUtils;
 @Mojo(name = "herd-swaggergen", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class SwaggerGenMojo extends AbstractMojo
 {
-    private final String TOKEN_URL = "https://{{TOKEN_URL}}";
+    private static final String TOKEN_URL = "https://{{TOKEN_URL}}";
 
     /**
      * Location where the generated output YAML file will go.
