@@ -19,6 +19,8 @@ from datetime import datetime
 
 # Third party imports
 import pandas as pd
+import requests
+from requests.auth import HTTPBasicAuth
 
 # Herd imports
 import herdsdk
@@ -56,6 +58,7 @@ class Controller:
     export_dir = ''
     export_path = ''
     debug_mode = False
+    fip_endpoint = ''
 
     # Configure HTTP basic authorization: basicAuthentication
     configuration = herdsdk.Configuration()
@@ -175,6 +178,7 @@ class Controller:
             self.configuration.host = self.config.get('url', config['env'])
             self.configuration.username = config['userName']
             self.configuration.password = config['userPwd']
+            self.fip_endpoint = self.config.get('fip', config['env'])
         else:
             self.debug_mode = self.config.getboolean('console', 'debug')
             self.action = str.lower(self.config.get('console', 'action'))
@@ -186,8 +190,21 @@ class Controller:
             self.configuration.host = self.config.get('url', env)
             self.configuration.username = self.config.get('credentials', 'userName')
             self.configuration.password = base64.b64decode(self.config.get('credentials', 'userPwd')).decode('utf-8')
+            self.fip_endpoint = self.config.get('fip', env)
 
         LOGGER.setLevel(logger.get_level(self.debug_mode))
+
+    ############################################################################
+    def setup_access_token(self):
+        """
+        Setup oauth2 access token
+
+        """
+
+        response = requests.post(self.fip_endpoint,
+                                 auth=HTTPBasicAuth(self.configuration.username, self.configuration.password))
+        response.raise_for_status()
+        self.configuration.access_token = response.json()['access_token']
 
     ############################################################################
     def get_action(self):
@@ -1975,7 +1992,7 @@ class Controller:
 
         """
         # create an instance of the API class
-        api_instance = herdsdk.CurrentUserApi(herdsdk.ApiClient(self.configuration))
+        api_instance = herdsdk.CurrentUserApi(ApiClientOverwrite(self.configuration))
 
         LOGGER.info('GET /currentUser')
         api_response = api_instance.current_user_get_current_user()
