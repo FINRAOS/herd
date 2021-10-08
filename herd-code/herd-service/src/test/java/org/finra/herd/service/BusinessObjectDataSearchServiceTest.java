@@ -5,12 +5,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
@@ -21,9 +26,11 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 
 public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 {
@@ -1059,5 +1066,329 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         {
             assertEquals("A partition key must be specified.", e.getMessage());
         }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDataRegistrationDateRangeFilter() throws DatatypeConfigurationException
+    {
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        // Set "created on" timestamp for this business object data to a test value, so we can validate filtering on registration date and time.
+        Timestamp createdOnTimestamp = Timestamp.valueOf("2016-03-29 10:34:11.311");
+        businessObjectDataEntity.setCreatedOn(createdOnTimestamp);
+        businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Create expected business object data search result for the test business object data.
+        BusinessObjectData expectedBusinessObjectData =
+            new BusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_KEY, PARTITION_VALUE, NULL_AS_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                NULL_AS_STORAGE_UNITS, NULL_AS_ATTRIBUTES, NULL_AS_BUSINESS_OBJECT_DATA_PARENTS, NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN,
+                NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
+
+        // Create business object data search request without any filters.
+        BusinessObjectDataSearchRequest businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
+        businessObjectDataSearchFilters.add(new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys));
+        businessObjectDataSearchRequest.setBusinessObjectDataSearchFilters(businessObjectDataSearchFilters);
+
+        // Declare variables to be used for the search calls validation.
+        XMLGregorianCalendar start;
+        XMLGregorianCalendar end;
+        BusinessObjectDataSearchResultPagingInfoDto result;
+
+        // Validate that our search request matches test business object data.
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(Collections.singletonList(expectedBusinessObjectData), result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements());
+
+        // The test cases below validate the following for the business object data search when it is filtered by registration date-time:
+        // 1) Registration date-time filter works on a half-open range: [start datetime, end datetime)
+        // 2) The start datetime value with or without time portion is used exactly as specified. ie, if end datetime is specified as 2017-01-02, the value to
+        //    filter is 2017-01-02T00:00:00
+        // 3) If no time portion is specified in the end datetime value then the date is assumed to be the start of next day. ie, if end datetime is specified
+        //    as 2017-01-01, the value used to filter is 2017-01-02T00:00:00
+        // 4) If time portion is specified in the end datetime value, then the datetime portion it is used exactly as specified (unlike how it is done for date
+        //    only end datetime value). ie, if end datetime is specified as 2017-01-02T10:11, the value to filter is 2017-01-02T10:11:00
+
+        // Testing filtering on date without time portion...
+
+        // Start date without time portion is less then createdOn date without time portion.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is equal to createdOn date without time portion.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is greater than createdOn date without time portion.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-30");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date without time portion is less then createdOn date without time portion.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date without time portion is equal to createdOn date without time portion.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date without time portion is greater than createdOn date without time portion.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-30");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is less than createdOn date without time portion.
+        // End date without time portion is less than createdOn date without time portion.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is less than createdOn date without time portion.
+        // End date without time portion is equal to createdOn date without time portion.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is less than createdOn date without time portion.
+        // End date without time portion is greater than createdOn date without time portion.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-28");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-30");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is equal to createdOn date without time portion.
+        // End date without time portion is equal to createdOn date without time portion.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date without time portion is greater than createdOn date without time portion.
+        // End date without time portion is greater than createdOn date without time portion.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-30");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-30");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Testing filtering on date with time portion...
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is equal to createdOn rounded to seconds.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is equal to createdOn (to the millisecond).
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.311");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is greater than createdOn by 1 millisecond.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.312");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is greater than createdOn rounded to seconds.
+        // End date is not specified.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        end = NO_END_REGISTRATION_DATE;
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date with time portion is less then createdOn rounded to seconds.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date with time portion is equal to createdOn rounded to seconds.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date with time portion is equal to createdOn (to the millisecond).
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.311");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date with time portion is greater than createdOn by 1 millisecond.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.312");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date is not specified.
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = NO_START_REGISTRATION_DATE;
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date with time portion is less then createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date with time portion is equal to createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date with time portion is equal to createdOn (to the millisecond).
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.311");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date with time portion is greater than createdOn by 1 millisecond.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.312");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is less then createdOn rounded to seconds.
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:10");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is equal to createdOn rounded to seconds.
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is equal to createdOn (to the millisecond).
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.311");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(1, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is greater than createdOn by 1 millisecond.
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:11.312");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
+
+        // Start date with time portion is greater than createdOn rounded to seconds.
+        // End date with time portion is greater than createdOn rounded to seconds.
+        start = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        end = DatatypeFactory.newInstance().newXMLGregorianCalendar("2016-03-29T10:34:12");
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0)
+            .setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
+        result = businessObjectDataService.searchBusinessObjectData(DEFAULT_PAGE_NUMBER, PAGE_SIZE, businessObjectDataSearchRequest);
+        assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements()));
     }
 }

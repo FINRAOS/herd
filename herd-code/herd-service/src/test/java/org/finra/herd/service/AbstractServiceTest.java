@@ -567,6 +567,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_DRY_RUN = false;
 
+    public static final XMLGregorianCalendar NO_END_REGISTRATION_DATE = null;
+
     public static final DateTime NO_END_TIME = null;
 
     public static final RuntimeException NO_EXCEPTION = null;
@@ -638,6 +640,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String NO_SKU = null;
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
+
+    public static final XMLGregorianCalendar NO_START_REGISTRATION_DATE = null;
 
     public static final DateTime NO_START_TIME = null;
 
