@@ -83,6 +83,7 @@ import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDdlPartitionsHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
 import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
@@ -651,6 +652,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<StorageUnitStatusChangeEvent> NO_STORAGE_UNIT_STATUS_HISTORY = null;
 
+    public static final Boolean NO_SUPPRESS_QUOTES_IN_NUMERIC_TYPE_PARTITION_VALUES = false;
+
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
@@ -758,6 +761,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end\n" + " ],\n" + "#end\n" + "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" + "  },\n" +
             "  \"storageName\" : \"$storageName\",\n" + "  \"newStorageUnitStatus\" : \"$newStorageUnitStatus\"" +
             "#if($StringUtils.isNotEmpty($oldStorageUnitStatus)),\n  \"oldStorageUnitStatus\" : \"$oldStorageUnitStatus\"" + "#end\n" + "}\n";
+
+    public static final Boolean SUPPRESS_QUOTES_IN_NUMERIC_TYPE_PARTITION_VALUES = true;
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
@@ -910,6 +915,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+
+    @Autowired
+    protected BusinessObjectDataDdlPartitionsHelper businessObjectDataDdlPartitionsHelper;
 
     @Autowired
     protected BusinessObjectDataFinalizeRestoreHelperService businessObjectDataFinalizeRestoreHelperService;
