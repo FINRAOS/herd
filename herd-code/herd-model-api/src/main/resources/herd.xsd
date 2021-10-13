@@ -4543,6 +4543,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="suppressQuotesInNumericTypePartitionValues" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies not to place single quotes around partition values where the columns are of numeric datatype</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
