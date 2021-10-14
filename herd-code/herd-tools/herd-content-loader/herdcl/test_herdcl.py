@@ -265,7 +265,7 @@ class TestUtilityMethods(unittest.TestCase):
     @responses.activate
     def test_oauth2_access_token(self):
         """
-        Test of the setup config function for Console app if no config key is found
+        Test of the setup oauth2 access token
 
         """
 
@@ -279,7 +279,7 @@ class TestUtilityMethods(unittest.TestCase):
     @responses.activate
     def test_oauth2_access_token_error(self):
         """
-        Test of the setup config function for Console app if no config key is found
+        Test of the setup oauth2 access token if status not 200 returns
 
         """
 
