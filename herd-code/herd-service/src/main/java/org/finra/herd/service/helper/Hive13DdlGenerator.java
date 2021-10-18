@@ -622,7 +622,6 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormatEntity the business object format entity that schema column belongs to
      *
      * @return the Hive data type
-     *
      * @throws IllegalArgumentException if schema column data type is not supported
      */
     private String getHiveDataType(SchemaColumn schemaColumn, BusinessObjectFormatEntity businessObjectFormatEntity)
@@ -693,7 +692,6 @@ public class Hive13DdlGenerator extends DdlGenerator
      * @param businessObjectFormatEntity the business object format entity that schema column belongs to
      *
      * @return the Hive file format
-     *
      * @throws IllegalArgumentException if business object format file type is not supported
      */
     private String getHiveFileFormat(BusinessObjectFormatEntity businessObjectFormatEntity)
@@ -768,7 +766,18 @@ public class Hive13DdlGenerator extends DdlGenerator
                             // We cannot hit ArrayIndexOutOfBoundsException on getPartitions() since partitionFilter would
                             // not have a value set at an index that is greater or equal than the number of partitions in the schema.
                             String partitionColumnName = businessObjectFormat.getSchema().getPartitions().get(i).getName();
-                            partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionFilter.get(i)));
+
+                            // If quotes are being suppressed for numeric types and the partition value is a numeric type, then suppress the quotes.
+                            if (businessObjectDataDdlPartitionsHelper.suppressQuotesInNumericTypePartitionValues(
+                                generateDdlRequest.getSuppressQuotesInNumericTypePartitionValues(),
+                                businessObjectFormat.getSchema().getPartitions().get(i).getType()))
+                            {
+                                partitionKeyValuePairs.add(String.format("`%s`=%s", partitionColumnName, partitionFilter.get(i)));
+                            }
+                            else
+                            {
+                                partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionFilter.get(i)));
+                            }
                         }
                     }
 
