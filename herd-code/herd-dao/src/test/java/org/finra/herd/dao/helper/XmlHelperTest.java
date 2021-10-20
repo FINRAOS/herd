@@ -52,21 +52,21 @@ public class XmlHelperTest extends AbstractDaoTest
     @Test
     public void testPrettyPrintXml() throws Exception
     {
-        String expected = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?><buildInformation>\n" + "  <buildOs>%s</buildOs>\n" +
+        String expected = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?><buildInformation>\n" +
             "  <buildUser>%s</buildUser>\n" + "  <buildDate>%s</buildDate>\n" + "  <buildNumber>%s</buildNumber>\n" +
-            "</buildInformation>\n", STRING_VALUE, STRING_VALUE, STRING_VALUE, STRING_VALUE).replaceAll("\\n", System.lineSeparator());
+            "</buildInformation>\n", STRING_VALUE, STRING_VALUE, STRING_VALUE).replaceAll("\\n", System.lineSeparator());
 
         assertEquals(XmlHelper.createPrettyPrint(getTestXml()), expected);
     }
 
     private BuildInformation getTestBuildInformation()
     {
-        return new BuildInformation(STRING_VALUE, STRING_VALUE, STRING_VALUE, STRING_VALUE);
+        return new BuildInformation(STRING_VALUE, STRING_VALUE, STRING_VALUE);
     }
 
     private String getTestXml()
     {
-        return String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?><buildInformation><buildOs>%s</buildOs><buildUser>%s</buildUser>" +
-            "<buildDate>%s</buildDate><buildNumber>%s</buildNumber></buildInformation>", STRING_VALUE, STRING_VALUE, STRING_VALUE, STRING_VALUE);
+        return String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?><buildInformation><buildUser>%s</buildUser>" +
+            "<buildDate>%s</buildDate><buildNumber>%s</buildNumber></buildInformation>", STRING_VALUE, STRING_VALUE, STRING_VALUE);
     }
 }
