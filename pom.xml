@@ -45,7 +45,7 @@
        -->
       <activiti.version>5.21.0</activiti.version>
       <aspectj.version>1.8.11</aspectj.version>
-      <aws.sdk.version>1.11.991</aws.sdk.version>
+      <aws.sdk.version>1.12.90</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.4</aws.sqs.messaging.version>
       <commons.cli.version>1.4</commons.cli.version>
       <commons.codec.version>1.11</commons.codec.version>
