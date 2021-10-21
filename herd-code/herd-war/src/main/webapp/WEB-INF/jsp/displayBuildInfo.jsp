@@ -34,7 +34,6 @@ Build Information
 Build Number: ${buildInformation.buildNumber}<br/>
 Build User: ${buildInformation.buildUser}<br/>
 Build Time: ${buildInformation.buildDate}<br/>
-Build OS: ${buildInformation.buildOs}<br/>
 
 </body>
 
