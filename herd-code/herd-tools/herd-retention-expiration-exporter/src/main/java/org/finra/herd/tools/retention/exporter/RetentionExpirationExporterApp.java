@@ -209,7 +209,8 @@ public class RetentionExpirationExporterApp
             {
                 BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
                 System.out.println(String
-                    .format(ToolsCommonConstants.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(), buildInformation.getBuildUser()));
+                    .format(ToolsCommonConstants.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
+                        buildInformation.getBuildUser()));
                 return ToolsCommonConstants.ReturnValue.SUCCESS;
             }
 
