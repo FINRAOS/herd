@@ -24,11 +24,6 @@
          <xs:documentation>The information about the current build of the application</xs:documentation>
       </xs:annotation>
       <xs:all>
-         <xs:element name="buildOs" type="xs:string">
-            <xs:annotation>
-               <xs:documentation>The OS in which the current build was built</xs:documentation>
-            </xs:annotation>
-         </xs:element>
          <xs:element name="buildUser" type="xs:string">
             <xs:annotation>
                <xs:documentation>The user ID of the user that performed the build</xs:documentation>
