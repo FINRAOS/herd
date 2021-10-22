@@ -743,11 +743,11 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Creates an instance of {@link KerberosAttributes} from a given instance of {@link EmrClusterDefinitionKerberosAttributes}.
+     * Creates an instance of {@link AutoTerminationPolicy} from a given instance of {@link EmrClusterDefinitionAutoTerminationPolicy}.
      *
-     * @param emrClusterDefinitionAutoTerminationPolicy the instance of {@link EmrClusterDefinitionKerberosAttributes}, may be null
+     * @param emrClusterDefinitionAutoTerminationPolicy the instance of {@link EmrClusterDefinitionAutoTerminationPolicy}, may be null
      *
-     * @return the instance of {@link KerberosAttributes}
+     * @return the instance of {@link AutoTerminationPolicy}
      */
     protected AutoTerminationPolicy getAutoTerminationPolicy(EmrClusterDefinitionAutoTerminationPolicy emrClusterDefinitionAutoTerminationPolicy)
     {
