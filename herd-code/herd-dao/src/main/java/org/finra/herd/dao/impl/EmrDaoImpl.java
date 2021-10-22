@@ -33,6 +33,7 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.Application;
+import com.amazonaws.services.elasticmapreduce.model.AutoTerminationPolicy;
 import com.amazonaws.services.elasticmapreduce.model.BootstrapActionConfig;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
@@ -91,6 +92,7 @@ import org.finra.herd.model.api.xml.ConfigurationFile;
 import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionAutoTerminationPolicy;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
@@ -741,6 +743,26 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
+     * Creates an instance of {@link AutoTerminationPolicy} from a given instance of {@link EmrClusterDefinitionAutoTerminationPolicy}.
+     *
+     * @param emrClusterDefinitionAutoTerminationPolicy the instance of {@link EmrClusterDefinitionAutoTerminationPolicy}, may be null
+     *
+     * @return the instance of {@link AutoTerminationPolicy}
+     */
+    protected AutoTerminationPolicy getAutoTerminationPolicy(EmrClusterDefinitionAutoTerminationPolicy emrClusterDefinitionAutoTerminationPolicy)
+    {
+        AutoTerminationPolicy autoTerminationPolicy = null;
+
+        if (emrClusterDefinitionAutoTerminationPolicy != null)
+        {
+            autoTerminationPolicy = new AutoTerminationPolicy();
+            autoTerminationPolicy.setIdleTimeout(emrClusterDefinitionAutoTerminationPolicy.getIdleTimeout());
+        }
+
+        return autoTerminationPolicy;
+    }
+
+    /**
      * Creates an instance of {@link KerberosAttributes} from a given instance of {@link EmrClusterDefinitionKerberosAttributes}.
      *
      * @param emrClusterDefinitionKerberosAttributes the instance of {@link EmrClusterDefinitionKerberosAttributes}, may be null
@@ -1307,6 +1329,9 @@ public class EmrDaoImpl implements EmrDao
 
         // Assign step concurrency level of the cluster
         runJobFlowRequest.setStepConcurrencyLevel(emrClusterDefinition.getStepConcurrencyLevel());
+
+        // Assign auto termination policy.
+        runJobFlowRequest.setAutoTerminationPolicy(getAutoTerminationPolicy(emrClusterDefinition.getAutoTerminationPolicy()));
 
         // Return the object
         return runJobFlowRequest;

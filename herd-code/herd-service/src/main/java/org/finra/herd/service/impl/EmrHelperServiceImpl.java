@@ -474,6 +474,10 @@ public class EmrHelperServiceImpl implements EmrHelperService
             {
                 emrClusterDefinition.setStepConcurrencyLevel(emrClusterDefinitionOverride.getStepConcurrencyLevel());
             }
+            if (emrClusterDefinitionOverride.getAutoTerminationPolicy() != null)
+            {
+                emrClusterDefinition.setAutoTerminationPolicy(emrClusterDefinitionOverride.getAutoTerminationPolicy());
+            }
         }
     }
 

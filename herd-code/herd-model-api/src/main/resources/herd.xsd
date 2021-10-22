@@ -6289,8 +6289,13 @@
          </xs:element>
          <xs:element name="stepConcurrencyLevel" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The step concurrency level of the cluster. Default is 1 which is non-concurrent. The maximum value is 256
-                  NOTE: Running multiple steps in parallel is only supported with Amazon EMR version 5.28.0 and later
+               <xs:documentation>The step concurrency level of the cluster. Default is 1 which is non-concurrent. The maximum value is 256</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="autoTerminationPolicy" type="emrClusterDefinitionAutoTerminationPolicy" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An auto-termination policy for an Amazon EMR cluster. An auto-termination policy defines the amount of idle time in seconds
+                  after which a cluster automatically terminates
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -7225,6 +7230,17 @@
          <xs:element name="realm" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The name of the Kerberos realm to which all nodes in a cluster belong</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionAutoTerminationPolicy">
+      <xs:all>
+         <xs:element name="idleTimeout" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>IdleTimeout in seconds.  If you don't specify idleTimeout the value defaults to one hour
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
