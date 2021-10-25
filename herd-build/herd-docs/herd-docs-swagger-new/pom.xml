@@ -67,7 +67,10 @@
                      <title>herd</title>
                      <basePath>/herd-app/rest</basePath>
                      <xsdName>herd.xsd</xsdName>
-                     <authType>basic</authType>
+                     <authTypes>
+                        <param>basic</param>
+                        <param>oauth2</param>
+                     </authTypes>
                   </configuration>
                </execution>
                <execution>
@@ -84,7 +87,10 @@
                      <title>herd-external</title>
                      <basePath>/herd-app/rest</basePath>
                      <xsdName>herd.xsd</xsdName>
-                     <authType>basic</authType>
+                     <authTypes>
+                        <param>basic</param>
+                        <param>oauth2</param>
+                     </authTypes>
                      <applyOperationsFilter>true</applyOperationsFilter>
                      <includeOperations>
                         <param>BusinessObjectData.checkBusinessObjectDataAvailability</param>

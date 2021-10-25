@@ -221,7 +221,7 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
 
         assertEquals("output", String
-            .format(DataBridgeApp.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(), buildInformation.getBuildOs(),
+            .format(DataBridgeApp.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
                 buildInformation.getBuildUser()), output);
     }
 

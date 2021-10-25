@@ -19,11 +19,14 @@ import static org.finra.herd.service.helper.DdlGenerator.NON_PARTITIONED_TABLE_L
 import static org.finra.herd.service.helper.DdlGenerator.PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +88,12 @@ public class BusinessObjectDataDdlPartitionsHelper
      * files with the "directoryname_$folder$" suffix.
      */
     public static final String REGEX_S3_EMPTY_PARTITION = "_\\$folder\\$";
+
+    /**
+     * The set of schema column numeric types.
+     */
+    public static final Set<String> SCHEMA_COLUMN_NUMERIC_TYPES =
+        new HashSet<>(Arrays.asList("TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "NUMBER"));
 
     @Autowired
     private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
@@ -222,6 +231,7 @@ public class BusinessObjectDataDdlPartitionsHelper
         generateDdlRequest.combinedAlterTableMaxPartitions = request.getCombinedAlterTableMaxPartitions();
         generateDdlRequest.tableName = request.getTableName();
         generateDdlRequest.asOfTime = request.getAsOfTime();
+        generateDdlRequest.suppressQuotesInNumericTypePartitionValues = request.isSuppressQuotesInNumericTypePartitionValues();
 
         // getOutputFormat == null, means it's used in generatePartitions request since getOutputFormat must not be null for generateDDL request
         if (request.getOutputFormat() == null)
@@ -564,7 +574,16 @@ public class BusinessObjectDataDdlPartitionsHelper
                         {
                             String partitionColumnName = businessObjectFormatForSchema.getSchema().getPartitions().get(i).getName();
                             String partitionValue = hivePartition.getPartitionValues().get(i);
-                            partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionValue));
+                            // If quotes are being suppressed for numeric types and the partition value is a numeric type, then suppress the quotes.
+                            if (suppressQuotesInNumericTypePartitionValues(generateDdlRequest.suppressQuotesInNumericTypePartitionValues,
+                                businessObjectFormat.getSchema().getPartitions().get(i).getType()))
+                            {
+                                partitionKeyValuePairs.add(String.format("`%s`=%s", partitionColumnName, partitionValue));
+                            }
+                            else
+                            {
+                                partitionKeyValuePairs.add(String.format("`%s`='%s'", partitionColumnName, partitionValue));
+                            }
                         }
                         addPartitionStatement.append(StringUtils.join(partitionKeyValuePairs, ", "));
                         addPartitionStatement.append(String.format(") LOCATION 's3n://%s/%s%s'", s3BucketName, s3KeyPrefix,
@@ -682,7 +701,6 @@ public class BusinessObjectDataDdlPartitionsHelper
      * @param storageNames the list of storage names
      *
      * @return the updated list of storage unit availability DTOs
-     *
      * @throws IllegalArgumentException on business object data being registered in multiple storage and storage names are not specified to resolve this
      */
     protected List<StorageUnitAvailabilityDto> excludeDuplicateBusinessObjectData(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos,
@@ -1076,6 +1094,11 @@ public class BusinessObjectDataDdlPartitionsHelper
         return sb.toString();
     }
 
+    protected boolean suppressQuotesInNumericTypePartitionValues(Boolean suppressQuotesInNumericTypePartitionValues, String partitionType)
+    {
+        return BooleanUtils.isTrue(suppressQuotesInNumericTypePartitionValues) && SCHEMA_COLUMN_NUMERIC_TYPES.contains(partitionType.toUpperCase());
+    }
+
     static class GenerateDdlRequestWrapper
     {
         private Boolean isGeneratePartitionsRequest;
@@ -1123,6 +1146,8 @@ public class BusinessObjectDataDdlPartitionsHelper
         private String tableName;
 
         private XMLGregorianCalendar asOfTime;
+
+        private Boolean suppressQuotesInNumericTypePartitionValues;
 
         public Boolean getGeneratePartitionsRequest()
         {
@@ -1342,6 +1367,16 @@ public class BusinessObjectDataDdlPartitionsHelper
         public void setAsOfTime(XMLGregorianCalendar asOfTime)
         {
             this.asOfTime = asOfTime;
+        }
+
+        public Boolean getSuppressQuotesInNumericTypePartitionValues()
+        {
+            return suppressQuotesInNumericTypePartitionValues;
+        }
+
+        public void setSuppressQuotesInNumericTypePartitionValues(Boolean suppressQuotesInNumericTypePartitionValues)
+        {
+            this.suppressQuotesInNumericTypePartitionValues = suppressQuotesInNumericTypePartitionValues;
         }
     }
 

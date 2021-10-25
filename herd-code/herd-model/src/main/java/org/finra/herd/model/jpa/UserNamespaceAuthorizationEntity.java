@@ -26,6 +26,8 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
 
+
+
 /**
  * A user namespace authorization.
  */
@@ -49,6 +51,12 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
      */
     @Column(name = "user_id")
     private String userId;
+
+    /**
+     * The namespace code column.
+     */
+    @Column(name = "name_space_cd")
+    private String namespaceCode;
 
     /**
      * The namespace column.
@@ -118,6 +126,8 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     {
         this.userId = userId;
     }
+
+    public String getNamespaceCode() { return namespaceCode; }
 
     public NamespaceEntity getNamespace()
     {
