@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.dao.UserNamespaceAuthorizationDao;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
@@ -94,7 +95,8 @@ public class UserNamespaceAuthorizationServiceImplTest
     @Before
     public void before()
     {
-        MockitoAnnotations.initMocks(this);
+       MockitoAnnotations.initMocks(this);
+       ReflectionTestUtils.setField(USER_NAMESPACE_AUTHORIZATION_ENTITY, "namespaceCode", NAMESPACE_VALUE);
     }
 
     @Test
