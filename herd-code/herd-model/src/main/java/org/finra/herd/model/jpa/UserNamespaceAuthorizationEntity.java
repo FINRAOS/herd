@@ -55,7 +55,7 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     /**
      * The namespace code column.
      */
-    @Column(name = "name_space_cd")
+    @Column(name = "name_space_cd", insertable = false, updatable = false)
     private String namespaceCode;
 
     /**
