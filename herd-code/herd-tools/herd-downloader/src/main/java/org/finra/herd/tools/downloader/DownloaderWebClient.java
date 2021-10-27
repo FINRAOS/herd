@@ -15,29 +15,22 @@
 */
 package org.finra.herd.tools.downloader;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.xml.bind.JAXBException;
-
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
+import org.finra.herd.sdk.api.BusinessObjectDataApi;
+import org.finra.herd.sdk.api.StorageUnitApi;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Component;
+
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
+
+import java.net.URISyntaxException;
 
 /**
  * This class encapsulates web client functionality required to communicate with the herd registration service.
@@ -52,58 +45,22 @@ public class DownloaderWebClient extends DataBridgeWebClient
      *
      * @param manifest the downloader input manifest file information
      *
-     * @return the business object data information
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
-    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest) throws ApiException, URISyntaxException {
         LOGGER.info("Retrieving business object data information from the registration server...");
 
-        StringBuilder uriPathBuilder = new StringBuilder(HERD_APP_REST_URI_PREFIX);
-        uriPathBuilder.append("/businessObjectData");
-        uriPathBuilder.append("/namespaces/").append(manifest.getNamespace());
-        uriPathBuilder.append("/businessObjectDefinitionNames/").append(manifest.getBusinessObjectDefinitionName());
-        uriPathBuilder.append("/businessObjectFormatUsages/").append(manifest.getBusinessObjectFormatUsage());
-        uriPathBuilder.append("/businessObjectFormatFileTypes/").append(manifest.getBusinessObjectFormatFileType());
-
-        URIBuilder uriBuilder =
-            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(uriPathBuilder.toString()).setParameter("partitionKey", manifest.getPartitionKey())
-                .setParameter("partitionValue", manifest.getPartitionValue())
-                .setParameter("businessObjectFormatVersion", manifest.getBusinessObjectFormatVersion())
-                .setParameter("businessObjectDataVersion", manifest.getBusinessObjectDataVersion());
-
-        if (manifest.getSubPartitionValues() != null)
-        {
-            uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-        }
-
-        URI uri = uriBuilder.build();
-
-        CloseableHttpClient client = httpClientHelper
-            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification());
-        HttpGet request = new HttpGet(uri);
-        request.addHeader("Accepts", "application/xml");
-
-        // If SSL is enabled, set the client authentication header.
-        if (regServerAccessParamsDto.isUseSsl())
-        {
-            request.addHeader(getAuthorizationHeader());
-        }
-
-        LOGGER.info(String.format("    HTTP GET URI: %s", request.getURI().toString()));
-
-        BusinessObjectData businessObjectData =
-            getBusinessObjectData(httpClientOperations.execute(client, request), "retrieve business object data from the registration server");
+        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
+        org.finra.herd.sdk.model.BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
+                manifest.getBusinessObjectFormatFileType(),
+                manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
+                Integer.valueOf(manifest.getBusinessObjectFormatVersion()), Integer.valueOf(manifest.getBusinessObjectDataVersion()),
+                //todo: Double check below default value, should be null or default value??
+                "VALID", false, false, false);
 
         LOGGER.info("Successfully retrieved business object data from the registration server.");
-
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        BeanUtils.copyProperties(sdkResponse, businessObjectData);
         return businessObjectData;
     }
 
@@ -113,16 +70,9 @@ public class DownloaderWebClient extends DataBridgeWebClient
      * @param businessObjectData the business object data
      *
      * @return the S3 key prefix
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
-    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData) throws ApiException, URISyntaxException {
         DataBridgeBaseManifestDto dataBridgeBaseManifestDto = new DataBridgeBaseManifestDto();
         dataBridgeBaseManifestDto.setNamespace(businessObjectData.getNamespace());
         dataBridgeBaseManifestDto.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
@@ -143,50 +93,21 @@ public class DownloaderWebClient extends DataBridgeWebClient
      * @param storageName The storage name
      *
      * @return StorageUnitDownloadCredential
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
-    public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
-        throws URISyntaxException, IOException, JAXBException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
-        URIBuilder uriBuilder =
-            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(String.join("/", HERD_APP_REST_URI_PREFIX, "storageUnits", "download", "credential", "namespaces", manifest.getNamespace(),
-                    "businessObjectDefinitionNames", manifest.getBusinessObjectDefinitionName(), "businessObjectFormatUsages",
-                    manifest.getBusinessObjectFormatUsage(), "businessObjectFormatFileTypes", manifest.getBusinessObjectFormatFileType(),
-                    "businessObjectFormatVersions", manifest.getBusinessObjectFormatVersion(), "partitionValues", manifest.getPartitionValue(),
-                    "businessObjectDataVersions", manifest.getBusinessObjectDataVersion(), "storageNames", storageName));
-        if (manifest.getSubPartitionValues() != null)
-        {
-            uriBuilder.addParameter("subPartitionValues", herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-        }
-        HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.addHeader("Accept", DEFAULT_ACCEPT);
-        if (regServerAccessParamsDto.isUseSsl())
-        {
-            httpGet.addHeader(getAuthorizationHeader());
-        }
-        try (CloseableHttpClient httpClient = httpClientHelper
-            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
-        {
-            LOGGER.info("Retrieving download credentials from registration server...");
-            return getStorageUnitDownloadCredential(httpClientOperations.execute(httpClient, httpGet));
-        }
-    }
+    public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName) throws ApiException, URISyntaxException {
+        StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
+        LOGGER.info("Retrieving download credentials from registration server...");
 
-    /**
-     * Gets the storage unit download credentials.
-     *
-     * @param response the HTTP response
-     *
-     * @return StorageUnitDownloadCredential
-     */
-    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(CloseableHttpResponse response)
-    {
-        return (StorageUnitDownloadCredential) processXmlHttpResponse(response, "get storage unit download credential", StorageUnitDownloadCredential.class);
+        org.finra.herd.sdk.model.StorageUnitDownloadCredential sdkResponse = storageUnitApi.storageUnitGetStorageUnitDownloadCredential
+                (manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),  manifest.getBusinessObjectFormatFileType(),
+                 Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
+                manifest.getPartitionValue(), Integer.valueOf(manifest.getBusinessObjectDataVersion()),
+                        storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
+
+        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
+        BeanUtils.copyProperties(sdkResponse, storageUnitDownloadCredential);
+        return storageUnitDownloadCredential;
+        // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 }

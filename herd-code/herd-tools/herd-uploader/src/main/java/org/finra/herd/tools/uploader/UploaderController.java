@@ -26,13 +26,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +57,8 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
+
+import javax.xml.bind.JAXBException;
 
 /**
  * Executes the UploaderApp workflow.
@@ -104,19 +105,13 @@ public class UploaderController extends DataBridgeController
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
      * @throws InterruptedException if the upload thread was interrupted
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
         justification = "manifestReader.readJsonManifest will always return an UploaderInputManifestDto object.")
     public void performUpload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, S3FileTransferRequestParamsDto params,
         Boolean createNewVersion, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws InterruptedException, JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+            throws ApiException, IOException, InterruptedException, URISyntaxException {
         boolean cleanUpS3KeyPrefixOnFailure = false;
         BusinessObjectDataKey businessObjectDataKey = null;
 
@@ -161,7 +156,7 @@ public class UploaderController extends DataBridgeController
                 @Override
                 public AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, null).getAwsCredential();
+                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential();
                 }
             });
 
@@ -217,7 +212,7 @@ public class UploaderController extends DataBridgeController
             // Change status of the business object data to VALID.
             uploaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         }
-        catch (InterruptedException | JAXBException | IOException | URISyntaxException e)
+        catch (ApiException | URISyntaxException e)
         {
             // If we got to the point of checking the target S3 key prefix before this failure
             // occurred, let's rollback the data transfer (clean up the S3 key prefix).
@@ -249,17 +244,11 @@ public class UploaderController extends DataBridgeController
      * @param maxRetryAttempts Maximum number of retry attempts on error
      * @param retryDelaySecs Delay in seconds between retries
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
         String storageName, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+            throws ApiException, URISyntaxException {
         // Initialize a retry count to know the number of times we re-try calling the method.
         int retryCount = 0;
 
@@ -272,7 +261,7 @@ public class UploaderController extends DataBridgeController
                 uploaderWebClient.addStorageFiles(businessObjectDataKey, manifest, params, storageName);
                 break;
             }
-            catch (IOException | JAXBException | URISyntaxException e)
+            catch (ApiException | URISyntaxException e)
             {
                 // Check if we've retried enough times.
                 if (retryCount >= maxRetryAttempts)
@@ -305,16 +294,10 @@ public class UploaderController extends DataBridgeController
      * @param manifest the uploader input manifest
      * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)
-        throws JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+            throws ApiException, URISyntaxException {
         // Retrieve all already registered versions for this business object data.
         BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(
             new BusinessObjectDataKey(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),

@@ -15,27 +15,18 @@
  */
 package org.finra.herd.tools.retention.destroyer;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.xml.bind.JAXBException;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.sdk.api.BusinessObjectDataApi;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Component;
+
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
+
+import java.net.URISyntaxException;
 
 @Component
 public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
@@ -48,65 +39,19 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @param businessObjectDataKey the name of the business object data key
      *
      * @return the business object definition
-     * @throws IOException if an I/O error was encountered
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws URISyntaxException if an URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
-        String uriPath = HERD_APP_REST_URI_PREFIX + "/businessObjectData/destroy" + "/namespaces/" + businessObjectDataKey.getNamespace() +
-            "/businessObjectDefinitionNames/" + businessObjectDataKey.getBusinessObjectDefinitionName() + "/businessObjectFormatUsages/" +
-            businessObjectDataKey.getBusinessObjectFormatUsage() + "/businessObjectFormatFileTypes/" + businessObjectDataKey.getBusinessObjectFormatFileType() +
-            "/businessObjectFormatVersions/" + businessObjectDataKey.getBusinessObjectFormatVersion() + "/partitionValues/" +
-            businessObjectDataKey.getPartitionValue() + "/businessObjectDataVersions/" + businessObjectDataKey.getBusinessObjectDataVersion();
-
-        URIBuilder uriBuilder =
-            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
-                .setPath(uriPath);
-
-        if (CollectionUtils.isNotEmpty(businessObjectDataKey.getSubPartitionValues()))
-        {
-            uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
-        }
-
-        URI uri = uriBuilder.build();
-
-        try (CloseableHttpClient client = httpClientHelper
-            .createHttpClient(regServerAccessParamsDto.isTrustSelfSignedCertificate(), regServerAccessParamsDto.isDisableHostnameVerification()))
-        {
-            HttpPost request = new HttpPost(uri);
-            request.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
-            request.addHeader("Accepts", DEFAULT_ACCEPT);
-
-            // If SSL is enabled, set the client authentication header.
-            if (regServerAccessParamsDto.isUseSsl())
-            {
-                request.addHeader(getAuthorizationHeader());
-            }
-
-            LOGGER.info(String.format("    HTTP POST URI: %s", request.getURI().toString()));
-
-            BusinessObjectData businessObjectData = destroyBusinessObjectData(httpClientOperations.execute(client, request));
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws ApiException, URISyntaxException {
+        BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
+        org.finra.herd.sdk.model.BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+                businessObjectDataKey.getBusinessObjectDataVersion(),
+                businessObjectDataKey.getSubPartitionValues().get(1)) ;
 
             LOGGER.info("Successfully destroyed business object data from the registration server.");
-
-            return businessObjectData;
-        }
-    }
-
-    /**
-     * Call business object Destroy to mark for destruction.
-     *
-     * @param httpResponse the response received from the supported options
-     *
-     * @return the BusinessObjectDefinition object extracted from the registration server response
-     */
-    private BusinessObjectData destroyBusinessObjectData(CloseableHttpResponse httpResponse)
-    {
-        return (BusinessObjectData) processXmlHttpResponse(httpResponse, "destroy business object data", BusinessObjectData.class);
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        BeanUtils.copyProperties(sdkResponse, businessObjectData);
+        return businessObjectData;
     }
 }

@@ -19,18 +19,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,21 +95,13 @@ public class DownloaderController extends DataBridgeController
      * @param manifestPath the local path to the manifest file
      * @param s3FileTransferRequestParamsDto the S3 file transfer DTO request parameters
      *
-     * @throws InterruptedException if the upload thread was interrupted
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = {"BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification =
         "manifestReader.readJsonManifest will always return an DownloaderInputManifestDto object. targetLocalDirectory.list().length will not" +
             " return a NullPointerException.")
     public void performDownload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath,
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
-        throws InterruptedException, JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
-    {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws ApiException, IOException, InterruptedException, URISyntaxException {
         boolean cleanUpTargetLocalDirectoryOnFailure = false;
         File targetLocalDirectory = null;
 
@@ -206,7 +194,7 @@ public class DownloaderController extends DataBridgeController
                 createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefixInformation.getS3KeyPrefix());
             manifestWriter.writeJsonManifest(targetLocalDirectory, OUTPUT_MANIFEST_FILE_NAME, downloaderOutputManifestDto);
         }
-        catch (InterruptedException | JAXBException | IOException | URISyntaxException e)
+        catch (ApiException | URISyntaxException e)
         {
             // If we got to the point of validating the target local directory being empty before this failure
             // occurred, let's rollback the data transfer by cleaning up the local target directory.

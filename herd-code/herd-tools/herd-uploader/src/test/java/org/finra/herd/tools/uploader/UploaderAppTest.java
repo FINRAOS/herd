@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -131,8 +132,8 @@ public class UploaderAppTest extends AbstractUploaderTest
                 "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString(), "-s", "true",
                 "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true"};
 
-        // We are expecting this to fail with a NullPointerException when AwsHostNameUtils is trying to parse a region name.
-        runDataBridgeAndCheckReturnValue(uploaderApp, arguments, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+        // We are expecting this to fail with a UnknownHostException.
+        runDataBridgeAndCheckReturnValue(uploaderApp, arguments, DataBridgeWebClient.class, new ClientHandlerException());
     }
 
     @Test

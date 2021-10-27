@@ -18,8 +18,6 @@ package org.finra.herd.tools.retention.exporter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
 
@@ -43,14 +41,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     {
         retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
 
-        try
-        {
-            retentionExpirationExporterWebClient.getBusinessObjectDefinition(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
-        }
-        catch (IOException e)
-        {
-            assertEquals("testThrowIoException", e.getMessage());
-        }
+        retentionExpirationExporterWebClient.getBusinessObjectDefinition(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
     }
 
     @Test
@@ -66,14 +57,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     {
         retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
 
-        try
-        {
-            retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
-        }
-        catch (IOException e)
-        {
-            assertEquals("testThrowIoException", e.getMessage());
-        }
+        retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
     }
 
     @Test

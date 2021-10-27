@@ -19,12 +19,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.util.Collections;
 
+import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.junit.Test;
 
-import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 
@@ -45,17 +44,10 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
     {
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
 
-        try
-        {
-            BusinessObjectDataKey businessObjectDataKey =
-                new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
-            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
-            fail();
-        }
-        catch (IOException e)
-        {
-            assertEquals("testThrowIoException", e.getMessage());
-        }
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+        retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+        fail();
     }
 
     @Test
