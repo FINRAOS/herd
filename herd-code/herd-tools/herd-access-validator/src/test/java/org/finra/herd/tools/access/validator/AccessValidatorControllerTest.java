@@ -21,6 +21,7 @@ import static org.finra.herd.dao.AbstractDaoTest.AWS_ROLE_ARN;
 import static org.finra.herd.dao.AbstractDaoTest.S3_KEY;
 import static org.finra.herd.dao.AbstractDaoTest.STORAGE_DIRECTORY_PATH;
 import static org.finra.herd.tools.access.validator.AccessValidatorController.S3_BUCKET_NAME_ATTRIBUTE;
+import static org.finra.herd.tools.access.validator.PropertiesHelper.ACCESS_TOKEN_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -122,6 +124,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -135,7 +138,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -148,6 +152,82 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
+        verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
+        verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
+        verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
+        verify(propertiesHelper).getProperty(AWS_ROLE_ARN_PROPERTY);
+        verify(propertiesHelper).getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY);
+        verify(propertiesHelper).getProperty(BUSINESS_OBJECT_DATA_VERSION_PROPERTY);
+        verify(propertiesHelper).getProperty(NAMESPACE_PROPERTY);
+        verify(propertiesHelper).getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY);
+        verify(propertiesHelper).getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY);
+        verify(propertiesHelper).getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY);
+        verify(propertiesHelper).getProperty(PRIMARY_PARTITION_VALUE_PROPERTY);
+        verify(propertiesHelper).getProperty(SUB_PARTITION_VALUES_PROPERTY);
+        verify(herdApiClientOperations)
+            .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
+                eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false));
+        verify(s3Operations).getObjectMetadata(any(), any(), any());
+        verify(s3Operations).getS3Object(eq(getObjectRequest), any(AmazonS3.class));
+        verifyNoMoreInteractionsHelper();
+    }
+
+    @Test
+    public void testValidateAccessWithToken() throws Exception
+    {
+        // Create business object data.
+        BusinessObjectData businessObjectData = createBusinessObjectData();
+
+        // Create AWS get object request.
+        GetObjectRequest getObjectRequest = new GetObjectRequest(S3_BUCKET_NAME, S3_KEY).withRange(0, MAX_BYTE_DOWNLOAD);
+
+        // Create S3 object.
+        S3Object s3Object = new S3Object();
+        s3Object.setObjectContent(new ByteArrayInputStream(RandomStringUtils.randomAlphabetic(MAX_BYTE_DOWNLOAD).getBytes()));
+
+        // Create S3 object metadata.
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentLength(MAX_BYTE_DOWNLOAD);
+
+        // Mock the external calls.
+        when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
+        when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
+        when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(false);
+        when(propertiesHelper.getProperty(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(ACCESS_TOKEN_URL);
+        when(herdApiClientOperations.getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL)).thenReturn(ACCESS_TOKEN);
+        when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
+        when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
+        when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
+        when(propertiesHelper.getProperty(BUSINESS_OBJECT_DATA_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_DATA_VERSION.toString());
+        when(propertiesHelper.getProperty(NAMESPACE_PROPERTY)).thenReturn(NAMESPACE);
+        when(propertiesHelper.getProperty(BUSINESS_OBJECT_DEFINITION_NAME_PROPERTY)).thenReturn(BUSINESS_OBJECT_DEFINITION_NAME);
+        when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_USAGE_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_USAGE);
+        when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_FILE_TYPE_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_FILE_TYPE);
+        when(propertiesHelper.getProperty(PRIMARY_PARTITION_VALUE_PROPERTY)).thenReturn(PRIMARY_PARTITION_VALUE);
+        when(propertiesHelper.getProperty(SUB_PARTITION_VALUES_PROPERTY)).thenReturn(SUB_PARTITION_VALUES);
+        when(herdApiClientOperations
+            .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
+                eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
+        when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
+        when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
+
+        // Call the method under test with message flag set to "false".
+        accessValidatorController.validateAccess(new File(PROPERTIES_FILE_PATH), false);
+
+        // Verify the external calls.
+        verify(herdApiClientOperations).checkPropertiesFile(propertiesHelper, false);
+        verify(propertiesHelper).loadProperties(new File(PROPERTIES_FILE_PATH));
+        verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
+        verify(propertiesHelper, times(2)).getProperty(HERD_USERNAME_PROPERTY);
+        verify(propertiesHelper, times(2)).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper, times(1)).getProperty(ACCESS_TOKEN_URL_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
+        verify(herdApiClientOperations).getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -195,6 +275,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(AWS_SQS_QUEUE_URL_PROPERTY)).thenReturn(AWS_SQS_QUEUE_URL);
@@ -202,7 +283,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -215,6 +297,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -251,6 +334,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(null);
@@ -277,6 +361,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -309,6 +394,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -322,7 +408,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -341,6 +428,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -392,6 +480,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -405,7 +494,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
         when(s3Operations.listObjects(any(ListObjectsRequest.class), any(AmazonS3.class))).thenReturn(objectListing);
         when(s3Operations.getS3Object(eq(getObjectRequest), any(AmazonS3.class))).thenReturn(s3Object);
 
@@ -418,6 +508,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -453,6 +544,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -466,7 +558,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -485,6 +578,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -516,6 +610,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -529,7 +624,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -548,6 +644,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -599,6 +696,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -612,7 +710,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
         when(s3Operations.listObjects(any(ListObjectsRequest.class), any(AmazonS3.class))).thenReturn(objectListing);
 
         // Call the method under test with message flag set to "false".
@@ -624,6 +723,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -655,6 +755,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -668,7 +769,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -687,6 +789,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -717,6 +820,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -730,7 +834,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
 
         // Try to call the method under test.
         try
@@ -749,6 +854,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
@@ -782,6 +888,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY)).thenReturn(HERD_BASE_URL);
         when(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY)).thenReturn(HERD_USERNAME);
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
+        when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(true);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -795,7 +902,8 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(herdApiClientOperations
             .businessObjectDataGetBusinessObjectData(any(BusinessObjectDataApi.class), eq(NAMESPACE), eq(BUSINESS_OBJECT_DEFINITION_NAME),
                 eq(BUSINESS_OBJECT_FORMAT_USAGE), eq(BUSINESS_OBJECT_FORMAT_FILE_TYPE), eq(null), eq(PRIMARY_PARTITION_VALUE), eq(SUB_PARTITION_VALUES),
-                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false))).thenReturn(businessObjectData);
+                eq(BUSINESS_OBJECT_FORMAT_VERSION), eq(BUSINESS_OBJECT_DATA_VERSION), eq(null), eq(false), eq(false), eq(false)))
+            .thenReturn(businessObjectData);
         when(s3Operations.getObjectMetadata(any(), any(), any())).thenReturn(objectMetadata);
 
         // Call the method under test with message flag set to "false".
@@ -807,6 +915,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper).getProperty(HERD_BASE_URL_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_USERNAME_PROPERTY);
         verify(propertiesHelper).getProperty(HERD_PASSWORD_PROPERTY);
+        verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
