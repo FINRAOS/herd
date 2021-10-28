@@ -40,7 +40,7 @@ import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
  */
 public abstract class DataBridgeApp
 {
-    public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildOS: %s\nbuildUser: %s";
+    public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildUser: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeApp.class);
 
@@ -206,7 +206,7 @@ public abstract class DataBridgeApp
             {
                 BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
                 System.out.println(String
-                    .format(BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(), buildInformation.getBuildOs(),
+                    .format(BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
                         buildInformation.getBuildUser()));
                 return ReturnValue.SUCCESS;
             }

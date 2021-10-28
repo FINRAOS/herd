@@ -190,7 +190,7 @@ public class RetentionExpirationDestroyerApp
                 BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
                 System.out.println(String
                     .format(ToolsCommonConstants.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
-                        buildInformation.getBuildOs(), buildInformation.getBuildUser()));
+                        buildInformation.getBuildUser()));
                 return ToolsCommonConstants.ReturnValue.SUCCESS;
             }
 

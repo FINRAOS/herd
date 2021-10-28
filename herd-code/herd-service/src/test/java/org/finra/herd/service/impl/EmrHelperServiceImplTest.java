@@ -50,6 +50,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionAutoTerminationPolicy;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKerberosAttributes;
@@ -570,7 +571,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
                 Lists.newArrayList("additionalMasterSecurityGroups"), Lists.newArrayList("additionalSlaveSecurityGroups"), "securityConfiguration",
                 "masterSecurityGroup", "slaveSecurityGroup", "serviceAccessSecurityGroup", "scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes(),
-                1);
+                1, new EmrClusterDefinitionAutoTerminationPolicy());
 
         EmrClusterDefinition emrClusterDefinitionOverride =
             new EmrClusterDefinition("sshKeyPairNameOverride", "subnetIdOverride", "logBucketOverride", false, false, false, false, "accountIdOverride",
@@ -586,7 +587,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList("additionalMasterSecurityGroupsOverride", "additionalMasterSecurityGroupsOverride"),
                 Lists.newArrayList("additionalSlaveSecurityGroupsOverride", "additionalSlaveSecurityGroupsOverride"), "securityConfigurationOverride",
                 "masterSecurityGroupOverride", "slaveSecurityGroupOverride", "serviceSecurityGroupOverride", "scaleDownBehaviorOverride",
-                new EmrClusterDefinitionKerberosAttributes(), 1);
+                new EmrClusterDefinitionKerberosAttributes(), 1, new EmrClusterDefinitionAutoTerminationPolicy());
 
         // Call the method under test.
         emrHelperServiceImpl.overrideEmrClusterDefinition(emrClusterDefinition, emrClusterDefinitionOverride);
@@ -607,7 +608,7 @@ public class EmrHelperServiceImplTest extends AbstractServiceTest
                 Lists.newArrayList(new Parameter()), Lists.newArrayList(new Byte("0")), Lists.newArrayList(new HadoopJarStep()),
                 Lists.newArrayList("additionalMasterSecurityGroups"), Lists.newArrayList("additionalSlaveSecurityGroups"), "securityConfiguration",
                 "masterSecurityGroup", "slaveSecurityGroup", "serviceAccessSecurityGroup", "scaleDownBehavior", new EmrClusterDefinitionKerberosAttributes(),
-                1);
+                1, new EmrClusterDefinitionAutoTerminationPolicy());
 
         EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
 
