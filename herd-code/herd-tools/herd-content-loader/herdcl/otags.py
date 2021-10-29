@@ -201,7 +201,7 @@ class Controller:
 
         """
 
-        response = requests.post(self.fip_endpoint,
+        response = requests.post(self.fip_endpoint, params={'grant_type': 'client_credentials'},
                                  auth=HTTPBasicAuth(self.configuration.username, self.configuration.password))
         response.raise_for_status()
         self.configuration.access_token = response.json()['access_token']
