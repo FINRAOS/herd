@@ -20,9 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -51,6 +49,10 @@ abstract class AbstractAccessValidatorTest extends AbstractDataBridgeTest
     static final String HERD_PASSWORD = "testHerdPassword";
 
     static final String HERD_USERNAME = "testHerdUsername";
+
+    static final String ACCESS_TOKEN_URL = "testAccessTokenUrl";
+
+    static final String ACCESS_TOKEN = "testAccessToken";
 
     static final String INVALID_PROPERTY = "testInvalidProperty";
 
