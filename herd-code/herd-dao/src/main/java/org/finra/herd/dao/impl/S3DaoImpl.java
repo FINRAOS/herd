@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,7 @@ import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -82,6 +84,18 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferProgress;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.AWSS3ControlClient;
+import com.amazonaws.services.s3control.AWSS3ControlClientBuilder;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.JobManifest;
+import com.amazonaws.services.s3control.model.JobManifestLocation;
+import com.amazonaws.services.s3control.model.JobManifestSpec;
+import com.amazonaws.services.s3control.model.JobOperation;
+import com.amazonaws.services.s3control.model.JobReport;
+import com.amazonaws.services.s3control.model.S3GlacierJobTier;
+import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -637,6 +651,99 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
+    public void createRestoreObjectsJob(final S3FileTransferRequestParamsDto params, String account, String role, int expirationInDays, String archiveRetrievalOption)
+    {
+        LOGGER.info("Creating batch job to restore a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
+            params.getS3BucketName(), params.getFiles().size());
+
+        if (CollectionUtils.isEmpty(params.getFiles())) return;
+        try
+        {
+            String uuid = UUID.randomUUID().toString();
+
+            LOGGER.debug("Restore call uuid: {}", uuid);
+
+            // Create the restore job manifest
+            StringBuilder manifestContentBuilder = new StringBuilder();
+            params.getFiles().stream()
+                .map(f -> f.getPath().replaceAll("\\\\", "/"))
+                .map(p -> String.format("%s,%s%n", params.getS3BucketName(), p))
+                .forEach(manifestContentBuilder::append);
+
+            String manifestContent = manifestContentBuilder.toString();
+
+            String eTag = DigestUtils.md5Hex(manifestContent);
+            LOGGER.debug("Manifest eTag: {}", eTag);
+            String manifestArn = String.format("arn:aws:s3:::%s/%s.csv", params.getS3BucketName(), uuid);
+            LOGGER.debug("Manifest arn: {}", manifestArn);
+
+            // Perform the transfer.
+            performTransfer(params, transferManager -> {
+                LOGGER.debug("Initiate Manifest transfer");
+                // Create and prepare the metadata.
+                ObjectMetadata metadata = new ObjectMetadata();
+                prepareMetadata(params, metadata);
+
+                // Create a put request and a transfer manager with the parameters and the metadata.
+                PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    params.getS3BucketName(),
+                    String.format("%s.csv", uuid),
+                    new ByteArrayInputStream(manifestContent.getBytes()),
+                    metadata);
+
+                return s3Operations.upload(putObjectRequest, transferManager);
+            });
+
+            LOGGER.debug("Manifest transfer complete");
+
+            // Create an S3 client.
+            AWSS3Control s3ControlClient = getAmazonS3Control(params);
+
+            JobOperation jobOperation = new JobOperation()
+                .withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation()
+                    .withExpirationInDays(expirationInDays)
+                    .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
+
+            JobManifest manifest = new JobManifest()
+                .withSpec(new JobManifestSpec()
+                    .withFormat("S3BatchOperations_CSV_20180820")
+                    .withFields(new String[]{
+                        "Bucket", "Key"
+                    }))
+                .withLocation(new JobManifestLocation()
+                    .withObjectArn(manifestArn)
+                    .withETag(eTag));
+
+            LOGGER.info("Manifest transfer complete");
+
+            JobReport jobReport = new JobReport()
+                .withEnabled(false);
+
+            CreateJobRequest createRestoreJobRequest = new CreateJobRequest()
+                .withAccountId(account)
+                .withOperation(jobOperation)
+                .withManifest(manifest)
+                .withReport(jobReport)
+                .withPriority(10)
+                .withRoleArn(role)
+                .withClientRequestToken(uuid)
+                .withDescription(String.format("Restore batch job %s", uuid))
+                .withConfirmationRequired(false);
+
+            LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
+
+            s3ControlClient.createJob(createRestoreJobRequest);
+
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to initiate a restore job for \"%s\" bucket. Reason: %s", params.getS3BucketName(),
+                    e.getMessage()), e);
+        }
+    }
+
+    @Override
     public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
         AmazonS3Client s3Client = getAmazonS3(params);
@@ -1079,6 +1186,56 @@ public class S3DaoImpl implements S3Dao
 
         // Return the newly created client.
         return amazonS3Client;
+    }
+
+    private AWSS3Control getAmazonS3Control(final S3FileTransferRequestParamsDto params) {
+        AWSS3ControlClientBuilder s3ControlClientBuilder = AWSS3ControlClient.builder()
+            .withCredentials(getAWSCredentialsProvider(params));
+
+        // Set the optional endpoint, if specified.
+        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
+        {
+            s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
+                params.getS3Endpoint(), params.getAwsRegionName()
+            ));
+        }
+        // Otherwise, set AWS region, if specified.
+        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
+        {
+            s3ControlClientBuilder.withRegion(Regions.fromName(params.getAwsRegionName()));
+        }
+
+        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
+        {
+            s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
+                params.getS3Endpoint(), params.getAwsRegionName()
+            ));
+        }
+
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
+
+        // Set the proxy configuration, if proxy is specified.
+        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
+        {
+            clientConfiguration.setProxyHost(params.getHttpProxyHost());
+            clientConfiguration.setProxyPort(params.getHttpProxyPort());
+        }
+
+        // Sign all S3 API's with V4 signing.
+        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
+        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
+        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
+        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
+
+        // Set the optional socket timeout, if configured.
+        if (params.getSocketTimeout() != null)
+        {
+            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
+        }
+
+        s3ControlClientBuilder.withClientConfiguration(clientConfiguration);
+
+        return s3ControlClientBuilder.build();
     }
 
     /**
