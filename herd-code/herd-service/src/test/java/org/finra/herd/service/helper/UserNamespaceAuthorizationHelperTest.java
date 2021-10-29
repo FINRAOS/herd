@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +91,8 @@ public class UserNamespaceAuthorizationHelperTest
         userNamespaceAuthorizationEntity.setUserId("userNamespaceAuthorizationEntityUserId");
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         namespaceEntity.setCode("namespace");
+        ReflectionTestUtils.setField(userNamespaceAuthorizationEntity, "namespaceCode", "namespace");
+
         userNamespaceAuthorizationEntity.setNamespace(namespaceEntity);
         userNamespaceAuthorizationEntities.add(userNamespaceAuthorizationEntity);
         when(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationsByUserId(any())).thenReturn(userNamespaceAuthorizationEntities);
@@ -120,6 +123,7 @@ public class UserNamespaceAuthorizationHelperTest
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         namespaceEntity.setCode("namespace");
         wildcardEntity.setNamespace(namespaceEntity);
+        ReflectionTestUtils.setField(wildcardEntity, "namespaceCode", "namespace");
         wildcardEntities.add(wildcardEntity);
         when(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationsByUserIdStartsWith(any())).thenReturn(wildcardEntities);
 
