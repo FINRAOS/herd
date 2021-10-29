@@ -29,16 +29,16 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import com.google.gson.Gson;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.apache.http.message.BasicHeader;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.helper.HttpClientHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStatusApi;
@@ -53,7 +53,6 @@ import org.finra.herd.sdk.model.StorageFile;
 import org.finra.herd.sdk.model.StorageUnitCreateRequest;
 import org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateRequest;
 
-import org.finra.herd.tools.common.ApiClientHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -89,6 +88,9 @@ public abstract class DataBridgeWebClient
 
     @Autowired
     protected HttpClientOperations httpClientOperations;
+
+    @Autowired
+    protected ApiClient apiClient;
 
     /**
      * The DTO for the parameters required to communicate with the registration server.
@@ -192,9 +194,7 @@ public abstract class DataBridgeWebClient
             LOGGER.info(String.format("        \"%s\"=\"%s\"", attribute.getName(), attribute.getValue()));
         }
 
-        Storage storage= new Storage();
-        BeanUtils.copyProperties(sdkStorage, storage);
-        return storage;
+        return convertType(sdkStorage, Storage.class);
     }
 
     /**
@@ -251,9 +251,7 @@ public abstract class DataBridgeWebClient
         request.setBusinessObjectDataParents(businessObjectDataParents);
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-        BeanUtils.copyProperties(businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request), businessObjectData);
-
+        BusinessObjectData businessObjectData = convertType(businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request), BusinessObjectData.class);
         LOGGER.info(String
             .format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s", businessObjectData.getId()));
 
@@ -286,7 +284,7 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                         businessObjectDataKey.getBusinessObjectFormatVersion(),
                         businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(1),
+                        businessObjectDataKey.getSubPartitionValues().get(0),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
                 break;
             case 2:
@@ -295,7 +293,7 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                         businessObjectDataKey.getBusinessObjectFormatVersion(),
                         businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
+                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
                 break;
             case 3:
@@ -304,7 +302,7 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                         businessObjectDataKey.getBusinessObjectFormatVersion(),
                         businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2), businessObjectDataKey.getSubPartitionValues().get(3),
+                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(2), businessObjectDataKey.getSubPartitionValues().get(3),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
                 break;
 
@@ -314,7 +312,7 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                         businessObjectDataKey.getBusinessObjectFormatVersion(),
                         businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),businessObjectDataKey.getSubPartitionValues().get(3),businessObjectDataKey.getSubPartitionValues().get(4),
+                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1),businessObjectDataKey.getSubPartitionValues().get(2),businessObjectDataKey.getSubPartitionValues().get(3),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
                 break;
             default:
@@ -467,15 +465,21 @@ public abstract class DataBridgeWebClient
     }
 
     public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto/*, Boolean trustSelfSignedCertificate, Boolean disableHostnameVerification*/) throws URISyntaxException {
-        ApiClient apiClient = new ApiClient();
         String protocol = regServerAccessParamsDto.isUseSsl() ? "https" : "http";
         String basPath = new URIBuilder().setScheme(protocol).setHost(regServerAccessParamsDto.getRegServerHost())
                 .setPort(regServerAccessParamsDto.getRegServerPort()).build().toString();
 
-        apiClient.setBasePath(basPath + "/" + HERD_APP_REST_URI_PREFIX);
+        apiClient.setBasePath(basPath + HERD_APP_REST_URI_PREFIX);
         apiClient.setUsername(regServerAccessParamsDto.getUsername());
         apiClient.setPassword(regServerAccessParamsDto.getPassword());
+        apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
+        apiClient.selectHeaderContentType(new String[]{DEFAULT_CONTENT_TYPE});
         return apiClient;
     }
 
+    protected <T> T convertType(Object sdkObject, Class targetClass){
+        Gson gson= new Gson();
+        String tmp = gson.toJson(sdkObject);
+        return (T) gson.fromJson(tmp, targetClass);
+    }
 }

@@ -132,8 +132,7 @@ public class UploaderAppTest extends AbstractUploaderTest
                 "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString(), "-s", "true",
                 "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-C", "true", "-d", "true"};
 
-        // We are expecting this to fail with a UnknownHostException.
-        runDataBridgeAndCheckReturnValue(uploaderApp, arguments, DataBridgeWebClient.class, new ClientHandlerException());
+        runDataBridgeAndCheckReturnValue(uploaderApp, arguments, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
     }
 
     @Test

@@ -25,17 +25,12 @@ import java.util.List;
 
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.model.api.xml.*;
-import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /**
  * Unit tests for UploaderWebClient class.
@@ -50,7 +45,7 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setBusinessObjectDefinitionName("test2");
         manifest.setBusinessObjectFormatUsage("test3");
         manifest.setBusinessObjectFormatFileType("test4");
-        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setBusinessObjectFormatVersion("5");
         manifest.setPartitionValue("test6");
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
         String storageName = "test8";
@@ -61,10 +56,9 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         Assert.assertNotNull(storageUnitUploadCredential);
         AwsCredential awsCredential = storageUnitUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
-                "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-                "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&businessObjectDataVersion=1234&createNewVersion=false",
-            awsCredential.getAwsAccessKey());
+        Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/storageUnits/upload/credential/namespaces/test1" +
+                "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
+                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -75,7 +69,7 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setBusinessObjectDefinitionName("test2");
         manifest.setBusinessObjectFormatUsage("test3");
         manifest.setBusinessObjectFormatFileType("test4");
-        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setBusinessObjectFormatVersion("5");
         manifest.setPartitionValue("test6");
         String storageName = "test8";
         Integer businessObjectDataVersion = 1234;
@@ -85,9 +79,9 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         Assert.assertNotNull(storageUnitUploadCredential);
         AwsCredential awsCredential = storageUnitUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
-            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6?storageName=test8&businessObjectDataVersion=1234", awsCredential.getAwsAccessKey());
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/upload/credential/namespaces/test1" +
+                "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
+                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -98,21 +92,20 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setBusinessObjectDefinitionName("test2");
         manifest.setBusinessObjectFormatUsage("test3");
         manifest.setBusinessObjectFormatFileType("test4");
-        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setBusinessObjectFormatVersion("5");
         manifest.setPartitionValue("test6");
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
         String storageName = "test8";
-        Integer businessObjectDataVersion = null;
-        Boolean createNewVersion = true;
+        Integer businessObjectDataVersion = 1234;
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(true);
         StorageUnitUploadCredential storageUnitUploadCredential =
             uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion);
         Assert.assertNotNull(storageUnitUploadCredential);
         AwsCredential awsCredential = storageUnitUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
-            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&createNewVersion=true", awsCredential.getAwsAccessKey());
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/upload/credential/namespaces/test1" +
+                "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
+                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -199,6 +192,10 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace("TestNamespace");
+        businessObjectDataKey.setBusinessObjectDefinitionName("TestBdef");
+        businessObjectDataKey.setBusinessObjectFormatUsage("TestFormatUsage");
+        businessObjectDataKey.setBusinessObjectFormatFileType("TestFormatFileType");
         businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);

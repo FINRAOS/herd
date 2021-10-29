@@ -60,9 +60,7 @@ public class UploaderWebClient extends DataBridgeWebClient
                 manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionValue(),  businessObjectDataVersion,  storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
 
-        StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential();
-        BeanUtils.copyProperties(sdkResponse, storageUnitUploadCredential);
-        return storageUnitUploadCredential;
+        return convertType(sdkResponse, StorageUnitUploadCredential.class);
    // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
@@ -87,10 +85,7 @@ public class UploaderWebClient extends DataBridgeWebClient
 
         LOGGER.info(String.format("Successfully retrieved %d already registered version(s) for the business object data. businessObjectDataKey=%s",
                 sdkResponse.getBusinessObjectDataVersions().size(), jsonHelper.objectToJson(businessObjectDataKey)));
-
-        BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions();
-        BeanUtils.copyProperties(sdkResponse, businessObjectDataVersions);
-        return businessObjectDataVersions;
+        return convertType(sdkResponse, BusinessObjectDataVersions.class);
     }
 
     /**

@@ -15,6 +15,8 @@
 */
 package org.finra.herd.tools.common.config;
 
+import org.finra.herd.sdk.invoker.ApiClient;
+import org.finra.herd.tools.common.MockApiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -55,6 +57,12 @@ public class DataBridgeEnvTestSpringModuleConfig
     public HttpClientOperations httpClientOperations()
     {
         return new MockHttpClientOperationsImpl();
+    }
+
+    @Bean
+    public ApiClient apiClient()
+    {
+        return new MockApiClient();
     }
 
     // This is needed in MockHttpClientOperationsImpl.
