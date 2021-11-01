@@ -15,7 +15,7 @@
  */
 package org.finra.herd.tools.common.oauth2;
 
-import io.restassured.RestAssured;
+import com.jayway.restassured.RestAssured;
 import org.apache.http.HttpStatus;
 
 public class AccessToken
