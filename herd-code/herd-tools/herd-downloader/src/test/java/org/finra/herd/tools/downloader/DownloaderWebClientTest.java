@@ -20,11 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -34,6 +30,9 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicStatusLine;
+import org.finra.herd.sdk.invoker.ApiClient;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.tools.common.MockApiClient;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -63,27 +62,26 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
     @Test
     public void testGetBusinessObjectDataAssertNoAuthorizationHeaderWhenNoSsl() throws Exception
     {
-        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
-        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+        ApiClient mockApiClient = mock(MockApiClient.class);
+        ApiClient originalApiClient = (ApiClient) ReflectionTestUtils.getField(downloaderWebClient, "apiClient");
+        ReflectionTestUtils.setField(downloaderWebClient, "apiClient", mockApiClient);
 
         try
         {
-            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
-            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+            when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(null);
+            when(mockApiClient.escapeString(any())).thenReturn("Test");
 
-            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
-            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new BusinessObjectData())));
+            DownloaderInputManifestDto manifest = getTestDownloaderInputManifestDto();
 
-            DownloaderInputManifestDto manifest = new DownloaderInputManifestDto();
             downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);
             downloaderWebClient.getBusinessObjectData(manifest);
 
-            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> httpUriRequest.getFirstHeader("Authorization") == null));
+            verify(mockApiClient, never()).setUsername(any());
+            verify(mockApiClient, never()).setPassword(any());
         }
         finally
         {
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+            ReflectionTestUtils.setField(downloaderWebClient, "apiClient", originalApiClient);
         }
     }
 
@@ -95,18 +93,18 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         manifest.setBusinessObjectDefinitionName("test2");
         manifest.setBusinessObjectFormatUsage("test3");
         manifest.setBusinessObjectFormatFileType("test4");
-        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setBusinessObjectFormatVersion("5");
         manifest.setPartitionValue("test6");
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
-        manifest.setBusinessObjectDataVersion("test9");
+        manifest.setBusinessObjectDataVersion("9");
         String storageName = "test10";
         StorageUnitDownloadCredential storageUnitDownloadCredential = downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
         Assert.assertNotNull(storageUnitDownloadCredential);
         AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1" +
-            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10?subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
+            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
+            "/partitionValues/test6/businessObjectDataVersions/9/storageNames/test10?subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -117,9 +115,9 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         manifest.setBusinessObjectDefinitionName("test2");
         manifest.setBusinessObjectFormatUsage("test3");
         manifest.setBusinessObjectFormatFileType("test4");
-        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setBusinessObjectFormatVersion("5");
         manifest.setPartitionValue("test6");
-        manifest.setBusinessObjectDataVersion("test9");
+        manifest.setBusinessObjectDataVersion("9");
         String storageName = "test10";
         downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(true);
         StorageUnitDownloadCredential storageUnitDownloadCredential = downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
@@ -127,8 +125,8 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1" +
-            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10", awsCredential.getAwsAccessKey());
+            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
+            "/partitionValues/test6/businessObjectDataVersions/9/storageNames/test10", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -138,18 +136,15 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         HttpClientHelper originalHttpClientHelper = (HttpClientHelper) ReflectionTestUtils.getField(downloaderWebClient, "httpClientHelper");
         ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", mockHttpClientHelper);
 
-        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
-        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+        ApiClient mockApiClient = mock(MockApiClient.class);
+        ApiClient originalApiClient = (ApiClient) ReflectionTestUtils.getField(downloaderWebClient, "apiClient");
+        ReflectionTestUtils.setField(downloaderWebClient, "apiClient", mockApiClient);
 
         try
         {
-            IOException expectedException = new IOException();
+            ApiException expectedException = new ApiException("Missing the required parameter 'namespace' when calling storageUnitGetStorageUnitDownloadCredential");
 
-            CloseableHttpClient closeableHttpClient = mock(CloseableHttpClient.class);
-            when(mockHttpClientHelper.createHttpClient(any(), any())).thenReturn(closeableHttpClient);
-
-            when(mockHttpClientOperations.execute(any(), any())).thenThrow(expectedException);
+            when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(expectedException);
 
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             String storageName = "storageName";
@@ -157,48 +152,45 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             try
             {
                 downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
-                verify(closeableHttpClient).close();
                 fail();
             }
             catch (Exception e)
             {
-                assertEquals(expectedException, e);
+                assertEquals(expectedException.getClass(), e.getClass());
             }
         }
         finally
         {
             ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", originalHttpClientHelper);
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+            ReflectionTestUtils.setField(downloaderWebClient, "apiClient", originalApiClient);
         }
     }
 
     @Test
     public void testGetBusinessObjectDataDownloadCredentialAssertNoAuthorizationHeaderWhenNoSsl() throws Exception
     {
-        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
-        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+        ApiClient mockApiClient = mock(MockApiClient.class);
+        ApiClient originalApiClient = (ApiClient) ReflectionTestUtils.getField(downloaderWebClient, "apiClient");
+        ReflectionTestUtils.setField(downloaderWebClient, "apiClient", mockApiClient);
 
         try
         {
-            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
-            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+            when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(null);
+            when(mockApiClient.escapeString(any())).thenReturn("Test");
 
-            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "SUCCESS"));
-            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new StorageUnitDownloadCredential())));
-
-            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            DownloaderInputManifestDto downloaderInputManifestDto = getTestDownloaderInputManifestDto();
             String storageName = "storageName";
             boolean useSsl = false;
 
             downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
             downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
 
-            verify(mockHttpClientOperations).execute(any(), argThat(httpUriRequest -> httpUriRequest.getFirstHeader("Authorization") == null));
+            verify(mockApiClient, never()).setUsername(any());
+            verify(mockApiClient, never()).setPassword(any());
         }
         finally
         {
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+            ReflectionTestUtils.setField(downloaderWebClient, "apiClient", originalApiClient);
         }
     }
 
@@ -240,7 +232,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             }
             catch (Exception e)
             {
-                assertEquals(IOException.class, e.getClass());
+                assertEquals(ApiException.class, e.getClass());
             }
         }
         finally

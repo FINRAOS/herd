@@ -15,6 +15,7 @@
 */
 package org.finra.herd.tools.downloader;
 
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
@@ -23,7 +24,6 @@ import org.finra.herd.sdk.api.StorageUnitApi;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
@@ -54,14 +54,14 @@ public class DownloaderWebClient extends DataBridgeWebClient
         org.finra.herd.sdk.model.BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
                 manifest.getBusinessObjectFormatFileType(),
                 manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
-                Integer.valueOf(manifest.getBusinessObjectFormatVersion()), Integer.valueOf(manifest.getBusinessObjectDataVersion()),
+                HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
+                HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
+
                 //todo: Double check below default value, should be null or default value??
                 "VALID", false, false, false);
 
         LOGGER.info("Successfully retrieved business object data from the registration server.");
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-        BeanUtils.copyProperties(sdkResponse, businessObjectData);
-        return businessObjectData;
+        return convertType(sdkResponse, BusinessObjectData.class);
     }
 
     /**
@@ -100,14 +100,12 @@ public class DownloaderWebClient extends DataBridgeWebClient
         LOGGER.info("Retrieving download credentials from registration server...");
 
         org.finra.herd.sdk.model.StorageUnitDownloadCredential sdkResponse = storageUnitApi.storageUnitGetStorageUnitDownloadCredential
-                (manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),  manifest.getBusinessObjectFormatFileType(),
-                 Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
-                manifest.getPartitionValue(), Integer.valueOf(manifest.getBusinessObjectDataVersion()),
+                (manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(),
+                        HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
+                        manifest.getPartitionValue(), HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                         storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
 
-        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
-        BeanUtils.copyProperties(sdkResponse, storageUnitDownloadCredential);
-        return storageUnitDownloadCredential;
+        return convertType(sdkResponse, StorageUnitDownloadCredential.class);
         // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 }

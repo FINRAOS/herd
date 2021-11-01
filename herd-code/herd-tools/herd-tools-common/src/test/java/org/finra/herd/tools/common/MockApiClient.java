@@ -36,10 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,9 +85,9 @@ public class MockApiClient extends ApiClient {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
                 return (T) buildGetStorageResponse(path);
             } else if (path.startsWith("/storageUnits/upload/credential")) {
-                return (T) getStorageUnitUploadCredential(path);
+                return (T) getStorageUnitUploadCredential(path, queryParams);
             } else if (path.startsWith("/storageUnits/download/credential")) {
-                return (T) getStorageUnitDownloadCredential(path);
+                return (T) getStorageUnitDownloadCredential(path, queryParams);
             }
         } else if (method.equals("POST")) {
             if (path.startsWith("/businessObjectDataStorageFiles")) {
@@ -143,6 +140,7 @@ public class MockApiClient extends ApiClient {
             businessObjectData.setPartitionKey("PROCESS_DATE");
             businessObjectData.setAttributes(new ArrayList<Attribute>());
             businessObjectData.setBusinessObjectFormatVersion(0);
+            businessObjectData.setVersion(0);
             businessObjectData.setLatestVersion(true);
             businessObjectData.setStatus(BusinessObjectDataStatusEntity.VALID);
 
@@ -174,7 +172,6 @@ public class MockApiClient extends ApiClient {
 
             businessObjectData.setSubPartitionValues(new ArrayList<String>());
             businessObjectData.setId(1234L);
-            businessObjectData.setVersion(0);
 
             return businessObjectData;
         }
@@ -393,10 +390,10 @@ public class MockApiClient extends ApiClient {
         }
     }
 
-    private StorageUnitUploadCredential getStorageUnitUploadCredential(String path) throws UnsupportedCharsetException {
+    private StorageUnitUploadCredential getStorageUnitUploadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException {
         StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential();
         AwsCredential awsCredential = new AwsCredential();
-        awsCredential.setAwsAccessKey(this.getBasePath() + path);
+        awsCredential.setAwsAccessKey(this.getBasePath() + path + getSubPartitionValues(queryParams));
         storageUnitUploadCredential.setAwsCredential(awsCredential);
 
         return storageUnitUploadCredential;
@@ -435,13 +432,22 @@ public class MockApiClient extends ApiClient {
         return storage;
     }
 
-    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(String path) throws UnsupportedCharsetException {
+    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException {
         StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
         AwsCredential awsCredential = new AwsCredential();
-        awsCredential.setAwsAccessKey(path);
+        awsCredential.setAwsAccessKey(this.getBasePath() + path + getSubPartitionValues(queryParams));
         storageUnitDownloadCredential.setAwsCredential(awsCredential);
 
         return storageUnitDownloadCredential;
+    }
+
+    private String getSubPartitionValues(List<Pair> queryParams){
+        if (queryParams == null || queryParams.size() == 0){
+            return "";
+        } else {
+             Optional<Pair> optional = queryParams.stream().filter(pair -> pair.getName().equals("subPartitionValues")).findFirst();
+            return optional.map(pair -> "?" + pair.getName() + "=" + this.escapeString(pair.getValue())).orElse("");
+        }
     }
 
     private Attribute createAttribute(String name, String value) {

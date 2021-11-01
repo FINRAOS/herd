@@ -194,7 +194,7 @@ public class DownloaderController extends DataBridgeController
                 createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefixInformation.getS3KeyPrefix());
             manifestWriter.writeJsonManifest(targetLocalDirectory, OUTPUT_MANIFEST_FILE_NAME, downloaderOutputManifestDto);
         }
-        catch (ApiException | URISyntaxException e)
+        catch (ApiException | URISyntaxException | IOException | InterruptedException e)
         {
             // If we got to the point of validating the target local directory being empty before this failure
             // occurred, let's rollback the data transfer by cleaning up the local target directory.

@@ -470,8 +470,10 @@ public abstract class DataBridgeWebClient
                 .setPort(regServerAccessParamsDto.getRegServerPort()).build().toString();
 
         apiClient.setBasePath(basPath + HERD_APP_REST_URI_PREFIX);
-        apiClient.setUsername(regServerAccessParamsDto.getUsername());
-        apiClient.setPassword(regServerAccessParamsDto.getPassword());
+        if (regServerAccessParamsDto.isUseSsl()){
+            apiClient.setUsername(regServerAccessParamsDto.getUsername());
+            apiClient.setPassword(regServerAccessParamsDto.getPassword());
+        }
         apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
         apiClient.selectHeaderContentType(new String[]{DEFAULT_CONTENT_TYPE});
         return apiClient;

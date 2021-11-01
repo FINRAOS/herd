@@ -37,6 +37,7 @@ import java.util.List;
 
 import javax.xml.datatype.DatatypeFactory;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +93,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         runDownload();
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ClientHandlerException.class)
     public void testPerformDownloadWithIoException() throws Exception
     {
         runDownload(getTestDownloaderInputManifestDto(), LOCAL_TEMP_PATH_OUTPUT.toString(), DownloaderController.MIN_THREADS,

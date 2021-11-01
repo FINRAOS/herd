@@ -58,7 +58,7 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/storageUnits/upload/credential/namespaces/test1" +
                 "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
-                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8", awsCredential.getAwsAccessKey());
+                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8?subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/upload/credential/namespaces/test1" +
                 "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/5" +
-                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8", awsCredential.getAwsAccessKey());
+                "/partitionValues/test6/businessObjectDataVersions/1234/storageNames/test8?subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
     }
 
     @Test
