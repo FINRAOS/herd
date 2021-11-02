@@ -43,6 +43,8 @@ public class HttpSecurityHeadersFilterTest extends AbstractAppTest
         assertEquals(200, mockHttpServletResponse.getStatus());
         assertEquals("no-store, no-cache, must-revalidate, max-age=0", mockHttpServletResponse.getHeader("Cache-Control"));
         assertEquals("no-cache", mockHttpServletResponse.getHeader("Pragma"));
-        assertEquals("frame-ancestors 'none'", mockHttpServletResponse.getHeader("Content-Security-Policy"));
+        assertEquals("frame-ancestors 'none'; default-src 'none'; script-src 'self'; " +
+            "connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'",
+            mockHttpServletResponse.getHeader("Content-Security-Policy"));
     }
 }

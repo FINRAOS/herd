@@ -50,7 +50,8 @@ public class HttpSecurityHeadersFilter implements Filter
         HttpServletResponse resp = (HttpServletResponse) response;
         resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         resp.setHeader("Pragma", "no-cache");
-        resp.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+        resp.setHeader("Content-Security-Policy", "frame-ancestors 'none'; default-src 'none'; " +
+            "script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'");
 
         chain.doFilter(request, response);
     }
