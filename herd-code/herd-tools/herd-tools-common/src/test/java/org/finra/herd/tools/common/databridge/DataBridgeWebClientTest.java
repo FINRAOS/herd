@@ -15,10 +15,6 @@
 */
 package org.finra.herd.tools.common.databridge;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +27,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicStatusLine;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
+import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,6 +51,8 @@ import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
 
+import static org.junit.Assert.*;
+
 public class DataBridgeWebClientTest extends AbstractDataBridgeTest
 {
     private DataBridgeWebClient dataBridgeWebClient;
@@ -66,6 +65,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
 
     @Autowired
     private HttpClientOperations httpClientOperations;
+
+    @Autowired
+    private ApiClient apiClient;
 
     @Autowired
     private XmlHelper xmlHelper;
@@ -86,6 +88,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         dataBridgeWebClient.httpClientHelper = httpClientHelper;
         dataBridgeWebClient.httpClientOperations = httpClientOperations;
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
+        dataBridgeWebClient.apiClient = apiClient;
+        dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
     }
 
     @Test
@@ -105,10 +109,11 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         String storageName = "testStorage";
 
-        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-            dataBridgeWebClient.addStorageFiles(businessObjectDataKey, manifest, s3FileTransferRequestParamsDto, storageName);
-
-        assertNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
+        try{
+            dataBridgeWebClient.addStorageFiles(businessObjectDataKey, manifest, s3FileTransferRequestParamsDto, storageName);}
+        catch (ApiException e){
+            assertEquals("invalid xml", e.getMessage());
+        }
     }
 
     @Test
@@ -221,7 +226,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     {
         RegServerAccessParamsDto regServerAccessParamsDto = dataBridgeWebClient.getRegServerAccessParamsDto();
 
-        assertEquals(RegServerAccessParamsDto.builder().withRegServerPort(8080).withUseSsl(false).build(), regServerAccessParamsDto);
+        assertEquals(RegServerAccessParamsDto.builder().withRegServerHost("dummyHostName").withRegServerPort(8080).withUseSsl(false).build(), regServerAccessParamsDto);
     }
 
     @Test
@@ -239,7 +244,12 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Test
     public void testGetS3KeyPrefixNoNamespace() throws Exception
     {
-        testGetS3KeyPrefix(null, Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2"), 0, "testStorage", false);
+        try {
+            testGetS3KeyPrefix(null, Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2"), 0, "testStorage", false);
+            fail();
+        } catch (ApiException e) {
+            assertEquals("Missing the required parameter 'namespace' when calling businessObjectDataGetS3KeyPrefix", e.getMessage());
+        }
     }
 
     @Test
@@ -453,7 +463,14 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace("test1");
+        businessObjectDataKey.setBusinessObjectDefinitionName("test2");
+        businessObjectDataKey.setBusinessObjectFormatUsage("test3");
+        businessObjectDataKey.setBusinessObjectFormatFileType("test4");
+        businessObjectDataKey.setBusinessObjectFormatVersion(5);
+        businessObjectDataKey.setPartitionValue("test6");
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
+        businessObjectDataKey.setBusinessObjectDataVersion(0);
         String businessObjectDataStatus = "testBusinessObjectDataStatus";
 
         BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse =

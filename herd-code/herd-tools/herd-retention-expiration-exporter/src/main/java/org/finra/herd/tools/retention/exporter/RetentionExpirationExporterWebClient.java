@@ -80,8 +80,6 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         org.finra.herd.sdk.model.BusinessObjectDataSearchResult sdkResponse = businessObjectDataApi.businessObjectDataSearchBusinessObjectData(sdkRequest, pageNum, null);
 
         LOGGER.info("Successfully received search business object data response from the registration server.");
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
-        BeanUtils.copyProperties(sdkResponse, businessObjectDataSearchResult);
-        return businessObjectDataSearchResult;
+        return convertType(sdkResponse, BusinessObjectDataSearchResult.class);
     }
 }

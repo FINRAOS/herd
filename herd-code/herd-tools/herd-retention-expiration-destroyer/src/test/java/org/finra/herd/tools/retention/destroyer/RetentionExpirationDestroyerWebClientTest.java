@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Collections;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.junit.Test;
 
@@ -44,10 +45,17 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
     {
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
 
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
-        retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
-        fail();
+        try
+        {
+            BusinessObjectDataKey businessObjectDataKey =
+                    new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+            fail();
+        }
+        catch (ClientHandlerException e)
+        {
+            assertEquals("testThrowIoException", e.getMessage());
+        }
     }
 
     @Test

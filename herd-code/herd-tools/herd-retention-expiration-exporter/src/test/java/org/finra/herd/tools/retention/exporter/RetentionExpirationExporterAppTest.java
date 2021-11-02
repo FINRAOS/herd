@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.UnknownHostException;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -89,7 +90,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
     }
 
     @Test
@@ -103,7 +104,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
     }
 
     @Test
@@ -117,7 +118,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
 
         environmentVariables.set("HERD_PASSWORD", "WEB_SERVICE_HTTPS_PASSWORD");
         String[] argumentsUsingEnvPassword =
@@ -127,7 +128,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, argumentsUsingEnvPassword, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, argumentsUsingEnvPassword, null, new ClientHandlerException());
     }
 
     @Test

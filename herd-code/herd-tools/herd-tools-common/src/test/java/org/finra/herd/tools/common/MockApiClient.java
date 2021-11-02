@@ -68,6 +68,12 @@ public class MockApiClient extends ApiClient {
     public <T> T invokeAPI(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String accept, String contentType, String[] authNames, GenericType<T> returnType) throws ApiException {
         LOGGER.debug("path = " + path);
 
+        // If requested, set response content to an invalid XML.
+        if (this.getBasePath().contains(HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT)) {
+            //response.setEntityInputStream(toInputStream("invalid xml"));
+            throw new ApiException(400, "invalid xml");
+        }
+
         // Find out which API's are being called and build an appropriate response.
         if (method.equals("GET")) {
             if (path.startsWith("/businessObjectData/")) {
@@ -83,7 +89,7 @@ public class MockApiClient extends ApiClient {
                 return (T) buildGetBusinessObjectDefinition(path);
             } else if (path.startsWith("/storages/")) {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
-                return (T) buildGetStorageResponse(path);
+                return (T) buildGetStorage(path);
             } else if (path.startsWith("/storageUnits/upload/credential")) {
                 return (T) getStorageUnitUploadCredential(path, queryParams);
             } else if (path.startsWith("/storageUnits/download/credential")) {
@@ -98,10 +104,10 @@ public class MockApiClient extends ApiClient {
                 return (T) buildPostBusinessObjectData(body);
             } else if (path.equals("/businessObjectData/search")) {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION);
-                return (T) buildSearchBusinessObjectData(path);
+                return (T) buildSearchBusinessObjectData(queryParams);
             } else if (path.startsWith("/businessObjectData/destroy")) {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION);
-                return (T) buildPostBusinessObjectData(path);
+                return (T) buildDestroyBusinessObjectData();
             }
         } else if (method.equals("PUT")) {
             if (path.startsWith("/businessObjectDataStatus/")) {
@@ -110,12 +116,6 @@ public class MockApiClient extends ApiClient {
             }
         } else {
             throw new ApiException(500, "unknown method type " + method);
-        }
-
-        // If requested, set response content to an invalid XML.
-        if (HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT.equals(this.getBasePath())) {
-            //response.setEntityInputStream(toInputStream("invalid xml"));
-            throw new ApiException(400, "invalid xml");
         }
         return null;
     }
@@ -200,14 +200,13 @@ public class MockApiClient extends ApiClient {
     /**
      * Builds a business object definition response.
      *
-     * @param path the path of the incoming request
-     * @throws JAXBException if a JAXB error occurred
+     * @param queryParams the query params of the incoming request
      */
-    private BusinessObjectDataSearchResult buildSearchBusinessObjectData(String path) {
+    private BusinessObjectDataSearchResult buildSearchBusinessObjectData(List<Pair> queryParams) {
         BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
 
         // Build the response based on the pageNum.
-        if (path.contains("pageNum=1"))
+        if (queryParams.stream().anyMatch(pair -> pair.getName().equals("pageNum") && pair.getValue().equals("1")))
 
         //if (uri.getRawQuery().equals("pageNum=1"))
         {
@@ -310,9 +309,8 @@ public class MockApiClient extends ApiClient {
      * Builds a Get Storage response.
      *
      * @param path the path of the incoming request.
-     * @throws JAXBException if a JAXB error occurred.
      */
-    private Storage buildGetStorageResponse(String path) {
+    private Storage buildGetStorage(String path) {
         Pattern pattern = Pattern.compile("/storages/(.*)");
         Matcher matcher = pattern.matcher(path);
         if (matcher.find()) {
@@ -321,16 +319,22 @@ public class MockApiClient extends ApiClient {
         return null;
     }
 
-    /**
-     * Builds a business object data create response.
-     * *
-     *
-     * @throws JAXBException if a JAXB error occurred.
-     */
     private <T> T convertType(Object sdkObject, Class targetClass) {
         Gson gson = new Gson();
         String tmp = gson.toJson(sdkObject);
         return (T) gson.fromJson(tmp, targetClass);
+    }
+
+    private BusinessObjectData buildDestroyBusinessObjectData(){
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        List<StorageUnit> storageUnits = new ArrayList<>();
+        businessObjectData.setStorageUnits(storageUnits);
+        StorageUnit storageUnit = new StorageUnit();
+        StorageDirectory storageDirectory = new StorageDirectory();
+        storageDirectory.setDirectoryPath("app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v0/process-date=2014-01-31");
+        storageUnit.setStorageDirectory(storageDirectory);
+        storageUnits.add(storageUnit);
+        return businessObjectData;
     }
 
     private BusinessObjectData buildPostBusinessObjectData(Object body) {

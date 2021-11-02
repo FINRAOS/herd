@@ -47,11 +47,9 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
                 businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                 businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
                 businessObjectDataKey.getBusinessObjectDataVersion(),
-                businessObjectDataKey.getSubPartitionValues().get(1)) ;
+                herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\")) ;
 
-            LOGGER.info("Successfully destroyed business object data from the registration server.");
-        BusinessObjectData businessObjectData = new BusinessObjectData();
-        BeanUtils.copyProperties(sdkResponse, businessObjectData);
-        return businessObjectData;
+       LOGGER.info("Successfully destroyed business object data from the registration server.");
+        return convertType(sdkResponse, BusinessObjectData.class);
     }
 }
