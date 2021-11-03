@@ -15,6 +15,7 @@
  */
 package org.finra.herd.tools.access.validator;
 
+import static org.finra.herd.tools.access.validator.PropertiesHelper.ACCESS_TOKEN_URL_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_REGION_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_ROLE_ARN_PROPERTY;
 import static org.finra.herd.tools.access.validator.PropertiesHelper.AWS_SQS_QUEUE_URL_PROPERTY;
@@ -73,6 +74,7 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.Attribute;
 import org.finra.herd.sdk.model.BusinessObjectData;
 import org.finra.herd.sdk.model.StorageFile;
+import org.finra.herd.tools.common.oauth2.AccessToken;
 
 /**
  * The controller for the application.
@@ -116,6 +118,13 @@ class AccessValidatorController
         apiClient.setBasePath(propertiesHelper.getProperty(HERD_BASE_URL_PROPERTY));
         apiClient.setUsername(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY));
         apiClient.setPassword(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY));
+
+        if (!propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY))
+        {
+            apiClient.setAccessToken(herdApiClientOperations
+                .getAccessToken(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY), propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY),
+                    propertiesHelper.getProperty(ACCESS_TOKEN_URL_PROPERTY)));
+        }
 
         // Setup specific API classes.
         ApplicationApi applicationApi = new ApplicationApi(apiClient);

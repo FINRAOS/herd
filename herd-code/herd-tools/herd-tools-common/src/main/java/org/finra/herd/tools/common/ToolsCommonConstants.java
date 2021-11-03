@@ -23,7 +23,7 @@ public final class ToolsCommonConstants
     /**
      * The format for the build information string for the herd tool applications.
      */
-    public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildOS: %s\nbuildUser: %s";
+    public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildUser: %s";
 
     /**
      * Default number of threads to be used by the Amazon S3 TransferManager.
