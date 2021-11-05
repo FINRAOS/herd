@@ -367,7 +367,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         BusinessObjectData businessObjectData =
             new BusinessObjectData(1234, "businessObjectDefinitionNamespace", "businessObjectDefinitionName", "formatUsage", "formatFileType", 2345,
                 "partitionKey", "partitionValue", subPartitionValues, 3456, true, BusinessObjectDataStatusEntity.VALID, Arrays.asList(storageUnit),
-                Arrays.asList(attribute), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null);
+                Arrays.asList(attribute), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null, null, null);
 
         // Create a downloader output manifest DTO.
         DownloaderOutputManifestDto resultDto = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);

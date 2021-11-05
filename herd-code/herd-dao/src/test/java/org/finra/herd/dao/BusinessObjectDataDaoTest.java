@@ -1240,6 +1240,45 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testBusinessObjectDataSearchWithAllSearchKeyFieldsWithFilterOnRetentionExpiration()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+
+        RegistrationDateRangeFilter registrationDateRangeFilter = new RegistrationDateRangeFilter();
+        businessObjectDataSearchKey.setRegistrationDateRangeFilter(registrationDateRangeFilter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        assertEquals(2, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            assertEquals(NAMESPACE, data.getNamespace());
+            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
+            assertTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            assertNotNull(data.getCreatedOn());
+        }
+    }
+
+    @Test
     public void testBusinessObjectDataSearchWithPageNumAndPageSize()
     {
         businessObjectDataDaoTestHelper
