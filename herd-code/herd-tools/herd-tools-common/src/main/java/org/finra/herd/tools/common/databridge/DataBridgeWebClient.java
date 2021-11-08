@@ -22,12 +22,16 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.google.gson.Gson;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -52,6 +56,7 @@ import org.finra.herd.sdk.model.StorageFile;
 import org.finra.herd.sdk.model.StorageUnitCreateRequest;
 import org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateRequest;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -246,7 +251,9 @@ public abstract class DataBridgeWebClient
 
         // Add business object data parents, if any.
         List<org.finra.herd.sdk.model.BusinessObjectDataKey> businessObjectDataParents = new ArrayList<>();
-        BeanUtils.copyProperties(manifest.getBusinessObjectDataParents(), businessObjectDataParents);
+        for(BusinessObjectDataKey businessObjectDataKey : manifest.getBusinessObjectDataParents()){
+            businessObjectDataParents.add(convertType(businessObjectDataKey, org.finra.herd.sdk.model.BusinessObjectDataKey.class));
+        }
         request.setBusinessObjectDataParents(businessObjectDataParents);
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
@@ -301,7 +308,7 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                         businessObjectDataKey.getBusinessObjectFormatVersion(),
                         businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(2), businessObjectDataKey.getSubPartitionValues().get(3),
+                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
                 break;
 
@@ -478,9 +485,22 @@ public abstract class DataBridgeWebClient
         return apiClient;
     }
 
-    protected <T> T convertType(Object sdkObject, Class targetClass){
-        Gson gson= new Gson();
+    protected <T> T convertType(Object sdkObject, Class targetClass) {
+        Gson gson = new Gson();
         String tmp = gson.toJson(sdkObject);
         return (T) gson.fromJson(tmp, targetClass);
+    }
+
+    protected XMLGregorianCalendar dateTimeToGregorianCalendar(DateTime dateTime){
+        GregorianCalendar calendar = new GregorianCalendar();
+        if(dateTime != null) {
+            calendar.setTimeZone(dateTime.getZone().toTimeZone());
+            calendar.setTimeInMillis(dateTime.getMillis());
+        }
+        try {
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+        } catch (DatatypeConfigurationException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

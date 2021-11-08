@@ -175,7 +175,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
 
         try
         {
-            when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(null);
+            when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(new org.finra.herd.sdk.model.StorageUnitDownloadCredential());
             when(mockApiClient.escapeString(any())).thenReturn("Test");
 
             DownloaderInputManifestDto downloaderInputManifestDto = getTestDownloaderInputManifestDto();

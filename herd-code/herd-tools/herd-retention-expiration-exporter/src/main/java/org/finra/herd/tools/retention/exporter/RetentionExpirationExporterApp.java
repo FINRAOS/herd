@@ -23,6 +23,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -111,6 +112,11 @@ public class RetentionExpirationExporterApp
 
             RetentionExpirationExporterApp retentionExpirationExporterApp = new RetentionExpirationExporterApp();
             returnValue = retentionExpirationExporterApp.go(args);
+        }
+        catch (ApiException apiException)
+        {
+            LOGGER.error("Error running herd retention expiration exporter application. {} statusCode={}", apiException.toString(), apiException.getCode());
+            returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
         }
         catch (Exception e)
         {

@@ -15,6 +15,7 @@
 */
 package org.finra.herd.tools.uploader;
 
+import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
@@ -59,10 +60,22 @@ public class UploaderWebClient extends DataBridgeWebClient
                 manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionValue(),  businessObjectDataVersion,  storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
 
-        return convertType(sdkResponse, StorageUnitUploadCredential.class);
+        return convertSdkCredential(sdkResponse);
    // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
+    private StorageUnitUploadCredential convertSdkCredential(org.finra.herd.sdk.model.StorageUnitUploadCredential sdkResponse){
+        StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential();
+        if(sdkResponse.getAwsKmsKeyId() != null){
+            storageUnitUploadCredential.setAwsKmsKeyId(sdkResponse.getAwsKmsKeyId());
+        }
+        if(sdkResponse.getAwsCredential() != null){
+            org.finra.herd.sdk.model.AwsCredential sdkAwsCredential = sdkResponse.getAwsCredential();
+
+            storageUnitUploadCredential.setAwsCredential(new AwsCredential(sdkAwsCredential.getAwsAccessKey(), sdkAwsCredential.getAwsSecretKey(), sdkAwsCredential.getAwsSessionToken(), dateTimeToGregorianCalendar(sdkAwsCredential.getAwsSessionExpirationTime())));
+        }
+        return storageUnitUploadCredential;
+    }
 
     /**
      * Retrieves all versions for the specified business object data key.

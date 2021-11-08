@@ -16,9 +16,7 @@
 package org.finra.herd.tools.downloader;
 
 import org.finra.herd.core.HerdStringUtils;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
+import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.StorageUnitApi;
 import org.finra.herd.sdk.invoker.ApiException;
@@ -105,7 +103,17 @@ public class DownloaderWebClient extends DataBridgeWebClient
                         manifest.getPartitionValue(), HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                         storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
 
-        return convertType(sdkResponse, StorageUnitDownloadCredential.class);
+        return convertSdkCredential(sdkResponse);
         // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
+    }
+
+    private StorageUnitDownloadCredential convertSdkCredential(org.finra.herd.sdk.model.StorageUnitDownloadCredential sdkResponse){
+        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
+        if(sdkResponse.getAwsCredential() != null){
+            org.finra.herd.sdk.model.AwsCredential sdkAwsCredential = sdkResponse.getAwsCredential();
+            storageUnitDownloadCredential.setAwsCredential(new AwsCredential(sdkAwsCredential.getAwsAccessKey(), sdkAwsCredential.getAwsSecretKey(), sdkAwsCredential.getAwsSessionToken(),
+                    dateTimeToGregorianCalendar(sdkAwsCredential.getAwsSessionExpirationTime())));
+        }
+        return storageUnitDownloadCredential;
     }
 }

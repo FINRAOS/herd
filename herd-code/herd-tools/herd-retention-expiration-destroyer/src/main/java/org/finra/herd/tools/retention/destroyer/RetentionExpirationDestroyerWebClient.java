@@ -21,7 +21,6 @@ import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
