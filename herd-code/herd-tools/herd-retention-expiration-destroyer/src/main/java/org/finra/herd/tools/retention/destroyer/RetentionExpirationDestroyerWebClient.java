@@ -15,10 +15,10 @@
  */
 package org.finra.herd.tools.retention.destroyer;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -42,13 +42,13 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      */
     public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws ApiException, URISyntaxException {
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+        BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
                 businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                 businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
                 businessObjectDataKey.getBusinessObjectDataVersion(),
                 herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\")) ;
 
        LOGGER.info("Successfully destroyed business object data from the registration server.");
-        return convertType(sdkResponse, BusinessObjectData.class);
+        return sdkResponse;
     }
 }

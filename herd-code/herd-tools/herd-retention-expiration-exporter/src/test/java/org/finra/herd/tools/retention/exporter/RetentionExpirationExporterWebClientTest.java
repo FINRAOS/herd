@@ -20,11 +20,10 @@ import static org.junit.Assert.assertNotNull;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.junit.Test;
-
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 
 public class RetentionExpirationExporterWebClientTest extends AbstractExporterTest
 {

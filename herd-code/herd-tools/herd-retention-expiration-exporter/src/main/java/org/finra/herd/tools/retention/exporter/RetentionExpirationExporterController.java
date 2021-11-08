@@ -31,17 +31,12 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.finra.herd.sdk.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
 @Component
@@ -89,8 +84,10 @@ class RetentionExpirationExporterController
         businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
-        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Collections.singletonList(businessObjectDataSearchFilter));
+        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter();
+        businessObjectDataSearchFilter.setBusinessObjectDataSearchKeys(businessObjectDataSearchKeys);
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        request.setBusinessObjectDataSearchFilters(Collections.singletonList(businessObjectDataSearchFilter));
 
         // Create a result list for business object data.
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();

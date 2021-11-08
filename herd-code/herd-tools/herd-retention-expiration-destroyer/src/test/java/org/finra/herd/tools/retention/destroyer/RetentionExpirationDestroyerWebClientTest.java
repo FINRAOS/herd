@@ -23,10 +23,10 @@ import java.util.Collections;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 import org.junit.Test;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 
 public class RetentionExpirationDestroyerWebClientTest extends AbstractRetentionExpirationDestroyerTest
 {
@@ -35,7 +35,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
     {
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(false);
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+                buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
         BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
         assertNotNull(result);
     }
@@ -48,7 +48,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
         try
         {
             BusinessObjectDataKey businessObjectDataKey =
-                    new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+                    buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
             retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
             fail();
         }
@@ -63,7 +63,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
     {
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(true);
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
+                buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
         BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
         assertNotNull(result);
     }

@@ -22,16 +22,12 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
-import org.apache.http.HttpVersion;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicStatusLine;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.*;
 import org.finra.herd.tools.common.MockApiClient;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.junit.Assert;
@@ -39,15 +35,6 @@ import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.core.Command;
-import org.finra.herd.dao.HttpClientOperations;
-import org.finra.herd.dao.helper.HttpClientHelper;
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageUnit;
-import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -132,10 +119,6 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
     @Test
     public void testGetBusinessObjectDataDownloadCredentialAssertHttpClientClosedWhenIOException() throws Exception
     {
-        HttpClientHelper mockHttpClientHelper = mock(HttpClientHelper.class);
-        HttpClientHelper originalHttpClientHelper = (HttpClientHelper) ReflectionTestUtils.getField(downloaderWebClient, "httpClientHelper");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", mockHttpClientHelper);
-
         ApiClient mockApiClient = mock(MockApiClient.class);
         ApiClient originalApiClient = (ApiClient) ReflectionTestUtils.getField(downloaderWebClient, "apiClient");
         ReflectionTestUtils.setField(downloaderWebClient, "apiClient", mockApiClient);
@@ -161,7 +144,6 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         }
         finally
         {
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", originalHttpClientHelper);
             ReflectionTestUtils.setField(downloaderWebClient, "apiClient", originalApiClient);
         }
     }
@@ -200,26 +182,6 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
     @Test
     public void testGetBusinessObjectDataDownloadCredentialAssertThrowIOExceptionWhenClosingHttpClientThrowsIOException() throws Exception
     {
-        HttpClientHelper mockHttpClientHelper = mock(HttpClientHelper.class);
-        HttpClientHelper originalHttpClientHelper = (HttpClientHelper) ReflectionTestUtils.getField(downloaderWebClient, "httpClientHelper");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", mockHttpClientHelper);
-
-        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
-        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
-        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
-
-        try
-        {
-            CloseableHttpClient closeableHttpClient = mock(CloseableHttpClient.class);
-            when(mockHttpClientHelper.createHttpClient(any(), any())).thenReturn(closeableHttpClient);
-
-            doThrow(IOException.class).when(closeableHttpClient).close();
-
-            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
-            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
-
-            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "SUCCESS"));
-            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new StorageUnitDownloadCredential())));
 
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             String storageName = "storageName";
@@ -227,19 +189,13 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             try
             {
                 downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
-                verify(closeableHttpClient).close();
                 fail();
             }
             catch (Exception e)
             {
                 assertEquals(ApiException.class, e.getClass());
             }
-        }
-        finally
-        {
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientHelper", originalHttpClientHelper);
-            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
-        }
+
     }
 
     @Test
@@ -259,7 +215,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             {
                 BusinessObjectData businessObjectData =
                     downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
-                BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+                BusinessObjectDataKey businessObjectDataKey = downloaderWebClient.getBusinessObjectDataKey(businessObjectData);
                 downloaderWebClient
                     .addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
                         StorageEntity.MANAGED_STORAGE);
@@ -292,7 +248,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             {
                 BusinessObjectData businessObjectData =
                     downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
-                BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+                BusinessObjectDataKey businessObjectDataKey = downloaderWebClient.getBusinessObjectDataKey(businessObjectData);
                 downloaderWebClient
                     .addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
                         StorageEntity.MANAGED_STORAGE);
@@ -346,8 +302,11 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         businessObjectData.setPartitionValue(uploaderInputManifestDto.getPartitionValue());
         businessObjectData.setSubPartitionValues(uploaderInputManifestDto.getSubPartitionValues());
         businessObjectData.setVersion(TEST_DATA_VERSION_V0);
-        businessObjectData
-            .setStorageUnits(Arrays.asList(new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, null, null), null, null, null, null, null, null)));
+        StorageUnit storageUnit = new StorageUnit();
+        Storage storage = new Storage();
+        storage.setName(StorageEntity.MANAGED_STORAGE);
+        storageUnit.setStorage(storage);
+        businessObjectData.setStorageUnits(Collections.singletonList(storageUnit));
         return businessObjectData;
     }
 }

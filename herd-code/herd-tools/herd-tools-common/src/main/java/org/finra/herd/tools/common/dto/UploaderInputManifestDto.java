@@ -19,9 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.tools.common.dto.ManifestFile;
-import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 
 /**
  * An input manifest for the uploader.

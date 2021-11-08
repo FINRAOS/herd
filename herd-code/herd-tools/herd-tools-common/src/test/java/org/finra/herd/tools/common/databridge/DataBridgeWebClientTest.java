@@ -21,15 +21,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.http.HttpVersion;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicStatusLine;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.junit.Assert;
+import org.finra.herd.sdk.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.dao.impl.MockCloseableHttpResponse;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
-import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.herd.model.api.xml.ErrorInformation;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
@@ -85,8 +73,6 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         regServerAccessParamsDto.setRegServerPort(8080);
         dataBridgeWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
 
-        dataBridgeWebClient.httpClientHelper = httpClientHelper;
-        dataBridgeWebClient.httpClientOperations = httpClientOperations;
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
         dataBridgeWebClient.apiClient = apiClient;
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
@@ -104,7 +90,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT);
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(false);
 
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey = new org.finra.herd.sdk.model.BusinessObjectDataKey();
         UploaderInputManifestDto manifest = getUploaderInputManifestDto();
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         String storageName = "testStorage";
@@ -120,105 +106,6 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     public void testAddStorageFilesUseSsl() throws Exception
     {
         testAddStorageFiles(true);
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200BadContentReturnsNull() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), false);
-        httpResponse.setEntity(new StringEntity("invalid xml"));
-
-        executeWithoutLogging(DataBridgeWebClient.class, () -> {
-            BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            assertNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-        });
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200ValidResponse() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), false);
-        httpResponse.setEntity(new StringEntity(xmlHelper.objectToXml(new BusinessObjectDataStorageFilesCreateResponse())));
-        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-            dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-        assertNotNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200ValidResponseHttpResponseThrowsExceptionOnClose() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), true);
-        httpResponse.setEntity(new StringEntity(xmlHelper.objectToXml(new BusinessObjectDataStorageFilesCreateResponse())));
-
-        executeWithoutLogging(DataBridgeWebClient.class, () -> {
-            BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            assertNotNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-        });
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse400BadContentThrows() throws Exception
-    {
-        int expectedStatusCode = 400;
-        String expectedReasonPhrase = "testReasonPhrase";
-        String expectedErrorMessage = "invalid xml";
-
-        CloseableHttpResponse httpResponse =
-            new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, expectedStatusCode, expectedReasonPhrase), false);
-        httpResponse.setEntity(new StringEntity(expectedErrorMessage));
-        try
-        {
-            executeWithoutLogging(DataBridgeWebClient.class, () -> {
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            });
-            Assert.fail("expected HttpErrorResponseException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception type", HttpErrorResponseException.class, e.getClass());
-
-            HttpErrorResponseException httpErrorResponseException = (HttpErrorResponseException) e;
-            assertEquals("httpErrorResponseException responseMessage", expectedErrorMessage, httpErrorResponseException.getResponseMessage());
-            assertEquals("httpErrorResponseException statusCode", expectedStatusCode, httpErrorResponseException.getStatusCode());
-            assertEquals("httpErrorResponseException statusDescription", expectedReasonPhrase, httpErrorResponseException.getStatusDescription());
-            assertEquals("httpErrorResponseException message", "Failed to add storage files", httpErrorResponseException.getMessage());
-        }
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse400Throws() throws Exception
-    {
-        int expectedStatusCode = 400;
-        String expectedReasonPhrase = "testReasonPhrase";
-        String expectedErrorMessage = "testErrorMessage";
-
-        ErrorInformation errorInformation = new ErrorInformation();
-        errorInformation.setStatusCode(expectedStatusCode);
-        errorInformation.setMessage(expectedErrorMessage);
-        errorInformation.setStatusDescription(expectedReasonPhrase);
-
-        String requestContent = xmlHelper.objectToXml(errorInformation);
-
-        CloseableHttpResponse httpResponse =
-            new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, expectedStatusCode, expectedReasonPhrase), false);
-        httpResponse.setEntity(new StringEntity(requestContent));
-        try
-        {
-            dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            Assert.fail("expected HttpErrorResponseException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception type", HttpErrorResponseException.class, e.getClass());
-
-            HttpErrorResponseException httpErrorResponseException = (HttpErrorResponseException) e;
-            assertEquals("httpErrorResponseException responseMessage", expectedErrorMessage, httpErrorResponseException.getResponseMessage());
-            assertEquals("httpErrorResponseException statusCode", expectedStatusCode, httpErrorResponseException.getStatusCode());
-            assertEquals("httpErrorResponseException statusDescription", expectedReasonPhrase, httpErrorResponseException.getStatusDescription());
-            assertEquals("httpErrorResponseException message", "Failed to add storage files", httpErrorResponseException.getMessage());
-        }
     }
 
     @Test
@@ -327,6 +214,11 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     {
         testUpdateBusinessObjectDataStatus(
             Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2", "testSubPartitionValue3", "testSubPartitionValue4"), true);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataKey(){
+
     }
 
     /**

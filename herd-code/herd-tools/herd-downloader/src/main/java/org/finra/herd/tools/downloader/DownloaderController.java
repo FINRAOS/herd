@@ -27,6 +27,9 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.*;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.tools.common.ToolsDtoHelper;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.finra.herd.tools.common.dto.DownloaderOutputManifestDto;
 import org.slf4j.Logger;
@@ -37,20 +40,11 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageFile;
-import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
-import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
 
@@ -61,9 +55,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 public class DownloaderController extends DataBridgeController
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloaderController.class);
-
-    @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -123,15 +114,14 @@ public class DownloaderController extends DataBridgeController
             downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
             s3FileTransferRequestParamsDto.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
-                @Override
-                public AwsCredential getNewAwsCredential() throws Exception
+                public org.finra.herd.model.api.xml.AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName).getAwsCredential();
+                    return ToolsDtoHelper.convertAwsCredential(downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName).getAwsCredential());
                 }
             });
 
             // Get a storage unit that belongs to the S3 storage.
-            StorageUnit storageUnit = businessObjectDataHelper.getStorageUnitByStorageName(businessObjectData, storageName);
+            StorageUnit storageUnit = getStorageUnitByStorageName(businessObjectData, storageName);
 
             // Get the expected S3 key prefix and S3 bucket name.
             S3KeyPrefixInformation s3KeyPrefixInformation = downloaderWebClient.getS3KeyPrefix(businessObjectData);
@@ -160,7 +150,7 @@ public class DownloaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), ToolsDtoHelper.convertStorage(storage), true);
 
             // Get the list of S3 files matching the expected S3 key prefix.
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
@@ -170,7 +160,7 @@ public class DownloaderController extends DataBridgeController
             List<String> actualS3Files = storageFileHelper.getFilePathsFromS3ObjectSummaries(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
 
             // Validate S3 files before we start the download.
-            storageFileHelper.validateStorageUnitS3Files(storageUnit, actualS3Files, s3KeyPrefixInformation.getS3KeyPrefix());
+            storageFileHelper.validateStorageUnitS3Files(ToolsDtoHelper.convertStorageUnit(storageUnit), actualS3Files, s3KeyPrefixInformation.getS3KeyPrefix());
 
             // Special handling for the maxThreads command line option.
             s3FileTransferRequestParamsDto.setMaxThreads(adjustIntegerValue(s3FileTransferRequestParamsDto.getMaxThreads(), MIN_THREADS, MAX_THREADS));
@@ -181,7 +171,7 @@ public class DownloaderController extends DataBridgeController
             s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
 
             // Validate the downloaded files.
-            storageFileHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(), storageUnit);
+            storageFileHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(), ToolsDtoHelper.convertStorageUnit(storageUnit));
 
             // Log a list of files downloaded to the target local directory.
             if (LOGGER.isInfoEnabled())
@@ -281,4 +271,28 @@ public class DownloaderController extends DataBridgeController
 
         return downloaderOutputManifestDto;
     }
+
+    public StorageUnit getStorageUnitByStorageName(BusinessObjectData businessObjectData, String storageName) throws IllegalStateException
+    {
+        StorageUnit resultStorageUnit = null;
+
+        // Find a storage unit that belongs to the specified storage.
+        for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+        {
+            if (storageUnit.getStorage().getName().equalsIgnoreCase(storageName))
+            {
+                resultStorageUnit = storageUnit;
+                break;
+            }
+        }
+
+        // Validate that we found a storage unit that belongs to the specified storage.
+        if (resultStorageUnit == null)
+        {
+            throw new IllegalStateException(String.format("Business object data has no storage unit with storage name \"%s\".", storageName));
+        }
+
+        return resultStorageUnit;
+    }
+
 }

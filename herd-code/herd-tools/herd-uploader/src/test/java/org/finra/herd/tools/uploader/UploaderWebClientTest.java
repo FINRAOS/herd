@@ -24,8 +24,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
-import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.AwsCredential;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.BusinessObjectDataVersions;
+import org.finra.herd.sdk.model.StorageUnitUploadCredential;
 import org.junit.Assert;
 import org.junit.Test;
 

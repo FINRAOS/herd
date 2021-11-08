@@ -16,10 +16,12 @@
 package org.finra.herd.tools.downloader;
 
 import org.finra.herd.core.HerdStringUtils;
-import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.StorageUnitApi;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.S3KeyPrefixInformation;
+import org.finra.herd.sdk.model.StorageUnitDownloadCredential;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
         LOGGER.info("Retrieving business object data information from the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
+        BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
                 manifest.getBusinessObjectFormatFileType(),
                 manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
                 HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
@@ -59,7 +61,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
                 "VALID", false, false, false);
 
         LOGGER.info("Successfully retrieved business object data from the registration server.");
-        return convertType(sdkResponse, BusinessObjectData.class);
+        return sdkResponse;
     }
 
     /**
@@ -97,23 +99,12 @@ public class DownloaderWebClient extends DataBridgeWebClient
         StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
         LOGGER.info("Retrieving download credentials from registration server...");
 
-        org.finra.herd.sdk.model.StorageUnitDownloadCredential sdkResponse = storageUnitApi.storageUnitGetStorageUnitDownloadCredential
+        return storageUnitApi.storageUnitGetStorageUnitDownloadCredential
                 (manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(),
                         HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
                         manifest.getPartitionValue(), HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                         storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-
-        return convertSdkCredential(sdkResponse);
         // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
-    private StorageUnitDownloadCredential convertSdkCredential(org.finra.herd.sdk.model.StorageUnitDownloadCredential sdkResponse){
-        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
-        if(sdkResponse.getAwsCredential() != null){
-            org.finra.herd.sdk.model.AwsCredential sdkAwsCredential = sdkResponse.getAwsCredential();
-            storageUnitDownloadCredential.setAwsCredential(new AwsCredential(sdkAwsCredential.getAwsAccessKey(), sdkAwsCredential.getAwsSecretKey(), sdkAwsCredential.getAwsSessionToken(),
-                    dateTimeToGregorianCalendar(sdkAwsCredential.getAwsSessionExpirationTime())));
-        }
-        return storageUnitDownloadCredential;
-    }
 }

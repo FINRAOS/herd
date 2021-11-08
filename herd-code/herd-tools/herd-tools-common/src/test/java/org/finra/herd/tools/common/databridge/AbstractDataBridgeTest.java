@@ -34,6 +34,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.sdk.model.Attribute;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -45,9 +48,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.core.Command;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -389,16 +389,16 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
      * @param actualBusinessObjectData the BusinessObjectData object instance to be validated
      */
     protected void assertBusinessObjectData(Integer expectedDataVersion, List<Attribute> expectedAttributes, List<BusinessObjectDataKey> expectedParents,
-        BusinessObjectData actualBusinessObjectData)
+                                            BusinessObjectData actualBusinessObjectData)
     {
         assertNotNull(actualBusinessObjectData);
         assertEquals(TEST_BUSINESS_OBJECT_DEFINITION, actualBusinessObjectData.getBusinessObjectDefinitionName());
         assertEquals(TEST_BUSINESS_OBJECT_FORMAT_USAGE, actualBusinessObjectData.getBusinessObjectFormatUsage());
         assertEquals(TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE, actualBusinessObjectData.getBusinessObjectFormatFileType());
-        assertEquals(TEST_BUSINESS_OBJECT_FORMAT_VERSION.intValue(), actualBusinessObjectData.getBusinessObjectFormatVersion());
+        assertEquals(TEST_BUSINESS_OBJECT_FORMAT_VERSION, actualBusinessObjectData.getBusinessObjectFormatVersion());
         assertEquals(TEST_BUSINESS_OBJECT_FORMAT_PARTITION_KEY, actualBusinessObjectData.getPartitionKey());
         assertEquals(TEST_PARTITION_VALUE, actualBusinessObjectData.getPartitionValue());
-        assertEquals(expectedDataVersion.intValue(), actualBusinessObjectData.getVersion());
+        assertEquals(expectedDataVersion, actualBusinessObjectData.getVersion());
         assertEquals(1, actualBusinessObjectData.getStorageUnits().size());
         assertEquals(StorageEntity.MANAGED_STORAGE, actualBusinessObjectData.getStorageUnits().get(0).getStorage().getName());
         assertEquals(testManifestFiles.size(), actualBusinessObjectData.getStorageUnits().get(0).getStorageFiles().size());
@@ -661,7 +661,7 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/");
         BusinessObjectData businessObjectData =
             dataBridgeWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, true);
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+        BusinessObjectDataKey businessObjectDataKey = dataBridgeWebClient.getBusinessObjectDataKey(businessObjectData);
         dataBridgeWebClient.addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE);
         dataBridgeWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         // Clean up the local input directory used for the test data files upload.
@@ -683,5 +683,19 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         {
             System.setOut(originalStream);
         }
+    }
+
+    protected BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage, final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue, final List<String> subPartitionValues, final Integer businessObjectDataVersion) {
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+
+        businessObjectDataKey.setNamespace(namespace);
+        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectFormatUsage);
+        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectFormatFileType);
+        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
+        businessObjectDataKey.setPartitionValue(partitionValue);
+        businessObjectDataKey.setSubPartitionValues(subPartitionValues);
+        businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+        return businessObjectDataKey;
     }
 }

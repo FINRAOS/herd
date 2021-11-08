@@ -15,13 +15,12 @@
 */
 package org.finra.herd.tools.uploader;
 
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.StorageUnitApi;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.BusinessObjectDataVersions;
+import org.finra.herd.sdk.model.StorageUnitUploadCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,26 +55,13 @@ public class UploaderWebClient extends DataBridgeWebClient
     public StorageUnitUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
                                                                              Integer businessObjectDataVersion) throws ApiException, URISyntaxException {
         StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.StorageUnitUploadCredential sdkResponse = storageUnitApi.storageUnitGetStorageUnitUploadCredential(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
+
+        return storageUnitApi.storageUnitGetStorageUnitUploadCredential(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
                 manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionValue(),  businessObjectDataVersion,  storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-
-        return convertSdkCredential(sdkResponse);
    // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
-    private StorageUnitUploadCredential convertSdkCredential(org.finra.herd.sdk.model.StorageUnitUploadCredential sdkResponse){
-        StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential();
-        if(sdkResponse.getAwsKmsKeyId() != null){
-            storageUnitUploadCredential.setAwsKmsKeyId(sdkResponse.getAwsKmsKeyId());
-        }
-        if(sdkResponse.getAwsCredential() != null){
-            org.finra.herd.sdk.model.AwsCredential sdkAwsCredential = sdkResponse.getAwsCredential();
-
-            storageUnitUploadCredential.setAwsCredential(new AwsCredential(sdkAwsCredential.getAwsAccessKey(), sdkAwsCredential.getAwsSecretKey(), sdkAwsCredential.getAwsSessionToken(), dateTimeToGregorianCalendar(sdkAwsCredential.getAwsSessionExpirationTime())));
-        }
-        return storageUnitUploadCredential;
-    }
 
     /**
      * Retrieves all versions for the specified business object data key.
@@ -88,7 +74,7 @@ public class UploaderWebClient extends DataBridgeWebClient
     public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey) throws ApiException, URISyntaxException {
         LOGGER.info("Retrieving business object data versions from the registration server...");
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.BusinessObjectDataVersions sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectDataVersions(
+        BusinessObjectDataVersions sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectDataVersions(
                 businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
                 businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                 businessObjectDataKey.getPartitionValue(),
@@ -97,7 +83,7 @@ public class UploaderWebClient extends DataBridgeWebClient
 
         LOGGER.info(String.format("Successfully retrieved %d already registered version(s) for the business object data. businessObjectDataKey=%s",
                 sdkResponse.getBusinessObjectDataVersions().size(), jsonHelper.objectToJson(businessObjectDataKey)));
-        return convertType(sdkResponse, BusinessObjectDataVersions.class);
+        return sdkResponse;
     }
 
     /**

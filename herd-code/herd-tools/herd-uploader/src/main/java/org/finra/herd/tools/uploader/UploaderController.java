@@ -29,6 +29,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.*;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.tools.common.ToolsDtoHelper;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,19 +42,11 @@ import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.core.helper.HerdThreadHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
 
@@ -62,9 +57,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 public class UploaderController extends DataBridgeController
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploaderController.class);
-
-    @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -140,7 +132,7 @@ public class UploaderController extends DataBridgeController
             BusinessObjectData businessObjectData = uploaderWebClient.preRegisterBusinessObjectData(manifest, storageName, createNewVersion);
 
             // Get business object data key.
-            businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+            businessObjectDataKey = uploaderWebClient.getBusinessObjectDataKey(businessObjectData);
 
             // Get the business object data version.
             Integer businessObjectDataVersion = businessObjectDataKey.getBusinessObjectDataVersion();
@@ -149,9 +141,9 @@ public class UploaderController extends DataBridgeController
             params.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
                 @Override
-                public AwsCredential getNewAwsCredential() throws Exception
+                public org.finra.herd.model.api.xml.AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential();
+                    return ToolsDtoHelper.convertAwsCredential(uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential());
                 }
             });
 
@@ -163,11 +155,11 @@ public class UploaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), ToolsDtoHelper.convertStorage(storage), true);
 
             // Set the KMS ID, if available
             String kmsKeyId =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storage, false);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), ToolsDtoHelper.convertStorage(storage), false);
             params.setKmsKeyId(kmsKeyId);
 
             // Special handling for the maxThreads command line option.
@@ -294,10 +286,16 @@ public class UploaderController extends DataBridgeController
     private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)
             throws ApiException, URISyntaxException {
         // Retrieve all already registered versions for this business object data.
-        BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
-                manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()), manifest.getPartitionValue(),
-                manifest.getSubPartitionValues(), null));
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace(manifest.getNamespace());
+        businessObjectDataKey.setBusinessObjectDefinitionName(manifest.getBusinessObjectDefinitionName());
+        businessObjectDataKey.setBusinessObjectFormatUsage(manifest.getBusinessObjectFormatUsage());
+        businessObjectDataKey.setBusinessObjectFormatFileType(manifest.getBusinessObjectFormatFileType());
+        businessObjectDataKey.setBusinessObjectDataVersion(Integer.valueOf(manifest.getBusinessObjectFormatVersion()));
+        businessObjectDataKey.setPartitionValue(manifest.getPartitionValue());
+        businessObjectDataKey.setSubPartitionValues(manifest.getSubPartitionValues());
+
+        BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(businessObjectDataKey);
 
         // Check if the latest version of the business object data.
         if (CollectionUtils.isNotEmpty(businessObjectDataVersions.getBusinessObjectDataVersions()))
@@ -324,7 +322,7 @@ public class UploaderController extends DataBridgeController
                         "Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
                             "Please use -force option to invalidate the latest business object version and allow upload to proceed. " +
                             "Business object data {%s}",
-                        businessObjectDataHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
+                            ToolsDtoHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
                 }
             }
         }

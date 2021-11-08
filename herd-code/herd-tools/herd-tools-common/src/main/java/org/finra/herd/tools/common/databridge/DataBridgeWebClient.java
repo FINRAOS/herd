@@ -15,51 +15,26 @@
 */
 package org.finra.herd.tools.common.databridge;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-
-import com.google.gson.Gson;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.finra.herd.dao.HttpClientOperations;
-import org.finra.herd.dao.helper.HttpClientHelper;
-import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStatusApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStorageFileApi;
 import org.finra.herd.sdk.api.StorageApi;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.sdk.model.Attribute;
-import org.finra.herd.sdk.model.BusinessObjectDataCreateRequest;
-import org.finra.herd.sdk.model.BusinessObjectDataStorageFilesCreateRequest;
-import org.finra.herd.sdk.model.StorageFile;
-import org.finra.herd.sdk.model.StorageUnitCreateRequest;
-import org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateRequest;
+import org.finra.herd.sdk.model.*;
 
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
@@ -88,12 +63,6 @@ public abstract class DataBridgeWebClient
     protected HerdStringHelper herdStringHelper;
 
     @Autowired
-    protected HttpClientHelper httpClientHelper;
-
-    @Autowired
-    protected HttpClientOperations httpClientOperations;
-
-    @Autowired
     protected ApiClient apiClient;
 
     /**
@@ -113,7 +82,7 @@ public abstract class DataBridgeWebClient
      * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
-    public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest,
+    public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest,
                                                                         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName)
             throws ApiException, URISyntaxException {
         LOGGER.info("Adding storage files to the business object data ...");
@@ -147,13 +116,11 @@ public abstract class DataBridgeWebClient
             storageFile.setRowCount(manifestFile.getRowCount());
         }
 
-        org.finra.herd.sdk.model.BusinessObjectDataStorageFilesCreateResponse sdkBusinessObjectDataStorageFilesCreateResponse = businessObjectDataStorageFileApi.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(request);
+        BusinessObjectDataStorageFilesCreateResponse sdkBusinessObjectDataStorageFilesCreateResponse = businessObjectDataStorageFileApi.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(request);
 
         LOGGER.info("Successfully added storage files to the registered business object data.");
 
-        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse = new BusinessObjectDataStorageFilesCreateResponse();
-        BeanUtils.copyProperties(sdkBusinessObjectDataStorageFilesCreateResponse, businessObjectDataStorageFilesCreateResponse);
-        return businessObjectDataStorageFilesCreateResponse;
+        return sdkBusinessObjectDataStorageFilesCreateResponse;
     }
 
     /**
@@ -187,7 +154,7 @@ public abstract class DataBridgeWebClient
     public Storage getStorage(String storageName) throws ApiException, URISyntaxException {
         LOGGER.info(String.format("Retrieving storage information for \"%s\" storage name from the registration server...", storageName));
         StorageApi storageApi = new StorageApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.Storage sdkStorage = storageApi.storageGetStorage(storageName);
+        Storage sdkStorage = storageApi.storageGetStorage(storageName);
 
         LOGGER.info("Successfully retrieved storage information from the registration server.");
         LOGGER.info("    Storage name: " + sdkStorage.getName());
@@ -198,7 +165,7 @@ public abstract class DataBridgeWebClient
             LOGGER.info(String.format("        \"%s\"=\"%s\"", attribute.getName(), attribute.getValue()));
         }
 
-        return convertType(sdkStorage, Storage.class);
+        return sdkStorage;
     }
 
     /**
@@ -250,14 +217,11 @@ public abstract class DataBridgeWebClient
         }
 
         // Add business object data parents, if any.
-        List<org.finra.herd.sdk.model.BusinessObjectDataKey> businessObjectDataParents = new ArrayList<>();
-        for(BusinessObjectDataKey businessObjectDataKey : manifest.getBusinessObjectDataParents()){
-            businessObjectDataParents.add(convertType(businessObjectDataKey, org.finra.herd.sdk.model.BusinessObjectDataKey.class));
-        }
+        List<BusinessObjectDataKey> businessObjectDataParents = manifest.getBusinessObjectDataParents();
         request.setBusinessObjectDataParents(businessObjectDataParents);
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectData businessObjectData = convertType(businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request), BusinessObjectData.class);
+        BusinessObjectData businessObjectData = businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request);
         LOGGER.info(String
             .format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s", businessObjectData.getId()));
 
@@ -275,12 +239,11 @@ public abstract class DataBridgeWebClient
      */
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
             throws ApiException, URISyntaxException {
-        org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
+        BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
         request.setStatus(businessObjectDataStatus);
 
         BusinessObjectDataStatusApi businessObjectDataStatusApi = new BusinessObjectDataStatusApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = new BusinessObjectDataStatusUpdateResponse();
-        org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateResponse sdkResponse;
+        BusinessObjectDataStatusUpdateResponse sdkResponse;
         int subPartitions = Math.min(org.apache.commons.collections4.CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
                 BusinessObjectDataEntity.MAX_SUBPARTITIONS);
         switch (subPartitions) {
@@ -329,40 +292,8 @@ public abstract class DataBridgeWebClient
                         businessObjectDataKey.getPartitionValue(),
                         businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
         }
-
-            LOGGER.info("Successfully updated status of the business object data.");
-            BeanUtils.copyProperties(sdkResponse, businessObjectDataStatusUpdateResponse);
-            return businessObjectDataStatusUpdateResponse;
-    }
-
-
-    /**
-     * Extracts BusinessObjectDataStorageFilesCreateResponse object from the registration server HTTP response.
-     *
-     * @param httpResponse the response received from the supported options.
-     *
-     * @return the BusinessObjectData object extracted from the registration server response.
-     */
-    protected BusinessObjectDataStorageFilesCreateResponse getBusinessObjectDataStorageFilesCreateResponse(CloseableHttpResponse httpResponse)
-    {
-        try
-        {
-            return (BusinessObjectDataStorageFilesCreateResponse) processXmlHttpResponse(httpResponse, "add storage files",
-                BusinessObjectDataStorageFilesCreateResponse.class);
-        }
-        catch (Exception e)
-        {
-            if (httpResponse.getStatusLine().getStatusCode() == 200)
-            {
-                // We assume add files is a success when we get status code 200 back from the service.
-                // Just return a null back, since processXmlHttpResponse() is responsible for logging the exception info.
-                return null;
-            }
-            else
-            {
-                throw e;
-            }
-        }
+        LOGGER.info("Successfully updated status of the business object data.");
+        return sdkResponse;
     }
 
     /**
@@ -381,7 +312,7 @@ public abstract class DataBridgeWebClient
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
 
-        org.finra.herd.sdk.model.S3KeyPrefixInformation sdkResponse = businessObjectDataApi.businessObjectDataGetS3KeyPrefix(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
+        S3KeyPrefixInformation sdkResponse = businessObjectDataApi.businessObjectDataGetS3KeyPrefix(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
                 manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
         businessObjectDataVersion, manifest.getStorageName(), createNewVersion);
@@ -389,85 +320,7 @@ public abstract class DataBridgeWebClient
         LOGGER.info("Successfully retrieved S3 key prefix from the registration server.");
         LOGGER.info("    S3 key prefix: " + sdkResponse.getS3KeyPrefix());
 
-        S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
-        BeanUtils.copyProperties(sdkResponse, s3KeyPrefixInformation);
-
-        return s3KeyPrefixInformation;
-    }
-
-    /**
-     * Extracts an instance of the specified object class from the registration server response.
-     *
-     * @param response the HTTP response received from the registration server.
-     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
-     * @param responseClass the class of the object expected to be returned by the registration server.
-     *
-     * @return the BusinessObjectData object extracted from the registration server response.
-     */
-    protected Object processXmlHttpResponse(CloseableHttpResponse response, String actionDescription, Class<?>... responseClass)
-    {
-        StatusLine responseStatusLine = response.getStatusLine();
-        Object responseObject = null;
-        String xmlResponse = "";
-        HttpErrorResponseException errorException = null;
-
-        try
-        {
-            if (responseStatusLine.getStatusCode() == 200)
-            {
-                // Request is successfully handled by the Server.
-                xmlResponse = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name());
-                InputStream inputStream = new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8));
-
-                // Un-marshall the response to the specified object class.
-                JAXBContext responseContext = JAXBContext.newInstance(responseClass);
-                Unmarshaller responseUnmarshaller = responseContext.createUnmarshaller();
-                responseObject = responseUnmarshaller.unmarshal(inputStream);
-            }
-            else
-            {
-                // Handle erroneous HTTP response.
-                xmlResponse = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name());
-                InputStream inputStream = new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8));
-
-                // Un-marshall response to the ErrorInformation object.
-                JAXBContext responseContext = JAXBContext.newInstance(ErrorInformation.class);
-                Unmarshaller responseUnmarshaller = responseContext.createUnmarshaller();
-                ErrorInformation errorInfo = (ErrorInformation) responseUnmarshaller.unmarshal(inputStream);
-
-                errorException = new HttpErrorResponseException("Failed to " + actionDescription, errorInfo.getStatusCode(), errorInfo.getStatusDescription(),
-                    errorInfo.getMessage());
-            }
-        }
-        catch (IOException | JAXBException e)
-        {
-            LOGGER.warn("Failed to get or process HTTP response from the registration server.", e);
-            LOGGER.warn(String.format("    HTTP Response Status: %s", responseStatusLine));
-            LOGGER.warn(String.format("    HTTP Response: %s", xmlResponse));
-            errorException =
-                new HttpErrorResponseException("Failed to " + actionDescription, responseStatusLine.getStatusCode(), responseStatusLine.getReasonPhrase(),
-                    xmlResponse);
-        }
-        finally
-        {
-            try
-            {
-                response.close();
-            }
-            catch (Exception ex)
-            {
-                LOGGER.warn("Unable to close HTTP response.", ex);
-            }
-        }
-
-        // If we populated a response exception, then throw it to the caller.
-        if (errorException != null)
-        {
-            throw errorException;
-        }
-
-        // Return the response.
-        return responseObject;
+        return sdkResponse;
     }
 
     public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto/*, Boolean trustSelfSignedCertificate, Boolean disableHostnameVerification*/) throws URISyntaxException {
@@ -485,22 +338,19 @@ public abstract class DataBridgeWebClient
         return apiClient;
     }
 
-    protected <T> T convertType(Object sdkObject, Class targetClass) {
-        Gson gson = new Gson();
-        String tmp = gson.toJson(sdkObject);
-        return (T) gson.fromJson(tmp, targetClass);
-    }
+    public BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectData businessObjectData)
+    {
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
 
-    protected XMLGregorianCalendar dateTimeToGregorianCalendar(DateTime dateTime){
-        GregorianCalendar calendar = new GregorianCalendar();
-        if(dateTime != null) {
-            calendar.setTimeZone(dateTime.getZone().toTimeZone());
-            calendar.setTimeInMillis(dateTime.getMillis());
-        }
-        try {
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
-        } catch (DatatypeConfigurationException e) {
-            throw new IllegalStateException(e);
-        }
+        businessObjectDataKey.setNamespace(businessObjectData.getNamespace());
+        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
+        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectData.getBusinessObjectFormatUsage());
+        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectData.getBusinessObjectFormatFileType());
+        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectData.getBusinessObjectFormatVersion());
+        businessObjectDataKey.setPartitionValue(businessObjectData.getPartitionValue());
+        businessObjectDataKey.setSubPartitionValues(businessObjectData.getSubPartitionValues());
+        businessObjectDataKey.setBusinessObjectDataVersion(businessObjectData.getVersion());
+
+        return businessObjectDataKey;
     }
 }

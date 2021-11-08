@@ -15,15 +15,14 @@
 */
 package org.finra.herd.tools.retention.exporter;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDefinitionApi;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
@@ -52,13 +51,11 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         LOGGER.info("Retrieving business object definition information from the registration server...");
         BusinessObjectDefinitionApi businessObjectDefinitionApi = new BusinessObjectDefinitionApi(createApiClient(regServerAccessParamsDto));
 
-        org.finra.herd.sdk.model.BusinessObjectDefinition sdkResponse = businessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false);
-        BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
-        BeanUtils.copyProperties(sdkResponse, businessObjectDefinition);
+        BusinessObjectDefinition sdkResponse = businessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false);
 
         LOGGER.info("Successfully retrieved business object definition from the registration server.");
 
-       return businessObjectDefinition;
+       return sdkResponse;
     }
 
     /**
@@ -75,11 +72,9 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         LOGGER.info("Sending business object data search request to the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        org.finra.herd.sdk.model.BusinessObjectDataSearchRequest sdkRequest = new org.finra.herd.sdk.model.BusinessObjectDataSearchRequest();
-        BeanUtils.copyProperties(businessObjectDataSearchRequest, sdkRequest);
-        org.finra.herd.sdk.model.BusinessObjectDataSearchResult sdkResponse = businessObjectDataApi.businessObjectDataSearchBusinessObjectData(sdkRequest, pageNum, null);
+        BusinessObjectDataSearchResult sdkResponse = businessObjectDataApi.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, null);
 
         LOGGER.info("Successfully received search business object data response from the registration server.");
-        return convertType(sdkResponse, BusinessObjectDataSearchResult.class);
+        return sdkResponse;
     }
 }

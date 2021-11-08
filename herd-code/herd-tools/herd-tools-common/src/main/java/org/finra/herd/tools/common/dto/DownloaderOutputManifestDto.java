@@ -15,13 +15,12 @@
 */
 package org.finra.herd.tools.common.dto;
 
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.tools.common.dto.ManifestFile;
-import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 
 /**
  * Implements output JSON manifest file for the downloader.

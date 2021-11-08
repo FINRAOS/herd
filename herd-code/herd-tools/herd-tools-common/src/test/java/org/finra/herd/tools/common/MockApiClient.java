@@ -350,6 +350,7 @@ public class MockApiClient extends ApiClient {
         businessObjectData.setPartitionKey(request.getPartitionKey());
         businessObjectData.setPartitionValue(request.getPartitionValue());
         businessObjectData.setSubPartitionValues(request.getSubPartitionValues());
+        businessObjectData.setVersion(0);
         StorageUnit storageUnit = new StorageUnit();
         StorageDirectory storageDirectory = new StorageDirectory();
         storageDirectory.setDirectoryPath("app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v0/process-date=2014-01-31");
