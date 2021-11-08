@@ -13,9 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.tools.downloader;
+package org.finra.herd.tools.downloader.dto;
 
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 
 /**
  * An input manifest for the downloader.

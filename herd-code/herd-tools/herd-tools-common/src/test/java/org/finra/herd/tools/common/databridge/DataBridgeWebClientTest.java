@@ -45,8 +45,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse
 import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;

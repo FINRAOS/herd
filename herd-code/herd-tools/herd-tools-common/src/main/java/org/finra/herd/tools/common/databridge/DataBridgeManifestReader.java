@@ -30,7 +30,7 @@ import org.apache.commons.io.Charsets;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdFileUtils;
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 
 /**
  * A base class for uploader and downloader manifest readers.

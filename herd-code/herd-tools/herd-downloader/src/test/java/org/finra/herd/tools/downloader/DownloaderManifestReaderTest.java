@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
 import org.junit.Test;
 
 /**

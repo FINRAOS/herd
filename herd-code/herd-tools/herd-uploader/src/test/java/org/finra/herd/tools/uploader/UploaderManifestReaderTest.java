@@ -24,10 +24,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 
 /**
  * Unit tests for UploaderManifestReader class.

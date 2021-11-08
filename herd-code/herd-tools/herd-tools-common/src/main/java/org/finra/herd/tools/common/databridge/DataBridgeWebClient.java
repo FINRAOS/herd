@@ -63,8 +63,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;

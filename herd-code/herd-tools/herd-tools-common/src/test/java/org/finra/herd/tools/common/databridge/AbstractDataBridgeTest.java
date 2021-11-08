@@ -48,7 +48,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;

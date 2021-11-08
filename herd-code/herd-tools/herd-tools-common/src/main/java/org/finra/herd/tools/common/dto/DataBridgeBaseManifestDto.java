@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.tools.common;
+package org.finra.herd.tools.common.dto;
 
 import java.util.List;
 

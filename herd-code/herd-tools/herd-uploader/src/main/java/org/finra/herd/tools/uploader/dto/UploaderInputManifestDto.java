@@ -13,15 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.tools.uploader;
+package org.finra.herd.tools.uploader.dto;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ManifestFile;
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 
 /**
  * An input manifest for the uploader.

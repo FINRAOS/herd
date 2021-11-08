@@ -20,12 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;

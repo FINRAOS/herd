@@ -28,6 +28,7 @@ import java.util.List;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;

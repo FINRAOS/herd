@@ -29,7 +29,7 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
 /**

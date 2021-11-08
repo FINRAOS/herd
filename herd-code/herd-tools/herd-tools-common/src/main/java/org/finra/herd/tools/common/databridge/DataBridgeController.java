@@ -18,7 +18,7 @@ package org.finra.herd.tools.common.databridge;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.S3Service;
 

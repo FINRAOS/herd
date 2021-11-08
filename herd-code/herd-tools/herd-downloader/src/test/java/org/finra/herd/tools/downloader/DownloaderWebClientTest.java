@@ -33,6 +33,7 @@ import org.apache.http.message.BasicStatusLine;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.tools.common.MockApiClient;
+import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
