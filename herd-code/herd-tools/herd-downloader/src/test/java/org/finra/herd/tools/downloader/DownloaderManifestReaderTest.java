@@ -22,8 +22,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
-
 /**
  * Unit tests for DownloaderManifestReader class.
  */

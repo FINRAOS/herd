@@ -27,7 +27,6 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.tools.common.databridge.DataBridgeManifestReader;
 

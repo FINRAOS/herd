@@ -40,7 +40,6 @@ import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**

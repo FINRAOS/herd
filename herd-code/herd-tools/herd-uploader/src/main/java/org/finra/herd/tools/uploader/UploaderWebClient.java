@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;

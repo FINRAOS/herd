@@ -24,8 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
+import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;

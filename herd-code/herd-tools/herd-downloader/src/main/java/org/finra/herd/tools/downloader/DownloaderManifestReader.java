@@ -21,7 +21,6 @@ import java.io.Reader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeManifestReader;
 
 /**

@@ -51,7 +51,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.S3Service;

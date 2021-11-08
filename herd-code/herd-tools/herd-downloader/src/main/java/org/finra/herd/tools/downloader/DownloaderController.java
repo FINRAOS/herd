@@ -43,8 +43,6 @@ import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
-import org.finra.herd.model.dto.DownloaderOutputManifestDto;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;

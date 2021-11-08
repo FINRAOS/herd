@@ -27,7 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.DataBridgeBaseManifestDto;
 
 public class DataBridgeManifestReaderTest
 {

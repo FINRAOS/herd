@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 
 /**
  * Unit tests for UploaderManifestReader class.

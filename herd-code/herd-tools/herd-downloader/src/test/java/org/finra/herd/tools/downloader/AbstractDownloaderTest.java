@@ -25,11 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
