@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
+import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 

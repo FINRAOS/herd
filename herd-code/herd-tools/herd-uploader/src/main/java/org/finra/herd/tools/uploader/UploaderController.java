@@ -29,7 +29,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

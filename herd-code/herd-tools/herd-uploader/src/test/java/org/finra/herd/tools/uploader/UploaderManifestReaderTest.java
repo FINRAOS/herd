@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;

@@ -20,7 +20,7 @@ import org.finra.herd.model.api.xml.*;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.StorageUnitApi;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
+import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

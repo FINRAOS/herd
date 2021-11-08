@@ -28,7 +28,7 @@ import java.util.List;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
-import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -39,8 +39,8 @@ import javax.xml.datatype.DatatypeFactory;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
-import org.finra.herd.tools.downloader.dto.DownloaderInputManifestDto;
-import org.finra.herd.tools.downloader.dto.DownloaderOutputManifestDto;
+import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
+import org.finra.herd.tools.common.dto.DownloaderOutputManifestDto;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;

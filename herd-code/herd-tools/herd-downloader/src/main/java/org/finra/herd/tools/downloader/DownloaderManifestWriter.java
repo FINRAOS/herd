@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finra.herd.tools.downloader.dto.DownloaderOutputManifestDto;
+import org.finra.herd.tools.common.dto.DownloaderOutputManifestDto;
 import org.springframework.stereotype.Component;
 
 /**

@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finra.herd.tools.uploader.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
