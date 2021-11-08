@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
@@ -356,7 +357,7 @@ public class BusinessObjectDataDaoHelperTest extends AbstractServiceTest
                     new StorageDirectory(testS3KeyPrefix), businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false),
                     StorageUnitStatusEntity.ENABLED, NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)),
                 NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                NO_RETENTION_EXPIRATION_DATE), resultBusinessObjectData);
+                NO_RETENTION_EXPIRATION_DATE, HerdDaoSecurityHelper.SYSTEM_USER, resultBusinessObjectData.getCreatedOn()), resultBusinessObjectData);
     }
 
     @Test
@@ -398,7 +399,7 @@ public class BusinessObjectDataDaoHelperTest extends AbstractServiceTest
                     new StorageDirectory(testS3KeyPrefix), businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false),
                     StorageUnitStatusEntity.ENABLED, NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)),
                 NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                NO_RETENTION_EXPIRATION_DATE), resultBusinessObjectData);
+                NO_RETENTION_EXPIRATION_DATE, HerdDaoSecurityHelper.SYSTEM_USER, resultBusinessObjectData.getCreatedOn()), resultBusinessObjectData);
     }
 
     @Test
@@ -441,7 +442,8 @@ public class BusinessObjectDataDaoHelperTest extends AbstractServiceTest
                     new StorageDirectory(testStorageDirectoryPath),
                     businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false), StorageUnitStatusEntity.ENABLED,
                     NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE),
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE,
+                HerdDaoSecurityHelper.SYSTEM_USER, resultBusinessObjectData.getCreatedOn()),
             resultBusinessObjectData);
     }
 
@@ -485,7 +487,8 @@ public class BusinessObjectDataDaoHelperTest extends AbstractServiceTest
                     new StorageDirectory(testStorageDirectoryPath),
                     businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false), StorageUnitStatusEntity.ENABLED,
                     NO_STORAGE_UNIT_STATUS_HISTORY, NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE),
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE,
+                HerdDaoSecurityHelper.SYSTEM_USER, resultBusinessObjectData.getCreatedOn()),
             resultBusinessObjectData);
     }
 

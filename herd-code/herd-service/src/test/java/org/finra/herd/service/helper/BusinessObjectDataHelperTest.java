@@ -102,7 +102,7 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
                 new BusinessObjectData(INTEGER_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, NO_STORAGE_UNITS,
                     NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                    NO_RETENTION_EXPIRATION_DATE), testStorageName);
+                    NO_RETENTION_EXPIRATION_DATE, CREATED_BY, CREATED_ON), testStorageName);
             fail("Should throw a IllegalStateException when storage unit does not exist.");
         }
         catch (IllegalStateException e)

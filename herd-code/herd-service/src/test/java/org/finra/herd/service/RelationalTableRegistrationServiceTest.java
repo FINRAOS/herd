@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
@@ -107,6 +108,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectData.setAttributes(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
+        expectedBusinessObjectData.setCreatedOn(resultBusinessObjectData.getCreatedOn());
+        expectedBusinessObjectData.setCreatedByUserId(HerdDaoSecurityHelper.SYSTEM_USER);
 
         // Validate the response.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
@@ -218,6 +221,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectData.setAttributes(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
+        expectedBusinessObjectData.setCreatedOn(businessObjectData.getCreatedOn());
+        expectedBusinessObjectData.setCreatedByUserId(HerdDaoSecurityHelper.SYSTEM_USER);
 
         // Validate the response.
         assertEquals(expectedBusinessObjectData, businessObjectData);
@@ -583,6 +588,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectData.setAttributes(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataParents(new ArrayList<>());
         expectedBusinessObjectData.setBusinessObjectDataChildren(new ArrayList<>());
+        expectedBusinessObjectData.setCreatedOn(resultBusinessObjectData.getCreatedOn());
+        expectedBusinessObjectData.setCreatedByUserId(HerdDaoSecurityHelper.SYSTEM_USER);
 
         // Validate the response.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);

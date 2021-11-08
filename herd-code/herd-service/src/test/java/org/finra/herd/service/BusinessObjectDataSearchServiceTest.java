@@ -308,8 +308,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
                     expectedBusinessObjectDataEntity.getBusinessObjectFormat().getPartitionKey(), expectedBusinessObjectDataEntity.getPartitionValue(),
                     NULL_AS_SUBPARTITION_VALUES, expectedBusinessObjectDataEntity.getVersion(), expectedBusinessObjectDataEntity.getLatestVersion(),
                     expectedBusinessObjectDataEntity.getStatus().getCode(), NULL_AS_STORAGE_UNITS, NULL_AS_ATTRIBUTES, NULL_AS_BUSINESS_OBJECT_DATA_PARENTS,
-                    NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN, NULL_AS_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE),
-                result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().get(0));
+                    NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN, NULL_AS_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE, NO_CREATED_BY,
+                    NO_CREATED_ON), result.getBusinessObjectDataSearchResult().getBusinessObjectDataElements().get(0));
 
             // Validate the paging information.
             assertEquals(Long.valueOf(pageNum), result.getPageNum());
@@ -1086,7 +1086,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
             new BusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, NULL_AS_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 NULL_AS_STORAGE_UNITS, NULL_AS_ATTRIBUTES, NULL_AS_BUSINESS_OBJECT_DATA_PARENTS, NULL_AS_BUSINESS_OBJECT_DATA_CHILDREN,
-                NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
+                NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE, NO_CREATED_BY, NO_CREATED_ON);
 
         // Create business object data search request without any filters.
         BusinessObjectDataSearchRequest businessObjectDataSearchRequest = new BusinessObjectDataSearchRequest();

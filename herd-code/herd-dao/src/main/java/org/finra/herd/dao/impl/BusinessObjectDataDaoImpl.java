@@ -882,8 +882,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         List<BusinessObjectDataEntity> businessObjectDataEntities =
             entityManager.createQuery(criteria).setFirstResult(pageSize * (pageNum - 1)).setMaxResults(pageSize).getResultList();
 
+        // If the registration date range filter is applied then include the created on date in the business object data included in the response message.
+        boolean includeCreatedOnDate = businessObjectDataSearchKey.getRegistrationDateRangeFilter() != null;
+
         // Crete the result list of business object data.
-        return getQueryResultListFromEntityList(businessObjectDataEntities, businessObjectDataSearchKey.getAttributeValueFilters());
+        return getQueryResultListFromEntityList(businessObjectDataEntities, businessObjectDataSearchKey.getAttributeValueFilters(), includeCreatedOnDate);
     }
 
     /**
@@ -1116,10 +1119,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      *
      * @param entityArray entity array from query
      * @param attributeValueList attribute value list
+     * @param includeCreatedOnDate boolean parameter to determine if the business object data should include the created on date
      *
      * @return the list of business object data
      */
-    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList)
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList,
+        boolean includeCreatedOnDate)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
         Set<Long> businessObjectIdSet = new HashSet<>();
@@ -1182,6 +1187,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 }
                 businessObjectData.setAttributes(attributeList);
             }
+
+            if (includeCreatedOnDate)
+            {
+                businessObjectData.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(dataEntity.getCreatedOn()));
+            }
+
             businessObjectDataList.add(businessObjectData);
         }
 
