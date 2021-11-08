@@ -746,6 +746,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_COLUMN_NAME = null;
 
+    public static final String NO_CREATED_BY = null;
+
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
 
     public static final Timestamp NO_CREATED_ON_TIMESTAMP = null;
