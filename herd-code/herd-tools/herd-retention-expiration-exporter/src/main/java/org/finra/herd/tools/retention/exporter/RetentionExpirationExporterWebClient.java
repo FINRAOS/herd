@@ -28,6 +28,9 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This class encapsulates web client functionality required to communicate with the registration server.
@@ -46,7 +49,9 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      * @return the business object definition
      * @throws ApiException if an Api exception was encountered
      */
-    BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName) throws ApiException, URISyntaxException {
+    BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
 
         LOGGER.info("Retrieving business object definition information from the registration server...");
         BusinessObjectDefinitionApi businessObjectDefinitionApi = new BusinessObjectDefinitionApi(createApiClient(regServerAccessParamsDto));
@@ -68,7 +73,8 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      * @throws ApiException if an Api exception was encountered
      */
     BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         LOGGER.info("Sending business object data search request to the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));

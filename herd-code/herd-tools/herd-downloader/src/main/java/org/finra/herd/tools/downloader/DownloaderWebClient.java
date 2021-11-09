@@ -31,6 +31,9 @@ import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This class encapsulates web client functionality required to communicate with the herd registration service.
@@ -47,7 +50,9 @@ public class DownloaderWebClient extends DataBridgeWebClient
      *
      * @throws ApiException if an Api exception was encountered
      */
-    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest) throws ApiException, URISyntaxException {
+    public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         LOGGER.info("Retrieving business object data information from the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
@@ -72,7 +77,9 @@ public class DownloaderWebClient extends DataBridgeWebClient
      * @return the S3 key prefix
      * @throws ApiException if an Api exception was encountered
      */
-    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData) throws ApiException, URISyntaxException {
+    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         DataBridgeBaseManifestDto dataBridgeBaseManifestDto = new DataBridgeBaseManifestDto();
         dataBridgeBaseManifestDto.setNamespace(businessObjectData.getNamespace());
         dataBridgeBaseManifestDto.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
@@ -95,7 +102,9 @@ public class DownloaderWebClient extends DataBridgeWebClient
      * @return StorageUnitDownloadCredential
      * @throws ApiException if an Api exception was encountered
      */
-    public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName) throws ApiException, URISyntaxException {
+    public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
         LOGGER.info("Retrieving download credentials from registration server...");
 
@@ -104,7 +113,6 @@ public class DownloaderWebClient extends DataBridgeWebClient
                         HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
                         manifest.getPartitionValue(), HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                         storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-        // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
 }

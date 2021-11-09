@@ -31,6 +31,10 @@ import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * This class encapsulates web client functionality required to communicate with the registration server.
  */
@@ -53,13 +57,14 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @throws ApiException if an Api exception was encountered
      */
     public StorageUnitUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
-                                                                             Integer businessObjectDataVersion) throws ApiException, URISyntaxException {
+                                                                             Integer businessObjectDataVersion)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
 
         return storageUnitApi.storageUnitGetStorageUnitUploadCredential(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
                 manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionValue(),  businessObjectDataVersion,  storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
-   // TODO: ssl, host, port, certIgnore, hostnameVerifyIgnore, do we need all these? or we can remove them?
     }
 
 
@@ -71,7 +76,9 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
      * @throws ApiException if an Api exception was encountered
      */
-    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey) throws ApiException, URISyntaxException {
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         LOGGER.info("Retrieving business object data versions from the registration server...");
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectDataVersions sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectDataVersions(

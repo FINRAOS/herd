@@ -20,6 +20,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -191,7 +194,8 @@ public class UploaderWebClientTest extends AbstractUploaderTest
      * @throws ApiException if an Api exception was encountered
      */
     private void testGetBusinessObjectDataVersions(List<String> subPartitionValues, Integer businessObjectFormatVersion, Integer businessObjectDataVersion,
-        boolean useSsl) throws ApiException, URISyntaxException {
+        boolean useSsl) throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();

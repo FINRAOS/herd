@@ -19,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -98,7 +101,8 @@ public class UploaderController extends DataBridgeController
         justification = "manifestReader.readJsonManifest will always return an UploaderInputManifestDto object.")
     public void performUpload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, S3FileTransferRequestParamsDto params,
         Boolean createNewVersion, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
-            throws ApiException, IOException, InterruptedException, URISyntaxException {
+        throws ApiException, IOException, InterruptedException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         boolean cleanUpS3KeyPrefixOnFailure = false;
         BusinessObjectDataKey businessObjectDataKey = null;
 
@@ -235,7 +239,8 @@ public class UploaderController extends DataBridgeController
      */
     private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
         String storageName, Integer maxRetryAttempts, Integer retryDelaySecs)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         // Initialize a retry count to know the number of times we re-try calling the method.
         int retryCount = 0;
 
@@ -284,14 +289,15 @@ public class UploaderController extends DataBridgeController
      * @throws ApiException if an Api exception was encountered
      */
     private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         // Retrieve all already registered versions for this business object data.
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(manifest.getNamespace());
         businessObjectDataKey.setBusinessObjectDefinitionName(manifest.getBusinessObjectDefinitionName());
         businessObjectDataKey.setBusinessObjectFormatUsage(manifest.getBusinessObjectFormatUsage());
         businessObjectDataKey.setBusinessObjectFormatFileType(manifest.getBusinessObjectFormatFileType());
-        businessObjectDataKey.setBusinessObjectDataVersion(Integer.valueOf(manifest.getBusinessObjectFormatVersion()));
+        businessObjectDataKey.setBusinessObjectFormatVersion(Integer.valueOf(manifest.getBusinessObjectFormatVersion()));
         businessObjectDataKey.setPartitionValue(manifest.getPartitionValue());
         businessObjectDataKey.setSubPartitionValues(manifest.getSubPartitionValues());
 

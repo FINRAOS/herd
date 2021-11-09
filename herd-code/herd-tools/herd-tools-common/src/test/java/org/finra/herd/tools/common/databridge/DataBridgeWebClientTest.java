@@ -16,6 +16,9 @@
 package org.finra.herd.tools.common.databridge;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,6 +51,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Autowired
     private ApiClient apiClient;
 
+    @Autowired
+    private ApiClientHelper apiClientHelper;
+
     @Before
     public void before()
     {
@@ -63,6 +69,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
 
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
         dataBridgeWebClient.apiClient = apiClient;
+        dataBridgeWebClient.apiClientHelper = apiClientHelper;
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
     }
 
@@ -268,7 +275,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @throws ApiException if an Api exception was encountered
      */
     private void testAddStorageFiles(boolean useSsl)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
@@ -315,8 +323,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @throws ApiException if an Api exception was encountered
      */
-    private void testGetStorage(boolean useSsl)
-            throws ApiException, URISyntaxException {
+    private void testGetStorage(boolean useSsl) throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         String expectedStorageName = "testStorage";
@@ -336,7 +344,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @throws ApiException if an Api exception was encountered
      */
     private void testPreRegisterBusinessObjectData(HashMap<String, String> attributes, boolean useSsl)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         UploaderInputManifestDto manifest = getUploaderInputManifestDto();
@@ -357,7 +366,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @throws ApiException if an Api exception was encountered
      */
     private void testUpdateBusinessObjectDataStatus(List<String> subPartitionValues, boolean useSsl)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();

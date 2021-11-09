@@ -18,6 +18,9 @@ package org.finra.herd.tools.common.databridge;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +69,9 @@ public abstract class DataBridgeWebClient
     @Autowired
     protected ApiClient apiClient;
 
+    @Autowired
+    protected ApiClientHelper apiClientHelper;
+
     /**
      * The DTO for the parameters required to communicate with the registration server.
      */
@@ -84,7 +90,7 @@ public abstract class DataBridgeWebClient
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey,
         UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName)
-        throws ApiException, URISyntaxException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Adding storage files to the business object data ...");
         BusinessObjectDataStorageFileApi businessObjectDataStorageFileApi = new BusinessObjectDataStorageFileApi(createApiClient(regServerAccessParamsDto));
@@ -152,7 +158,7 @@ public abstract class DataBridgeWebClient
      * @return the storage information
      * @throws ApiException if an Api exception was encountered
      */
-    public Storage getStorage(String storageName) throws ApiException, URISyntaxException
+    public Storage getStorage(String storageName) throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info(String.format("Retrieving storage information for \"%s\" storage name from the registration server...", storageName));
         StorageApi storageApi = new StorageApi(createApiClient(regServerAccessParamsDto));
@@ -181,7 +187,7 @@ public abstract class DataBridgeWebClient
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectData preRegisterBusinessObjectData(UploaderInputManifestDto manifest, String storageName, Boolean createNewVersion)
-        throws ApiException, URISyntaxException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Pre-registering business object data with the registration server...");
 
@@ -239,7 +245,7 @@ public abstract class DataBridgeWebClient
      * @throws ApiException if an Api exception was encountered
      */
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
-        throws ApiException, URISyntaxException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
         request.setStatus(businessObjectDataStatus);
@@ -272,7 +278,6 @@ public abstract class DataBridgeWebClient
                     businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
                     businessObjectDataKey.getBusinessObjectDataVersion(), request);
                 break;
-
             case 4:
                 sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus4(businessObjectDataKey.getNamespace(),
                     businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
@@ -302,7 +307,7 @@ public abstract class DataBridgeWebClient
      * @throws ApiException if an Api exception was encountered
      */
     protected S3KeyPrefixInformation getS3KeyPrefix(DataBridgeBaseManifestDto manifest, Integer businessObjectDataVersion, Boolean createNewVersion)
-        throws ApiException, URISyntaxException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         LOGGER.info("Retrieving S3 key prefix from the registration server...");
 
@@ -320,23 +325,30 @@ public abstract class DataBridgeWebClient
         return sdkResponse;
     }
 
-    public ApiClient createApiClient(
-        RegServerAccessParamsDto regServerAccessParamsDto/*, Boolean trustSelfSignedCertificate, Boolean disableHostnameVerification*/)
-        throws URISyntaxException
+    public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto)
+        throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
+        // Set basePath
         String protocol = regServerAccessParamsDto.isUseSsl() ? "https" : "http";
         String basPath =
             new URIBuilder().setScheme(protocol).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
                 .build().toString();
-
         apiClient.setBasePath(basPath + HERD_APP_REST_URI_PREFIX);
+
+        // Set headers
+        apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
+        apiClient.selectHeaderContentType(new String[] {DEFAULT_CONTENT_TYPE});
+
+        // If SSL is enabled, set the client authentication header.
         if (regServerAccessParamsDto.isUseSsl())
         {
             apiClient.setUsername(regServerAccessParamsDto.getUsername());
             apiClient.setPassword(regServerAccessParamsDto.getPassword());
+
+            // Rebuild apiClient to trust self-signed cert and disable hostname verification
+            return apiClientHelper.rebuildClient(apiClient, regServerAccessParamsDto.isTrustSelfSignedCertificate(),
+                regServerAccessParamsDto.isDisableHostnameVerification());
         }
-        apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
-        apiClient.selectHeaderContentType(new String[] {DEFAULT_CONTENT_TYPE});
         return apiClient;
     }
 

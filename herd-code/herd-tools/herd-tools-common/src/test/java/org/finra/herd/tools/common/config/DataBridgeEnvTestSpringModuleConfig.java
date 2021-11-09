@@ -29,6 +29,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.MockStsOperationsImpl;
+import org.finra.herd.tools.common.databridge.ApiClientHelper;
 
 /**
  * Data Bridge environment test specific Spring module configuration.
@@ -54,9 +55,9 @@ public class DataBridgeEnvTestSpringModuleConfig
     }
 
     @Bean
-    public HttpClientOperations httpClientOperations()
+    public ApiClientHelper apiClientHelper()
     {
-        return new MockHttpClientOperationsImpl();
+        return new ApiClientHelper();
     }
 
     @Bean

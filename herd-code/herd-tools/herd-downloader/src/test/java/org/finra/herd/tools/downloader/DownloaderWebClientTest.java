@@ -30,6 +30,8 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.*;
 import org.finra.herd.tools.common.MockApiClient;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
+
+import com.sun.jersey.api.client.Client;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -128,6 +130,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             ApiException expectedException = new ApiException("Missing the required parameter 'namespace' when calling storageUnitGetStorageUnitDownloadCredential");
 
             when(mockApiClient.invokeAPI(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(expectedException);
+            when(mockApiClient.getHttpClient()).thenReturn(new Client());
 
             DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
             String storageName = "storageName";

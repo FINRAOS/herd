@@ -26,6 +26,9 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 @Component
 public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
@@ -40,7 +43,9 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @return the business object definition
      * @throws ApiException if an Api exception was encountered
      */
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey) throws ApiException, URISyntaxException {
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
                 businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),

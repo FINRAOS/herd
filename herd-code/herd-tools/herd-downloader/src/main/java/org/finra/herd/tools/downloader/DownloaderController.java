@@ -19,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,7 +95,9 @@ public class DownloaderController extends DataBridgeController
         "manifestReader.readJsonManifest will always return an DownloaderInputManifestDto object. targetLocalDirectory.list().length will not" +
             " return a NullPointerException.")
     public void performDownload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath,
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws ApiException, IOException, InterruptedException, URISyntaxException {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
+        throws ApiException, IOException, InterruptedException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    {
         boolean cleanUpTargetLocalDirectoryOnFailure = false;
         File targetLocalDirectory = null;
 
