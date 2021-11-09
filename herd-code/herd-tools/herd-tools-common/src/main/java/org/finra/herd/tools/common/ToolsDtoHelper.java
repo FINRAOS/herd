@@ -24,10 +24,12 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.sdk.model.*;
 
 import javax.xml.datatype.XMLGregorianCalendar;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ToolsDtoHelper {
+public class ToolsDtoHelper
+{
 
     public static String businessObjectDataKeyToString(BusinessObjectDataKey businessObjectDataKey)
     {
@@ -37,55 +39,70 @@ public class ToolsDtoHelper {
         }
 
         return String.format(
-                "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
-                        "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s\", " +
-                        "businessObjectDataVersion: %d", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" : StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
-                businessObjectDataKey.getBusinessObjectDataVersion());
+            "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s\", " +
+                "businessObjectDataVersion: %d", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+            CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" : StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
+            businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
-    public static org.finra.herd.model.api.xml.StorageUnit convertStorageUnit(StorageUnit storageUnit){
+    public static org.finra.herd.model.api.xml.StorageUnit convertStorageUnit(StorageUnit storageUnit)
+    {
         org.finra.herd.model.api.xml.Storage storage = convertStorage(storageUnit.getStorage());
 
         List<StorageFile> storageFileList = new ArrayList<>();
-        if(storageUnit.getStorageFiles() != null){
-            for(org.finra.herd.sdk.model.StorageFile storageFile : storageUnit.getStorageFiles()){
-                storageFileList.add(new org.finra.herd.model.api.xml.StorageFile(storageFile.getFilePath(), storageFile.getFileSizeBytes(), storageFile.getRowCount()));
+        if (storageUnit.getStorageFiles() != null)
+        {
+            for (org.finra.herd.sdk.model.StorageFile storageFile : storageUnit.getStorageFiles())
+            {
+                storageFileList.add(
+                    new org.finra.herd.model.api.xml.StorageFile(storageFile.getFilePath(), storageFile.getFileSizeBytes(), storageFile.getRowCount()));
             }
         }
         org.finra.herd.model.api.xml.StorageDirectory storageDirectory = new org.finra.herd.model.api.xml.StorageDirectory();
-        if(storageUnit.getStorageDirectory() != null){
+        if (storageUnit.getStorageDirectory() != null)
+        {
             storageDirectory.setDirectoryPath(storageUnit.getStorageDirectory().getDirectoryPath());
         }
         List<org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent> storageUnitStatusChangeEvent = new ArrayList<>();
-        if(storageUnit.getStorageUnitStatusHistory() != null){
-            for(StorageUnitStatusChangeEvent statusChangeEvent : storageUnit.getStorageUnitStatusHistory()){
+        if (storageUnit.getStorageUnitStatusHistory() != null)
+        {
+            for (StorageUnitStatusChangeEvent statusChangeEvent : storageUnit.getStorageUnitStatusHistory())
+            {
                 XMLGregorianCalendar eventTime = null;
-                if (statusChangeEvent.getEventTime() != null){
+                if (statusChangeEvent.getEventTime() != null)
+                {
                     eventTime = HerdDateUtils.getXMLGregorianCalendarValue(statusChangeEvent.getEventTime().toDate());
                 }
-                storageUnitStatusChangeEvent.add(new org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent(statusChangeEvent.getStatus(),
-                        eventTime, statusChangeEvent.getUserId()));
+                storageUnitStatusChangeEvent.add(
+                    new org.finra.herd.model.api.xml.StorageUnitStatusChangeEvent(statusChangeEvent.getStatus(), eventTime, statusChangeEvent.getUserId()));
             }
         }
         XMLGregorianCalendar restoreExpirationOn = null;
-        if (storageUnit.getRestoreExpirationOn() != null){
+        if (storageUnit.getRestoreExpirationOn() != null)
+        {
             restoreExpirationOn = HerdDateUtils.getXMLGregorianCalendarValue(storageUnit.getRestoreExpirationOn().toDate());
         }
-        return new org.finra.herd.model.api.xml.StorageUnit(storage, storageDirectory, storageFileList,  storageUnit.getStorageUnitStatus(),
-                storageUnitStatusChangeEvent,  storageUnit.getStoragePolicyTransitionFailedAttempts(), restoreExpirationOn);
+        return new org.finra.herd.model.api.xml.StorageUnit(storage, storageDirectory, storageFileList, storageUnit.getStorageUnitStatus(),
+            storageUnitStatusChangeEvent, storageUnit.getStoragePolicyTransitionFailedAttempts(), restoreExpirationOn);
     }
 
-    public static org.finra.herd.model.api.xml.Storage convertStorage(Storage storage){
+    public static org.finra.herd.model.api.xml.Storage convertStorage(Storage storage)
+    {
         org.finra.herd.model.api.xml.Storage modelStorage = new org.finra.herd.model.api.xml.Storage();
-        if(storage != null){
+        if (storage != null)
+        {
             modelStorage.setName(storage.getName());
             modelStorage.setStoragePlatformName(storage.getStoragePlatformName());
             modelStorage.setAttributes(new ArrayList<>());
-            if(storage.getAttributes() != null){
-                for(Attribute attribute: storage.getAttributes()){
-                    org.finra.herd.model.api.xml.Attribute modelAttribute = new org.finra.herd.model.api.xml.Attribute(attribute.getName(), attribute.getValue());
+            if (storage.getAttributes() != null)
+            {
+                for (Attribute attribute : storage.getAttributes())
+                {
+                    org.finra.herd.model.api.xml.Attribute modelAttribute =
+                        new org.finra.herd.model.api.xml.Attribute(attribute.getName(), attribute.getValue());
                     modelStorage.getAttributes().add(modelAttribute);
                 }
             }
@@ -93,13 +110,15 @@ public class ToolsDtoHelper {
         return modelStorage;
     }
 
-    public static org.finra.herd.model.api.xml.AwsCredential convertAwsCredential(AwsCredential sdkAwsCredential){
-        org.finra.herd.model.api.xml.AwsCredential awsCredential = new org.finra.herd.model.api.xml.AwsCredential(sdkAwsCredential.getAwsAccessKey(),
-                sdkAwsCredential.getAwsSecretKey(), sdkAwsCredential.getAwsSessionToken(), null);
-        if (sdkAwsCredential.getAwsSessionExpirationTime() != null){
+    public static org.finra.herd.model.api.xml.AwsCredential convertAwsCredential(AwsCredential sdkAwsCredential)
+    {
+        org.finra.herd.model.api.xml.AwsCredential awsCredential =
+            new org.finra.herd.model.api.xml.AwsCredential(sdkAwsCredential.getAwsAccessKey(), sdkAwsCredential.getAwsSecretKey(),
+                sdkAwsCredential.getAwsSessionToken(), null);
+        if (sdkAwsCredential.getAwsSessionExpirationTime() != null)
+        {
             awsCredential.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(sdkAwsCredential.getAwsSessionExpirationTime().toDate()));
         }
         return awsCredential;
     }
-
 }

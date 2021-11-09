@@ -685,7 +685,10 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         }
     }
 
-    protected BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage, final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue, final List<String> subPartitionValues, final Integer businessObjectDataVersion) {
+    protected BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName,
+        final String businessObjectFormatUsage, final String businessObjectFormatFileType, final Integer businessObjectFormatVersion,
+        final String partitionValue, final List<String> subPartitionValues, final Integer businessObjectDataVersion)
+    {
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
 
         businessObjectDataKey.setNamespace(namespace);

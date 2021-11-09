@@ -19,6 +19,7 @@ package org.finra.herd.tools.common;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.GenericType;
+
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -29,11 +30,13 @@ import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.invoker.Pair;
 import org.finra.herd.sdk.model.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.bind.JAXBException;
+
 import java.io.*;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
@@ -43,7 +46,8 @@ import java.util.regex.Pattern;
 /**
  * Mock implementation of HTTP client operations.
  */
-public class MockApiClient extends ApiClient {
+public class MockApiClient extends ApiClient
+{
     public static final String HOSTNAME_LATEST_BDATA_VERSION_EXISTS = "testLatestBdataVersionExists";
 
     public static final String HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE = "testLatestBdataVersionExistsInUploadingState";
@@ -65,56 +69,88 @@ public class MockApiClient extends ApiClient {
     @Autowired
     protected ConfigurationHelper configurationHelper;
 
-    public <T> T invokeAPI(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String accept, String contentType, String[] authNames, GenericType<T> returnType) throws ApiException {
+    public <T> T invokeAPI(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams,
+        Map<String, Object> formParams, String accept, String contentType, String[] authNames, GenericType<T> returnType) throws ApiException
+    {
         LOGGER.debug("path = " + path);
 
         // If requested, set response content to an invalid XML.
-        if (this.getBasePath().contains(HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT)) {
+        if (this.getBasePath().contains(HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT))
+        {
             //response.setEntityInputStream(toInputStream("invalid xml"));
             throw new ApiException(400, "invalid xml");
         }
 
         // Find out which API's are being called and build an appropriate response.
-        if (method.equals("GET")) {
-            if (path.startsWith("/businessObjectData/")) {
-                if (path.endsWith("s3KeyPrefix")) {
+        if (method.equals("GET"))
+        {
+            if (path.startsWith("/businessObjectData/"))
+            {
+                if (path.endsWith("s3KeyPrefix"))
+                {
                     return (T) buildGetS3KeyPrefix(path);
-                } else if (path.endsWith("versions")) {
+                }
+                else if (path.endsWith("versions"))
+                {
                     return (T) buildGetBusinessObjectDataVersions(path);
-                } else {
+                }
+                else
+                {
                     return (T) buildGetBusinessObjectData(path);
                 }
-            } else if (path.startsWith("/businessObjectDefinitions/")) {
+            }
+            else if (path.startsWith("/businessObjectDefinitions/"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION);
                 return (T) buildGetBusinessObjectDefinition(path);
-            } else if (path.startsWith("/storages/")) {
+            }
+            else if (path.startsWith("/storages/"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
                 return (T) buildGetStorage(path);
-            } else if (path.startsWith("/storageUnits/upload/credential")) {
+            }
+            else if (path.startsWith("/storageUnits/upload/credential"))
+            {
                 return (T) getStorageUnitUploadCredential(path, queryParams);
-            } else if (path.startsWith("/storageUnits/download/credential")) {
+            }
+            else if (path.startsWith("/storageUnits/download/credential"))
+            {
                 return (T) getStorageUnitDownloadCredential(path, queryParams);
             }
-        } else if (method.equals("POST")) {
-            if (path.startsWith("/businessObjectDataStorageFiles")) {
+        }
+        else if (method.equals("POST"))
+        {
+            if (path.startsWith("/businessObjectDataStorageFiles"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES);
                 return (T) buildPostBusinessObjectDataStorageFiles(path);
-            } else if (path.equals("/businessObjectData")) {
+            }
+            else if (path.equals("/businessObjectData"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA);
                 return (T) buildPostBusinessObjectData(body);
-            } else if (path.equals("/businessObjectData/search")) {
+            }
+            else if (path.equals("/businessObjectData/search"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION);
                 return (T) buildSearchBusinessObjectData(queryParams);
-            } else if (path.startsWith("/businessObjectData/destroy")) {
+            }
+            else if (path.startsWith("/businessObjectData/destroy"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION);
                 return (T) buildDestroyBusinessObjectData();
             }
-        } else if (method.equals("PUT")) {
-            if (path.startsWith("/businessObjectDataStatus/")) {
+        }
+        else if (method.equals("PUT"))
+        {
+            if (path.startsWith("/businessObjectDataStatus/"))
+            {
                 checkHostname(HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS);
                 return (T) buildPutBusinessObjectDataStatus(path);
             }
-        } else {
+        }
+        else
+        {
             throw new ApiException(500, "unknown method type " + method);
         }
         return null;
@@ -125,12 +161,13 @@ public class MockApiClient extends ApiClient {
      *
      * @param path the path of the incoming request.
      */
-    private BusinessObjectData buildGetBusinessObjectData(String path) {
+    private BusinessObjectData buildGetBusinessObjectData(String path)
+    {
         Pattern pattern = Pattern.compile(
-                "/businessObjectData/namespaces/(.*)/businessObjectDefinitionNames/(.*)/businessObjectFormatUsages/(.*)" +
-                        "/businessObjectFormatFileTypes/(.*).*");
+            "/businessObjectData/namespaces/(.*)/businessObjectDefinitionNames/(.*)/businessObjectFormatUsages/(.*)" + "/businessObjectFormatFileTypes/(.*).*");
         Matcher matcher = pattern.matcher(path);
-        if (matcher.find()) {
+        if (matcher.find())
+        {
             BusinessObjectData businessObjectData = new BusinessObjectData();
             businessObjectData.setNamespace(matcher.group(1));
             businessObjectData.setBusinessObjectDefinitionName(matcher.group(2));
@@ -157,15 +194,16 @@ public class MockApiClient extends ApiClient {
             storageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
 
             List<String> localFiles = Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");
-            for (String filename : localFiles) {
+            for (String filename : localFiles)
+            {
                 StorageFile storageFile = new StorageFile();
                 storageFiles.add(storageFile);
                 storageFile.setFilePath(businessObjectData.getNamespace().toLowerCase().replace('_', '-') + "/exchange-a/" +
-                        businessObjectData.getBusinessObjectFormatUsage().toLowerCase().replace('_', '-') + "/" +
-                        businessObjectData.getBusinessObjectFormatFileType().toLowerCase().replace('_', '-') + "/" +
-                        businessObjectData.getBusinessObjectDefinitionName().toLowerCase().replace('_', '-') + "/frmt-v" +
-                        businessObjectData.getBusinessObjectFormatVersion() + "/data-v" + businessObjectData.getVersion() + "/" +
-                        businessObjectData.getPartitionKey().toLowerCase().replace('_', '-') + "=" + businessObjectData.getPartitionValue() + "/" + filename);
+                    businessObjectData.getBusinessObjectFormatUsage().toLowerCase().replace('_', '-') + "/" +
+                    businessObjectData.getBusinessObjectFormatFileType().toLowerCase().replace('_', '-') + "/" +
+                    businessObjectData.getBusinessObjectDefinitionName().toLowerCase().replace('_', '-') + "/frmt-v" +
+                    businessObjectData.getBusinessObjectFormatVersion() + "/data-v" + businessObjectData.getVersion() + "/" +
+                    businessObjectData.getPartitionKey().toLowerCase().replace('_', '-') + "=" + businessObjectData.getPartitionValue() + "/" + filename);
                 storageFile.setFileSizeBytes(1024L);
                 storageFile.setRowCount(10L);
             }
@@ -184,10 +222,12 @@ public class MockApiClient extends ApiClient {
      * @param path the path of the incoming request
      * @throws JAXBException if a JAXB error occurred
      */
-    private BusinessObjectDefinition buildGetBusinessObjectDefinition(String path) {
+    private BusinessObjectDefinition buildGetBusinessObjectDefinition(String path)
+    {
         Pattern pattern = Pattern.compile("/businessObjectDefinitions/namespaces/(.*)/businessObjectDefinitionNames/(.*)");
         Matcher matcher = pattern.matcher(path);
-        if (matcher.find()) {
+        if (matcher.find())
+        {
             BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
             businessObjectDefinition.setNamespace(matcher.group(1));
             businessObjectDefinition.setBusinessObjectDefinitionName(matcher.group(2));
@@ -202,7 +242,8 @@ public class MockApiClient extends ApiClient {
      *
      * @param queryParams the query params of the incoming request
      */
-    private BusinessObjectDataSearchResult buildSearchBusinessObjectData(List<Pair> queryParams) {
+    private BusinessObjectDataSearchResult buildSearchBusinessObjectData(List<Pair> queryParams)
+    {
         BusinessObjectDataSearchResult businessObjectDataSearchResult = new BusinessObjectDataSearchResult();
 
         // Build the response based on the pageNum.
@@ -220,8 +261,8 @@ public class MockApiClient extends ApiClient {
             businessObjectDataWithSubPartitions.setBusinessObjectFormatFileType("testBusinessObjectFormatFileType");
             businessObjectDataWithSubPartitions.setBusinessObjectFormatVersion(9);
             businessObjectDataWithSubPartitions.setPartitionValue("primaryPartitionValue");
-            businessObjectDataWithSubPartitions
-                    .setSubPartitionValues(Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4"));
+            businessObjectDataWithSubPartitions.setSubPartitionValues(
+                Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4"));
             businessObjectDataWithSubPartitions.setVersion(5);
             businessObjectDataElements.add(businessObjectDataWithSubPartitions);
 
@@ -248,26 +289,30 @@ public class MockApiClient extends ApiClient {
      *
      * @param path the path of the incoming request.
      */
-    private BusinessObjectDataVersions buildGetBusinessObjectDataVersions(String path) throws ApiException {
+    private BusinessObjectDataVersions buildGetBusinessObjectDataVersions(String path) throws ApiException
+    {
         Pattern pattern = Pattern.compile("/businessObjectData(/namespaces/(?<namespace>.*?))?" +
-                "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
-                "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)" + "/versions");
+            "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
+            "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)" + "/versions");
 
         Matcher matcher = pattern.matcher(path);
         BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions();
         businessObjectDataVersions.setBusinessObjectDataVersions(new ArrayList<>());
-        if (matcher.find()) {
-            if (this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS) || this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE)) {
+        if (matcher.find())
+        {
+            if (this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS) ||
+                this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE))
+            {
                 BusinessObjectDataVersion businessObjectDataVersion = new BusinessObjectDataVersion();
                 businessObjectDataVersions.getBusinessObjectDataVersions().add(businessObjectDataVersion);
 
                 businessObjectDataVersion.setBusinessObjectDataKey(
-                        createBusinessObjectDataKey(getGroup(matcher, "namespace"), getGroup(matcher, "businessObjectDefinitionName"),
-                                getGroup(matcher, "businessObjectFormatUsage"), getGroup(matcher, "businessObjectFormatFileType"), 0, "2014-01-31", null, 0));
+                    createBusinessObjectDataKey(getGroup(matcher, "namespace"), getGroup(matcher, "businessObjectDefinitionName"),
+                        getGroup(matcher, "businessObjectFormatUsage"), getGroup(matcher, "businessObjectFormatFileType"), 0, "2014-01-31", null, 0));
 
                 businessObjectDataVersion.setStatus(
-                        this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE) ? BusinessObjectDataStatusEntity.UPLOADING :
-                                BusinessObjectDataStatusEntity.VALID);
+                    this.getBasePath().contains(HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE) ? BusinessObjectDataStatusEntity.UPLOADING :
+                        BusinessObjectDataStatusEntity.VALID);
             }
 
             return businessObjectDataVersions;
@@ -281,13 +326,15 @@ public class MockApiClient extends ApiClient {
      * @param path the path of the incoming request.
      * @throws JAXBException if a JAXB error occurred.
      */
-    private S3KeyPrefixInformation buildGetS3KeyPrefix(String path) {
+    private S3KeyPrefixInformation buildGetS3KeyPrefix(String path)
+    {
         Pattern pattern = Pattern.compile("/businessObjectData(/namespaces/(?<namespace>.*?))?" +
-                "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
-                "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)/businessObjectFormatVersions/(?<businessObjectFormatVersion>.*?)" +
-                "/s3KeyPrefix");
+            "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
+            "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)/businessObjectFormatVersions/(?<businessObjectFormatVersion>.*?)" +
+            "/s3KeyPrefix");
         Matcher matcher = pattern.matcher(path);
-        if (matcher.find()) {
+        if (matcher.find())
+        {
             S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
             String namespace = getGroup(matcher, "namespace");
             namespace = namespace == null ? "testNamespace" : namespace;
@@ -296,9 +343,9 @@ public class MockApiClient extends ApiClient {
             String businessObjectDefinitionName = getGroup(matcher, "businessObjectDefinitionName");
             String businessObjectFormatVersion = getGroup(matcher, "businessObjectFormatVersion");
             s3KeyPrefixInformation.setS3KeyPrefix(
-                    namespace.toLowerCase().replace('_', '-') + "/exchange-a/" + businessObjectFormatUsage.toLowerCase().replace('_', '-') + "/" +
-                            businessObjectFormatType.toLowerCase().replace('_', '-') + "/" + businessObjectDefinitionName.toLowerCase().replace('_', '-') + "/frmt-v" +
-                            businessObjectFormatVersion + "/data-v0/process-date=2014-01-31");
+                namespace.toLowerCase().replace('_', '-') + "/exchange-a/" + businessObjectFormatUsage.toLowerCase().replace('_', '-') + "/" +
+                    businessObjectFormatType.toLowerCase().replace('_', '-') + "/" + businessObjectDefinitionName.toLowerCase().replace('_', '-') + "/frmt-v" +
+                    businessObjectFormatVersion + "/data-v0/process-date=2014-01-31");
 
             return s3KeyPrefixInformation;
         }
@@ -310,22 +357,26 @@ public class MockApiClient extends ApiClient {
      *
      * @param path the path of the incoming request.
      */
-    private Storage buildGetStorage(String path) {
+    private Storage buildGetStorage(String path)
+    {
         Pattern pattern = Pattern.compile("/storages/(.*)");
         Matcher matcher = pattern.matcher(path);
-        if (matcher.find()) {
+        if (matcher.find())
+        {
             return getNewStorage(matcher.group(1));
         }
         return null;
     }
 
-    private <T> T convertType(Object sdkObject, Class targetClass) {
+    private <T> T convertType(Object sdkObject, Class targetClass)
+    {
         Gson gson = new Gson();
         String tmp = gson.toJson(sdkObject);
         return (T) gson.fromJson(tmp, targetClass);
     }
 
-    private BusinessObjectData buildDestroyBusinessObjectData(){
+    private BusinessObjectData buildDestroyBusinessObjectData()
+    {
         BusinessObjectData businessObjectData = new BusinessObjectData();
         List<StorageUnit> storageUnits = new ArrayList<>();
         businessObjectData.setStorageUnits(storageUnits);
@@ -337,7 +388,8 @@ public class MockApiClient extends ApiClient {
         return businessObjectData;
     }
 
-    private BusinessObjectData buildPostBusinessObjectData(Object body) {
+    private BusinessObjectData buildPostBusinessObjectData(Object body)
+    {
         BusinessObjectDataCreateRequest request = convertType(body, BusinessObjectDataCreateRequest.class);
         BusinessObjectData businessObjectData = new BusinessObjectData();
         List<StorageUnit> storageUnits = new ArrayList<>();
@@ -365,7 +417,8 @@ public class MockApiClient extends ApiClient {
      * @param path the path of the incoming request.
      * @throws JAXBException if a JAXB error occurred.
      */
-    private BusinessObjectDataStorageFilesCreateResponse buildPostBusinessObjectDataStorageFiles(String path) {
+    private BusinessObjectDataStorageFilesCreateResponse buildPostBusinessObjectDataStorageFiles(String path)
+    {
         return new BusinessObjectDataStorageFilesCreateResponse();
     }
 
@@ -375,7 +428,8 @@ public class MockApiClient extends ApiClient {
      * @param path the path of the incoming request.
      * @throws JAXBException if a JAXB error occurred.
      */
-    private BusinessObjectDataStatusUpdateResponse buildPutBusinessObjectDataStatus(String path) {
+    private BusinessObjectDataStatusUpdateResponse buildPutBusinessObjectDataStatus(String path)
+    {
         return new BusinessObjectDataStatusUpdateResponse();
     }
 
@@ -385,17 +439,21 @@ public class MockApiClient extends ApiClient {
      * @param hostnameToThrowException the hostname that will cause an exception to be thrown.
      * @throws IOException if the hostname suggests that we should thrown this exception.
      */
-    private void checkHostname(String hostnameToThrowException) {
+    private void checkHostname(String hostnameToThrowException)
+    {
         // We don't have mocking for HttpPost operations yet (e.g. business object data registration) - just exception throwing as needed.
         String basePath = this.getBasePath();
-        if (basePath != null) {
-            if (basePath.contains(hostnameToThrowException)) {
+        if (basePath != null)
+        {
+            if (basePath.contains(hostnameToThrowException))
+            {
                 throw new ClientHandlerException(hostnameToThrowException);
             }
         }
     }
 
-    private StorageUnitUploadCredential getStorageUnitUploadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException {
+    private StorageUnitUploadCredential getStorageUnitUploadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException
+    {
         StorageUnitUploadCredential storageUnitUploadCredential = new StorageUnitUploadCredential();
         AwsCredential awsCredential = new AwsCredential();
         awsCredential.setAwsAccessKey(this.getBasePath() + path + getSubPartitionValues(queryParams));
@@ -404,10 +462,14 @@ public class MockApiClient extends ApiClient {
         return storageUnitUploadCredential;
     }
 
-    private String getGroup(Matcher matcher, String groupName) {
-        try {
+    private String getGroup(Matcher matcher, String groupName)
+    {
+        try
+        {
             return matcher.group(groupName);
-        } catch (IllegalArgumentException illegalArgumentException) {
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
             return null;
         }
     }
@@ -418,7 +480,8 @@ public class MockApiClient extends ApiClient {
      * @param storageName the storage name.
      * @return the newly created storage.
      */
-    private Storage getNewStorage(String storageName) {
+    private Storage getNewStorage(String storageName)
+    {
         Storage storage = new Storage();
         storage.setName(storageName);
         storage.setStoragePlatformName(StoragePlatformEntity.S3);
@@ -428,7 +491,8 @@ public class MockApiClient extends ApiClient {
         /*
          * Set the KMS key attribute if the storage name contains ignore case the word "KMS" (ex. S3_MANAGED_KMS)
          */
-        if (storageName.toLowerCase().contains("kms")) {
+        if (storageName.toLowerCase().contains("kms"))
+        {
 
             attributes.add(createAttribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), "testKmsKeyId"));
         }
@@ -437,7 +501,8 @@ public class MockApiClient extends ApiClient {
         return storage;
     }
 
-    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException {
+    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(String path, List<Pair> queryParams) throws UnsupportedCharsetException
+    {
         StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
         AwsCredential awsCredential = new AwsCredential();
         awsCredential.setAwsAccessKey(this.getBasePath() + path + getSubPartitionValues(queryParams));
@@ -446,16 +511,21 @@ public class MockApiClient extends ApiClient {
         return storageUnitDownloadCredential;
     }
 
-    private String getSubPartitionValues(List<Pair> queryParams){
-        if (queryParams == null || queryParams.size() == 0){
+    private String getSubPartitionValues(List<Pair> queryParams)
+    {
+        if (queryParams == null || queryParams.size() == 0)
+        {
             return "";
-        } else {
-             Optional<Pair> optional = queryParams.stream().filter(pair -> pair.getName().equals("subPartitionValues")).findFirst();
+        }
+        else
+        {
+            Optional<Pair> optional = queryParams.stream().filter(pair -> pair.getName().equals("subPartitionValues")).findFirst();
             return optional.map(pair -> "?" + pair.getName() + "=" + this.escapeString(pair.getValue())).orElse("");
         }
     }
 
-    private Attribute createAttribute(String name, String value) {
+    private Attribute createAttribute(String name, String value)
+    {
         Attribute attribute = new Attribute();
         attribute.setName(name);
         attribute.setValue(value);
@@ -463,7 +533,9 @@ public class MockApiClient extends ApiClient {
     }
 
     private BusinessObjectDataKey createBusinessObjectDataKey(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-                                                              String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion) {
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, List<String> subPartitionValues,
+        Integer businessObjectDataVersion)
+    {
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(namespace);
         businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
@@ -476,6 +548,5 @@ public class MockApiClient extends ApiClient {
 
         return businessObjectDataKey;
     }
-
 }
 

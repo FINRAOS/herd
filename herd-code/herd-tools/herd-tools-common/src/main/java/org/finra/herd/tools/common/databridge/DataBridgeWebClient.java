@@ -25,6 +25,7 @@ import java.util.Map;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStatusApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStorageFileApi;
@@ -73,18 +74,18 @@ public abstract class DataBridgeWebClient
     /**
      * Calls the registration server to add storage files to the business object data.
      *
-     * @param businessObjectDataKey the business object data key
-     * @param manifest the uploader input manifest file
+     * @param businessObjectDataKey          the business object data key
+     * @param manifest                       the uploader input manifest file
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters to be used to retrieve local path and S3 key prefix values
-     * @param storageName the storage name
-     *
+     * @param storageName                    the storage name
      * @return the business object data create storage files response turned by the registration server.
      * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
-    public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest,
-                                                                        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName)
-            throws ApiException, URISyntaxException {
+    public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey,
+        UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName)
+        throws ApiException, URISyntaxException
+    {
         LOGGER.info("Adding storage files to the business object data ...");
         BusinessObjectDataStorageFileApi businessObjectDataStorageFileApi = new BusinessObjectDataStorageFileApi(createApiClient(regServerAccessParamsDto));
 
@@ -116,7 +117,8 @@ public abstract class DataBridgeWebClient
             storageFile.setRowCount(manifestFile.getRowCount());
         }
 
-        BusinessObjectDataStorageFilesCreateResponse sdkBusinessObjectDataStorageFilesCreateResponse = businessObjectDataStorageFileApi.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(request);
+        BusinessObjectDataStorageFilesCreateResponse sdkBusinessObjectDataStorageFilesCreateResponse =
+            businessObjectDataStorageFileApi.businessObjectDataStorageFileCreateBusinessObjectDataStorageFiles(request);
 
         LOGGER.info("Successfully added storage files to the registered business object data.");
 
@@ -147,11 +149,11 @@ public abstract class DataBridgeWebClient
      * Gets storage information from the registration server.
      *
      * @param storageName the storage name
-     *
      * @return the storage information
      * @throws ApiException if an Api exception was encountered
      */
-    public Storage getStorage(String storageName) throws ApiException, URISyntaxException {
+    public Storage getStorage(String storageName) throws ApiException, URISyntaxException
+    {
         LOGGER.info(String.format("Retrieving storage information for \"%s\" storage name from the registration server...", storageName));
         StorageApi storageApi = new StorageApi(createApiClient(regServerAccessParamsDto));
         Storage sdkStorage = storageApi.storageGetStorage(storageName);
@@ -171,16 +173,16 @@ public abstract class DataBridgeWebClient
     /**
      * Pre-registers business object data with the registration server.
      *
-     * @param manifest the uploader input manifest file
-     * @param storageName the storage name
+     * @param manifest         the uploader input manifest file
+     * @param storageName      the storage name
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     *
      * @return the business object data returned by the registration server.
      * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectData preRegisterBusinessObjectData(UploaderInputManifestDto manifest, String storageName, Boolean createNewVersion)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException
+    {
         LOGGER.info("Pre-registering business object data with the registration server...");
 
         BusinessObjectDataCreateRequest request = new BusinessObjectDataCreateRequest();
@@ -222,8 +224,8 @@ public abstract class DataBridgeWebClient
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectData businessObjectData = businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request);
-        LOGGER.info(String
-            .format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s", businessObjectData.getId()));
+        LOGGER.info(String.format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s",
+            businessObjectData.getId()));
 
         return businessObjectData;
     }
@@ -231,66 +233,59 @@ public abstract class DataBridgeWebClient
     /**
      * Updates the business object data status.
      *
-     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataKey    the business object data key
      * @param businessObjectDataStatus the status of the business object data
-     *
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse}
      * @throws ApiException if an Api exception was encountered
      */
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
-            throws ApiException, URISyntaxException {
+        throws ApiException, URISyntaxException
+    {
         BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
         request.setStatus(businessObjectDataStatus);
 
         BusinessObjectDataStatusApi businessObjectDataStatusApi = new BusinessObjectDataStatusApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectDataStatusUpdateResponse sdkResponse;
         int subPartitions = Math.min(org.apache.commons.collections4.CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()),
-                BusinessObjectDataEntity.MAX_SUBPARTITIONS);
-        switch (subPartitions) {
+            BusinessObjectDataEntity.MAX_SUBPARTITIONS);
+        switch (subPartitions)
+        {
             case 1:
-                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus1(
-                        businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(),
-                        businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(0),
-                        businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
+                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus1(businessObjectDataKey.getNamespace(),
+                    businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
+                    businessObjectDataKey.getBusinessObjectDataVersion(), request);
                 break;
             case 2:
-                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus2(
-                        businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(),
-                        businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1),
-                        businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
+                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus2(businessObjectDataKey.getNamespace(),
+                    businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
+                    businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getBusinessObjectDataVersion(), request);
                 break;
             case 3:
-                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus3(
-                        businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(),
-                        businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
-                        businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
+                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus3(businessObjectDataKey.getNamespace(),
+                    businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
+                    businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
+                    businessObjectDataKey.getBusinessObjectDataVersion(), request);
                 break;
 
             case 4:
-                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus4(
-                        businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(),
-                        businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getSubPartitionValues().get(0), businessObjectDataKey.getSubPartitionValues().get(1),businessObjectDataKey.getSubPartitionValues().get(2),businessObjectDataKey.getSubPartitionValues().get(3),
-                        businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
+                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus4(businessObjectDataKey.getNamespace(),
+                    businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues().get(0),
+                    businessObjectDataKey.getSubPartitionValues().get(1), businessObjectDataKey.getSubPartitionValues().get(2),
+                    businessObjectDataKey.getSubPartitionValues().get(3), businessObjectDataKey.getBusinessObjectDataVersion(), request);
                 break;
             default:
-                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus(
-                        businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(),
-                        businessObjectDataKey.getPartitionValue(),
-                        businessObjectDataKey.getBusinessObjectDataVersion(), request) ;
+                sdkResponse = businessObjectDataStatusApi.businessObjectDataStatusUpdateBusinessObjectDataStatus(businessObjectDataKey.getNamespace(),
+                    businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+                    businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+                    businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getBusinessObjectDataVersion(), request);
         }
         LOGGER.info("Successfully updated status of the business object data.");
         return sdkResponse;
@@ -299,23 +294,25 @@ public abstract class DataBridgeWebClient
     /**
      * Retrieves S3 key prefix from the registration server.
      *
-     * @param manifest the manifest file information
+     * @param manifest                  the manifest file information
      * @param businessObjectDataVersion the business object data version (optional)
-     * @param createNewVersion if not set, only initial version of the business object data is allowed to be created.  This parameter is ignored, when the
-     * business object data version is specified.
-     *
+     * @param createNewVersion          if not set, only initial version of the business object data is allowed to be created.  This parameter is ignored, when
+     *                                  the business object data version is specified.
      * @return the S3 key prefix
      * @throws ApiException if an Api exception was encountered
      */
-    protected S3KeyPrefixInformation getS3KeyPrefix(DataBridgeBaseManifestDto manifest, Integer businessObjectDataVersion, Boolean createNewVersion) throws ApiException, URISyntaxException {
+    protected S3KeyPrefixInformation getS3KeyPrefix(DataBridgeBaseManifestDto manifest, Integer businessObjectDataVersion, Boolean createNewVersion)
+        throws ApiException, URISyntaxException
+    {
         LOGGER.info("Retrieving S3 key prefix from the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
 
-        S3KeyPrefixInformation sdkResponse = businessObjectDataApi.businessObjectDataGetS3KeyPrefix(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
-                manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
+        S3KeyPrefixInformation sdkResponse =
+            businessObjectDataApi.businessObjectDataGetS3KeyPrefix(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
+                manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()),
                 manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
-        businessObjectDataVersion, manifest.getStorageName(), createNewVersion);
+                businessObjectDataVersion, manifest.getStorageName(), createNewVersion);
 
         LOGGER.info("Successfully retrieved S3 key prefix from the registration server.");
         LOGGER.info("    S3 key prefix: " + sdkResponse.getS3KeyPrefix());
@@ -323,18 +320,23 @@ public abstract class DataBridgeWebClient
         return sdkResponse;
     }
 
-    public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto/*, Boolean trustSelfSignedCertificate, Boolean disableHostnameVerification*/) throws URISyntaxException {
+    public ApiClient createApiClient(
+        RegServerAccessParamsDto regServerAccessParamsDto/*, Boolean trustSelfSignedCertificate, Boolean disableHostnameVerification*/)
+        throws URISyntaxException
+    {
         String protocol = regServerAccessParamsDto.isUseSsl() ? "https" : "http";
-        String basPath = new URIBuilder().setScheme(protocol).setHost(regServerAccessParamsDto.getRegServerHost())
-                .setPort(regServerAccessParamsDto.getRegServerPort()).build().toString();
+        String basPath =
+            new URIBuilder().setScheme(protocol).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .build().toString();
 
         apiClient.setBasePath(basPath + HERD_APP_REST_URI_PREFIX);
-        if (regServerAccessParamsDto.isUseSsl()){
+        if (regServerAccessParamsDto.isUseSsl())
+        {
             apiClient.setUsername(regServerAccessParamsDto.getUsername());
             apiClient.setPassword(regServerAccessParamsDto.getPassword());
         }
         apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
-        apiClient.selectHeaderContentType(new String[]{DEFAULT_CONTENT_TYPE});
+        apiClient.selectHeaderContentType(new String[] {DEFAULT_CONTENT_TYPE});
         return apiClient;
     }
 

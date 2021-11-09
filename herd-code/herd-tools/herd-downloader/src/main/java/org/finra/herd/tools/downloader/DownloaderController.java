@@ -294,5 +294,4 @@ public class DownloaderController extends DataBridgeController
 
         return resultStorageUnit;
     }
-
 }

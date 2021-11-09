@@ -206,7 +206,18 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
     }
 
     @Test
-    public void testBuildBusinessObjectDataKey(){
-
+    public void testBuildBusinessObjectDataKey()
+    {
+        BusinessObjectDataKey businessObjectDataKey =
+            retentionExpirationDestroyerController.buildBusinessObjectDataKey("namespace", "bdefName", "formatUsage", "fileType", 0, "partitionValue",
+                Arrays.asList("a", "b"), 1);
+        assertEquals("namespace", businessObjectDataKey.getNamespace());
+        assertEquals("bdefName", businessObjectDataKey.getBusinessObjectDefinitionName());
+        assertEquals("formatUsage", businessObjectDataKey.getBusinessObjectFormatUsage());
+        assertEquals("fileType", businessObjectDataKey.getBusinessObjectFormatFileType());
+        assertEquals(0, businessObjectDataKey.getBusinessObjectFormatVersion().intValue());
+        assertEquals("partitionValue", businessObjectDataKey.getPartitionValue());
+        assertEquals(Arrays.asList("a", "b"), businessObjectDataKey.getSubPartitionValues());
+        assertEquals(1, businessObjectDataKey.getBusinessObjectDataVersion().intValue());
     }
 }

@@ -34,7 +34,12 @@ import java.util.*;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
-import org.finra.herd.model.dto.*;
+
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
+import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.sdk.model.*;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
@@ -650,8 +655,37 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     }
 
     @Test
-    public void testGetStorageUnitByStorageName(){
+    public void testGetStorageUnitByStorageName()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setStorageUnits(Arrays.asList(createStorageUnit("storageName1"), createStorageUnit("storageName2")));
+        assertEquals("storageName1", downloaderController.getStorageUnitByStorageName(businessObjectData, "storageName1").getStorage().getName());
+        assertEquals("storageName1", downloaderController.getStorageUnitByStorageName(businessObjectData, "StorageNAME1".toUpperCase()).getStorage().getName());
+        assertEquals("storageName1", downloaderController.getStorageUnitByStorageName(businessObjectData, "storageName1".toLowerCase()).getStorage().getName());
+    }
 
+    @Test
+    public void testGetStorageUnitByStorageNameNotExist()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setStorageUnits(Arrays.asList(createStorageUnit("storageName1"), createStorageUnit("storageName2")));
+        try
+        {
+            downloaderController.getStorageUnitByStorageName(businessObjectData, "storageName3");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Business object data has no storage unit with storage name \"%s\".", "storageName3"), e.getMessage());
+        }
+    }
+
+    private StorageUnit createStorageUnit(String storageName)
+    {
+        StorageUnit storageUnit = new StorageUnit();
+        Storage storage = new Storage();
+        storage.setName(storageName);
+        storageUnit.setStorage(storage);
+        return storageUnit;
     }
 
 

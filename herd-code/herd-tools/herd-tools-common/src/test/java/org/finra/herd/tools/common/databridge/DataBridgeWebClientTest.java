@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
@@ -31,8 +30,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
-import org.finra.herd.dao.helper.HttpClientHelper;
-import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
@@ -49,16 +46,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private HttpClientHelper httpClientHelper;
-
-    @Autowired
-    private HttpClientOperations httpClientOperations;
-
-    @Autowired
     private ApiClient apiClient;
-
-    @Autowired
-    private XmlHelper xmlHelper;
 
     @Before
     public void before()
@@ -217,8 +205,26 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     }
 
     @Test
-    public void testGetBusinessObjectDataKey(){
-
+    public void testGetBusinessObjectDataKey()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setNamespace("test1");
+        businessObjectData.setBusinessObjectDefinitionName("test2");
+        businessObjectData.setBusinessObjectFormatUsage("test3");
+        businessObjectData.setBusinessObjectFormatFileType("test4");
+        businessObjectData.setBusinessObjectFormatVersion(5);
+        businessObjectData.setPartitionValue("test6");
+        businessObjectData.setSubPartitionValues(Arrays.asList("a", "b"));
+        businessObjectData.setVersion(0);
+        BusinessObjectDataKey businessObjectDataKey = dataBridgeWebClient.getBusinessObjectDataKey(businessObjectData);
+        assertEquals(businessObjectData.getNamespace(), businessObjectDataKey.getNamespace());
+        assertEquals(businessObjectData.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectDefinitionName());
+        assertEquals(businessObjectData.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatUsage());
+        assertEquals(businessObjectData.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatFileType());
+        assertEquals(businessObjectData.getBusinessObjectFormatVersion(), businessObjectDataKey.getBusinessObjectFormatVersion());
+        assertEquals(businessObjectData.getPartitionValue(), businessObjectDataKey.getPartitionValue());
+        assertEquals(businessObjectData.getSubPartitionValues(), businessObjectDataKey.getSubPartitionValues());
+        assertEquals(businessObjectData.getVersion(), businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
     /**
