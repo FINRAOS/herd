@@ -51,6 +51,12 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     private String userId;
 
     /**
+     * The namespace code column.
+     */
+    @Column(name = "name_space_cd", insertable = false, updatable = false)
+    private String namespaceCode;
+
+    /**
      * The namespace column.
      */
     @ManyToOne
@@ -117,6 +123,11 @@ public class UserNamespaceAuthorizationEntity extends AuditableEntity
     public void setUserId(String userId)
     {
         this.userId = userId;
+    }
+
+    public String getNamespaceCode()
+    {
+        return namespaceCode;
     }
 
     public NamespaceEntity getNamespace()

@@ -52,6 +52,8 @@ class Application:
             self.controller.start_time = time.time()
             self.controller.setup_run(config)
             method = self.controller.get_action()
+            LOGGER.info('Getting OAuth2 Token')
+            self.controller.setup_access_token()
             LOGGER.info('Connection Check')
             self.controller.get_current_user()
             LOGGER.info('Success')
