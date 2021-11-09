@@ -29,6 +29,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStatusApi;
 import org.finra.herd.sdk.api.BusinessObjectDataStorageFileApi;
@@ -72,6 +73,9 @@ public abstract class DataBridgeWebClient
     @Autowired
     protected ApiClientHelper apiClientHelper;
 
+    @Autowired
+    protected JsonHelper jsonHelper;
+
     /**
      * The DTO for the parameters required to communicate with the registration server.
      */
@@ -86,6 +90,10 @@ public abstract class DataBridgeWebClient
      * @param storageName                    the storage name
      * @return the business object data create storage files response turned by the registration server.
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey,
@@ -157,6 +165,10 @@ public abstract class DataBridgeWebClient
      * @param storageName the storage name
      * @return the storage information
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public Storage getStorage(String storageName) throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
@@ -184,6 +196,10 @@ public abstract class DataBridgeWebClient
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
      * @return the business object data returned by the registration server.
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
     public BusinessObjectData preRegisterBusinessObjectData(UploaderInputManifestDto manifest, String storageName, Boolean createNewVersion)
@@ -227,6 +243,7 @@ public abstract class DataBridgeWebClient
         // Add business object data parents, if any.
         List<BusinessObjectDataKey> businessObjectDataParents = manifest.getBusinessObjectDataParents();
         request.setBusinessObjectDataParents(businessObjectDataParents);
+        LOGGER.info(String.format("    HTTP POST  Content:%n%s", jsonHelper.objectToJson(request)));
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectData businessObjectData = businessObjectDataApi.businessObjectDataCreateBusinessObjectData(request);
@@ -243,6 +260,10 @@ public abstract class DataBridgeWebClient
      * @param businessObjectDataStatus the status of the business object data
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse}
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -305,6 +326,10 @@ public abstract class DataBridgeWebClient
      *                                  the business object data version is specified.
      * @return the S3 key prefix
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     protected S3KeyPrefixInformation getS3KeyPrefix(DataBridgeBaseManifestDto manifest, Integer businessObjectDataVersion, Boolean createNewVersion)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -355,7 +380,6 @@ public abstract class DataBridgeWebClient
     public BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectData businessObjectData)
     {
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
-
         businessObjectDataKey.setNamespace(businessObjectData.getNamespace());
         businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectData.getBusinessObjectDefinitionName());
         businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectData.getBusinessObjectFormatUsage());
@@ -364,7 +388,6 @@ public abstract class DataBridgeWebClient
         businessObjectDataKey.setPartitionValue(businessObjectData.getPartitionValue());
         businessObjectDataKey.setSubPartitionValues(businessObjectData.getSubPartitionValues());
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectData.getVersion());
-
         return businessObjectDataKey;
     }
 }

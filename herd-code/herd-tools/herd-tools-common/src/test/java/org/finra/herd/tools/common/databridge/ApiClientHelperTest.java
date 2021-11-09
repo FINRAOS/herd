@@ -25,8 +25,6 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 
 import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.sdk.invoker.ApiClient;

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.tools.common.ToolsDtoHelper;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 import java.net.URISyntaxException;
@@ -42,18 +43,24 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      *
      * @return the business object definition
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-                businessObjectDataKey.getBusinessObjectDataVersion(),
-                herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\")) ;
 
-       LOGGER.info("Successfully destroyed business object data from the registration server.");
+        LOGGER.info(String.format("Destroy business object data for: %s", ToolsDtoHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+        BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataDestroyBusinessObjectData(businessObjectDataKey.getNamespace(),
+            businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
+            businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
+            businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getBusinessObjectDataVersion(),
+            herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
+
+        LOGGER.info("Successfully destroyed business object data from the registration server.");
         return sdkResponse;
     }
 }

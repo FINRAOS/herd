@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
@@ -54,6 +55,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Autowired
     private ApiClientHelper apiClientHelper;
 
+    @Autowired
+    private JsonHelper jsonHelper;
+
     @Before
     public void before()
     {
@@ -70,6 +74,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
         dataBridgeWebClient.apiClient = apiClient;
         dataBridgeWebClient.apiClientHelper = apiClientHelper;
+        dataBridgeWebClient.jsonHelper = jsonHelper;
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
     }
 

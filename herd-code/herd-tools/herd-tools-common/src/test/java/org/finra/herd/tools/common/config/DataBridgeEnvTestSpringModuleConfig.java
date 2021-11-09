@@ -15,18 +15,17 @@
 */
 package org.finra.herd.tools.common.config;
 
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.tools.common.MockApiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.Log4jOverridableConfigurer;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.helper.HerdCharacterEscapeHandler;
 import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.MockStsOperationsImpl;
 import org.finra.herd.tools.common.databridge.ApiClientHelper;
@@ -71,6 +70,12 @@ public class DataBridgeEnvTestSpringModuleConfig
     public XmlHelper xmlHelper()
     {
         return new XmlHelper();
+    }
+
+    @Bean
+    public JsonHelper jsonHelper()
+    {
+        return new JsonHelper();
     }
 
     // This is needed in XmlHelper.

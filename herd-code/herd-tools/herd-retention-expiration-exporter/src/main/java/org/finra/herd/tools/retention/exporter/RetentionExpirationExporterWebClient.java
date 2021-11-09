@@ -48,6 +48,10 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      *
      * @return the business object definition
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     BusinessObjectDefinition getBusinessObjectDefinition(String namespace, String businessObjectDefinitionName)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -56,11 +60,12 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         LOGGER.info("Retrieving business object definition information from the registration server...");
         BusinessObjectDefinitionApi businessObjectDefinitionApi = new BusinessObjectDefinitionApi(createApiClient(regServerAccessParamsDto));
 
-        BusinessObjectDefinition sdkResponse = businessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false);
+        BusinessObjectDefinition sdkResponse =
+            businessObjectDefinitionApi.businessObjectDefinitionGetBusinessObjectDefinition(namespace, businessObjectDefinitionName, false);
 
         LOGGER.info("Successfully retrieved business object definition from the registration server.");
 
-       return sdkResponse;
+        return sdkResponse;
     }
 
     /**
@@ -71,6 +76,10 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      *
      * @return the business object definition
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -78,7 +87,8 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
         LOGGER.info("Sending business object data search request to the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectDataSearchResult sdkResponse = businessObjectDataApi.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, null);
+        BusinessObjectDataSearchResult sdkResponse =
+            businessObjectDataApi.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, null);
 
         LOGGER.info("Successfully received search business object data response from the registration server.");
         return sdkResponse;

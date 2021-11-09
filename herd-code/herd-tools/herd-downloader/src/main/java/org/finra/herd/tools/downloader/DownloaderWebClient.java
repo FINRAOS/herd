@@ -49,6 +49,10 @@ public class DownloaderWebClient extends DataBridgeWebClient
      * @param manifest the downloader input manifest file information
      *
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public BusinessObjectData getBusinessObjectData(DownloaderInputManifestDto manifest)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -76,6 +80,10 @@ public class DownloaderWebClient extends DataBridgeWebClient
      *
      * @return the S3 key prefix
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectData businessObjectData)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
@@ -101,6 +109,10 @@ public class DownloaderWebClient extends DataBridgeWebClient
      *
      * @return StorageUnitDownloadCredential
      * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      */
     public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
