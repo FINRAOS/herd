@@ -65,8 +65,6 @@ public class DownloaderWebClient extends DataBridgeWebClient
                 manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
                 HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
                 HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
-
-                //todo: Double check below default value, should be null or default value??
                 "VALID", false, false, false);
 
         LOGGER.info("Successfully retrieved business object data from the registration server.");

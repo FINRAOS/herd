@@ -41,6 +41,7 @@ import org.finra.herd.sdk.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
@@ -72,6 +73,9 @@ public abstract class DataBridgeWebClient
 
     @Autowired
     protected ApiClientHelper apiClientHelper;
+
+    @Autowired
+    protected OAuthTokenProvider oauthTokenProvider;
 
     @Autowired
     protected JsonHelper jsonHelper;
@@ -351,7 +355,7 @@ public abstract class DataBridgeWebClient
     }
 
     public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto)
-        throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ApiException
     {
         // Set basePath
         String protocol = regServerAccessParamsDto.isUseSsl() ? "https" : "http";
@@ -367,8 +371,16 @@ public abstract class DataBridgeWebClient
         // If SSL is enabled, set the client authentication header.
         if (regServerAccessParamsDto.isUseSsl())
         {
-            apiClient.setUsername(regServerAccessParamsDto.getUsername());
-            apiClient.setPassword(regServerAccessParamsDto.getPassword());
+            if (!StringUtils.isEmpty(regServerAccessParamsDto.getAccessTokenUrl()))
+            {
+                apiClient.setAccessToken(oauthTokenProvider.getAccessToken(regServerAccessParamsDto.getUsername(), regServerAccessParamsDto.getPassword(),
+                    regServerAccessParamsDto.getAccessTokenUrl()));
+            }
+            else
+            {
+                apiClient.setUsername(regServerAccessParamsDto.getUsername());
+                apiClient.setPassword(regServerAccessParamsDto.getPassword());
+            }
 
             // Rebuild apiClient to trust self-signed cert and disable hostname verification
             return apiClientHelper.rebuildClient(apiClient, regServerAccessParamsDto.isTrustSelfSignedCertificate(),

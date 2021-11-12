@@ -99,6 +99,18 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
     }
 
     @Test
+    public void testGoSuccessOauth() throws Exception
+    {
+        String[] arguments =
+            {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-T", WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL, "--trustSelfSignedCertificate", "true",
+                "--disableHostnameVerification", "true"};
+
+        // We are expecting this to fail with an FileNotFoundException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+    }
+
+    @Test
     public void testParseCommandLineArgumentsHelpOpt()
     {
         String output = runTestGetSystemOut(() -> {

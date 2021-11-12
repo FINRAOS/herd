@@ -159,7 +159,7 @@ public class UploaderApp extends DataBridgeApp
         String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password).withAccessTokenUrl(argParser.getStringValue(accessTokenUrlOpt))
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performUpload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params, argParser.getBooleanValue(createNewVersionOpt),
             argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);

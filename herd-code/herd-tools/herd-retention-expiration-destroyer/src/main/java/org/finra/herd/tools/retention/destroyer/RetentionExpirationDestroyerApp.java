@@ -54,6 +54,8 @@ public class RetentionExpirationDestroyerApp
 
     private Option passwordOpt;
 
+    protected Option accessTokenUrlOpt;
+
     private Option enableEnvVariablesOpt;
 
     private Option regServerHostOpt;
@@ -137,7 +139,7 @@ public class RetentionExpirationDestroyerApp
         String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password).withAccessTokenUrl(argParser.getStringValue(accessTokenUrlOpt))
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
 
         // Call the controller with the user specified parameters to perform the upload.
@@ -173,6 +175,7 @@ public class RetentionExpirationDestroyerApp
             enableEnvVariablesOpt = argParser
                 .addArgument("E", "enableEnvVariables", true, "The enableEnvVariables used for HTTPS client authentication via environment provided var.",
                     false);
+            accessTokenUrlOpt = argParser.addArgument("T", "accessTokenUrl", true, "The access token url used for oauth token retrieval.", false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
             disableHostnameVerificationOpt =

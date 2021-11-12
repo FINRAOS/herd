@@ -28,6 +28,8 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.invoker.auth.HttpBasicAuth;
+import org.finra.herd.sdk.invoker.auth.OAuth;
 import org.finra.herd.sdk.model.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +55,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     private ApiClient apiClient;
 
     @Autowired
+    private OAuthTokenProvider oAuthTokenProvider;
+
+    @Autowired
     private ApiClientHelper apiClientHelper;
 
     @Autowired
@@ -70,9 +75,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         regServerAccessParamsDto.setUseSsl(false);
         regServerAccessParamsDto.setRegServerPort(8080);
         dataBridgeWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
-
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
         dataBridgeWebClient.apiClient = apiClient;
+        dataBridgeWebClient.oauthTokenProvider = oAuthTokenProvider;
         dataBridgeWebClient.apiClientHelper = apiClientHelper;
         dataBridgeWebClient.jsonHelper = jsonHelper;
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
@@ -237,6 +242,37 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         assertEquals(businessObjectData.getPartitionValue(), businessObjectDataKey.getPartitionValue());
         assertEquals(businessObjectData.getSubPartitionValues(), businessObjectDataKey.getSubPartitionValues());
         assertEquals(businessObjectData.getVersion(), businessObjectDataKey.getBusinessObjectDataVersion());
+    }
+
+    @Test
+    public void testCreateApiClient() throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ApiException
+    {
+        RegServerAccessParamsDto regServerAccessParamsDto = new RegServerAccessParamsDto();
+        regServerAccessParamsDto.setUseSsl(false);
+        regServerAccessParamsDto.setRegServerHost("localhost");
+        regServerAccessParamsDto.setRegServerPort(8080);
+        regServerAccessParamsDto.setUsername("username");
+        regServerAccessParamsDto.setPassword("password");
+        regServerAccessParamsDto.setUseSsl(true);
+
+        // Basic Auth
+        ApiClient oauthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
+        OAuth oauth = (OAuth) oauthApiClient.getAuthentication("oauth2Authentication");
+        HttpBasicAuth basicAuth = (HttpBasicAuth) oauthApiClient.getAuthentication("basicAuthentication");
+        assertNull(oauth.getAccessToken());
+        assertEquals(regServerAccessParamsDto.getUsername(), basicAuth.getUsername());
+        assertEquals(regServerAccessParamsDto.getPassword(), basicAuth.getPassword());
+        apiClient.setUsername(null);
+        apiClient.setPassword(null);
+
+        // OAuth
+        regServerAccessParamsDto.setAccessTokenUrl("dummyUrl");
+        ApiClient basicAuthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
+        oauth = (OAuth) basicAuthApiClient.getAuthentication("oauth2Authentication");
+        basicAuth = (HttpBasicAuth) basicAuthApiClient.getAuthentication("basicAuthentication");
+        assertNotNull(oauth.getAccessToken());
+        assertNull(basicAuth.getUsername());
+        assertNull(basicAuth.getPassword());
     }
 
     /**

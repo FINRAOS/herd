@@ -136,6 +136,23 @@ public class UploaderAppTest extends AbstractUploaderTest
     }
 
     @Test
+    public void testGoSuccessOAuth() throws Exception
+    {
+        // Create local test data files.
+        createTestDataFiles(LOCAL_TEMP_PATH_INPUT, testManifestFiles);
+
+        // Create the uploader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestUploaderInputManifestDto());
+
+        String[] arguments =
+            {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_INPUT.toString(), "-m", manifestFile.getPath(),
+                "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-n", HTTP_PROXY_HOST, "-o", HTTP_PROXY_PORT.toString(), "-s", "true",
+                "-u", WEB_SERVICE_HTTPS_USERNAME, "-w", WEB_SERVICE_HTTPS_PASSWORD, "-T", WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL, "-C", "true", "-d", "true"};
+
+        runDataBridgeAndCheckReturnValue(uploaderApp, arguments, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+    }
+
+    @Test
     public void testParseCommandLineArgumentsInvalidMaxRetryAttempts()
     {
         String[] arguments =

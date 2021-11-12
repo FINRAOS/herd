@@ -41,6 +41,7 @@ import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 import org.finra.herd.service.impl.S3ServiceImpl;
 import org.finra.herd.tools.common.databridge.ApiClientHelper;
+import org.finra.herd.tools.common.databridge.OAuthTokenProvider;
 
 /**
  * Data Bridge Spring module configuration. We are only defining specific beans we require to run the uploader and downloader applications.
@@ -152,5 +153,11 @@ public class DataBridgeSpringModuleConfig
     public StsDao stsDao()
     {
         return new StsDaoImpl();
+    }
+
+    @Bean
+    public OAuthTokenProvider oauthTokenProvider()
+    {
+        return new OAuthTokenProvider();
     }
 }

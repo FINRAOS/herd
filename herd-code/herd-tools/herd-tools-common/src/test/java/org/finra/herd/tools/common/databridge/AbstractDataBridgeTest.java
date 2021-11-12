@@ -78,6 +78,8 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
 
     protected static final String WEB_SERVICE_HTTPS_PASSWORD = "testHttpsPassword";
 
+    protected static final String WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL = "http://localhost";
+
     public static final String HTTP_PROXY_HOST = "testProxyHostname";
 
     public static final Integer HTTP_PROXY_PORT = 80;

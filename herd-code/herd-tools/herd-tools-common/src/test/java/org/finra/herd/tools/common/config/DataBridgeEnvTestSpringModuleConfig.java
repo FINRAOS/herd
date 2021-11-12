@@ -17,6 +17,7 @@ package org.finra.herd.tools.common.config;
 
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.sdk.invoker.ApiClient;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.tools.common.MockApiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.MockStsOperationsImpl;
 import org.finra.herd.tools.common.databridge.ApiClientHelper;
+import org.finra.herd.tools.common.databridge.OAuthTokenProvider;
 
 /**
  * Data Bridge environment test specific Spring module configuration.
@@ -92,5 +94,17 @@ public class DataBridgeEnvTestSpringModuleConfig
         log4jConfigurer.setDefaultResourceLocation(TEST_LOG4J_CONFIG_RESOURCE_LOCATION);
         log4jConfigurer.setOverrideResourceLocation("non_existent_override_location");
         return log4jConfigurer;
+    }
+
+    @Bean
+    public OAuthTokenProvider oauthTokenProvider()
+    {
+        return new OAuthTokenProvider(){
+            @Override
+            public String getAccessToken(String username, String password, String accessTokenUrl) throws ApiException
+            {
+                return "dummyAccessToken";
+            }
+        };
     }
 }
