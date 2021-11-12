@@ -67,7 +67,8 @@ public class OAuthTokenProvider
         accessToken.setAccessToken(response.jsonPath().getString("access_token"));
         accessToken.setScope(response.jsonPath().getString("scope"));
         accessToken.setTokenType(response.jsonPath().getString("token_type"));
-        accessToken.setExpiresIn(DateTime.now().plusSeconds(Integer.parseInt(response.jsonPath().getString("expires_in"))));
+        // Set expire time to actual expire time minus 1 minute
+        accessToken.setExpiresIn(DateTime.now().plusSeconds(Integer.parseInt(response.jsonPath().getString("expires_in")) - 60));
         accessTokenCache.put(username, accessToken);
     }
 }
