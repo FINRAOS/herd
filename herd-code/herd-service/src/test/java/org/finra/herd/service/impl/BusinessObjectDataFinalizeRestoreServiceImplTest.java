@@ -88,7 +88,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
                 NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
-                NO_BUSINESS_OBJECT_DATA);
+                NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE);
 
         // Mock the external calls.
         when(businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(storageUnitKey)).thenReturn(businessObjectDataRestoreDto);

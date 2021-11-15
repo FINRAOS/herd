@@ -20,6 +20,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyListOf;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -43,6 +47,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -82,6 +87,9 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferProgress;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.CreateJobResult;
 import com.google.common.base.Objects;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -90,12 +98,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.internal.matchers.Any;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -145,6 +160,7 @@ public class S3DaoTest extends AbstractDaoTest
     {
         // Create a local temp directory.
         localTempPath = Files.createTempDirectory(null);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
@@ -3225,5 +3241,117 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Validate the upload.
         s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
+    }
+
+    @Captor
+    ArgumentCaptor<PutObjectRequest> uploadArgumentCaptor;
+
+    @Captor
+    ArgumentCaptor<CreateJobRequest> createJobRequestArgumentCaptor;
+
+    @Test
+    public void testCreateBatchRestoreJob()
+    {
+        // Initialize test values
+        final String bucketName = storageDaoTestHelper.getS3ManagedBucketName();
+        final String expectedJobId = UUID.randomUUID().toString();
+
+        final S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(bucketName);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+
+        // Create mocks
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+
+        // Configure mocks
+        when(mockS3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(TransferState.Completed);
+            return mockedUpload;
+        });
+
+        when(mockCreateJobResult.getJobId()).thenReturn(expectedJobId);
+        when(mockS3Operations.createBatchJob(any(CreateJobRequest.class), any(AWSS3Control.class))).thenReturn(mockCreateJobResult);
+
+        // Replace s3Dao.s3Operations with mock
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            // Execute target method
+            String jobId = s3Dao.createBatchRestoreJob(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            assertEquals(expectedJobId, jobId);
+
+            // Verify interactions
+            verify(mockS3Operations).upload(uploadArgumentCaptor.capture(), any());
+
+            PutObjectRequest putRequest = uploadArgumentCaptor.getValue();
+            assertNotNull(putRequest);
+            assertEquals(bucketName,  putRequest.getBucketName());
+            assertEquals(bucketName + ".csv", putRequest.getKey());
+
+            verify(mockS3Operations).createBatchJob(createJobRequestArgumentCaptor.capture(), any(AWSS3Control.class));
+
+            CreateJobRequest createJobRequest = createJobRequestArgumentCaptor.getValue();
+            assertNotNull(createJobRequest);
+            assertNotNull(createJobRequest.getOperation().getS3InitiateRestoreObject());
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testCreateBatchRestoreJobUploadFailed()
+    {
+        // Initialize test values
+        final String bucketName = storageDaoTestHelper.getS3ManagedBucketName();
+        final String expectedJobId = UUID.randomUUID().toString();
+
+        final S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(bucketName);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+
+        // Create mocks
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+
+        // Configure mocks
+        when(mockS3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(TransferState.Failed);
+            return mockedUpload;
+        });
+
+        when(mockCreateJobResult.getJobId()).thenReturn(expectedJobId);
+        when(mockS3Operations.createBatchJob(any(CreateJobRequest.class), any(AWSS3Control.class))).thenReturn(mockCreateJobResult);
+
+        // Replace s3Dao.s3Operations with mock
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            // Execute target method
+            s3Dao.createBatchRestoreJob(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail("Should throw an IllegalStateException when upload failed.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith(String.format("Failed to initiate a restoreJobId=")));
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
     }
 }

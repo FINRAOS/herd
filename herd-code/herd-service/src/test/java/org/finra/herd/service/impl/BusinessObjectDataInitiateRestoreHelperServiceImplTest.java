@@ -137,7 +137,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -183,12 +183,12 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3Files, STORAGE_NAME, businessObjectDataKey);
         verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
         verify(storageFileHelper).getFiles(storageFilesCreatedFromActualS3Files);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135, ARCHIVE_RETRIEVAL_OPTION);
+        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The business object data restore DTO is expected not to be updated.
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE), businessObjectDataRestoreDto);
     }
 
     @Test
@@ -205,7 +205,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         // Create a DTO for business object data restore parameters.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA);
+                NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto initialS3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -246,7 +246,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
             businessObjectDataRestoreDto.getException().getMessage());
         businessObjectDataRestoreDto.setException(NO_EXCEPTION);
         assertEquals(new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA), businessObjectDataRestoreDto);
+            NO_STORAGE_UNIT_STATUS, storageFiles, NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION, NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE), businessObjectDataRestoreDto);
     }
 
     @Test

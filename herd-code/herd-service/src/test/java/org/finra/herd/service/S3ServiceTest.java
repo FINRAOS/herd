@@ -250,7 +250,7 @@ public class S3ServiceTest extends AbstractServiceTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
         // Call the method under test.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Verify the external calls.
         verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);

@@ -275,6 +275,16 @@ public interface S3Dao
      */
     void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
 
-    void createRestoreObjectsJob(S3FileTransferRequestParamsDto params, String account, String role, int expirationInDays, String archiveRetrievalOption);
+    /**
+     * Creates S3 batch job
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * restored
+     * every object in the manifest.
+     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     *
+     * @return S3 batch job id
+     */
+    String createBatchRestoreJob(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
 
 }

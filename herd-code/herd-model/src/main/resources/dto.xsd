@@ -104,6 +104,7 @@
          <xs:element name="exception" type="runtimeException" minOccurs="0"/>
          <xs:element name="archiveRetrievalOption" type="xs:string" minOccurs="0"/>
          <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0"/>
+         <xs:element name="batchMode" type="xs:boolean" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 

@@ -48,6 +48,9 @@ import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.CreateJobResult;
 
 import org.finra.herd.dao.S3Operations;
 
@@ -168,4 +171,11 @@ public class S3OperationsImpl implements S3Operations
     {
         return transferManager.uploadFileList(s3BucketName, virtualDirectoryKeyPrefix, directory, files, metadataProvider);
     }
+
+    @Override
+    public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient)
+    {
+        return s3ControlClient.createJob(createJobRequest);
+    }
+
 }

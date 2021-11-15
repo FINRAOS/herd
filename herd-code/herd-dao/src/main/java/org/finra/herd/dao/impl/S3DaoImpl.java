@@ -88,14 +88,7 @@ import com.amazonaws.services.s3control.AWSS3Control;
 import com.amazonaws.services.s3control.AWSS3ControlClient;
 import com.amazonaws.services.s3control.AWSS3ControlClientBuilder;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
-import com.amazonaws.services.s3control.model.JobManifest;
-import com.amazonaws.services.s3control.model.JobManifestLocation;
-import com.amazonaws.services.s3control.model.JobManifestSpec;
-import com.amazonaws.services.s3control.model.JobOperation;
-import com.amazonaws.services.s3control.model.JobReport;
-import com.amazonaws.services.s3control.model.S3GlacierJobTier;
-import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
-import org.apache.commons.codec.digest.DigestUtils;
+import com.amazonaws.services.s3control.model.CreateJobResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -109,10 +102,12 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.RetryPolicyFactory;
+import org.finra.herd.dao.S3BatchManifest;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
@@ -145,6 +140,9 @@ public class S3DaoImpl implements S3Dao
 
     @Autowired
     private S3Operations s3Operations;
+
+    @Autowired
+    private S3BatchHelper batchHelper;
 
     private long sleepIntervalsMillis = DEFAULT_SLEEP_INTERVAL_MILLIS;
 
@@ -651,95 +649,50 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public void createRestoreObjectsJob(final S3FileTransferRequestParamsDto params, String account, String role, int expirationInDays, String archiveRetrievalOption)
+    public String createBatchRestoreJob(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
     {
         LOGGER.info("Creating batch job to restore a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
             params.getS3BucketName(), params.getFiles().size());
 
-        if (CollectionUtils.isEmpty(params.getFiles())) return;
+        if (CollectionUtils.isEmpty(params.getFiles())) return null;
+
+        String jobId = UUID.randomUUID().toString();
+        LOGGER.info("Create restoreJobId=\"{}\"", jobId);
+
         try
         {
-            String uuid = UUID.randomUUID().toString();
-
-            LOGGER.debug("Restore call uuid: {}", uuid);
-
-            // Create the restore job manifest
-            StringBuilder manifestContentBuilder = new StringBuilder();
-            params.getFiles().stream()
-                .map(f -> f.getPath().replaceAll("\\\\", "/"))
-                .map(p -> String.format("%s,%s%n", params.getS3BucketName(), p))
-                .forEach(manifestContentBuilder::append);
-
-            String manifestContent = manifestContentBuilder.toString();
-
-            String eTag = DigestUtils.md5Hex(manifestContent);
-            LOGGER.debug("Manifest eTag: {}", eTag);
-            String manifestArn = String.format("arn:aws:s3:::%s/%s.csv", params.getS3BucketName(), uuid);
-            LOGGER.debug("Manifest arn: {}", manifestArn);
+            S3BatchManifest manifest = batchHelper.createCSVBucketKeyManifest(params.getS3BucketName(), jobId, params.getFiles());
 
             // Perform the transfer.
             performTransfer(params, transferManager -> {
-                LOGGER.debug("Initiate Manifest transfer");
+                LOGGER.info("restoreJobId=\"{}\" Initiate manifest transfer", jobId);
                 // Create and prepare the metadata.
                 ObjectMetadata metadata = new ObjectMetadata();
                 prepareMetadata(params, metadata);
 
-                // Create a put request and a transfer manager with the parameters and the metadata.
+                // Create a put request with the parameters and the metadata.
                 PutObjectRequest putObjectRequest = new PutObjectRequest(
                     params.getS3BucketName(),
-                    String.format("%s.csv", uuid),
-                    new ByteArrayInputStream(manifestContent.getBytes()),
+                    manifest.getFilename(),
+                    new ByteArrayInputStream(manifest.getContent().getBytes()),
                     metadata);
 
                 return s3Operations.upload(putObjectRequest, transferManager);
             });
 
-            LOGGER.debug("Manifest transfer complete");
+            LOGGER.info("restoreJobId=\"{}\" Manifest transfer complete", jobId);
 
-            // Create an S3 client.
+            CreateJobRequest createRestoreJobRequest = batchHelper.generateCreateRestoreJobRequest(manifest, jobId, expirationInDays, archiveRetrievalOption);
             AWSS3Control s3ControlClient = getAmazonS3Control(params);
 
-            JobOperation jobOperation = new JobOperation()
-                .withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation()
-                    .withExpirationInDays(expirationInDays)
-                    .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
+            CreateJobResult createJobResult = s3Operations.createBatchJob(createRestoreJobRequest, s3ControlClient);
 
-            JobManifest manifest = new JobManifest()
-                .withSpec(new JobManifestSpec()
-                    .withFormat("S3BatchOperations_CSV_20180820")
-                    .withFields(new String[]{
-                        "Bucket", "Key"
-                    }))
-                .withLocation(new JobManifestLocation()
-                    .withObjectArn(manifestArn)
-                    .withETag(eTag));
-
-            LOGGER.info("Manifest transfer complete");
-
-            JobReport jobReport = new JobReport()
-                .withEnabled(false);
-
-            CreateJobRequest createRestoreJobRequest = new CreateJobRequest()
-                .withAccountId(account)
-                .withOperation(jobOperation)
-                .withManifest(manifest)
-                .withReport(jobReport)
-                .withPriority(10)
-                .withRoleArn(role)
-                .withClientRequestToken(uuid)
-                .withDescription(String.format("Restore batch job %s", uuid))
-                .withConfirmationRequired(false);
-
-            LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
-
-            s3ControlClient.createJob(createRestoreJobRequest);
-
+            return createJobResult.getJobId();
         }
         catch (Exception e)
         {
             throw new IllegalStateException(String
-                .format("Failed to initiate a restore job for \"%s\" bucket. Reason: %s", params.getS3BucketName(),
-                    e.getMessage()), e);
+                .format("Failed to initiate a restoreJobId=\"%s\" for \"%s\" bucket", jobId, params.getS3BucketName()), e);
         }
     }
 

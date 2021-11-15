@@ -231,9 +231,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             // Set a list of files to restore.
             s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)));
 
+            // Treat batchMode as false by default
+            boolean batchProcessing = businessObjectDataRestoreDto.isBatchMode() != null ? businessObjectDataRestoreDto.isBatchMode() : false;
+
             // Initiate restore requests for the list of objects in the Glacier bucket.
             // TODO: Make "expirationInDays" value configurable with default value set to 99 years (36135 days).
-            s3Service.restoreObjects(s3FileTransferRequestParamsDto, 36135, businessObjectDataRestoreDto.getArchiveRetrievalOption());
+
+            s3Service.restoreObjects(s3FileTransferRequestParamsDto, 36135, businessObjectDataRestoreDto.getArchiveRetrievalOption(), batchProcessing);
         }
         catch (RuntimeException e)
         {

@@ -48,6 +48,9 @@ import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.CreateJobResult;
 
 /**
  * AWS S3 Operations Service.
@@ -257,4 +260,10 @@ public interface S3Operations
      */
     public MultipleFileUpload uploadFileList(String s3BucketName, String virtualDirectoryKeyPrefix, File directory, List<File> files,
         ObjectMetadataProvider metadataProvider, TransferManager transferManager);
+
+
+    // TODO: Add comments here
+    public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient);
+
+
 }

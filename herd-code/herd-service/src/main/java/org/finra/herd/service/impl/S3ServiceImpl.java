@@ -127,18 +127,10 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
+    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption, boolean batchMode)
     {
-        if (configurationHelper.getBooleanProperty(ConfigurationValue.S3_RESTORE_BATCH_MODE_ON))
-        {
-            String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT);
-            String batchRole = configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN);
-            s3Dao.createRestoreObjectsJob(params, account, batchRole, expirationInDays, archiveRetrievalOption);
-        }
-        else
-        {
-            s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
-        }
+        if (batchMode) s3Dao.createBatchRestoreJob(params, expirationInDays, archiveRetrievalOption);
+        else s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
     }
 
     @Override

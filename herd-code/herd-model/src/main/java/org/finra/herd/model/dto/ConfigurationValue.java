@@ -993,9 +993,9 @@ public enum ConfigurationValue
      */
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
 
-    S3_RESTORE_BATCH_MODE_ON("s3.object.restore.batch.mode.on", "true"),
+
     S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
-    AWS_ACCOUNT("aws.account", null),
+    AWS_ACCOUNT_ID("aws.account.id", null),
     /**
      * The business object format attribute name for the relational database schema name. The default is "relational.schema.name".
      */
