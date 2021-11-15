@@ -23,7 +23,8 @@ import java.security.NoSuchAlgorithmException;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.junit.Test;
 
 import org.finra.herd.core.AbstractCoreTest;
@@ -41,10 +42,10 @@ public class ApiClientHelperTest extends AbstractCoreTest
         ApiClientHelper apiClientHelper = new ApiClientHelper();
         ApiClient rebuiltApiClient = apiClientHelper.rebuildClient(apiClient, true, false);
         HTTPSProperties httpsProperties = (HTTPSProperties) rebuiltApiClient.getHttpClient().getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
-        assertEquals(SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER, httpsProperties.getHostnameVerifier());
+        assertEquals(DefaultHostnameVerifier.class, httpsProperties.getHostnameVerifier().getClass());
 
         rebuiltApiClient = apiClientHelper.rebuildClient(apiClient, true, true);
         httpsProperties = (HTTPSProperties) rebuiltApiClient.getHttpClient().getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
-        assertEquals(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER, httpsProperties.getHostnameVerifier());
+        assertEquals(NoopHostnameVerifier.INSTANCE, httpsProperties.getHostnameVerifier());
     }
 }

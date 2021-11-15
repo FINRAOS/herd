@@ -29,7 +29,8 @@ import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
@@ -87,8 +88,7 @@ public class ApiClientHelper
         }
 
         // If specified, turn hostname verification off.
-        HostnameVerifier hostnameVerifier = BooleanUtils.isTrue(disableHostnameVerification) ? SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER :
-            SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER;
+        HostnameVerifier hostnameVerifier = BooleanUtils.isTrue(disableHostnameVerification) ? NoopHostnameVerifier.INSTANCE : new DefaultHostnameVerifier();
 
         // Create client config
         ClientConfig config = new DefaultClientConfig();
