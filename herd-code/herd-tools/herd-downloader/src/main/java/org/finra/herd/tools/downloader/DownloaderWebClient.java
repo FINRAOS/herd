@@ -48,6 +48,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
      *
      * @param manifest the downloader input manifest file information
      *
+     * @return the business object data
      * @throws ApiException if an Api exception was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
@@ -60,9 +61,11 @@ public class DownloaderWebClient extends DataBridgeWebClient
         LOGGER.info("Retrieving business object data information from the registration server...");
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
-        BusinessObjectData sdkResponse = businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
-                manifest.getBusinessObjectFormatFileType(),
-                manifest.getPartitionKey(), manifest.getPartitionValue(), herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
+        BusinessObjectData sdkResponse =
+            businessObjectDataApi.businessObjectDataGetBusinessObjectData(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
+                manifest.getBusinessObjectFormatUsage(),
+                manifest.getBusinessObjectFormatFileType(), manifest.getPartitionKey(), manifest.getPartitionValue(),
+                herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"),
                 HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
                 HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                 "VALID", false, false, false);
@@ -118,10 +121,10 @@ public class DownloaderWebClient extends DataBridgeWebClient
         StorageUnitApi storageUnitApi = new StorageUnitApi(createApiClient(regServerAccessParamsDto));
         LOGGER.info("Retrieving download credentials from registration server...");
 
-        return storageUnitApi.storageUnitGetStorageUnitDownloadCredential
-                (manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(),
-                        HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null),
-                        manifest.getPartitionValue(), HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
+        return storageUnitApi.storageUnitGetStorageUnitDownloadCredential(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(),
+            manifest.getBusinessObjectFormatUsage(), manifest.getBusinessObjectFormatFileType(),
+                        HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectFormatVersion(), null), manifest.getPartitionValue(),
+            HerdStringUtils.convertStringToInteger(manifest.getBusinessObjectDataVersion(), null),
                         storageName, herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
     }
 

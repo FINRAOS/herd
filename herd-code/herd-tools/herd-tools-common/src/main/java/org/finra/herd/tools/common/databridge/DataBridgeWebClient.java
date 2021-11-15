@@ -36,7 +36,6 @@ import org.finra.herd.sdk.api.BusinessObjectDataStorageFileApi;
 import org.finra.herd.sdk.api.StorageApi;
 import org.finra.herd.sdk.invoker.ApiClient;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.sdk.model.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.sdk.model.Attribute;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataCreateRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.sdk.model.BusinessObjectDataStorageFilesCreateRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataStorageFilesCreateResponse;
+import org.finra.herd.sdk.model.S3KeyPrefixInformation;
+import org.finra.herd.sdk.model.Storage;
+import org.finra.herd.sdk.model.StorageFile;
+import org.finra.herd.sdk.model.StorageUnitCreateRequest;
 import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
@@ -57,10 +68,6 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
  */
 public abstract class DataBridgeWebClient
 {
-    protected static final String DEFAULT_ACCEPT = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
-
-    protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
-
     protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeWebClient.class);
@@ -354,6 +361,17 @@ public abstract class DataBridgeWebClient
         return sdkResponse;
     }
 
+    /**
+     *
+     * @param regServerAccessParamsDto parameters used for apiClient configuration
+     * @return ApiClient configured with provided params
+     * @throws ApiException if an Api exception was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
+     *
+     */
     public ApiClient createApiClient(RegServerAccessParamsDto regServerAccessParamsDto)
         throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ApiException
     {
@@ -363,10 +381,6 @@ public abstract class DataBridgeWebClient
             new URIBuilder().setScheme(protocol).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
                 .build().toString();
         apiClient.setBasePath(basPath + HERD_APP_REST_URI_PREFIX);
-
-        // Set headers
-        apiClient.selectHeaderAccept(new String[] {DEFAULT_ACCEPT});
-        apiClient.selectHeaderContentType(new String[] {DEFAULT_CONTENT_TYPE});
 
         // If SSL is enabled, set the client authentication header.
         if (regServerAccessParamsDto.isUseSsl())
@@ -389,6 +403,11 @@ public abstract class DataBridgeWebClient
         return apiClient;
     }
 
+    /**
+     * Get business object data key
+     * @param businessObjectData business object data
+     * @return business object data key
+     */
     public BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectData businessObjectData)
     {
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();

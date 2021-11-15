@@ -32,7 +32,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.sdk.model.*;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.BusinessObjectDataVersion;
+import org.finra.herd.sdk.model.BusinessObjectDataVersions;
+import org.finra.herd.sdk.model.Storage;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.ToolsDtoHelper;
 import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
@@ -95,6 +99,11 @@ public class UploaderController extends DataBridgeController
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
      * @throws InterruptedException if the upload thread was interrupted
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
@@ -147,7 +156,8 @@ public class UploaderController extends DataBridgeController
                 @Override
                 public org.finra.herd.model.api.xml.AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return ToolsDtoHelper.convertAwsCredential(uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential());
+                    return ToolsDtoHelper.convertAwsCredential(
+                        uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential());
                 }
             });
 
@@ -159,11 +169,12 @@ public class UploaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), ToolsDtoHelper.convertStorage(storage), true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    ToolsDtoHelper.convertStorage(storage), true);
 
             // Set the KMS ID, if available
-            String kmsKeyId =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), ToolsDtoHelper.convertStorage(storage), false);
+            String kmsKeyId = storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+                ToolsDtoHelper.convertStorage(storage), false);
             params.setKmsKeyId(kmsKeyId);
 
             // Special handling for the maxThreads command line option.
@@ -234,7 +245,10 @@ public class UploaderController extends DataBridgeController
      * @param storageName the name of the storage
      * @param maxRetryAttempts Maximum number of retry attempts on error
      * @param retryDelaySecs Delay in seconds between retries
-     *
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
@@ -285,7 +299,10 @@ public class UploaderController extends DataBridgeController
      *
      * @param manifest the uploader input manifest
      * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
-     *
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)

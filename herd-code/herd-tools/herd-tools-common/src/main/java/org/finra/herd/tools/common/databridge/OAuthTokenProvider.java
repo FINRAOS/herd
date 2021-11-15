@@ -43,6 +43,7 @@ public class OAuthTokenProvider
      * @param password       username used for OAuth access token retrieval
      * @param accessTokenUrl access token url used for OAuth access token retrieval
      * @return OAuth access token as String
+     * @throws ApiException if an Api exception was encountered
      */
     public String getAccessToken(String username, String password, String accessTokenUrl) throws ApiException
     {

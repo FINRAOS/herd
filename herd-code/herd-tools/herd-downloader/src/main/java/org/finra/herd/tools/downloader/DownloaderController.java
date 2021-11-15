@@ -30,7 +30,12 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.sdk.model.*;
+import org.finra.herd.sdk.model.Attribute;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.S3KeyPrefixInformation;
+import org.finra.herd.sdk.model.Storage;
+import org.finra.herd.sdk.model.StorageFile;
+import org.finra.herd.sdk.model.StorageUnit;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.ToolsDtoHelper;
 import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
@@ -88,7 +93,12 @@ public class DownloaderController extends DataBridgeController
      * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the herd registration server
      * @param manifestPath the local path to the manifest file
      * @param s3FileTransferRequestParamsDto the S3 file transfer DTO request parameters
-     *
+     * @throws InterruptedException if an interrupted error was encountered
+     * @throws IOException if an I/O error was encountered
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = {"BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification =
@@ -155,7 +165,8 @@ public class DownloaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), ToolsDtoHelper.convertStorage(storage), true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    ToolsDtoHelper.convertStorage(storage), true);
 
             // Get the list of S3 files matching the expected S3 key prefix.
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
@@ -165,7 +176,8 @@ public class DownloaderController extends DataBridgeController
             List<String> actualS3Files = storageFileHelper.getFilePathsFromS3ObjectSummaries(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
 
             // Validate S3 files before we start the download.
-            storageFileHelper.validateStorageUnitS3Files(ToolsDtoHelper.convertStorageUnit(storageUnit), actualS3Files, s3KeyPrefixInformation.getS3KeyPrefix());
+            storageFileHelper.validateStorageUnitS3Files(ToolsDtoHelper.convertStorageUnit(storageUnit), actualS3Files,
+                s3KeyPrefixInformation.getS3KeyPrefix());
 
             // Special handling for the maxThreads command line option.
             s3FileTransferRequestParamsDto.setMaxThreads(adjustIntegerValue(s3FileTransferRequestParamsDto.getMaxThreads(), MIN_THREADS, MAX_THREADS));
@@ -176,7 +188,8 @@ public class DownloaderController extends DataBridgeController
             s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
 
             // Validate the downloaded files.
-            storageFileHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(), ToolsDtoHelper.convertStorageUnit(storageUnit));
+            storageFileHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(),
+                ToolsDtoHelper.convertStorageUnit(storageUnit));
 
             // Log a list of files downloaded to the target local directory.
             if (LOGGER.isInfoEnabled())
@@ -277,6 +290,15 @@ public class DownloaderController extends DataBridgeController
         return downloaderOutputManifestDto;
     }
 
+    /**
+     * Gets a storage unit by storage name (case insensitive).
+     *
+     * @param businessObjectData the business object data
+     * @param storageName the storage name
+     *
+     * @return the storage unit
+     * @throws IllegalStateException if business object data has no storage unit with the specified storage name
+     */
     public StorageUnit getStorageUnitByStorageName(BusinessObjectData businessObjectData, String storageName) throws IllegalStateException
     {
         StorageUnit resultStorageUnit = null;

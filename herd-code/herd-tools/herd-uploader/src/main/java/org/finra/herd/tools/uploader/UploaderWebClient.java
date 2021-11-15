@@ -54,6 +54,10 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @param businessObjectDataVersion the version of the business object data
      *
      * @return {@link StorageUnitUploadCredential}
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     public StorageUnitUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
@@ -74,6 +78,10 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @param businessObjectDataKey the business object data key
      *
      * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
+     * @throws URISyntaxException if a URI syntax error was encountered
+     * @throws KeyStoreException if a key store exception occurs
+     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
+     * @throws KeyManagementException if key management exception
      * @throws ApiException if an Api exception was encountered
      */
     public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)

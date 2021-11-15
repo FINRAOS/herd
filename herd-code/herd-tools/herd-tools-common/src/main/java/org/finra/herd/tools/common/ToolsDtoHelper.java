@@ -21,16 +21,30 @@ import org.apache.commons.lang3.StringUtils;
 import org.finra.herd.core.HerdDateUtils;
 
 import org.finra.herd.model.api.xml.StorageFile;
-import org.finra.herd.sdk.model.*;
+import org.finra.herd.sdk.model.Attribute;
+import org.finra.herd.sdk.model.AwsCredential;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.Storage;
+import org.finra.herd.sdk.model.StorageUnit;
+import org.finra.herd.sdk.model.StorageUnitStatusChangeEvent;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Helper class to convert SDK dto to api model dto
+ */
 public class ToolsDtoHelper
 {
 
+    /**
+     * Returns a string representation of the business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @return the string representation of the business object data key
+     */
     public static String businessObjectDataKeyToString(BusinessObjectDataKey businessObjectDataKey)
     {
         if (businessObjectDataKey == null)
@@ -48,6 +62,12 @@ public class ToolsDtoHelper
             businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
+    /**
+     * Convert herd sdk storageUnit dto to model xml storageUnit dto
+     *
+     * @param storageUnit the storageUnit from herd sdk
+     * @return the storageUnit object from model
+     */
     public static org.finra.herd.model.api.xml.StorageUnit convertStorageUnit(StorageUnit storageUnit)
     {
         org.finra.herd.model.api.xml.Storage storage = convertStorage(storageUnit.getStorage());
@@ -89,6 +109,12 @@ public class ToolsDtoHelper
             storageUnitStatusChangeEvent, storageUnit.getStoragePolicyTransitionFailedAttempts(), restoreExpirationOn);
     }
 
+    /**
+     * Convert herd sdk storage dto to model xml storage dto
+     *
+     * @param storage the storage from herd sdk
+     * @return the storage object from model
+     */
     public static org.finra.herd.model.api.xml.Storage convertStorage(Storage storage)
     {
         org.finra.herd.model.api.xml.Storage modelStorage = new org.finra.herd.model.api.xml.Storage();
@@ -110,6 +136,12 @@ public class ToolsDtoHelper
         return modelStorage;
     }
 
+    /**
+     * Convert herd sdk sdkAwsCredential dto to model xml sdkAwsCredential dto
+     *
+     * @param sdkAwsCredential the storageUnit from herd sdk
+     * @return the sdkAwsCredential object from model
+     */
     public static org.finra.herd.model.api.xml.AwsCredential convertAwsCredential(AwsCredential sdkAwsCredential)
     {
         org.finra.herd.model.api.xml.AwsCredential awsCredential =

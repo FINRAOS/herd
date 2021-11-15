@@ -173,6 +173,18 @@ public class RetentionExpirationDestroyerController
         return businessObjectDataKeyList;
     }
 
+    /**
+     * Build Business Object Data Key object
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business objcet format version
+     * @param partitionValue the partition value
+     * @param subPartitionValues the sub partition values
+     * @param businessObjectDataVersion the business object data version
+     * @return the built business object data key object
+     */
     BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage,
         final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue,
         final List<String> subPartitionValues, final Integer businessObjectDataVersion)
