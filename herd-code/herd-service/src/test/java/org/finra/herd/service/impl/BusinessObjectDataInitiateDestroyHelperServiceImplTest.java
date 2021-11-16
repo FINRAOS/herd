@@ -44,6 +44,7 @@ import org.mockito.stubbing.Answer;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -96,6 +97,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
     @Mock
     private HerdStringHelper herdStringHelper;
+
+    @Mock
+    private S3Dao s3Dao;
 
     @Mock
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -309,7 +313,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
         when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
             .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
+        when(s3Dao.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
 
         // Call the method under test.
         businessObjectDataInitiateDestroyHelperServiceImpl.executeS3SpecificSteps(businessObjectDataDestroyDto);
@@ -324,8 +328,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
         verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listVersions(s3FileTransferRequestParamsDto);
-        verify(s3Service).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
+        verify(s3Dao).listVersions(s3FileTransferRequestParamsDto);
+        verify(s3Dao).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
             new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
     }
@@ -1038,7 +1042,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectFormatDao, businessObjectFormatHelper,
-            configurationHelper, herdDao, herdStringHelper, s3KeyPrefixHelper, s3Service, storageFileHelper, storageHelper, storageUnitDao,
+            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, s3Service, storageFileHelper, storageHelper, storageUnitDao,
             storageUnitDaoHelper);
     }
 }
