@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.JsonHelper;
@@ -49,7 +50,6 @@ import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.StoragePolicyProcessorHelperService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -83,10 +83,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     private JsonHelper jsonHelper;
 
     @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Autowired
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -326,7 +326,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         {
             // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
             // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-            List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
+            List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Dao.listDirectory(s3FileTransferRequestParamsDto, true);
 
             // Validate existence of the S3 files.
             storageFileHelper.validateRegisteredS3Files(storagePolicyTransitionParamsDto.getStorageFiles(), actualS3FilesWithoutZeroByteDirectoryMarkers,
@@ -335,10 +335,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
         // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
         // This time, we do not ignore 0 byte objects that represent S3 directories.
-        List<S3ObjectSummary> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto, false);
+        List<S3ObjectSummary> actualS3Files = s3Dao.listDirectory(s3FileTransferRequestParamsDto, false);
 
         // Tag the S3 objects to initiate the archiving.
-        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, actualS3Files,
+        s3Dao.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, actualS3Files,
             new Tag(storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue()));
     }
 

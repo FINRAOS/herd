@@ -37,6 +37,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -82,6 +83,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
     @Mock
     private JsonHelper jsonHelper;
+
+    @Mock
+    private S3Dao s3Dao;
 
     @Mock
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -242,8 +246,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
         when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
             .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
 
         // Call the method under test.
         storagePolicyProcessorHelperServiceImpl.executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
@@ -251,11 +255,11 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
         verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3FilesWithoutZeroByteDirectoryMarkers, STORAGE_NAME, businessObjectDataKey);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, false);
-        verify(s3Service)
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, false);
+        verify(s3Dao)
             .tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, actualS3Files, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
 
@@ -523,7 +527,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3KeyPrefixHelper, s3Service,
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3Dao, s3KeyPrefixHelper, s3Service,
             storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
     }
 }
