@@ -63,7 +63,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -103,9 +102,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
     @Mock
     private S3KeyPrefixHelper s3KeyPrefixHelper;
-
-    @Mock
-    private S3Service s3Service;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -1042,7 +1038,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectFormatDao, businessObjectFormatHelper,
-            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, s3Service, storageFileHelper, storageHelper, storageUnitDao,
+            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, storageFileHelper, storageHelper, storageUnitDao,
             storageUnitDaoHelper);
     }
 }
