@@ -35,6 +35,7 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
@@ -53,7 +54,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -94,10 +94,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Autowired
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -213,10 +213,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         s3ObjectTaggerParamsDto.setS3Endpoint(businessObjectDataDestroyDto.getS3Endpoint());
 
         // Get all S3 objects matching the S3 key prefix from the S3 bucket.
-        List<S3VersionSummary> s3VersionSummaries = s3Service.listVersions(s3FileTransferRequestParamsDto);
+        List<S3VersionSummary> s3VersionSummaries = s3Dao.listVersions(s3FileTransferRequestParamsDto);
 
         // Tag the S3 objects to initiate the deletion.
-        s3Service.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries,
+        s3Dao.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries,
             new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
     }
 
