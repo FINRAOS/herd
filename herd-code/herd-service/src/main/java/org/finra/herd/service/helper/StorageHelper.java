@@ -17,6 +17,8 @@ package org.finra.herd.service.helper;
 
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.stereotype.Component;
@@ -37,6 +39,8 @@ import org.finra.herd.model.jpa.StorageEntity;
 @Component
 public class StorageHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageHelper.class);
+
     @Autowired
     protected StsDao stsDao;
 
@@ -155,11 +159,18 @@ public class StorageHelper
      */
     public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName)
     {
+        // Get the AWS security token assume role duration secs configuration value.
+        int awsSecurityTokenAssumeRoleDurationSecs = configurationHelper.getProperty(ConfigurationValue.AWS_SECURITY_TOKEN_ASSUME_ROLE_DURATION_SECS,
+            Integer.class);
+
         // Get the S3 file transfer request parameters DTO with proxy host and port populated from the configuration.
         S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
 
+        LOGGER.info("Getting AWS temporary security credentials. sessionName={}, roleArn={}, awsSecurityTokenAssumeRoleDurationSecs={}",
+            sessionName, roleArn, awsSecurityTokenAssumeRoleDurationSecs);
+
         // Assume the specified role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, 3600, null);
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, awsSecurityTokenAssumeRoleDurationSecs, null);
 
         // Update the AWS parameters DTO with the temporary credentials.
         params.setAwsAccessKeyId(credentials.getAccessKeyId());

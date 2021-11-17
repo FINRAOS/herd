@@ -119,6 +119,12 @@ public enum ConfigurationValue
     AWS_REGION_NAME("aws.region.name", null),
 
     /**
+     * The duration, in seconds, of the role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum session duration that is
+     * set for the role.
+     */
+    AWS_SECURITY_TOKEN_ASSUME_ROLE_DURATION_SECS("aws.security.token.assume.role.duration.secs", 43200),
+
+    /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.
      */
     S3_ENDPOINT("s3.endpoint", null),
