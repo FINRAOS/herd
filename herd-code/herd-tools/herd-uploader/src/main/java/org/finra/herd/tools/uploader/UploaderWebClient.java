@@ -77,7 +77,7 @@ public class UploaderWebClient extends DataBridgeWebClient
      *
      * @param businessObjectDataKey the business object data key
      *
-     * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
+     * @return {@link BusinessObjectDataVersions}
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs

@@ -22,6 +22,8 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 
@@ -33,6 +35,7 @@ import org.finra.herd.tools.common.dto.AccessToken;
  */
 public class OAuthTokenProvider
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OAuthTokenProvider.class);
 
     private ConcurrentMap<String, AccessToken> accessTokenCache = new ConcurrentHashMap();
 
@@ -47,6 +50,7 @@ public class OAuthTokenProvider
      */
     public String getAccessToken(String username, String password, String accessTokenUrl) throws ApiException
     {
+        LOGGER.info(String.format("Getting Access Token from accessTokenUrl: %s for user: %s ", username, accessTokenUrl));
         if (!accessTokenCache.containsKey(username) || accessTokenCache.get(username).getExpiresIn().isBefore(DateTime.now()))
         {
             refreshOauthToken(username, password, accessTokenUrl);
