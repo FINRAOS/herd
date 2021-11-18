@@ -61,11 +61,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -96,6 +99,10 @@ public class S3DaoImplTest extends AbstractDaoTest
 
     @Mock
     private S3Operations s3Operations;
+
+    @Spy
+    @InjectMocks
+    private AWSClientFactory awsClientFactory;
 
     @Before
     public void before()

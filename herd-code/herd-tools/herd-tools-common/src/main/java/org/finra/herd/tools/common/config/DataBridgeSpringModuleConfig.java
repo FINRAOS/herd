@@ -27,13 +27,17 @@ import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.dao.StsDao;
+import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
+import org.finra.herd.dao.impl.S3BatchCompletionServiceImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.dao.impl.StsDaoImpl;
+import org.finra.herd.dao.service.S3BatchCompletionService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -153,4 +157,13 @@ public class DataBridgeSpringModuleConfig
     {
         return new StsDaoImpl();
     }
+
+    @Bean
+    public S3BatchHelper batchHelper() { return new S3BatchHelper(); }
+
+    @Bean
+    public AWSClientFactory awsClientFactory() { return new AWSClientFactory(); }
+
+    @Bean
+    public S3BatchCompletionService s3BatchCompletionService() { return new S3BatchCompletionServiceImpl(); }
 }

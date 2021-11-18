@@ -53,7 +53,6 @@ public class S3BatchCompletionServiceTest extends AbstractDaoTest
         DescribeJobResult actual = service.awaitForBatchJobComplete(s3FileTransferRequestParamsDto, jobId);
 
         assertEquals(describeJobResult, actual);
-        verify(s3Dao.getBatchJobDescription(s3FileTransferRequestParamsDto, jobId));
     }
 
     @Test
@@ -72,7 +71,6 @@ public class S3BatchCompletionServiceTest extends AbstractDaoTest
         DescribeJobResult actual = service.awaitForBatchJobComplete(s3FileTransferRequestParamsDto, jobId);
 
         assertEquals(describeJobResult, actual);
-        verify(s3Dao.getBatchJobDescription(s3FileTransferRequestParamsDto, jobId));
     }
 
     @Test
@@ -97,7 +95,7 @@ public class S3BatchCompletionServiceTest extends AbstractDaoTest
             assertEquals(describeJobResult, e.jobDescriptor);
         }
 
-        verify(s3Dao.getBatchJobDescription(s3FileTransferRequestParamsDto, jobId));
+        verify(s3Dao).getBatchJobDescription(s3FileTransferRequestParamsDto, jobId);
     }
 
 }

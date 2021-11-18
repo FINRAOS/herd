@@ -43,6 +43,7 @@ import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.config.DaoTestSpringModuleConfig;
+import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.EmrVpcPricingStateFormatter;
 import org.finra.herd.dao.helper.HerdCollectionHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
