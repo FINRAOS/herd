@@ -26,23 +26,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -85,10 +76,10 @@ import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferProgress;
 import com.amazonaws.services.s3control.AWSS3Control;
-import com.amazonaws.services.s3control.AWSS3ControlClient;
-import com.amazonaws.services.s3control.AWSS3ControlClientBuilder;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -101,10 +92,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3BatchManifest;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.S3BatchHelper;
@@ -136,13 +127,13 @@ public class S3DaoImpl implements S3Dao
     private JavaPropertiesHelper javaPropertiesHelper;
 
     @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
-
-    @Autowired
     private S3Operations s3Operations;
 
     @Autowired
     private S3BatchHelper batchHelper;
+
+    @Autowired
+    private AWSClientFactory awsClientFactory;
 
     private long sleepIntervalsMillis = DEFAULT_SLEEP_INTERVAL_MILLIS;
 
@@ -150,7 +141,7 @@ public class S3DaoImpl implements S3Dao
     public int abortMultipartUploads(S3FileTransferRequestParamsDto params, Date thresholdDate)
     {
         // Create an Amazon S3 client.
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
         int abortedMultipartUploadsCount = 0;
 
         try
@@ -281,7 +272,7 @@ public class S3DaoImpl implements S3Dao
             if (CollectionUtils.isNotEmpty(s3VersionSummaries))
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
                 // Build a list of objects to be deleted.
                 List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
@@ -320,7 +311,7 @@ public class S3DaoImpl implements S3Dao
             if (!params.getFiles().isEmpty())
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
                 try
                 {
@@ -407,7 +398,7 @@ public class S3DaoImpl implements S3Dao
     {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
-        AmazonS3Client s3 = getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3 = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
         try
         {
             return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
@@ -421,7 +412,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public ObjectMetadata getObjectMetadata(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
         try
         {
@@ -448,7 +439,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
     {
-        AmazonS3Client s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
 
         try
         {
@@ -477,7 +468,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
         List<S3ObjectSummary> s3ObjectSummaries = new ArrayList<>();
 
         try
@@ -530,7 +521,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
         List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
 
         try
@@ -584,13 +575,13 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
                 // Create a restore object request.
                 RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
                 // Make Bulk the default archive retrieval option if the option is not provided
-                requestRestore.setGlacierJobParameters(new GlacierJobParameters().withTier(
-                    StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
+                requestRestore.setGlacierJobParameters(
+                    new GlacierJobParameters().withTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
 
                 try
                 {
@@ -654,10 +645,15 @@ public class S3DaoImpl implements S3Dao
         LOGGER.info("Creating batch job to restore a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
             params.getS3BucketName(), params.getFiles().size());
 
-        if (CollectionUtils.isEmpty(params.getFiles())) return null;
+        if (CollectionUtils.isEmpty(params.getFiles()))
+        {
+            return null;
+        }
 
         String jobId = UUID.randomUUID().toString();
         LOGGER.info("Create restoreJobId=\"{}\"", jobId);
+
+        AWSS3Control s3ControlClient = null;
 
         try
         {
@@ -683,7 +679,7 @@ public class S3DaoImpl implements S3Dao
             LOGGER.info("restoreJobId=\"{}\" Manifest transfer complete", jobId);
 
             CreateJobRequest createRestoreJobRequest = batchHelper.generateCreateRestoreJobRequest(manifest, jobId, expirationInDays, archiveRetrievalOption);
-            AWSS3Control s3ControlClient = getAmazonS3Control(params);
+            s3ControlClient = awsClientFactory.getAmazonS3Control(params);
 
             CreateJobResult createJobResult = s3Operations.createBatchJob(createRestoreJobRequest, s3ControlClient);
 
@@ -691,15 +687,34 @@ public class S3DaoImpl implements S3Dao
         }
         catch (Exception e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to initiate a restoreJobId=\"%s\" for \"%s\" bucket", jobId, params.getS3BucketName()), e);
+            throw new IllegalStateException(String.format("Failed to initiate a restoreJobId=\"%s\" for \"%s\" bucket", jobId, params.getS3BucketName()), e);
+        }
+        finally
+        {
+            if (s3ControlClient != null) s3ControlClient.shutdown();
+        }
+
+    }
+
+    // S3FileTransferRequestParamsDto parameter is not really needed here,
+    // it is added only as a placeholder of configuration values to get S3 Client instance,
+    // so it may need to be refactored later
+    @Override
+    public DescribeJobResult getBatchJobDescription(final S3FileTransferRequestParamsDto params, String jobId) {
+        DescribeJobRequest request = batchHelper.generateDescribeJobRequest(jobId);
+        AWSS3Control s3ControlClient = awsClientFactory.getAmazonS3Control(params);
+        try {
+            return s3Operations.describeBatchJob(request, s3ControlClient);
+        }
+        finally {
+            s3ControlClient.shutdown();
         }
     }
 
     @Override
     public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
         try
         {
@@ -915,7 +930,7 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
                 try
                 {
@@ -998,7 +1013,7 @@ public class S3DaoImpl implements S3Dao
         PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
         // KMS key ID is being set through prepareMetadata()
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
 
         try
         {
@@ -1056,142 +1071,6 @@ public class S3DaoImpl implements S3Dao
     }
 
     /**
-     * <p> Gets the {@link AWSCredentialsProvider} based on the credentials in the given parameters. </p> <p> Returns {@link DefaultAWSCredentialsProviderChain}
-     * if either access or secret key is {@code null}. Otherwise returns a {@link StaticCredentialsProvider} with the credentials. </p>
-     *
-     * @param params - Access parameters
-     *
-     * @return AWS credentials provider implementation
-     */
-    private AWSCredentialsProvider getAWSCredentialsProvider(S3FileTransferRequestParamsDto params)
-    {
-        List<AWSCredentialsProvider> providers = new ArrayList<>();
-        String accessKey = params.getAwsAccessKeyId();
-        String secretKey = params.getAwsSecretKey();
-        if (accessKey != null && secretKey != null)
-        {
-            providers.add(new StaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)));
-        }
-        for (HerdAWSCredentialsProvider herdAWSCredentialsProvider : params.getAdditionalAwsCredentialsProviders())
-        {
-            providers.add(new HerdAwsCredentialsProviderWrapper(herdAWSCredentialsProvider));
-        }
-        providers.add(new DefaultAWSCredentialsProviderChain());
-        return new AWSCredentialsProviderChain(providers.toArray(new AWSCredentialsProvider[providers.size()]));
-    }
-
-    /**
-     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
-     *
-     * @param params the parameters.
-     *
-     * @return the Amazon S3 client.
-     */
-    private AmazonS3Client getAmazonS3(S3FileTransferRequestParamsDto params)
-    {
-        AmazonS3Client amazonS3Client;
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Set the proxy configuration, if proxy is specified.
-        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyHost(params.getHttpProxyHost());
-            clientConfiguration.setProxyPort(params.getHttpProxyPort());
-        }
-
-        // Sign all S3 API's with V4 signing.
-        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
-        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
-        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
-        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
-
-        // Set the optional socket timeout, if configured.
-        if (params.getSocketTimeout() != null)
-        {
-            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
-        }
-
-        // Create an S3 client using passed in credentials and HTTP proxy information.
-        if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
-            StringUtils.isNotBlank(params.getSessionToken()))
-        {
-            // Create an S3 client using basic session credentials.
-            amazonS3Client = new AmazonS3Client(new BasicSessionCredentials(params.getAwsAccessKeyId(), params.getAwsSecretKey(), params.getSessionToken()),
-                clientConfiguration);
-        }
-        else
-        {
-            // Create an S3 client using AWS credentials provider.
-            amazonS3Client = new AmazonS3Client(getAWSCredentialsProvider(params), clientConfiguration);
-        }
-
-        // Set the optional endpoint, if specified.
-        if (StringUtils.isNotBlank(params.getS3Endpoint()))
-        {
-            amazonS3Client.setEndpoint(params.getS3Endpoint());
-        }
-        // Otherwise, set AWS region, if specified.
-        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
-        {
-            amazonS3Client.setRegion(Region.getRegion(Regions.fromName(params.getAwsRegionName())));
-        }
-
-        // Return the newly created client.
-        return amazonS3Client;
-    }
-
-    private AWSS3Control getAmazonS3Control(final S3FileTransferRequestParamsDto params) {
-        AWSS3ControlClientBuilder s3ControlClientBuilder = AWSS3ControlClient.builder()
-            .withCredentials(getAWSCredentialsProvider(params));
-
-        // Set the optional endpoint, if specified.
-        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
-        {
-            s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                params.getS3Endpoint(), params.getAwsRegionName()
-            ));
-        }
-        // Otherwise, set AWS region, if specified.
-        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
-        {
-            s3ControlClientBuilder.withRegion(Regions.fromName(params.getAwsRegionName()));
-        }
-
-        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
-        {
-            s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                params.getS3Endpoint(), params.getAwsRegionName()
-            ));
-        }
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Set the proxy configuration, if proxy is specified.
-        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyHost(params.getHttpProxyHost());
-            clientConfiguration.setProxyPort(params.getHttpProxyPort());
-        }
-
-        // Sign all S3 API's with V4 signing.
-        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
-        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
-        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
-        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
-
-        // Set the optional socket timeout, if configured.
-        if (params.getSocketTimeout() != null)
-        {
-            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
-        }
-
-        s3ControlClientBuilder.withClientConfiguration(clientConfiguration);
-
-        return s3ControlClientBuilder.build();
-    }
-
-    /**
      * Retrieves an S3 object.
      *
      * @param s3Client the S3 client
@@ -1200,6 +1079,7 @@ public class S3DaoImpl implements S3Dao
      * @param errorOnNoSuchKey true to throw an error when the object key is not found, otherwise return null
      *
      * @return the S3 object
+     *
      * @throws ObjectNotFoundException when specified bucket or key does not exist or access to bucket or key is denied
      */
     private S3Object getS3Object(AmazonS3Client s3Client, String bucketName, String key, boolean errorOnNoSuchKey)
@@ -1241,30 +1121,6 @@ public class S3DaoImpl implements S3Dao
         }
     }
 
-    /**
-     * Gets a transfer manager with the specified parameters including proxy host, proxy port, S3 access key, S3 secret key, and max threads.
-     *
-     * @param params the parameters.
-     *
-     * @return a newly created transfer manager.
-     */
-    private TransferManager getTransferManager(final S3FileTransferRequestParamsDto params)
-    {
-        // We are returning a new transfer manager each time it is called. Although the Javadocs of TransferManager say to share a single instance
-        // if possible, this could potentially be a problem if TransferManager.shutdown(true) is called and underlying resources are not present when needed
-        // for subsequent transfers.
-        if (params.getMaxThreads() == null)
-        {
-            // Create a transfer manager that will internally use an appropriate number of threads.
-            return new TransferManager(getAmazonS3(params));
-        }
-        else
-        {
-            // Create a transfer manager with our own executor configured with the specified total threads.
-            LOGGER.info("Creating a transfer manager. fixedThreadPoolSize={}", params.getMaxThreads());
-            return new TransferManager(getAmazonS3(params), Executors.newFixedThreadPool(params.getMaxThreads()));
-        }
-    }
 
     /**
      * Logs the given MultiObjectDeleteException.
@@ -1331,12 +1187,13 @@ public class S3DaoImpl implements S3Dao
      * @param transferer a transferer that knows how to perform the transfer.
      *
      * @return the results.
+     *
      * @throws InterruptedException if a problem is encountered.
      */
     private S3FileTransferResultsDto performTransfer(final S3FileTransferRequestParamsDto params, Transferer transferer) throws InterruptedException
     {
         // Create a transfer manager.
-        TransferManager transferManager = getTransferManager(params);
+        TransferManager transferManager = awsClientFactory.getTransferManager(params);
 
         try
         {
@@ -1481,10 +1338,10 @@ public class S3DaoImpl implements S3Dao
         try
         {
             // Create an S3 client to access S3 objects.
-            s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+            s3Client = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
 
             // Create an S3 client for S3 object tagging.
-            s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
+            s3ObjectTaggerClient = awsClientFactory.getAmazonS3(s3ObjectTaggerParamsDto);
 
             // Create a get object tagging request.
             GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);

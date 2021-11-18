@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collection;
 
 import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
 import com.amazonaws.services.s3control.model.JobManifest;
 import com.amazonaws.services.s3control.model.JobManifestLocation;
 import com.amazonaws.services.s3control.model.JobManifestSpec;
@@ -88,5 +89,10 @@ public class S3BatchHelper
         LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
 
         return createRestoreJobRequest;
+    }
+
+    public DescribeJobRequest generateDescribeJobRequest(String jobId) {
+        String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);
+        return new DescribeJobRequest().withAccountId(account).withJobId(jobId);
     }
 }

@@ -51,6 +51,8 @@ import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3control.AWSS3Control;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
 
 /**
  * AWS S3 Operations Service.
@@ -264,6 +266,8 @@ public interface S3Operations
 
     // TODO: Add comments here
     public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient);
+
+    public DescribeJobResult describeBatchJob(DescribeJobRequest request, AWSS3Control s3ControlClient);
 
 
 }

@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.service.S3BatchCompletionService;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -50,7 +51,7 @@ public class S3ServiceImpl implements S3Service
     private S3Dao s3Dao;
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
+    private S3BatchCompletionService s3BatchCompletionService;
 
     @Override
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto params) throws InterruptedException
@@ -129,7 +130,10 @@ public class S3ServiceImpl implements S3Service
     @Override
     public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption, boolean batchMode)
     {
-        if (batchMode) s3Dao.createBatchRestoreJob(params, expirationInDays, archiveRetrievalOption);
+        if (batchMode) {
+            String jobId = s3Dao.createBatchRestoreJob(params, expirationInDays, archiveRetrievalOption);
+            s3BatchCompletionService.awaitForBatchJobComplete(params, jobId);
+        }
         else s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
     }
 

@@ -81,6 +81,8 @@ import com.amazonaws.services.s3.transfer.internal.UploadImpl;
 import com.amazonaws.services.s3control.AWSS3Control;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.concurrent.BasicFuture;
@@ -820,11 +822,16 @@ public class MockS3OperationsImpl implements S3Operations
         return multipleFileUpload;
     }
 
-    // TODO: Add comments
     @Override
     public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient)
     {
         return new CreateJobResult();
+    }
+
+    @Override
+    public DescribeJobResult describeBatchJob(DescribeJobRequest request, AWSS3Control s3ControlClient)
+    {
+        return new DescribeJobResult();
     }
 
     /**

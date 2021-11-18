@@ -23,6 +23,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
 
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -287,4 +288,12 @@ public interface S3Dao
      */
     String createBatchRestoreJob(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
 
+    /****
+     * Get S3 batch job configuration and status information
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters
+     * @param jobId The ID for the S3 batch job
+     * @return A container element for the job configuration and status information
+     */
+    DescribeJobResult getBatchJobDescription(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String jobId);
 }

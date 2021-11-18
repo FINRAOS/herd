@@ -51,6 +51,8 @@ import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3control.AWSS3Control;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
 
 import org.finra.herd.dao.S3Operations;
 
@@ -176,6 +178,12 @@ public class S3OperationsImpl implements S3Operations
     public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient)
     {
         return s3ControlClient.createJob(createJobRequest);
+    }
+
+    @Override
+    public DescribeJobResult describeBatchJob(DescribeJobRequest request, AWSS3Control s3ControlClient)
+    {
+        return s3ControlClient.describeJob(request);
     }
 
 }

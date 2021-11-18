@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
@@ -33,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.S3Dao;
+import org.finra.herd.dao.service.S3BatchCompletionService;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -45,6 +48,9 @@ public class S3ServiceTest extends AbstractServiceTest
 {
     @Mock
     private S3Dao s3Dao;
+
+    @Mock
+    private S3BatchCompletionService s3BatchCompletionService;
 
     @InjectMocks
     private S3ServiceImpl s3Service;
@@ -366,4 +372,26 @@ public class S3ServiceTest extends AbstractServiceTest
         verify(s3Dao).validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
         verifyNoMoreInteractions(s3Dao);
     }
+
+    @Test
+    public void testBatchRestoreObjects()
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        String jobId = UUID.randomUUID().toString();
+
+        // Configure mock
+        when(s3Dao.createBatchRestoreJob(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION)).thenReturn(jobId);
+
+        // Call the method under test.
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION, true);
+
+        // Verify the external calls.
+        verify(s3Dao).createBatchRestoreJob(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
+        verifyNoMoreInteractions(s3Dao);
+
+        verify(s3BatchCompletionService).awaitForBatchJobComplete(s3FileTransferRequestParamsDto, jobId);
+        verifyNoMoreInteractions(s3BatchCompletionService);
+    }
+
 }
