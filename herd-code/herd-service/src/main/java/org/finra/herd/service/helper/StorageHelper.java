@@ -17,6 +17,8 @@ package org.finra.herd.service.helper;
 
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.stereotype.Component;
@@ -37,6 +39,8 @@ import org.finra.herd.model.jpa.StorageEntity;
 @Component
 public class StorageHelper
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageHelper.class);
+
     @Autowired
     protected StsDao stsDao;
 
@@ -150,16 +154,20 @@ public class StorageHelper
      *
      * @param roleArn the ARN of the role
      * @param sessionName the session name
+     * @param awsRoleDurationSeconds the AWS role duration in seconds
      *
      * @return the {@link S3FileTransferRequestParamsDto} object
      */
-    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName)
+    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName, int awsRoleDurationSeconds)
     {
         // Get the S3 file transfer request parameters DTO with proxy host and port populated from the configuration.
         S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
 
-        // Assume the specified role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, 3600, null);
+        LOGGER.info("Getting AWS temporary security credentials. sessionName={}, roleArn={}, awsRoleDurationSeconds={}", sessionName, roleArn,
+            awsRoleDurationSeconds);
+
+        // Assume the specified role.
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, awsRoleDurationSeconds, null);
 
         // Update the AWS parameters DTO with the temporary credentials.
         params.setAwsAccessKeyId(credentials.getAccessKeyId());

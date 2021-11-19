@@ -5,4 +5,5 @@ xlsxwriter >= 1.1.0
 herdcl
 herdsdk
 PySimpleGUI == 4.45.0
+requests
 pyinstaller

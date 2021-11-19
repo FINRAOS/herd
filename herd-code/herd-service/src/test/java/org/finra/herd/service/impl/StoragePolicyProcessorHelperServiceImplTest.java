@@ -37,6 +37,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -58,7 +59,6 @@ import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -84,10 +84,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private JsonHelper jsonHelper;
 
     @Mock
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Mock
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -239,23 +239,29 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
 
         // Mock the external calls.
+        int awsAssumeS3TaggingRoleDurationSecs = 43200;
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(awsAssumeS3TaggingRoleDurationSecs);
+        when(storageHelper
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs))
             .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
 
         // Call the method under test.
         storagePolicyProcessorHelperServiceImpl.executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+        verify(storageHelper)
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3FilesWithoutZeroByteDirectoryMarkers, STORAGE_NAME, businessObjectDataKey);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, false);
-        verify(s3Service)
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, false);
+        verify(s3Dao)
             .tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, actualS3Files, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
 
@@ -523,7 +529,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3KeyPrefixHelper, s3Service,
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3Dao, s3KeyPrefixHelper,
             storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
     }
 }

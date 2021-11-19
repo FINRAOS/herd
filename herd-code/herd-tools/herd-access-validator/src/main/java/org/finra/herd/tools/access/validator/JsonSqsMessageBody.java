@@ -17,6 +17,9 @@ package org.finra.herd.tools.access.validator;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 
+/**
+ * A helper class for AWS SQS messages as JSON
+ */
 public class JsonSqsMessageBody
 {
     private BusinessObjectDataKey businessObjectDataKey;

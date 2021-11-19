@@ -24,6 +24,8 @@ from unittest import mock
 
 # Third party imports
 import pandas as pd
+import requests
+import responses
 
 # Herd imports
 from herdsdk import rest
@@ -131,7 +133,7 @@ class TestUtilityMethods(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.setup_run(config)
-        self.assertEqual(mock_config.get.call_count, 2)
+        self.assertEqual(mock_config.get.call_count, 3)
         self.assertFalse(self.controller.debug_mode)
         self.assertEqual(self.controller.action, str.lower(config['action']))
         self.assertEqual(self.controller.excel_file, config['excelFile'])
@@ -154,7 +156,7 @@ class TestUtilityMethods(unittest.TestCase):
 
         # Mock config.get so each call returns a different value
         test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-                     'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk']
+                     'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
@@ -170,6 +172,7 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.configuration.host, test_vars[7])
         self.assertEqual(self.controller.configuration.username, test_vars[8])
         self.assertEqual(self.controller.configuration.password, 'testpassword')
+        self.assertEqual(self.controller.fip_endpoint, test_vars[10])
 
         # Check other actions
         actions = ['descriptive info', 'contacts', 'data entity tags', 'columns', 'lineage', 'sample data', 'tags',
@@ -179,25 +182,25 @@ class TestUtilityMethods(unittest.TestCase):
         mock_config.reset_mock(side_effect=True)
         test_vars = [
             'testdomain', 'descriptive info', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip',
 
             'testdomain', 'SmE', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'Bdef Tags', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'CoLuMns', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'LiNeage', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'TaGs', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'reLATIONal tABLE', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64()
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
         ]
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
@@ -212,13 +215,13 @@ class TestUtilityMethods(unittest.TestCase):
         mock_config.reset_mock(side_effect=True)
         test_vars = [
             'testdomain', 'latest descriptive info', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk',
+            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip',
 
             'testdomain', 'latest CoLuMns', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
 
             'testdomain', 'latest Bdef Tags', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
-            'testurl', string_generator(), string_generator_base64(),
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
         ]
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
@@ -258,6 +261,34 @@ class TestUtilityMethods(unittest.TestCase):
         # Run scenario and check values
         with self.assertRaises(configparser.NoOptionError):
             self.controller.setup_run(config)
+
+    @responses.activate
+    def test_oauth2_access_token(self):
+        """
+        Test of the setup oauth2 access token
+
+        """
+
+        self.controller.fip_endpoint = 'https://isso-devint.fip.dev.finra.org/fip/rest/isso/oauth2/access_token'
+        responses.add(responses.POST, self.controller.fip_endpoint,
+                      json={'access_token': 'token'}, status=200)
+
+        self.controller.setup_access_token()
+        self.assertEqual(self.controller.configuration.access_token, 'token')
+
+    @responses.activate
+    def test_oauth2_access_token_error(self):
+        """
+        Test of the setup oauth2 access token if status not 200 returns
+
+        """
+
+        self.controller.fip_endpoint = 'https://isso-devint.fip.dev.finra.org/fip/rest/isso/oauth2/access_token'
+        responses.add(responses.POST, self.controller.fip_endpoint,
+                      json={'error': 'bad request'}, status=400)
+
+        with self.assertRaises(requests.exceptions.HTTPError):
+            self.controller.setup_access_token()
 
     def test_get_key(self):
         """

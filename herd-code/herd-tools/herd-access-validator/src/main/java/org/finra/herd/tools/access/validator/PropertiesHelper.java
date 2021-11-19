@@ -54,6 +54,8 @@ class PropertiesHelper
 
     static final String HERD_USERNAME_PROPERTY = "herdUsername";
 
+    static final String ACCESS_TOKEN_URL_PROPERTY = "accessTokenUrl";
+
     static final String NAMESPACE_PROPERTY = "namespace";
 
     static final String PRIMARY_PARTITION_VALUE_PROPERTY = "primaryPartitionValue";
