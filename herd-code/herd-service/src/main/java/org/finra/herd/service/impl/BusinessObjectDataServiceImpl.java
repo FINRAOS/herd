@@ -422,9 +422,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption, Boolean batchMode)
     {
-        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption);
+        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption, batchMode);
     }
 
     /**
@@ -1087,13 +1087,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * Initiates a restore request for a currently archived business object data. Keeps current transaction context.
      *
      * @param businessObjectDataKey the business object data key
-     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
+     * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
      * and Bulk
+     * @param batchMode flag to indicate if herd should use S3 Batch processing to restore the business object
      *
      * @return the business object data information
      */
-    BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption)
+    BusinessObjectData restoreBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption, Boolean batchMode)
     {
         // Execute the initiate a restore request before step.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
@@ -1110,6 +1111,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
             businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getStorageName(),
             businessObjectDataRestoreDto.getNewStorageUnitStatus(), businessObjectDataRestoreDto.getOldStorageUnitStatus());
+
+        if (batchMode) businessObjectDataRestoreDto.setBatchMode(true);
 
         // Initiate the restore request.
         businessObjectDataInitiateRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);

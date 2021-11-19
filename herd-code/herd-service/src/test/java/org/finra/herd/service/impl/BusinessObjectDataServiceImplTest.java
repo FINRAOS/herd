@@ -251,7 +251,7 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
 
         // Call the method under test.
         BusinessObjectData result =
-            businessObjectDataServiceImpl.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataServiceImpl.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Validate the results.
         assertEquals(businessObjectData, result);

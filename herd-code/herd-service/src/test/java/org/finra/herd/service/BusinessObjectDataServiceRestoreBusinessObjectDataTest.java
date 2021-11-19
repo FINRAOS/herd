@@ -96,7 +96,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
 
             // Initiate a restore request for the business object data.
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS,
-                ARCHIVE_RETRIEVAL_OPTION);
+                ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
             // Validate the returned object.
             businessObjectDataServiceTestHelper
@@ -177,7 +177,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
 
             // Initiate a restore request for the business object data.
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS,
-                ARCHIVE_RETRIEVAL_OPTION);
+                ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
             // Validate the returned object.
             businessObjectDataServiceTestHelper
@@ -267,7 +267,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
 
             // Initiate a restore request for the business object data.
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS,
-                ARCHIVE_RETRIEVAL_OPTION);
+                ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
             // Validate the returned object.
             businessObjectDataServiceTestHelper
@@ -343,7 +343,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             // Try to initiate a restore request for the business object data when S3 restore object operation fails with an Amazon service exception.
             try
             {
-                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
                 fail();
             }
             catch (IllegalStateException e)
@@ -403,7 +403,7 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             // Try to initiate a restore request for the business object data.
             try
             {
-                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
                 fail();
             }
             catch (IllegalArgumentException e)
