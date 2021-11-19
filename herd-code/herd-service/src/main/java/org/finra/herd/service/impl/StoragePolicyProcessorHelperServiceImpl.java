@@ -318,7 +318,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
         S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = storageHelper
             .getS3FileTransferRequestParamsDtoByRole(storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleArn(),
-                storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleSessionName());
+                storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleSessionName(),
+                configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class));
         s3ObjectTaggerParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
 
         // For directory only registration, we have no registered storage files to check against actual S3 files.

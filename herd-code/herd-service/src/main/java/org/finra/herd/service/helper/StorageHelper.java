@@ -154,23 +154,20 @@ public class StorageHelper
      *
      * @param roleArn the ARN of the role
      * @param sessionName the session name
+     * @param awsRoleDurationSeconds the AWS role duration in seconds
      *
      * @return the {@link S3FileTransferRequestParamsDto} object
      */
-    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName)
+    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName, int awsRoleDurationSeconds)
     {
-        // Get the AWS security token assume role duration secs configuration value.
-        int awsSecurityTokenAssumeRoleDurationSecs = configurationHelper.getProperty(ConfigurationValue.AWS_SECURITY_TOKEN_ASSUME_ROLE_DURATION_SECS,
-            Integer.class);
-
         // Get the S3 file transfer request parameters DTO with proxy host and port populated from the configuration.
         S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
 
-        LOGGER.info("Getting AWS temporary security credentials. sessionName={}, roleArn={}, awsSecurityTokenAssumeRoleDurationSecs={}",
-            sessionName, roleArn, awsSecurityTokenAssumeRoleDurationSecs);
+        LOGGER.info("Getting AWS temporary security credentials. sessionName={}, roleArn={}, awsRoleDurationSeconds={}", sessionName, roleArn,
+            awsRoleDurationSeconds);
 
-        // Assume the specified role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, awsSecurityTokenAssumeRoleDurationSecs, null);
+        // Assume the specified role.
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, awsRoleDurationSeconds, null);
 
         // Update the AWS parameters DTO with the temporary credentials.
         params.setAwsAccessKeyId(credentials.getAccessKeyId());

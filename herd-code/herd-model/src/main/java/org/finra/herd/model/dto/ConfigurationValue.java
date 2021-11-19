@@ -122,7 +122,7 @@ public enum ConfigurationValue
      * The duration, in seconds, of the role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum session duration that is
      * set for the role.
      */
-    AWS_SECURITY_TOKEN_ASSUME_ROLE_DURATION_SECS("aws.security.token.assume.role.duration.secs", 43200),
+    AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 43200),
 
     /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.

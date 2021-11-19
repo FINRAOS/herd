@@ -239,8 +239,12 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
 
         // Mock the external calls.
+        int awsAssumeS3TaggingRoleDurationSecs = 43200;
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(awsAssumeS3TaggingRoleDurationSecs);
+        when(storageHelper
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs))
             .thenReturn(s3ObjectTaggerParamsDto);
         when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
         when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
@@ -250,7 +254,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+        verify(storageHelper)
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs);
         verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3FilesWithoutZeroByteDirectoryMarkers, STORAGE_NAME, businessObjectDataKey);
         verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
