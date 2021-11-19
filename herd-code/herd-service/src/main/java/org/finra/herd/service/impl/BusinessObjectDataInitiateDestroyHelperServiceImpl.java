@@ -209,7 +209,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
         S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = storageHelper
             .getS3FileTransferRequestParamsDtoByRole(businessObjectDataDestroyDto.getS3ObjectTaggerRoleArn(),
-                businessObjectDataDestroyDto.getS3ObjectTaggerRoleSessionName());
+                businessObjectDataDestroyDto.getS3ObjectTaggerRoleSessionName(),
+                configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class));
         s3ObjectTaggerParamsDto.setS3Endpoint(businessObjectDataDestroyDto.getS3Endpoint());
 
         // Get all S3 objects matching the S3 key prefix from the S3 bucket.
