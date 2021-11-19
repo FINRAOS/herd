@@ -306,8 +306,12 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
 
         // Mock the external calls.
+        int awsAssumeS3TaggingRoleDurationSecs = 43200;
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(awsAssumeS3TaggingRoleDurationSecs);
+        when(storageHelper
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs))
             .thenReturn(s3ObjectTaggerParamsDto);
         when(s3Dao.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
 
@@ -323,7 +327,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+        verify(storageHelper).
+            getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs);
         verify(s3Dao).listVersions(s3FileTransferRequestParamsDto);
         verify(s3Dao).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
             new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
