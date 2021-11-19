@@ -20,14 +20,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,10 +38,9 @@ import org.slf4j.LoggerFactory;
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -292,25 +292,25 @@ public class UploaderControllerTest extends AbstractUploaderTest
         }
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ClientHandlerException.class)
     public void testPerformUploadWithIoExceptionDuringAddStorageFiles() throws Exception
     {
         runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES, null);
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ClientHandlerException.class)
     public void testPerformUploadWithIoExceptionDuringGetStorage() throws Exception
     {
         runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE, null);
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ClientHandlerException.class)
     public void testPerformUploadWithIoExceptionDuringRegisterBusinessObjectData() throws Exception
     {
         runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA, null);
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ClientHandlerException.class)
     public void testPerformUploadWithIoExceptionDuringUpdateBusinessObjectDataStatus() throws Exception
     {
         // Turn off logging since this test will log a stack trace as a warning.

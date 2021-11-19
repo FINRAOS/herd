@@ -21,9 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.finra.herd.tools.common.dto.DownloaderOutputManifestDto;
 import org.springframework.stereotype.Component;
-
-import org.finra.herd.model.dto.DownloaderOutputManifestDto;
 
 /**
  * Manifest writer that writes a downloader JSON output manifest file.

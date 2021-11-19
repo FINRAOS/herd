@@ -19,8 +19,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.UnknownHostException;
+import java.net.ConnectException;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -89,7 +90,20 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
+    }
+
+    @Test
+    public void testGoSuccessOAuth() throws Exception
+    {
+        String[] arguments =
+            {"--namespace", NAMESPACE, "--businessObjectDefinitionName", BUSINESS_OBJECT_DEFINITION_NAME, "--localOutputFile", LOCAL_OUTPUT_FILE,
+                "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--udcServerHost", UDC_SERVICE_HOSTNAME, "--ssl",
+                "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-T", WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL,
+                "--trustSelfSignedCertificate", "true", "--disableHostnameVerification", "true"};
+
+        // We are expecting this to fail with an UnknownHostException.
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ConnectException());
     }
 
     @Test
@@ -103,7 +117,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
     }
 
     @Test
@@ -117,7 +131,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, arguments, null, new ClientHandlerException());
 
         environmentVariables.set("HERD_PASSWORD", "WEB_SERVICE_HTTPS_PASSWORD");
         String[] argumentsUsingEnvPassword =
@@ -127,7 +141,7 @@ public class RetentionExpirationExporterAppTest extends AbstractExporterTest
                 "--disableHostnameVerification", "true"};
 
         // We are expecting this to fail with an UnknownHostException.
-        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, argumentsUsingEnvPassword, null, new UnknownHostException());
+        runApplicationAndCheckReturnValue(retentionExpirationExporterApp, argumentsUsingEnvPassword, null, new ClientHandlerException());
     }
 
     @Test

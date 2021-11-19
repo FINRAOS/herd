@@ -24,11 +24,11 @@ import java.io.FileInputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.helper.LogLevel;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 

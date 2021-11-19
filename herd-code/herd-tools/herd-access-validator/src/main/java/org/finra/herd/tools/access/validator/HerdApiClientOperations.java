@@ -54,8 +54,6 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.BuildInformation;
 import org.finra.herd.sdk.model.BusinessObjectData;
 import org.finra.herd.sdk.model.UserAuthorizations;
-import org.finra.herd.tools.common.oauth2.AccessToken;
-import org.finra.herd.tools.common.oauth2.AuthKey;
 
 /**
  * A helper class that wraps calls to Herd API clients.
@@ -244,21 +242,5 @@ class HerdApiClientOperations
     UserAuthorizations currentUserGetCurrentUser(CurrentUserApi currentUserApi) throws ApiException
     {
         return currentUserApi.currentUserGetCurrentUser();
-    }
-
-    /**
-     * Gets OAuth2 Access Token
-     *
-     * @param username       the Herd API client user
-     * @param password       the Herd API client password
-     * @param accessTokenUrl url to get Herd API client access token
-     *
-     * @return String
-     */
-    public String getAccessToken(String username, String password, String accessTokenUrl)
-    {
-        AuthKey authKey = new AuthKey(username, password, accessTokenUrl);
-
-        return AccessToken.getAccessToken(authKey);
     }
 }

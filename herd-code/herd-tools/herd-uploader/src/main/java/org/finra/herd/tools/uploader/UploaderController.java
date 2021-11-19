@@ -26,13 +26,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.sdk.model.BusinessObjectDataVersion;
+import org.finra.herd.sdk.model.BusinessObjectDataVersions;
+import org.finra.herd.sdk.model.Storage;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.tools.common.ToolsDtoHelper;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,20 +49,11 @@ import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.core.helper.HerdThreadHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
 
@@ -66,9 +64,6 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 public class UploaderController extends DataBridgeController
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploaderController.class);
-
-    @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -104,18 +99,18 @@ public class UploaderController extends DataBridgeController
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
      * @throws InterruptedException if the upload thread was interrupted
-     * @throws JAXBException if a JAXB error was encountered
      * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
      * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
         justification = "manifestReader.readJsonManifest will always return an UploaderInputManifestDto object.")
     public void performUpload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, S3FileTransferRequestParamsDto params,
         Boolean createNewVersion, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws InterruptedException, JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, IOException, InterruptedException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         boolean cleanUpS3KeyPrefixOnFailure = false;
         BusinessObjectDataKey businessObjectDataKey = null;
@@ -150,7 +145,7 @@ public class UploaderController extends DataBridgeController
             BusinessObjectData businessObjectData = uploaderWebClient.preRegisterBusinessObjectData(manifest, storageName, createNewVersion);
 
             // Get business object data key.
-            businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+            businessObjectDataKey = uploaderWebClient.getBusinessObjectDataKey(businessObjectData);
 
             // Get the business object data version.
             Integer businessObjectDataVersion = businessObjectDataKey.getBusinessObjectDataVersion();
@@ -159,9 +154,10 @@ public class UploaderController extends DataBridgeController
             params.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
                 @Override
-                public AwsCredential getNewAwsCredential() throws Exception
+                public org.finra.herd.model.api.xml.AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, null).getAwsCredential();
+                    return ToolsDtoHelper.convertAwsCredential(
+                        uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion).getAwsCredential());
                 }
             });
 
@@ -173,11 +169,12 @@ public class UploaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    ToolsDtoHelper.convertStorage(storage), true);
 
             // Set the KMS ID, if available
-            String kmsKeyId =
-                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storage, false);
+            String kmsKeyId = storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+                ToolsDtoHelper.convertStorage(storage), false);
             params.setKmsKeyId(kmsKeyId);
 
             // Special handling for the maxThreads command line option.
@@ -217,7 +214,7 @@ public class UploaderController extends DataBridgeController
             // Change status of the business object data to VALID.
             uploaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         }
-        catch (InterruptedException | JAXBException | IOException | URISyntaxException e)
+        catch (ApiException | URISyntaxException e)
         {
             // If we got to the point of checking the target S3 key prefix before this failure
             // occurred, let's rollback the data transfer (clean up the S3 key prefix).
@@ -248,17 +245,15 @@ public class UploaderController extends DataBridgeController
      * @param storageName the name of the storage
      * @param maxRetryAttempts Maximum number of retry attempts on error
      * @param retryDelaySecs Delay in seconds between retries
-     *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
      * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
         String storageName, Integer maxRetryAttempts, Integer retryDelaySecs)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         // Initialize a retry count to know the number of times we re-try calling the method.
         int retryCount = 0;
@@ -272,7 +267,7 @@ public class UploaderController extends DataBridgeController
                 uploaderWebClient.addStorageFiles(businessObjectDataKey, manifest, params, storageName);
                 break;
             }
-            catch (IOException | JAXBException | URISyntaxException e)
+            catch (ApiException | URISyntaxException e)
             {
                 // Check if we've retried enough times.
                 if (retryCount >= maxRetryAttempts)
@@ -304,22 +299,26 @@ public class UploaderController extends DataBridgeController
      *
      * @param manifest the uploader input manifest
      * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
-     *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
      * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force)
-        throws JAXBException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         // Retrieve all already registered versions for this business object data.
-        BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
-                manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()), manifest.getPartitionValue(),
-                manifest.getSubPartitionValues(), null));
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace(manifest.getNamespace());
+        businessObjectDataKey.setBusinessObjectDefinitionName(manifest.getBusinessObjectDefinitionName());
+        businessObjectDataKey.setBusinessObjectFormatUsage(manifest.getBusinessObjectFormatUsage());
+        businessObjectDataKey.setBusinessObjectFormatFileType(manifest.getBusinessObjectFormatFileType());
+        businessObjectDataKey.setBusinessObjectFormatVersion(Integer.valueOf(manifest.getBusinessObjectFormatVersion()));
+        businessObjectDataKey.setPartitionValue(manifest.getPartitionValue());
+        businessObjectDataKey.setSubPartitionValues(manifest.getSubPartitionValues());
+
+        BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(businessObjectDataKey);
 
         // Check if the latest version of the business object data.
         if (CollectionUtils.isNotEmpty(businessObjectDataVersions.getBusinessObjectDataVersions()))
@@ -346,7 +345,7 @@ public class UploaderController extends DataBridgeController
                         "Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
                             "Please use -force option to invalidate the latest business object version and allow upload to proceed. " +
                             "Business object data {%s}",
-                        businessObjectDataHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
+                            ToolsDtoHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
                 }
             }
         }

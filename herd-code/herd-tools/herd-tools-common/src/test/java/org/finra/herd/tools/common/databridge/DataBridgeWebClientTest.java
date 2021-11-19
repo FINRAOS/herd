@@ -15,11 +15,6 @@
 */
 package org.finra.herd.tools.common.databridge;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -29,35 +24,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
-import org.apache.http.HttpVersion;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicStatusLine;
-import org.junit.Assert;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
+import org.finra.herd.sdk.invoker.ApiClient;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.invoker.auth.HttpBasicAuth;
+import org.finra.herd.sdk.invoker.auth.OAuth;
+import org.finra.herd.sdk.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.helper.HerdStringHelper;
-import org.finra.herd.dao.helper.HttpClientHelper;
-import org.finra.herd.dao.helper.XmlHelper;
-import org.finra.herd.dao.impl.MockCloseableHttpResponse;
-import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
-import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.herd.model.api.xml.ErrorInformation;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
+
+import static org.junit.Assert.*;
 
 public class DataBridgeWebClientTest extends AbstractDataBridgeTest
 {
@@ -67,13 +52,16 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private HttpClientHelper httpClientHelper;
+    private ApiClient apiClient;
 
     @Autowired
-    private HttpClientOperations httpClientOperations;
+    private OAuthTokenProvider oAuthTokenProvider;
 
     @Autowired
-    private XmlHelper xmlHelper;
+    private ApiClientHelper apiClientHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Before
     public void before()
@@ -87,10 +75,12 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         regServerAccessParamsDto.setUseSsl(false);
         regServerAccessParamsDto.setRegServerPort(8080);
         dataBridgeWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
-
-        dataBridgeWebClient.httpClientHelper = httpClientHelper;
-        dataBridgeWebClient.httpClientOperations = httpClientOperations;
         dataBridgeWebClient.herdStringHelper = herdStringHelper;
+        dataBridgeWebClient.apiClient = apiClient;
+        dataBridgeWebClient.oauthTokenProvider = oAuthTokenProvider;
+        dataBridgeWebClient.apiClientHelper = apiClientHelper;
+        dataBridgeWebClient.jsonHelper = jsonHelper;
+        dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost("dummyHostName");
     }
 
     @Test
@@ -105,15 +95,16 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         dataBridgeWebClient.regServerAccessParamsDto.setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT);
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(false);
 
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        org.finra.herd.sdk.model.BusinessObjectDataKey businessObjectDataKey = new org.finra.herd.sdk.model.BusinessObjectDataKey();
         UploaderInputManifestDto manifest = getUploaderInputManifestDto();
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         String storageName = "testStorage";
 
-        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-            dataBridgeWebClient.addStorageFiles(businessObjectDataKey, manifest, s3FileTransferRequestParamsDto, storageName);
-
-        assertNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
+        try{
+            dataBridgeWebClient.addStorageFiles(businessObjectDataKey, manifest, s3FileTransferRequestParamsDto, storageName);}
+        catch (ApiException e){
+            assertEquals("invalid xml", e.getMessage());
+        }
     }
 
     @Test
@@ -123,110 +114,11 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     }
 
     @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200BadContentReturnsNull() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), false);
-        httpResponse.setEntity(new StringEntity("invalid xml"));
-
-        executeWithoutLogging(DataBridgeWebClient.class, () -> {
-            BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            assertNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-        });
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200ValidResponse() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), false);
-        httpResponse.setEntity(new StringEntity(xmlHelper.objectToXml(new BusinessObjectDataStorageFilesCreateResponse())));
-        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-            dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-        assertNotNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse200ValidResponseHttpResponseThrowsExceptionOnClose() throws Exception
-    {
-        CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"), true);
-        httpResponse.setEntity(new StringEntity(xmlHelper.objectToXml(new BusinessObjectDataStorageFilesCreateResponse())));
-
-        executeWithoutLogging(DataBridgeWebClient.class, () -> {
-            BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse =
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            assertNotNull("businessObjectDataStorageFilesCreateResponse", businessObjectDataStorageFilesCreateResponse);
-        });
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse400BadContentThrows() throws Exception
-    {
-        int expectedStatusCode = 400;
-        String expectedReasonPhrase = "testReasonPhrase";
-        String expectedErrorMessage = "invalid xml";
-
-        CloseableHttpResponse httpResponse =
-            new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, expectedStatusCode, expectedReasonPhrase), false);
-        httpResponse.setEntity(new StringEntity(expectedErrorMessage));
-        try
-        {
-            executeWithoutLogging(DataBridgeWebClient.class, () -> {
-                dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            });
-            Assert.fail("expected HttpErrorResponseException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception type", HttpErrorResponseException.class, e.getClass());
-
-            HttpErrorResponseException httpErrorResponseException = (HttpErrorResponseException) e;
-            assertEquals("httpErrorResponseException responseMessage", expectedErrorMessage, httpErrorResponseException.getResponseMessage());
-            assertEquals("httpErrorResponseException statusCode", expectedStatusCode, httpErrorResponseException.getStatusCode());
-            assertEquals("httpErrorResponseException statusDescription", expectedReasonPhrase, httpErrorResponseException.getStatusDescription());
-            assertEquals("httpErrorResponseException message", "Failed to add storage files", httpErrorResponseException.getMessage());
-        }
-    }
-
-    @Test
-    public void testGetBusinessObjectDataStorageFilesCreateResponse400Throws() throws Exception
-    {
-        int expectedStatusCode = 400;
-        String expectedReasonPhrase = "testReasonPhrase";
-        String expectedErrorMessage = "testErrorMessage";
-
-        ErrorInformation errorInformation = new ErrorInformation();
-        errorInformation.setStatusCode(expectedStatusCode);
-        errorInformation.setMessage(expectedErrorMessage);
-        errorInformation.setStatusDescription(expectedReasonPhrase);
-
-        String requestContent = xmlHelper.objectToXml(errorInformation);
-
-        CloseableHttpResponse httpResponse =
-            new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, expectedStatusCode, expectedReasonPhrase), false);
-        httpResponse.setEntity(new StringEntity(requestContent));
-        try
-        {
-            dataBridgeWebClient.getBusinessObjectDataStorageFilesCreateResponse(httpResponse);
-            Assert.fail("expected HttpErrorResponseException, but no exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals("thrown exception type", HttpErrorResponseException.class, e.getClass());
-
-            HttpErrorResponseException httpErrorResponseException = (HttpErrorResponseException) e;
-            assertEquals("httpErrorResponseException responseMessage", expectedErrorMessage, httpErrorResponseException.getResponseMessage());
-            assertEquals("httpErrorResponseException statusCode", expectedStatusCode, httpErrorResponseException.getStatusCode());
-            assertEquals("httpErrorResponseException statusDescription", expectedReasonPhrase, httpErrorResponseException.getStatusDescription());
-            assertEquals("httpErrorResponseException message", "Failed to add storage files", httpErrorResponseException.getMessage());
-        }
-    }
-
-    @Test
     public void testGetRegServerAccessParamsDto()
     {
         RegServerAccessParamsDto regServerAccessParamsDto = dataBridgeWebClient.getRegServerAccessParamsDto();
 
-        assertEquals(RegServerAccessParamsDto.builder().withRegServerPort(8080).withUseSsl(false).build(), regServerAccessParamsDto);
+        assertEquals(RegServerAccessParamsDto.builder().withRegServerHost("dummyHostName").withRegServerPort(8080).withUseSsl(false).build(), regServerAccessParamsDto);
     }
 
     @Test
@@ -244,7 +136,12 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Test
     public void testGetS3KeyPrefixNoNamespace() throws Exception
     {
-        testGetS3KeyPrefix(null, Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2"), 0, "testStorage", false);
+        try {
+            testGetS3KeyPrefix(null, Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2"), 0, "testStorage", false);
+            fail();
+        } catch (ApiException e) {
+            assertEquals("Missing the required parameter 'namespace' when calling businessObjectDataGetS3KeyPrefix", e.getMessage());
+        }
     }
 
     @Test
@@ -324,6 +221,60 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
             Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2", "testSubPartitionValue3", "testSubPartitionValue4"), true);
     }
 
+    @Test
+    public void testGetBusinessObjectDataKey()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setNamespace("test1");
+        businessObjectData.setBusinessObjectDefinitionName("test2");
+        businessObjectData.setBusinessObjectFormatUsage("test3");
+        businessObjectData.setBusinessObjectFormatFileType("test4");
+        businessObjectData.setBusinessObjectFormatVersion(5);
+        businessObjectData.setPartitionValue("test6");
+        businessObjectData.setSubPartitionValues(Arrays.asList("a", "b"));
+        businessObjectData.setVersion(0);
+        BusinessObjectDataKey businessObjectDataKey = dataBridgeWebClient.getBusinessObjectDataKey(businessObjectData);
+        assertEquals(businessObjectData.getNamespace(), businessObjectDataKey.getNamespace());
+        assertEquals(businessObjectData.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectDefinitionName());
+        assertEquals(businessObjectData.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatUsage());
+        assertEquals(businessObjectData.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatFileType());
+        assertEquals(businessObjectData.getBusinessObjectFormatVersion(), businessObjectDataKey.getBusinessObjectFormatVersion());
+        assertEquals(businessObjectData.getPartitionValue(), businessObjectDataKey.getPartitionValue());
+        assertEquals(businessObjectData.getSubPartitionValues(), businessObjectDataKey.getSubPartitionValues());
+        assertEquals(businessObjectData.getVersion(), businessObjectDataKey.getBusinessObjectDataVersion());
+    }
+
+    @Test
+    public void testCreateApiClient() throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ApiException
+    {
+        RegServerAccessParamsDto regServerAccessParamsDto = new RegServerAccessParamsDto();
+        regServerAccessParamsDto.setUseSsl(false);
+        regServerAccessParamsDto.setRegServerHost("localhost");
+        regServerAccessParamsDto.setRegServerPort(8080);
+        regServerAccessParamsDto.setUsername("username");
+        regServerAccessParamsDto.setPassword("password");
+        regServerAccessParamsDto.setUseSsl(true);
+
+        // Basic Auth
+        ApiClient oauthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
+        OAuth oauth = (OAuth) oauthApiClient.getAuthentication("oauth2Authentication");
+        HttpBasicAuth basicAuth = (HttpBasicAuth) oauthApiClient.getAuthentication("basicAuthentication");
+        assertNull(oauth.getAccessToken());
+        assertEquals(regServerAccessParamsDto.getUsername(), basicAuth.getUsername());
+        assertEquals(regServerAccessParamsDto.getPassword(), basicAuth.getPassword());
+        apiClient.setUsername(null);
+        apiClient.setPassword(null);
+
+        // OAuth
+        regServerAccessParamsDto.setAccessTokenUrl("dummyUrl");
+        ApiClient basicAuthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
+        oauth = (OAuth) basicAuthApiClient.getAuthentication("oauth2Authentication");
+        basicAuth = (HttpBasicAuth) basicAuthApiClient.getAuthentication("basicAuthentication");
+        assertNotNull(oauth.getAccessToken());
+        assertNull(basicAuth.getUsername());
+        assertNull(basicAuth.getPassword());
+    }
+
     /**
      * Creates a UploaderInputManifestDto.
      *
@@ -362,15 +313,10 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void testAddStorageFiles(boolean useSsl)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -416,15 +362,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
-    private void testGetStorage(boolean useSsl)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+    private void testGetStorage(boolean useSsl) throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -442,15 +382,10 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      * @param attributes a map of business object data attributes
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void testPreRegisterBusinessObjectData(HashMap<String, String> attributes, boolean useSsl)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
@@ -469,20 +404,22 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
      *
      * @param useSsl specifies whether to use SSL or not
      *
-     * @throws JAXBException if a JAXB error was encountered
-     * @throws IOException if an I/O error was encountered
-     * @throws URISyntaxException if a URI syntax error was encountered
-     * @throws KeyStoreException if a key store exception occurs
-     * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
-     * @throws KeyManagementException if key management exception
+     * @throws ApiException if an Api exception was encountered
      */
     private void testUpdateBusinessObjectDataStatus(List<String> subPartitionValues, boolean useSsl)
-        throws IOException, JAXBException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+        throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         dataBridgeWebClient.regServerAccessParamsDto.setUseSsl(useSsl);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace("test1");
+        businessObjectDataKey.setBusinessObjectDefinitionName("test2");
+        businessObjectDataKey.setBusinessObjectFormatUsage("test3");
+        businessObjectDataKey.setBusinessObjectFormatFileType("test4");
+        businessObjectDataKey.setBusinessObjectFormatVersion(5);
+        businessObjectDataKey.setPartitionValue("test6");
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
+        businessObjectDataKey.setBusinessObjectDataVersion(0);
         String businessObjectDataStatus = "testBusinessObjectDataStatus";
 
         BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse =
