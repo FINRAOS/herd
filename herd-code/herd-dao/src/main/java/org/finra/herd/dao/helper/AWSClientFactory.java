@@ -8,6 +8,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -34,17 +35,15 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 @Component
 public class AWSClientFactory
 {
-    final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(AWSClientFactory.class);
-
+    final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
     @Autowired
     private RetryPolicyFactory retryPolicyFactory;
 
     /**
      * <p> Gets the {@link AWSCredentialsProvider} based on the credentials in the given parameters. </p> <p> Returns {@link
-     * DefaultAWSCredentialsProviderChain}
-     * if either access or secret key is {@code null}. Otherwise returns a {@link StaticCredentialsProvider} with the credentials. </p>
+     * DefaultAWSCredentialsProviderChain} if either access or secret key is {@code null}. Otherwise returns a {@link StaticCredentialsProvider} with the
+     * credentials. </p>
      *
      * @param params - Access parameters
      *
@@ -67,17 +66,8 @@ public class AWSClientFactory
         return new AWSCredentialsProviderChain(providers.toArray(new AWSCredentialsProvider[providers.size()]));
     }
 
-    /**
-     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
-     *
-     * @param params the parameters.
-     *
-     * @return the Amazon S3 client.
-     */
-    public AmazonS3Client getAmazonS3(S3FileTransferRequestParamsDto params)
+    private ClientConfiguration getClientConfiguration(S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client amazonS3Client;
-
         ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
         // Set the proxy configuration, if proxy is specified.
@@ -98,6 +88,22 @@ public class AWSClientFactory
         {
             clientConfiguration.setSocketTimeout(params.getSocketTimeout());
         }
+
+        return clientConfiguration;
+    }
+
+    /**
+     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
+     *
+     * @param params the parameters.
+     *
+     * @return the Amazon S3 client.
+     */
+    public AmazonS3Client getAmazonS3(S3FileTransferRequestParamsDto params)
+    {
+        AmazonS3Client amazonS3Client;
+
+        ClientConfiguration clientConfiguration = getClientConfiguration(params);
 
         // Create an S3 client using passed in credentials and HTTP proxy information.
         if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
@@ -130,10 +136,27 @@ public class AWSClientFactory
 
     public AWSS3Control getAmazonS3Control(final S3FileTransferRequestParamsDto params)
     {
-        AWSS3ControlClientBuilder s3ControlClientBuilder = AWSS3ControlClient.builder().withCredentials(getAWSCredentialsProvider(params));
+        ClientConfiguration clientConfiguration = getClientConfiguration(params);
+
+        AWSS3ControlClientBuilder s3ControlClientBuilder =
+            AWSS3ControlClient.builder().withClientConfiguration(clientConfiguration).withRegion(params.getAwsRegionName());
+
+        if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
+            StringUtils.isNotBlank(params.getSessionToken()))
+        {
+            LOGGER.info("Creating AWSS3Control with static credentials provider");
+            // Create an S3 client using basic session credentials.
+            s3ControlClientBuilder.withCredentials(
+                new AWSStaticCredentialsProvider(new BasicSessionCredentials(params.getAwsAccessKeyId(), params.getAwsSecretKey(), params.getSessionToken())));
+        }
+        else
+        {
+            LOGGER.info("Creating AWSS3Control with HerdAwsCredentialsProvider");
+            s3ControlClientBuilder.withCredentials(getAWSCredentialsProvider(params));
+        }
 
         // Set the optional endpoint, if specified.
-        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
+        if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
             s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(params.getS3Endpoint(), params.getAwsRegionName()));
         }
@@ -143,30 +166,9 @@ public class AWSClientFactory
             s3ControlClientBuilder.withRegion(Regions.fromName(params.getAwsRegionName()));
         }
 
-        if (StringUtils.isNotBlank(params.getS3Endpoint()) && StringUtils.isNotBlank(params.getAwsRegionName()))
+        if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
             s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(params.getS3Endpoint(), params.getAwsRegionName()));
-        }
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Set the proxy configuration, if proxy is specified.
-        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyHost(params.getHttpProxyHost());
-            clientConfiguration.setProxyPort(params.getHttpProxyPort());
-        }
-
-        // Sign all S3 API's with V4 signing.
-        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
-        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
-        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
-        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
-
-        // Set the optional socket timeout, if configured.
-        if (params.getSocketTimeout() != null)
-        {
-            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
         }
 
         s3ControlClientBuilder.withClientConfiguration(clientConfiguration);
@@ -215,7 +217,8 @@ public class AWSClientFactory
         public AWSCredentials getCredentials()
         {
             AwsCredential herdAwsCredential = herdAWSCredentialsProvider.getAwsCredential();
-            return new BasicSessionCredentials(herdAwsCredential.getAwsAccessKey(), herdAwsCredential.getAwsSecretKey(), herdAwsCredential.getAwsSessionToken());
+            return new BasicSessionCredentials(herdAwsCredential.getAwsAccessKey(), herdAwsCredential.getAwsSecretKey(),
+                herdAwsCredential.getAwsSessionToken());
         }
 
         @Override

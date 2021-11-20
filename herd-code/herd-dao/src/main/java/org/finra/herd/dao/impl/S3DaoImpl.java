@@ -1412,33 +1412,6 @@ public class S3DaoImpl implements S3Dao
          *
          * @return the transfer information for the transfer. This will typically be returned from an operation on the transfer manager (e.g. upload).
          */
-        public Transfer performTransfer(TransferManager transferManager);
-    }
-
-    /**
-     * A {@link AWSCredentialsProvider} which delegates to its wrapped {@link HerdAWSCredentialsProvider}
-     */
-    private static class HerdAwsCredentialsProviderWrapper implements AWSCredentialsProvider
-    {
-        private HerdAWSCredentialsProvider herdAWSCredentialsProvider;
-
-        public HerdAwsCredentialsProviderWrapper(HerdAWSCredentialsProvider herdAWSCredentialsProvider)
-        {
-            this.herdAWSCredentialsProvider = herdAWSCredentialsProvider;
-        }
-
-        @Override
-        public AWSCredentials getCredentials()
-        {
-            AwsCredential herdAwsCredential = herdAWSCredentialsProvider.getAwsCredential();
-            return new BasicSessionCredentials(herdAwsCredential.getAwsAccessKey(), herdAwsCredential.getAwsSecretKey(),
-                herdAwsCredential.getAwsSessionToken());
-        }
-
-        @Override
-        public void refresh()
-        {
-            // No need to implement this. AWS doesn't use this.
-        }
+        Transfer performTransfer(TransferManager transferManager);
     }
 }
