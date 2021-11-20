@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import org.finra.herd.core.AbstractCoreTest;
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.tools.common.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.jpa.StorageEntity;
 
 /**

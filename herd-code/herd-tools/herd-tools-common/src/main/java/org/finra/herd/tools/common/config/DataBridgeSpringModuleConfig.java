@@ -30,7 +30,6 @@ import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
-import org.finra.herd.dao.helper.HttpClientHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.S3BatchHelper;
@@ -45,6 +44,8 @@ import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StorageUnitHelper;
 import org.finra.herd.service.impl.S3ServiceImpl;
+import org.finra.herd.tools.common.databridge.ApiClientHelper;
+import org.finra.herd.tools.common.databridge.OAuthTokenProvider;
 
 /**
  * Data Bridge Spring module configuration. We are only defining specific beans we require to run the uploader and downloader applications.
@@ -98,9 +99,9 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
-    public HttpClientHelper httpClientHelper()
+    public ApiClientHelper apiClientHelper()
     {
-        return new HttpClientHelper();
+        return new ApiClientHelper();
     }
 
     // This dependency is required when S3Dao is used.
@@ -157,13 +158,29 @@ public class DataBridgeSpringModuleConfig
     {
         return new StsDaoImpl();
     }
+    
+    @Bean
+    public S3BatchHelper batchHelper()
+    {
+        return new S3BatchHelper();
+    }
+    
+    @Bean
+    public AWSClientFactory awsClientFactory()
+    {
+        return new AWSClientFactory();
+    }
+    
+    @Bean
+    public S3BatchCompletionService s3BatchCompletionService()
+    {
+        return new S3BatchCompletionServiceImpl();
+    }
+
 
     @Bean
-    public S3BatchHelper batchHelper() { return new S3BatchHelper(); }
-
-    @Bean
-    public AWSClientFactory awsClientFactory() { return new AWSClientFactory(); }
-
-    @Bean
-    public S3BatchCompletionService s3BatchCompletionService() { return new S3BatchCompletionServiceImpl(); }
+    public OAuthTokenProvider oauthTokenProvider()
+    {
+        return new OAuthTokenProvider();
+    }
 }
