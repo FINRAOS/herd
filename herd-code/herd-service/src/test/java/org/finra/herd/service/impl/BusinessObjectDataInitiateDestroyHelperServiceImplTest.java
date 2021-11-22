@@ -44,6 +44,7 @@ import org.mockito.stubbing.Answer;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -62,7 +63,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -98,10 +98,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private HerdStringHelper herdStringHelper;
 
     @Mock
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Mock
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -306,10 +306,14 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
 
         // Mock the external calls.
+        int awsAssumeS3TaggingRoleDurationSecs = 43200;
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(awsAssumeS3TaggingRoleDurationSecs);
+        when(storageHelper
+            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs))
             .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
+        when(s3Dao.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
 
         // Call the method under test.
         businessObjectDataInitiateDestroyHelperServiceImpl.executeS3SpecificSteps(businessObjectDataDestroyDto);
@@ -323,9 +327,11 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listVersions(s3FileTransferRequestParamsDto);
-        verify(s3Service).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+        verify(storageHelper).
+            getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs);
+        verify(s3Dao).listVersions(s3FileTransferRequestParamsDto);
+        verify(s3Dao).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
             new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
     }
@@ -1038,7 +1044,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectFormatDao, businessObjectFormatHelper,
-            configurationHelper, herdDao, herdStringHelper, s3KeyPrefixHelper, s3Service, storageFileHelper, storageHelper, storageUnitDao,
+            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, storageFileHelper, storageHelper, storageUnitDao,
             storageUnitDaoHelper);
     }
 }

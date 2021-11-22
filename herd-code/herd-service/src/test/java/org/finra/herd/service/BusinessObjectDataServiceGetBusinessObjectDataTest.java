@@ -646,7 +646,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Collections.singletonList(
                 new BusinessObjectDataStatusChangeEvent(BusinessObjectDataStatusEntity.VALID,
                     HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()),
-                    HerdDaoSecurityHelper.SYSTEM_USER)), NO_RETENTION_EXPIRATION_DATE);
+                    HerdDaoSecurityHelper.SYSTEM_USER)), NO_RETENTION_EXPIRATION_DATE, HerdDaoSecurityHelper.SYSTEM_USER,
+                resultBusinessObjectData.getCreatedOn());
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
@@ -687,7 +688,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                         Collections.singletonList(new StorageUnitStatusChangeEvent(StorageUnitStatusEntity.ENABLED,
                             HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(storageUnitEntity.getHistoricalStatuses(), 0).getCreatedOn()),
                             HerdDaoSecurityHelper.SYSTEM_USER)), NO_STORAGE_POLICY_TRANSITION_FAILED_ATTEMPTS, NO_RESTORE_EXPIRATION_ON)), NO_ATTRIBUTES,
-                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE);
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY, NO_RETENTION_EXPIRATION_DATE,
+                HerdDaoSecurityHelper.SYSTEM_USER, resultBusinessObjectData.getCreatedOn());
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
@@ -717,7 +719,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY,
-                RETENTION_EXPIRATION_DATE);
+                RETENTION_EXPIRATION_DATE, HerdDaoSecurityHelper.SYSTEM_USER, result.getCreatedOn());
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, result);

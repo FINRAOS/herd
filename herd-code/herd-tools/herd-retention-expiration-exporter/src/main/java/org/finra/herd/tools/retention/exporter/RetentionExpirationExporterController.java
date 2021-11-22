@@ -36,13 +36,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchFilter;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchKey;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 
 @Component
 class RetentionExpirationExporterController
@@ -89,8 +89,10 @@ class RetentionExpirationExporterController
         businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
-        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(Collections.singletonList(businessObjectDataSearchFilter));
+        BusinessObjectDataSearchFilter businessObjectDataSearchFilter = new BusinessObjectDataSearchFilter();
+        businessObjectDataSearchFilter.setBusinessObjectDataSearchKeys(businessObjectDataSearchKeys);
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        request.setBusinessObjectDataSearchFilters(Collections.singletonList(businessObjectDataSearchFilter));
 
         // Create a result list for business object data.
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();

@@ -68,6 +68,8 @@ public abstract class DataBridgeApp
 
     protected Option passwordOpt;
 
+    protected Option accessTokenUrlOpt;
+
     protected Option enableEnvVariablesOpt;
 
     protected Option trustSelfSignedCertificateOpt;
@@ -179,6 +181,7 @@ public abstract class DataBridgeApp
             passwordOpt = argParser.addArgument("w", "password", true, "The password used for HTTPS client authentication.", false);
             enableEnvVariablesOpt = argParser.addArgument("E", "enableEnvVariables", true,
                 "The enableEnvVariables used for HTTPS client authentication through environment provided variable.", false);
+            accessTokenUrlOpt = argParser.addArgument("T", "accessTokenUrl", true, "The access token url used for oauth token retrieval.", false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
             disableHostnameVerificationOpt =

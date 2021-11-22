@@ -20,9 +20,8 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.junit.Test;
-
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
 
 /**
  * Unit tests for DownloaderManifestReader class.

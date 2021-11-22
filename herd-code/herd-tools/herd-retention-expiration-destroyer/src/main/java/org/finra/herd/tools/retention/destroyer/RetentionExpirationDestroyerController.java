@@ -27,13 +27,13 @@ import java.util.List;
 import com.opencsv.CSVReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
 @Component
@@ -135,7 +135,7 @@ public class RetentionExpirationDestroyerController
             }
         }
 
-        return new BusinessObjectDataKey(line[0], line[1], line[2], line[3], businessObjectFormatVersion, line[5], subPartitionValues,
+        return buildBusinessObjectDataKey(line[0], line[1], line[2], line[3], businessObjectFormatVersion, line[5], subPartitionValues,
             businessObjectDataVersion);
     }
 
@@ -171,5 +171,34 @@ public class RetentionExpirationDestroyerController
         }
 
         return businessObjectDataKeyList;
+    }
+
+    /**
+     * Build Business Object Data Key object
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business objcet format version
+     * @param partitionValue the partition value
+     * @param subPartitionValues the sub partition values
+     * @param businessObjectDataVersion the business object data version
+     * @return the built business object data key object
+     */
+    BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage,
+        final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue,
+        final List<String> subPartitionValues, final Integer businessObjectDataVersion)
+    {
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+
+        businessObjectDataKey.setNamespace(namespace);
+        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectFormatUsage);
+        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectFormatFileType);
+        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectFormatVersion);
+        businessObjectDataKey.setPartitionValue(partitionValue);
+        businessObjectDataKey.setSubPartitionValues(subPartitionValues);
+        businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
+        return businessObjectDataKey;
     }
 }
