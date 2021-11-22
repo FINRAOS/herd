@@ -384,6 +384,20 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
             assertEquals("Storage policy name can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a storage policy when storage policy name contains a backward slash character.
+        try
+        {
+            storagePolicyService.createStoragePolicy(storagePolicyServiceTestHelper
+                .createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, addBackwardSlash(STORAGE_POLICY_NAME)), STORAGE_POLICY_RULE_TYPE,
+                    STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+                    NO_DO_NOT_TRANSITION_LATEST_VALID, STORAGE_POLICY_TRANSITION_TYPE, StoragePolicyStatusEntity.ENABLED));
+            fail("Should throw an IllegalArgumentException when storage policy name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Storage policy name can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a storage policy using non-existing storage policy rule type.
         request = storagePolicyServiceTestHelper
             .createStoragePolicyCreateRequest(storagePolicyKey, "I_DO_NOT_EXIST", STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,

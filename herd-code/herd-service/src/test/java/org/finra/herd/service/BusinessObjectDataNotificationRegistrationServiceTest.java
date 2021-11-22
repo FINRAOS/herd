@@ -400,6 +400,36 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             assertEquals("Notification name can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a business object data notification when namespace contains a backward slash character.
+        request = new BusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(addBackwardSlash(NAMESPACE), NOTIFICATION_NAME),
+            NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
+            new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                BDATA_STATUS, BDATA_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+        try
+        {
+            businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data notification when notification name contains a backward slash character.
+        request = new BusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(NAMESPACE, addBackwardSlash(NOTIFICATION_NAME)),
+            NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
+            new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                BDATA_STATUS, BDATA_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+        try
+        {
+            businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when notification name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Notification name can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a business object data notification using non-existing notification event type.
         request = new BusinessObjectDataNotificationRegistrationCreateRequest(notificationRegistrationKey, "I_DO_NOT_EXIST",
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,

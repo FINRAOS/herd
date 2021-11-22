@@ -181,6 +181,38 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
             assertEquals("Notification name can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a storage unit notification when namespace contains a backward slash character.
+        request = new StorageUnitNotificationRegistrationCreateRequest(new NotificationRegistrationKey(addBackwardSlash(NAMESPACE), NOTIFICATION_NAME),
+            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
+            NotificationRegistrationStatusEntity.ENABLED);
+        try
+        {
+            storageUnitNotificationRegistrationService.createStorageUnitNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a storage unit notification when notification name contains a backward slash character.
+        request = new StorageUnitNotificationRegistrationCreateRequest(new NotificationRegistrationKey(NAMESPACE, addBackwardSlash(NOTIFICATION_NAME)),
+            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
+            new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
+                STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions(),
+            NotificationRegistrationStatusEntity.ENABLED);
+        try
+        {
+            storageUnitNotificationRegistrationService.createStorageUnitNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when notification name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Notification name can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a storage unit notification using non-existing notification event type.
         request = new StorageUnitNotificationRegistrationCreateRequest(notificationRegistrationKey, "I_DO_NOT_EXIST",
             new StorageUnitNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,

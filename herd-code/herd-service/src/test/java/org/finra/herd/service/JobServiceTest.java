@@ -206,6 +206,28 @@ public class JobServiceTest extends AbstractServiceTest
         {
             assertEquals("Job name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a job when namespace contains a backward slash character.
+        try
+        {
+            jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(addBackwardSlash(TEST_ACTIVITI_NAMESPACE_CD), TEST_ACTIVITI_JOB_NAME));
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a job when job name name contains a backward slash character.
+        try
+        {
+            jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, addBackwardSlash(TEST_ACTIVITI_JOB_NAME)));
+            fail("Should throw an IllegalArgumentException when job name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Job name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)

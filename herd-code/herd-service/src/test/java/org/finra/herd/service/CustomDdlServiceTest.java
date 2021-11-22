@@ -256,6 +256,71 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         {
             assertEquals("Custom DDL name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a custom DDL instance when namespace contains a backward slash character.
+        try
+        {
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(addBackwardSlash(NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                    TEST_DDL));
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a custom DDL instance when business object definition name contains a backward slash character.
+        try
+        {
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, addBackwardSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                    TEST_DDL));
+            fail("Should throw an IllegalArgumentException when business object definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a custom DDL instance when business object format usage contains a backward slash character.
+        try
+        {
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, addBackwardSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                    TEST_DDL));
+            fail("Should throw an IllegalArgumentException when business object format usage contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format usage can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a custom DDL instance when business object format file type contains a backward slash character.
+        try
+        {
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addBackwardSlash(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, CUSTOM_DDL_NAME,
+                    TEST_DDL));
+            fail("Should throw an IllegalArgumentException when business object format file type contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format file type can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a custom DDL instance when custom DDL name contains a backward slash character.
+        try
+        {
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, addBackwardSlash(CUSTOM_DDL_NAME),
+                    TEST_DDL));
+            fail("Should throw an IllegalArgumentException when custom DDL name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Custom DDL name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test
