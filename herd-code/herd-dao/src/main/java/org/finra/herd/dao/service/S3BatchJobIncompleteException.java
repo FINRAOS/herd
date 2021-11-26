@@ -4,13 +4,10 @@ import com.amazonaws.services.s3control.model.DescribeJobResult;
 
 public class S3BatchJobIncompleteException extends RuntimeException
 {
-    DescribeJobResult jobDescriptor = null;
+    DescribeJobResult jobDescriptor;
 
-    public S3BatchJobIncompleteException() {
-        super();
-    }
-
-    public S3BatchJobIncompleteException(DescribeJobResult jobDescriptor) {
+    public S3BatchJobIncompleteException(DescribeJobResult jobDescriptor)
+    {
         super();
         this.jobDescriptor = jobDescriptor;
     }
@@ -18,7 +15,7 @@ public class S3BatchJobIncompleteException extends RuntimeException
     @Override
     public String toString()
     {
-        return "S3BatchJobIncompleteException{" + "jobDescriptor=" + jobDescriptor + '}';
+        return "S3BatchJobIncompleteException{ jobDescriptor=" + jobDescriptor + '}';
     }
 }
 

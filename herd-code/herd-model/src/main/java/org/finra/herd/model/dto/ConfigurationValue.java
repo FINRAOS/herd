@@ -999,9 +999,43 @@ public enum ConfigurationValue
      */
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
 
-
-    S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
+    /**
+     * The AWS account ID that creates the batch job.
+     * Length Constraints: Maximum length of 64.
+     * Pattern: ^\d{12}$
+     */
     AWS_ACCOUNT_ID("aws.account.id", null),
+
+    /**
+     * The Amazon Resource Name (ARN) for the AWS Identity and Access Management (IAM) role that Batch Operations will use to run this job's action on every object in the manifest.
+     * Type: String
+     * Length Constraints: Minimum length of 1. Maximum length of 2048.
+     * Pattern: arn:[^:]+:iam::\d{12}:role/.*
+     */
+    S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
+
+    /**
+     * The bucket where all batch job manifests will be stored
+     */
+    S3_BATCH_MANIFEST_BUCKET_NAME("s3.batch.manifest.bucket.name", null),
+
+    /**
+     * Parent folders structure where batch manifests should be uploaded
+     */
+    S3_BATCH_MANIFEST_LOCATION("s3.batch.manifest.location", null),
+
+    /**
+     * The maximum number of attempts that herd will call S3 describeJob while waiting for a batch job completion
+     * Type: Integer
+     */
+    S3_BATCH_RESTORE_MAX_ATTEMPTS("s3.batch.restore.maxAttempts", 30),
+
+    /**
+     * The number of milliseconds between S3 describeJob call attempts, that herd will call while waiting for a batch job completion
+     * Type: Integer
+     */
+    S3_BATCH_RESTORE_BACKOFF_PERIOD("s3.batch.restore.backoffPeriod", 30000),
+
     /**
      * The business object format attribute name for the relational database schema name. The default is "relational.schema.name".
      */

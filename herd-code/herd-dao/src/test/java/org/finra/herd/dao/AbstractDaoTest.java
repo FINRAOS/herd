@@ -1415,6 +1415,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @Autowired
+    private AWSClientFactory awsClientFactory;
+
+    @Autowired
     protected BusinessObjectDataAttributeDao businessObjectDataAttributeDao;
 
     @Autowired

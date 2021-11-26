@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.List;
@@ -26,11 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.service.S3BatchCompletionService;
-import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.dao.service.S3BatchWorkflowService;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -51,7 +49,7 @@ public class S3ServiceImpl implements S3Service
     private S3Dao s3Dao;
 
     @Autowired
-    private S3BatchCompletionService s3BatchCompletionService;
+    private S3BatchWorkflowService s3BatchWorkflowService;
 
     @Override
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto params) throws InterruptedException
@@ -130,11 +128,14 @@ public class S3ServiceImpl implements S3Service
     @Override
     public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption, boolean batchMode)
     {
-        if (batchMode) {
-            String jobId = s3Dao.createBatchRestoreJob(params, expirationInDays, archiveRetrievalOption);
-            s3BatchCompletionService.awaitForBatchJobComplete(params, jobId);
+        if (batchMode)
+        {
+            s3BatchWorkflowService.batchRestoreObjects(params, expirationInDays, archiveRetrievalOption);
         }
-        else s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
+        else
+        {
+            s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
+        }
     }
 
     @Override

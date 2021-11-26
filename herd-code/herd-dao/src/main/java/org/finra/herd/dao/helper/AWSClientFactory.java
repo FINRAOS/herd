@@ -155,17 +155,6 @@ public class AWSClientFactory
             s3ControlClientBuilder.withCredentials(getAWSCredentialsProvider(params));
         }
 
-        // Set the optional endpoint, if specified.
-//        if (StringUtils.isNotBlank(params.getS3Endpoint()))
-//        {
-//            s3ControlClientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(params.getS3Endpoint(), params.getAwsRegionName()));
-//        }
-        // Otherwise, set AWS region, if specified.
-//        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
-//        {
-//            s3ControlClientBuilder.withRegion(Regions.fromName(params.getAwsRegionName()));
-//        }
-
         return s3ControlClientBuilder.build();
     }
 

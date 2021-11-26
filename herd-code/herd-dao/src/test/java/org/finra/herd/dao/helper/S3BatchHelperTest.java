@@ -1,5 +1,7 @@
 package org.finra.herd.dao.helper;
 
+import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME;
+import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_LOCATION;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,6 +59,9 @@ public class S3BatchHelperTest extends AbstractDaoTest
             System.err.println( "Error creating temporary test file in " + this.getClass().getSimpleName() );
         }
 
+        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class)).thenReturn("testManifestBucket");
+        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class)).thenReturn("testLocation");
+
         S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", "testBucketName", files);
 
         assertNotNull(manifest);
@@ -64,6 +69,7 @@ public class S3BatchHelperTest extends AbstractDaoTest
         assertEquals(2, manifest.getFields().length);
         assertEquals("Bucket", manifest.getFields()[0]);
         assertEquals("Key", manifest.getFields()[1]);
+        assertEquals("arn:aws:s3:::testManifestBucket/testLocation/testJobName.csv", manifest.getLocationArn());
 
         assertNotNull(manifest.getContent());
         assertNotNull(manifest.getETag());
@@ -75,6 +81,42 @@ public class S3BatchHelperTest extends AbstractDaoTest
         assertTrue(lines[0].endsWith("testFile1.txt"));
         assertTrue(lines[1].endsWith("testFile2.txt"));
     }
+
+    @Test
+    public void testCreateCSVBucketKeyManifestNoLocation()
+    {
+        List<File> files = new ArrayList<>();
+        try {
+            files.add(folder.newFile("testFile1.txt"));
+            files.add(folder.newFile("testFile2.txt"));
+        }
+        catch( IOException ioe ) {
+            System.err.println( "Error creating temporary test file in " + this.getClass().getSimpleName() );
+        }
+
+        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class)).thenReturn("testManifestBucket");
+        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class)).thenReturn(null);
+
+        S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", "testBucketName", files);
+
+        assertNotNull(manifest);
+        assertEquals("S3BatchOperations_CSV_20180820", manifest.getFormat());
+        assertEquals(2, manifest.getFields().length);
+        assertEquals("Bucket", manifest.getFields()[0]);
+        assertEquals("Key", manifest.getFields()[1]);
+        assertEquals("arn:aws:s3:::testManifestBucket/testJobName.csv", manifest.getLocationArn());
+
+        assertNotNull(manifest.getContent());
+        assertNotNull(manifest.getETag());
+
+        String[] lines = manifest.getContent().split("\\R");
+        assertEquals(2, lines.length);
+        assertTrue(lines[0].startsWith("testBucketName,"));
+        assertTrue(lines[1].startsWith("testBucketName,"));
+        assertTrue(lines[0].endsWith("testFile1.txt"));
+        assertTrue(lines[1].endsWith("testFile2.txt"));
+    }
+
 
     @Test
     public void testCreateCSVBucketKeyManifestWithoutFiles()
@@ -125,8 +167,8 @@ public class S3BatchHelperTest extends AbstractDaoTest
         when(configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN)).thenReturn(S3_BATCH_ROLE_ARN);
 
         S3BatchManifest manifest = mock(S3BatchManifest.class);
-        when(manifest.getFilename()).thenReturn(TEST_MANIFEST_FILE_NAME);
-        when(manifest.getArn()).thenReturn(TEST_MANIFEST_ARN);
+        when(manifest.getS3Key()).thenReturn(TEST_MANIFEST_FILE_NAME);
+        when(manifest.getLocationArn()).thenReturn(TEST_MANIFEST_ARN);
         when(manifest.getFormat()).thenReturn(TEST_MANIFEST_FORMAT);
         when(manifest.getContent()).thenReturn(TEST_MANIFEST_CONTENT);
         when(manifest.getFields()).thenReturn(TEST_MANIFEST_FIELDS);

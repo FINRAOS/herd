@@ -8,8 +8,8 @@ public class S3BatchManifest
     private String[] fields;
     private String content;
     private String eTag;
-    private String filename;
-    private String arn;
+    private String key;
+    private String bucketName;
 
     public String getFormat()
     {
@@ -38,9 +38,18 @@ public class S3BatchManifest
 
     public void setContent(String content)
     {
-        if (content == null) eTag = null;
-        else if (content.isEmpty()) eTag = "";
-        else eTag = DigestUtils.md5Hex(content);
+        if (content == null)
+        {
+            eTag = null;
+        }
+        else if (content.isEmpty())
+        {
+            eTag = "";
+        }
+        else
+        {
+            eTag = DigestUtils.md5Hex(content);
+        }
 
         this.content = content;
     }
@@ -50,11 +59,28 @@ public class S3BatchManifest
         return eTag;
     }
 
-    public void setFilename(String filename) { this.filename = filename; }
+    public void setKey(String key)
+    {
+        this.key = key;
+    }
 
-    public String getFilename() { return filename; }
+    public String getS3Key()
+    {
+        return key;
+    }
 
-    public void setArn(String arn) { this.arn = arn; }
+    public String getBucketName()
+    {
+        return bucketName;
+    }
 
-    public String getArn() { return arn; }
+    public void setBucketName(String bucketName)
+    {
+        this.bucketName = bucketName;
+    }
+
+    public String getLocationArn()
+    {
+        return String.format("arn:aws:s3:::%s/%s", bucketName, key);
+    }
 }

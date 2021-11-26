@@ -1,5 +1,8 @@
 package org.finra.herd.dao.helper;
 
+import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME;
+import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_LOCATION;
+
 import java.io.File;
 import java.util.Collection;
 
@@ -32,24 +35,34 @@ public class S3BatchHelper
 
     public S3BatchManifest createCSVBucketKeyManifest(String jobId, String bucketName, Collection<File> files)
     {
-        if (bucketName == null || bucketName.isEmpty()) return null;
-        if (files == null || files.isEmpty()) return null;
+        String manifestBucketName = configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class);
+        String manifestLocation = configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class);
+
+        if (bucketName == null || bucketName.isEmpty())
+        {
+            return null;
+        }
+        if (files == null || files.isEmpty())
+        {
+            return null;
+        }
 
         // Create manifest content
         StringBuilder manifestContentBuilder = new StringBuilder();
-        files.stream()
-            .map(file -> file.getPath().replaceAll("\\\\", "/"))
-            .map(path -> String.format("%s,%s%n", bucketName, path))
+        files.stream().map(file -> file.getPath().replaceAll("\\\\", "/")).map(path -> String.format("%s,%s%n", bucketName, path))
             .forEach(manifestContentBuilder::append);
 
         S3BatchManifest manifest = new S3BatchManifest();
-        manifest.setFilename(String.format("%s.csv", jobId));
-        manifest.setArn(String.format("arn:aws:s3:::%s/%s", bucketName, manifest.getFilename()));
+        manifest.setKey(
+            (manifestLocation != null && !manifestLocation.isEmpty())
+                ? String.format("%s/%s.csv", manifestLocation, jobId)
+                : String.format("%s.csv", jobId));
+        manifest.setBucketName(manifestBucketName);
         manifest.setFormat("S3BatchOperations_CSV_20180820");
-        manifest.setFields(new String[]{ "Bucket", "Key" });
+        manifest.setFields(new String[] {"Bucket", "Key"});
         manifest.setContent(manifestContentBuilder.toString());
 
-        LOGGER.debug("restoreJobId=\"{}\" manifest: {}", jobId, manifest.getETag());
+        LOGGER.info("Manifest created, etag {} - batchJobId=\"{}\" ", manifest.getETag(), jobId);
 
         return manifest;
     }
@@ -59,39 +72,26 @@ public class S3BatchHelper
         String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);
         String batchRole = configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN);
 
-        JobOperation jobOperation = new JobOperation()
-            .withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation()
-                .withExpirationInDays(expirationInDays)
-                .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
+        JobOperation jobOperation = new JobOperation().withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation().withExpirationInDays(expirationInDays)
+            .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
 
-        JobManifest jobManifest = new JobManifest()
-            .withSpec(new JobManifestSpec()
-                .withFormat(manifest.getFormat())
-                .withFields(manifest.getFields()))
-            .withLocation(new JobManifestLocation()
-                .withObjectArn(manifest.getArn())
-                .withETag(manifest.getETag()));
+        JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
+            .withLocation(new JobManifestLocation().withObjectArn(manifest.getLocationArn()).withETag(manifest.getETag()));
 
-        JobReport jobReport = new JobReport()
-            .withEnabled(false);
+        JobReport jobReport = new JobReport().withEnabled(false);
 
-        CreateJobRequest createRestoreJobRequest = new CreateJobRequest()
-            .withAccountId(account)
-            .withOperation(jobOperation)
-            .withManifest(jobManifest)
-            .withReport(jobReport)
-            .withPriority(10)
-            .withRoleArn(batchRole)
-            .withClientRequestToken(jobId)
-            .withDescription(String.format("Restore batch job %s", jobId))
-            .withConfirmationRequired(false);
+        CreateJobRequest createRestoreJobRequest =
+            new CreateJobRequest().withAccountId(account).withOperation(jobOperation).withManifest(jobManifest).withReport(jobReport).withPriority(10)
+                .withRoleArn(batchRole).withClientRequestToken(jobId).withDescription(String.format("Restore batch job %s", jobId))
+                .withConfirmationRequired(false);
 
         LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
 
         return createRestoreJobRequest;
     }
 
-    public DescribeJobRequest generateDescribeJobRequest(String jobId) {
+    public DescribeJobRequest generateDescribeJobRequest(String jobId)
+    {
         String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);
         return new DescribeJobRequest().withAccountId(account).withJobId(jobId);
     }

@@ -33,10 +33,10 @@ import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.S3BatchHelper;
-import org.finra.herd.dao.impl.S3BatchCompletionServiceImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.dao.impl.StsDaoImpl;
-import org.finra.herd.dao.service.S3BatchCompletionService;
+import org.finra.herd.dao.service.S3BatchWorkflowService;
+import org.finra.herd.dao.service.S3BatchWorkflowServiceImpl;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -158,23 +158,23 @@ public class DataBridgeSpringModuleConfig
     {
         return new StsDaoImpl();
     }
-    
+
     @Bean
     public S3BatchHelper batchHelper()
     {
         return new S3BatchHelper();
     }
-    
+
     @Bean
     public AWSClientFactory awsClientFactory()
     {
         return new AWSClientFactory();
     }
-    
+
     @Bean
-    public S3BatchCompletionService s3BatchCompletionService()
+    public S3BatchWorkflowService s3BatchCompletionService()
     {
-        return new S3BatchCompletionServiceImpl();
+        return new S3BatchWorkflowServiceImpl();
     }
 
 

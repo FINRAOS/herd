@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import java.io.File;
@@ -122,7 +122,7 @@ public interface S3Operations
      * @param s3Client the {@link AmazonS3} implementation to use
      *
      * @return the pre-signed URL which expires at the specified time, and can be used to allow anyone to download the specified object from S3, without
-     *         exposing the owner's AWS secret access key
+     * exposing the owner's AWS secret access key
      */
     public URL generatePresignedUrl(GeneratePresignedUrlRequest generatePresignedUrlRequest, AmazonS3 s3Client);
 
@@ -263,10 +263,24 @@ public interface S3Operations
     public MultipleFileUpload uploadFileList(String s3BucketName, String virtualDirectoryKeyPrefix, File directory, List<File> files,
         ObjectMetadataProvider metadataProvider, TransferManager transferManager);
 
-
-    // TODO: Add comments here
+    /**
+     * This action creates a S3 Batch Operations job.
+     *
+     * @param createJobRequest the request object containing all the options for creating the S3 batch job
+     * @param s3ControlClient service client for accessing AWS S3 Control
+     *
+     * @return container object that contains information of the created job
+     */
     public CreateJobResult createBatchJob(CreateJobRequest createJobRequest, AWSS3Control s3ControlClient);
 
+    /**
+     * This action retrieves current state and settings of the S3 Batcj Job
+     *
+     * @param request the request object containing all the options for getting the S3 batch job description
+     * @param s3ControlClient service client for accessing AWS S3 Control
+     *
+     * @return container object that contains settings and current state of the created job
+     */
     public DescribeJobResult describeBatchJob(DescribeJobRequest request, AWSS3Control s3ControlClient);
 
 
