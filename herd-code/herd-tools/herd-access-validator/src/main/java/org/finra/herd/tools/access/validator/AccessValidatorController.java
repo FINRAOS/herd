@@ -74,7 +74,7 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.Attribute;
 import org.finra.herd.sdk.model.BusinessObjectData;
 import org.finra.herd.sdk.model.StorageFile;
-import org.finra.herd.tools.common.oauth2.AccessToken;
+import org.finra.herd.tools.common.databridge.OAuthTokenProvider;
 
 /**
  * The controller for the application.
@@ -93,6 +93,9 @@ class AccessValidatorController
 
     @Autowired
     private PropertiesHelper propertiesHelper;
+
+    @Autowired
+    private OAuthTokenProvider oauthTokenProvider;
 
     @Autowired
     private S3Operations s3Operations;
@@ -121,8 +124,8 @@ class AccessValidatorController
 
         if (!propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY))
         {
-            apiClient.setAccessToken(herdApiClientOperations
-                .getAccessToken(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY), propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY),
+            apiClient.setAccessToken(
+                oauthTokenProvider.getAccessToken(propertiesHelper.getProperty(HERD_USERNAME_PROPERTY), propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY),
                     propertiesHelper.getProperty(ACCESS_TOKEN_URL_PROPERTY)));
         }
 

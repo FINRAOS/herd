@@ -66,6 +66,21 @@ public class DownloaderAppTest extends AbstractDownloaderTest
     }
 
     @Test
+    public void testDownloaderAppOAuth() throws Exception
+    {
+        // Create the downloader manifest file.
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), getTestDownloaderInputManifestDto());
+
+        final String[] args =
+            new String[] {"-a", S3_ACCESS_KEY, "-p", S3_SECRET_KEY, "-e", S3_ENDPOINT_US_STANDARD, "-l", LOCAL_TEMP_PATH_OUTPUT.toString(), "-m",
+                manifestFile.getPath(), "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
+                "-w", WEB_SERVICE_HTTPS_PASSWORD, "-T", WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL, "-C", "true", "-d", "true", "-n", HTTP_PROXY_HOST, "-o",
+                HTTP_PROXY_PORT.toString()};
+
+        runDataBridgeAndCheckReturnValue(downloaderApp, args, DataBridgeWebClient.class, DataBridgeApp.ReturnValue.SUCCESS);
+    }
+
+    @Test
     public void testDownloaderAppHelpOptionSet() throws Exception
     {
         // Displaying help is a success condition.

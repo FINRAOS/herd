@@ -25,11 +25,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.helper.LogLevel;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
@@ -114,11 +114,11 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
 
         // Validate the results.
         assertEquals(Arrays.asList(
-            new BusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+                retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
                 BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
-            new BusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+            retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
                 BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, NO_SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
-            new BusinessObjectDataKey(NAMESPACE + ",\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"",
+            retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE + ",\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"",
                 BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"", BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"", Arrays
                 .asList(SUB_PARTITION_VALUES.get(0) + ",\"", SUB_PARTITION_VALUES.get(1) + ",\"", SUB_PARTITION_VALUES.get(2) + ",\"",
                     SUB_PARTITION_VALUES.get(3) + ",\""), BUSINESS_OBJECT_DATA_VERSION)), result);
@@ -203,5 +203,21 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
         FileUtils.writeStringToFile(inputCsvFile, stringBuilder, StandardCharsets.UTF_8);
 
         return inputCsvFile;
+    }
+
+    @Test
+    public void testBuildBusinessObjectDataKey()
+    {
+        BusinessObjectDataKey businessObjectDataKey =
+            retentionExpirationDestroyerController.buildBusinessObjectDataKey("namespace", "bdefName", "formatUsage", "fileType", 0, "partitionValue",
+                Arrays.asList("a", "b"), 1);
+        assertEquals("namespace", businessObjectDataKey.getNamespace());
+        assertEquals("bdefName", businessObjectDataKey.getBusinessObjectDefinitionName());
+        assertEquals("formatUsage", businessObjectDataKey.getBusinessObjectFormatUsage());
+        assertEquals("fileType", businessObjectDataKey.getBusinessObjectFormatFileType());
+        assertEquals(0, businessObjectDataKey.getBusinessObjectFormatVersion().intValue());
+        assertEquals("partitionValue", businessObjectDataKey.getPartitionValue());
+        assertEquals(Arrays.asList("a", "b"), businessObjectDataKey.getSubPartitionValues());
+        assertEquals(1, businessObjectDataKey.getBusinessObjectDataVersion().intValue());
     }
 }

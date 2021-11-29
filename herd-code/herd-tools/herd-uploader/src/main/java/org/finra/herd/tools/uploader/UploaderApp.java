@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import org.apache.commons.cli.Option;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -158,7 +159,7 @@ public class UploaderApp extends DataBridgeApp
         String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password).withAccessTokenUrl(argParser.getStringValue(accessTokenUrlOpt))
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performUpload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params, argParser.getBooleanValue(createNewVersionOpt),
             argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);
@@ -198,6 +199,11 @@ public class UploaderApp extends DataBridgeApp
 
             UploaderApp uploaderApp = new UploaderApp();
             returnValue = uploaderApp.go(args);
+        }
+        catch (ApiException apiException)
+        {
+            LOGGER.error("Error running herd uploader. {} statusCode={}", apiException.toString(), apiException.getCode());
+            returnValue = ReturnValue.FAILURE;
         }
         catch (Exception e)
         {

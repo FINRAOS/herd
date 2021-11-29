@@ -77,6 +77,7 @@ import org.finra.herd.sdk.model.Storage;
 import org.finra.herd.sdk.model.StorageDirectory;
 import org.finra.herd.sdk.model.StorageFile;
 import org.finra.herd.sdk.model.StorageUnit;
+import org.finra.herd.tools.common.databridge.OAuthTokenProvider;
 
 public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 {
@@ -87,6 +88,9 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
 
     @Mock
     private HerdApiClientOperations herdApiClientOperations;
+
+    @Mock
+    private OAuthTokenProvider oauthTokenProvider;
 
     @Mock
     private ObjectListing objectListing;
@@ -197,7 +201,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         when(propertiesHelper.getProperty(HERD_PASSWORD_PROPERTY)).thenReturn(HERD_PASSWORD);
         when(propertiesHelper.isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(false);
         when(propertiesHelper.getProperty(ACCESS_TOKEN_URL_PROPERTY)).thenReturn(ACCESS_TOKEN_URL);
-        when(herdApiClientOperations.getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL)).thenReturn(ACCESS_TOKEN);
+        when(oauthTokenProvider.getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL)).thenReturn(ACCESS_TOKEN);
         when(propertiesHelper.getProperty(AWS_REGION_PROPERTY)).thenReturn(AWS_REGION_NAME_US_EAST_1);
         when(propertiesHelper.getProperty(AWS_ROLE_ARN_PROPERTY)).thenReturn(AWS_ROLE_ARN);
         when(propertiesHelper.getProperty(BUSINESS_OBJECT_FORMAT_VERSION_PROPERTY)).thenReturn(BUSINESS_OBJECT_FORMAT_VERSION.toString());
@@ -227,7 +231,7 @@ public class AccessValidatorControllerTest extends AbstractAccessValidatorTest
         verify(propertiesHelper, times(2)).getProperty(HERD_PASSWORD_PROPERTY);
         verify(propertiesHelper, times(1)).getProperty(ACCESS_TOKEN_URL_PROPERTY);
         verify(propertiesHelper).isBlankOrNull(ACCESS_TOKEN_URL_PROPERTY);
-        verify(herdApiClientOperations).getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL);
+        verify(oauthTokenProvider).getAccessToken(HERD_USERNAME, HERD_PASSWORD, ACCESS_TOKEN_URL);
         verify(herdApiClientOperations).applicationGetBuildInfo(any(ApplicationApi.class));
         verify(herdApiClientOperations).currentUserGetCurrentUser(any(CurrentUserApi.class));
         verify(propertiesHelper).getProperty(AWS_REGION_PROPERTY);
