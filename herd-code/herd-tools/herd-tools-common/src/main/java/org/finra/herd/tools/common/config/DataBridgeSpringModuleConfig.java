@@ -23,11 +23,11 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.dao.StsDao;
-import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
@@ -166,9 +166,9 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
-    public AWSClientFactory awsClientFactory()
+    public AwsClientFactory awsClientFactory()
     {
-        return new AWSClientFactory();
+        return new AwsClientFactory();
     }
 
     @Bean

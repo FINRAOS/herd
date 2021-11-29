@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.service;
 
 import java.util.Arrays;
@@ -72,19 +87,17 @@ public class S3BatchWorkflowServiceImpl implements S3BatchWorkflowService
 
         if (result == null || result.getJob() == null || result.getJob().getStatus() == null)
         {
-            IllegalStateException e = new IllegalStateException("Unable to retrieve descriptor of the batch job");
-            LOGGER.warn("Batch restore call failed", e);
-            throw e;
+            IllegalStateException exception = new IllegalStateException("Unable to retrieve descriptor of the batch job");
+            LOGGER.warn("Batch restore call failed", exception);
+            throw exception;
         }
 
         JobStatus jobStatus = JobStatus.fromValue(result.getJob().getStatus());
         if (jobStatus != JobStatus.Complete)
         {
-            IllegalStateException e = new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor:  %s ", result));
-            LOGGER.warn("Batch restore call failed", e);
-            throw e;
+            IllegalStateException exception = new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor:  %s ", result));
+            LOGGER.warn("Batch restore call failed", exception);
+            throw exception;
         }
     }
-
-
 }

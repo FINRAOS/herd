@@ -18,6 +18,7 @@ package org.finra.herd.dao.impl;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -89,10 +90,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.S3BatchManifest;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
-import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.S3BatchHelper;
@@ -128,7 +129,7 @@ public class S3DaoImpl implements S3Dao
     private S3BatchHelper batchHelper;
 
     @Autowired
-    private AWSClientFactory awsClientFactory;
+    private AwsClientFactory awsClientFactory;
 
     private long sleepIntervalsMillis = DEFAULT_SLEEP_INTERVAL_MILLIS;
 
@@ -136,7 +137,7 @@ public class S3DaoImpl implements S3Dao
     public int abortMultipartUploads(S3FileTransferRequestParamsDto params, Date thresholdDate)
     {
         // Create an Amazon S3 client.
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
         int abortedMultipartUploadsCount = 0;
 
         try
@@ -265,7 +266,7 @@ public class S3DaoImpl implements S3Dao
             if (CollectionUtils.isNotEmpty(s3VersionSummaries))
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
                 // Build a list of objects to be deleted.
                 List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
@@ -304,7 +305,7 @@ public class S3DaoImpl implements S3Dao
             if (!params.getFiles().isEmpty())
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -391,7 +392,7 @@ public class S3DaoImpl implements S3Dao
     {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
-        AmazonS3Client s3 = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3 = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
         try
         {
             return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
@@ -405,7 +406,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public ObjectMetadata getObjectMetadata(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -432,7 +433,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
         try
         {
@@ -461,7 +462,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
         List<S3ObjectSummary> s3ObjectSummaries = new ArrayList<>();
 
         try
@@ -514,7 +515,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
         List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
 
         try
@@ -568,7 +569,7 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
                 // Create a restore object request.
                 RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
@@ -660,8 +661,8 @@ public class S3DaoImpl implements S3Dao
                 prepareMetadata(params, metadata);
 
                 // Create a put request with the parameters and the metadata.
-                PutObjectRequest putObjectRequest =
-                    new PutObjectRequest(manifest.getBucketName(), manifest.getS3Key(), new ByteArrayInputStream(manifest.getContent().getBytes()), metadata);
+                PutObjectRequest putObjectRequest = new PutObjectRequest(manifest.getBucketName(), manifest.getS3Key(),
+                    new ByteArrayInputStream(manifest.getContent().getBytes(Charset.forName("UTF-8"))), metadata);
 
                 return s3Operations.upload(putObjectRequest, transferManager);
             });
@@ -714,7 +715,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -930,7 +931,7 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -1011,7 +1012,7 @@ public class S3DaoImpl implements S3Dao
         PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
         // KMS key ID is being set through prepareMetadata()
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3(params);
+        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -1337,10 +1338,10 @@ public class S3DaoImpl implements S3Dao
         try
         {
             // Create an S3 client to access S3 objects.
-            s3Client = awsClientFactory.getAmazonS3(s3FileTransferRequestParamsDto);
+            s3Client = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
             // Create an S3 client for S3 object tagging.
-            s3ObjectTaggerClient = awsClientFactory.getAmazonS3(s3ObjectTaggerParamsDto);
+            s3ObjectTaggerClient = awsClientFactory.getAmazonS3Client(s3ObjectTaggerParamsDto);
 
             // Create a get object tagging request.
             GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.helper;
 
 import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME;
@@ -33,6 +48,15 @@ public class S3BatchHelper
     @Autowired
     private ConfigurationHelper configurationHelper;
 
+    /**
+     * Create container object for S3 batch job manifest
+     *
+     * @param jobId Unique batch job id
+     * @param bucketName The bucket name where target files located
+     * @param files The list of files to process by batch job
+     *
+     * @return container object with job settings and manifest content
+     */
     public S3BatchManifest createCSVBucketKeyManifest(String jobId, String bucketName, Collection<File> files)
     {
         String manifestBucketName = configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class);
@@ -54,9 +78,7 @@ public class S3BatchHelper
 
         S3BatchManifest manifest = new S3BatchManifest();
         manifest.setKey(
-            (manifestLocation != null && !manifestLocation.isEmpty())
-                ? String.format("%s/%s.csv", manifestLocation, jobId)
-                : String.format("%s.csv", jobId));
+            (manifestLocation != null && !manifestLocation.isEmpty()) ? String.format("%s/%s.csv", manifestLocation, jobId) : String.format("%s.csv", jobId));
         manifest.setBucketName(manifestBucketName);
         manifest.setFormat("S3BatchOperations_CSV_20180820");
         manifest.setFields(new String[] {"Bucket", "Key"});
@@ -67,6 +89,17 @@ public class S3BatchHelper
         return manifest;
     }
 
+    /**
+     * Generate AWS SDK CreateJobRequest object to restore files using S3 Batch operation
+     *
+     * @param manifest the container object containing configuration parameters and content for the manifest.
+     * @param jobId herd generated job id
+     * @param expirationInDays This argument specifies how long the S3 Glacier or S3 Glacier Deep Archive object remains available in Amazon S3. S3 Initiate
+     * Restore Object jobs that target S3 Glacier and S3 Glacier Deep Archive objects require ExpirationInDays set to 1 or greater.
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     *
+     * @return container object which contains the configuration parameters for an S3 Initiate Restore Object job.
+     */
     public CreateJobRequest generateCreateRestoreJobRequest(S3BatchManifest manifest, String jobId, int expirationInDays, String archiveRetrievalOption)
     {
         String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);

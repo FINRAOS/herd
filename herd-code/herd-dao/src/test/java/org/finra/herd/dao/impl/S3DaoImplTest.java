@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import static junit.framework.TestCase.fail;
@@ -61,14 +61,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.AbstractDaoTest;
-import org.finra.herd.dao.RetryPolicyFactory;
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.S3Operations;
-import org.finra.herd.dao.helper.AWSClientFactory;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -91,18 +88,17 @@ public class S3DaoImplTest extends AbstractDaoTest
     @Mock
     private JavaPropertiesHelper javaPropertiesHelper;
 
-    @Mock
-    private RetryPolicyFactory retryPolicyFactory;
-
     @InjectMocks
     private S3DaoImpl s3DaoImpl;
 
     @Mock
     private S3Operations s3Operations;
 
-    @Spy
-    @InjectMocks
-    private AWSClientFactory awsClientFactory;
+    @Mock
+    private AmazonS3Client s3client;
+
+    @Mock
+    private AwsClientFactory awsClientFactory;
 
     @Before
     public void before()
@@ -142,7 +138,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         MultiObjectDeleteException multiObjectDeleteException = new MultiObjectDeleteException(Collections.singletonList(deleteError), new ArrayList<>());
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class))).thenReturn(versionListing);
         when(s3Operations.deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class))).thenThrow(multiObjectDeleteException);
 
@@ -155,12 +151,14 @@ public class S3DaoImplTest extends AbstractDaoTest
         {
             assertEquals(String.format(
                 "Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: One or more objects could not be deleted " +
-                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null)", S3_KEY_PREFIX, S3_BUCKET_NAME),
-                e.getMessage());
+                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null)", S3_KEY_PREFIX,
+                S3_BUCKET_NAME), e.getMessage());
         }
 
         // Verify the external calls.
-        verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        //verify()
+        //verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -191,7 +189,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
 
         doThrow(new AmazonServiceException("Retrieval option is not supported by this storage class")).when(s3Operations)
@@ -226,14 +224,14 @@ public class S3DaoImplTest extends AbstractDaoTest
         VersionListing versionListing = new VersionListing();
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class))).thenReturn(versionListing);
 
         // Call the method under test.
         s3DaoImpl.deleteDirectory(s3FileTransferRequestParamsDto);
 
         // Verify the external calls.
-        verify(retryPolicyFactory).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
     }
@@ -288,7 +286,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenThrow(new AmazonServiceException(ERROR_MESSAGE));
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenThrow(new AmazonServiceException(ERROR_MESSAGE));
 
         // Try to call the method under test.
         try
@@ -298,11 +296,12 @@ public class S3DaoImplTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"null\" version id in \"%s\" bucket. " +
-                "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE), e.getMessage());
+                    "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE),
+                e.getMessage());
         }
 
         // Verify the external calls.
-        verify(retryPolicyFactory).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -457,10 +456,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setFiles(files);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create an Object Metadata
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setOngoingRestore(false);
@@ -476,7 +471,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         amazonS3Exception.setStatusCode(statusCode);
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
         doThrow(amazonS3Exception).when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
 
@@ -499,20 +494,20 @@ public class S3DaoImplTest extends AbstractDaoTest
                 assertEquals(TEST_FILE, keyCaptor.getValue());
 
                 // Verify Bulk option is used when the option is not provided
-                assertEquals(StringUtils.isNotEmpty(Tier.Standard.toString())
-                    ? Tier.Standard.toString() : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+                assertEquals(StringUtils.isNotEmpty(Tier.Standard.toString()) ? Tier.Standard.toString() : Tier.Bulk.toString(),
+                    requestStore.getGlacierJobParameters().getTier());
             }
         }
         catch (IllegalStateException illegalStateException)
         {
-            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
+            assertEquals(String.format(
+                "Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " + "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
                     "(Service: null; Status Code: %s; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null), S3 Extended Request ID: null",
                 TEST_FILE, S3_BUCKET_NAME, exceptionMessage, statusCode), illegalStateException.getMessage());
         }
 
         // Verify the external calls
-        verify(retryPolicyFactory).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
         verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -533,10 +528,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setFiles(files);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create an Object Metadata
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setOngoingRestore(false);
@@ -548,7 +539,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         ArgumentCaptor<RestoreObjectRequest> requestStoreCaptor = ArgumentCaptor.forClass(RestoreObjectRequest.class);
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        //when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
         doNothing().when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
 
@@ -557,13 +549,14 @@ public class S3DaoImplTest extends AbstractDaoTest
         RestoreObjectRequest requestStore = requestStoreCaptor.getValue();
         assertEquals(S3_BUCKET_NAME, s3BucketNameCaptor.getValue());
         assertEquals(TEST_FILE, keyCaptor.getValue());
+        assertEquals(s3client, s3ClientCaptor.getValue());
 
         // Verify Bulk option is used when the option is not provided
-        assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption)
-            ? archiveRetrievalOption : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+        assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString(),
+            requestStore.getGlacierJobParameters().getTier());
 
         // Verify the external calls
-        verify(retryPolicyFactory).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
         verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -588,10 +581,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create a get object tagging result.
         GetObjectTaggingResult getObjectTaggingResult = new GetObjectTaggingResult(null);
 
@@ -599,7 +588,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         SetObjectTaggingResult setObjectTaggingResult = new SetObjectTaggingResult();
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
 
@@ -607,7 +596,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Verify the external calls.
-        verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -644,7 +633,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         SetObjectTaggingResult setObjectTaggingResult = new SetObjectTaggingResult();
 
         // Mock the external calls.
-        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
 
@@ -652,7 +641,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3VersionSummary), tag);
 
         // Verify the external calls.
-        verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -663,6 +652,6 @@ public class S3DaoImplTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(awsHelper, javaPropertiesHelper, retryPolicyFactory, s3Operations);
+        verifyNoMoreInteractions(awsHelper, javaPropertiesHelper, s3Operations, awsClientFactory);
     }
 }
