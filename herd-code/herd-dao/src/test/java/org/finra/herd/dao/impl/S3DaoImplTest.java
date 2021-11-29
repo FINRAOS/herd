@@ -156,8 +156,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         }
 
         // Verify the external calls.
-        //verify()
-        //verify(retryPolicyFactory, times(2)).getRetryPolicy();
         verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class));
