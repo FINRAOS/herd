@@ -117,10 +117,6 @@ import org.finra.herd.model.dto.S3FileTransferResultsDto;
  */
 public class S3DaoTest extends AbstractDaoTest
 {
-    @Captor
-    ArgumentCaptor<PutObjectRequest> uploadArgumentCaptor;
-    @Captor
-    ArgumentCaptor<CreateJobRequest> createJobRequestArgumentCaptor;
     private Path localTempPath;
 
     /**
@@ -3239,6 +3235,9 @@ public class S3DaoTest extends AbstractDaoTest
         params.setS3BucketName(bucketName);
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
         params.setAwsRegionName("us-east-1");
+
+        ArgumentCaptor<PutObjectRequest> uploadArgumentCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        ArgumentCaptor<CreateJobRequest> createJobRequestArgumentCaptor = ArgumentCaptor.forClass(CreateJobRequest.class);
 
         // Create mocks
         S3Operations mockS3Operations = mock(S3Operations.class);
