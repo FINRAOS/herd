@@ -102,6 +102,17 @@ public class NamespaceServiceTest extends AbstractServiceTest
         {
             assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a namespace instance when namespace contains a backward slash character.
+        try
+        {
+            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addBackwardSlash(NAMESPACE)));
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

@@ -81,6 +81,17 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         {
             assertEquals("Partition key group name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to perform a create when partition key group name contains a backward slash character.
+        try
+        {
+            partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(addBackwardSlash(PARTITION_KEY_GROUP));
+            fail("Should throw an IllegalArgumentException when partition key group name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key group name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

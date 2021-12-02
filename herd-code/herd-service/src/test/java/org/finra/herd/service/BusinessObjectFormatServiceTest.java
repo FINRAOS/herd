@@ -1423,6 +1423,21 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a business object format when namespace contains a backward slash character.
+        request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        try
+        {
+            businessObjectFormatService.createBusinessObjectFormat(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to perform a create using invalid business object definition name.
         request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
@@ -1470,6 +1485,36 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals("Business object format usage can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a business object format when business object definition name contains a backward slash character.
+        request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        try
+        {
+            businessObjectFormatService.createBusinessObjectFormat(request);
+            fail("Should throw an IllegalArgumentException when business object definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object format when business object format usage contains a backward slash character.
+        request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addBackwardSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        try
+        {
+            businessObjectFormatService.createBusinessObjectFormat(request);
+            fail("Should throw an IllegalArgumentException when business object format usage contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format usage can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to perform a create using invalid format file type.
         request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", PARTITION_KEY, FORMAT_DESCRIPTION,
@@ -1513,6 +1558,36 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("Partition key can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object format when business object format file type contains a backward slash character.
+        request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addBackwardSlash(FORMAT_FILE_TYPE_CODE), PARTITION_KEY,
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        try
+        {
+            businessObjectFormatService.createBusinessObjectFormat(request);
+            fail("Should throw an IllegalArgumentException when business object format file type contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format file type can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object format when partition key contains a backward slash character.
+        request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, addBackwardSlash(PARTITION_KEY),
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema());
+        try
+        {
+            businessObjectFormatService.createBusinessObjectFormat(request);
+            fail("Should throw an IllegalArgumentException when partition key contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key can not contain a backward slash character.", e.getMessage());
         }
 
         // Try to perform a create using invalid partition key group.
