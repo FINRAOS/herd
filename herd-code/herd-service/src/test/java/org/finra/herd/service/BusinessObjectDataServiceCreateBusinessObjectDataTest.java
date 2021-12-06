@@ -559,6 +559,127 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         {
             assertEquals("Attribute name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a business object data when namespace contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object definition name contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object format usage contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addBackwardSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object format usage contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format usage can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object format file type contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addBackwardSlash(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object format file type contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format file type can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when partition key contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    addBackwardSlash(PARTITION_KEY), PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when partition key contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when partition value contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    addBackwardSlash(PARTITION_VALUE), SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when partition value contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition value can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when a sub-partition value contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, Arrays.asList(addBackwardSlash(PARTITION_VALUE_2)), BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when sub-partition value contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Subpartition value can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when an attribute name contains a backward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    Arrays.asList(new Attribute(addBackwardSlash(ATTRIBUTE_NAME_1_MIXED_CASE), ATTRIBUTE_VALUE_1)), NO_BUSINESS_OBJECT_DATA_PARENTS,
+                    NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when attribute name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Attribute name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

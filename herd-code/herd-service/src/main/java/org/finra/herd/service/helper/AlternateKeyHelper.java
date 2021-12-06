@@ -53,6 +53,7 @@ public class AlternateKeyHelper
     {
         Assert.hasText(parameterValue, String.format("%s %s must be specified.", indefiniteArticle, parameterName));
         Assert.doesNotContain(parameterValue, "/", String.format("%s can not contain a forward slash character.", StringUtils.capitalize(parameterName)));
+        Assert.doesNotContain(parameterValue, "\\", String.format("%s can not contain a backward slash character.", StringUtils.capitalize(parameterName)));
         return parameterValue.trim();
     }
 }
