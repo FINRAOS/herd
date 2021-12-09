@@ -120,7 +120,7 @@ public enum ConfigurationValue
 
     /**
      * The duration, in seconds, of the S3 tagging assume role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum
-     * session duration that is set for the role.
+     * session duration that is set for the role. The default is 1 hour (3600 seconds).
      */
     AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 3600),
 
