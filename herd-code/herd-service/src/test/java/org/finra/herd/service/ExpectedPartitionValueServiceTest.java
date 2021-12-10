@@ -158,6 +158,31 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         {
             assertEquals("Expected partition value can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to perform a create when partition key group name contains a backward slash character.
+        try
+        {
+            expectedPartitionValueService.createExpectedPartitionValues(expectedPartitionValueServiceTestHelper
+                .createExpectedPartitionValuesCreateRequest(addBackwardSlash(PARTITION_KEY_GROUP),
+                    expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues()));
+            fail("Should throw an IllegalArgumentException when partition key group name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key group name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when expected partition value contains a backward slash character.
+        try
+        {
+            expectedPartitionValueService.createExpectedPartitionValues(expectedPartitionValueServiceTestHelper
+                .createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, Arrays.asList(addBackwardSlash(PARTITION_VALUE))));
+            fail("Should throw an IllegalArgumentException when expected partition value contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Expected partition value can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

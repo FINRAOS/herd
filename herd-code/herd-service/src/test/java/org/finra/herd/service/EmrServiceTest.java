@@ -449,6 +449,45 @@ public class EmrServiceTest extends AbstractServiceTest
         {
             assertEquals("EMR cluster name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to perform a create when namespace contains a backward slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setNamespace(addBackwardSlash(request.getNamespace()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster definition name contains a backward slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setEmrClusterDefinitionName(addBackwardSlash(request.getEmrClusterDefinitionName()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster name contains a backward slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setEmrClusterName(addBackwardSlash(request.getEmrClusterName()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when EMR cluster name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     /**

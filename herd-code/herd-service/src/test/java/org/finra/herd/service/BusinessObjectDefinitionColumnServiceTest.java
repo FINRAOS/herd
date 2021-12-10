@@ -217,6 +217,45 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         {
             assertEquals("Business object definition column name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a business object definition column when business object definition namespace contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME, BDEF_COLUMN_NAME),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition column when business object definition name contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME), BDEF_COLUMN_NAME),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition column when business object definition column name contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, addBackwardSlash(BDEF_COLUMN_NAME)),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition column name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition column name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

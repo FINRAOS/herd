@@ -142,6 +142,45 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceTest extends Abst
         {
             assertEquals("User id can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a business object definition subject matter expert when business object definition namespace contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionSubjectMatterExpertService.createBusinessObjectDefinitionSubjectMatterExpert(
+                new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(
+                    new BusinessObjectDefinitionSubjectMatterExpertKey(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME, USER_ID)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition subject matter expert when business object definition name contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionSubjectMatterExpertService.createBusinessObjectDefinitionSubjectMatterExpert(
+                new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(
+                    new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME), USER_ID)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition subject matter expert when user id contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionSubjectMatterExpertService.createBusinessObjectDefinitionSubjectMatterExpert(
+                new BusinessObjectDefinitionSubjectMatterExpertCreateRequest(
+                    new BusinessObjectDefinitionSubjectMatterExpertKey(BDEF_NAMESPACE, BDEF_NAME, addBackwardSlash(USER_ID))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("User id can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

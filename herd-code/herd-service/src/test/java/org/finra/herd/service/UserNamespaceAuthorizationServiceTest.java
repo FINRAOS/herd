@@ -220,6 +220,19 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
             assertEquals("User id can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a user namespace authorization when user id contains a backward slash character.
+        request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(addBackwardSlash(key.getUserId()), key.getNamespace()),
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        try
+        {
+            userNamespaceAuthorizationService.createUserNamespaceAuthorization(request);
+            fail("Should throw an IllegalArgumentException when user id contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("User id can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a user namespace authorization using non-existing namespace.
         request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(key.getUserId(), "I_DO_NOT_EXIST"),
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
@@ -244,6 +257,19 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a user namespace authorization when namespace contains a backward slash character.
+        request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(key.getUserId(), addBackwardSlash(key.getNamespace())),
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        try
+        {
+            userNamespaceAuthorizationService.createUserNamespaceAuthorization(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
         }
     }
 
