@@ -41,6 +41,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -179,6 +180,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Get the session identifier for the assumed role to be used to tag S3 objects for archiving to Glacier.
         String s3ObjectTaggerRoleSessionName = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
 
+        // Get duration, in seconds, of the assumed role session.
+        Integer s3ObjectTaggerRoleSessionDurationSeconds =
+            configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+
         // Retrieve the storage unit and ensure it exists.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(storageName, businessObjectDataEntity);
 
@@ -204,6 +209,12 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         String oldStorageUnitStatus = storageUnitEntity.getStatus().getCode();
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVING, reason);
 
+        // Create and initialize the S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto = new S3ObjectTaggerRoleParamsDto();
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleSessionDurationSeconds(s3ObjectTaggerRoleSessionDurationSeconds);
+
         // Update the policy transition parameters DTO.
         storagePolicyTransitionParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         storagePolicyTransitionParamsDto.setS3BucketName(s3BucketName);
@@ -213,8 +224,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setStorageFiles(storageFiles);
         storagePolicyTransitionParamsDto.setS3ObjectTagKey(s3ObjectTagKey);
         storagePolicyTransitionParamsDto.setS3ObjectTagValue(s3ObjectTagValue);
-        storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
-        storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
+        storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleParamsDto(s3ObjectTaggerRoleParamsDto);
     }
 
     /**
@@ -315,13 +325,6 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getS3BucketName());
         s3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getS3KeyPrefix(), "/"));
 
-        // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = storageHelper
-            .getS3FileTransferRequestParamsDtoByRole(storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleArn(),
-                storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleSessionName(),
-                configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class));
-        s3ObjectTaggerParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
-
         // For directory only registration, we have no registered storage files to check against actual S3 files.
         if (CollectionUtils.isNotEmpty(storagePolicyTransitionParamsDto.getStorageFiles()))
         {
@@ -339,7 +342,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         List<S3ObjectSummary> actualS3Files = s3Dao.listDirectory(s3FileTransferRequestParamsDto, false);
 
         // Tag the S3 objects to initiate the archiving.
-        s3Dao.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, actualS3Files,
+        s3Dao.tagObjects(s3FileTransferRequestParamsDto, storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleParamsDto(), actualS3Files,
             new Tag(storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue()));
     }
 

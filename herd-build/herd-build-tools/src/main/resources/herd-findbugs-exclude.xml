@@ -105,6 +105,8 @@
          <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.S3FileTransferResultsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicyPriorityLevel"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicySelection"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicyTransitionParamsDto"/>
