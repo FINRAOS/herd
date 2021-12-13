@@ -1046,7 +1046,7 @@ public class S3DaoImpl implements S3Dao
                 PutObjectRequest putObjectRequest = new PutObjectRequest(manifest.getBucketName(), manifest.getKey(),
                     new ByteArrayInputStream(manifest.getContent().getBytes(StandardCharsets.UTF_8)), metadata);
 
-                LOGGER.info("Manifest S3 put request... batchJobId=\"{}\", putObjectRequest={}", jobId, jsonHelper.objectToJson(putObjectRequest));
+                LOGGER.info("Manifest S3 put request generated... batchJobId=\"{}\"", jobId);
 
                 // Upload file
                 return s3Operations.upload(putObjectRequest, transferManager);
