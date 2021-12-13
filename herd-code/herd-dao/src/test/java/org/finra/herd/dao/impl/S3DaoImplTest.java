@@ -520,7 +520,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         PutObjectRequest putRequest = uploadArgumentCaptor.getValue();
         assertNotNull(putRequest);
         assertEquals(S3_BUCKET_NAME_2, putRequest.getBucketName());
-        assertEquals(S3_KEY_2, putRequest.getKey());
+        assertEquals(TEST_S3_KEY_PREFIX_2, putRequest.getKey());
 
         verify(s3Operations).createBatchJob(eq(createJobRequest), any(AWSS3Control.class));
         verify(awsClientFactory).getAmazonS3Control(any());
@@ -577,7 +577,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         PutObjectRequest putRequest = uploadArgumentCaptor.getValue();
         assertNotNull(putRequest);
         assertEquals(S3_BUCKET_NAME_2, putRequest.getBucketName());
-        assertEquals(S3_KEY_2, putRequest.getKey());
+        assertEquals(TEST_S3_KEY_PREFIX_2, putRequest.getKey());
 
         verifyNoMoreInteractions(batchHelper);
         verifyNoMoreInteractions(s3Operations);

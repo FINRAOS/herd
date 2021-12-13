@@ -46,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
@@ -101,6 +102,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
 
     @Mock
     private S3Service s3Service;
+
+    @Mock
+    private S3Dao s3Dao;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -183,7 +187,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImplTest extends Abst
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3Files, STORAGE_NAME, businessObjectDataKey);
         verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(actualS3Files);
         verify(storageFileHelper).getFiles(storageFilesCreatedFromActualS3Files);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 36135, ARCHIVE_RETRIEVAL_OPTION);
+        verify(s3Dao).restoreObjects(finalS3FileTransferRequestParamsDto, 36135, ARCHIVE_RETRIEVAL_OPTION);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The business object data restore DTO is expected not to be updated.
