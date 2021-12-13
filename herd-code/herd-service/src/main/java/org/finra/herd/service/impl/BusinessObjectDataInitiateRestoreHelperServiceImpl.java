@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.Tier;
+import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -363,23 +364,34 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         if (StringUtils.isNotEmpty(archiveRetrievalOption))
         {
             //Validate archiveRetrievalOption to be a valid option.
-            Tier archiveRetrievalTier;
-            try
+            // Batch mode must provide tier in upper case and does not support Expedited, so validation is a bit different between modes
+            if (BooleanUtils.isTrue(batchMode))
             {
-                archiveRetrievalTier = Tier.fromValue(archiveRetrievalOption);
+                try
+                {
+                    S3GlacierJobTier.fromValue(archiveRetrievalOption);
+                }
+                catch (IllegalArgumentException ex)
+                {
+                    throw new IllegalArgumentException(String.format(
+                        "The archive retrieval option value \"%s\" is invalid. Valid archive retrieval option values for S3 batch operations are:%s",
+                        archiveRetrievalOption, Stream.of(S3GlacierJobTier.values()).map(Enum::name).collect(Collectors.toList())));
+                }
             }
-            catch (IllegalArgumentException ex)
+            else
             {
-                throw new IllegalArgumentException(
-                    String.format("The archive retrieval option value \"%s\" is invalid. Valid archive retrieval option values are:%s", archiveRetrievalOption,
-                        Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())));
+                try
+                {
+                    Tier.fromValue(archiveRetrievalOption);
+                }
+                catch (IllegalArgumentException ex)
+                {
+                    throw new IllegalArgumentException(
+                        String.format("The archive retrieval option value \"%s\" is invalid. Valid archive retrieval option values are:%s",
+                            archiveRetrievalOption, Stream.of(Tier.values()).map(Enum::name).collect(Collectors.toList())));
+                }
             }
 
-            // S3 Batch Operations does not support the Expedited retrieval tier.
-            if (BooleanUtils.isTrue(batchMode) && archiveRetrievalTier == Tier.Expedited)
-            {
-                throw new IllegalArgumentException("S3 Batch Operations does not support the Expedited retrieval tier.");
-            }
         }
 
         // Retrieve the business object data and ensure it exists.
