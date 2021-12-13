@@ -1309,6 +1309,18 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     }
 
     /**
+     * Returns a copy of the string, with a trailing backward slash character added.
+     *
+     * @param string the string that we want to add trailing backward slash character to
+     *
+     * @return the string with a trailing slash added
+     */
+    protected String addBackwardSlash(String string)
+    {
+        return String.format("%s\\", string);
+    }
+
+    /**
      * Returns a copy of the string, with some leading and trailing whitespace added.
      *
      * @param string the string that we want to add leading and trailing whitespace to

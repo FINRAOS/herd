@@ -122,6 +122,30 @@ public class TagServiceTest extends AbstractServiceTest
             assertEquals("Tag code can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a tag when tag type contains a backward slash character.
+        try
+        {
+            tagService.createTag(new TagCreateRequest(new TagKey(addBackwardSlash(TAG_TYPE), TAG_CODE), TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION,
+                NO_PARENT_TAG_KEY));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag type code can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a tag when tag code contains a backward slash character.
+        try
+        {
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, addBackwardSlash(TAG_CODE)), TAG_DISPLAY_NAME, TAG_SEARCH_SCORE_MULTIPLIER, TAG_DESCRIPTION,
+                NO_PARENT_TAG_KEY));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag code can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a tag with parent tag type is not the same as the requested.
         try
         {

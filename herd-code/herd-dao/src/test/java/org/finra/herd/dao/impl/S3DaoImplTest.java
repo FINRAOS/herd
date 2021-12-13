@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.impl;
 
 import static junit.framework.TestCase.fail;
@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.s3.AmazonS3;
@@ -69,13 +70,13 @@ import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 
 /**
  * This class tests functionality within the S3 DAO implementation.
  */
 public class S3DaoImplTest extends AbstractDaoTest
 {
-
     private static final String OTHER_EXCEPTION_MESSAGE = "OtherExceptionMessage";
 
     private static final String RESTORE_ALREADY_IN_PROGRESS_EXCEPTION_MESSAGE = "RestoreAlreadyInProgress";
@@ -148,8 +149,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         {
             assertEquals(String.format(
                 "Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: One or more objects could not be deleted " +
-                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null)", S3_KEY_PREFIX, S3_BUCKET_NAME),
-                e.getMessage());
+                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null)", S3_KEY_PREFIX,
+                S3_BUCKET_NAME), e.getMessage());
         }
 
         // Verify the external calls.
@@ -244,17 +245,15 @@ public class S3DaoImplTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Call the method under test with a list of S3 object summaries passed as null.
-        s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, null, tag);
+        s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, null, tag);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
@@ -267,11 +266,9 @@ public class S3DaoImplTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
@@ -286,12 +283,13 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Try to call the method under test.
         try
         {
-            s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
+            s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
         }
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to tag S3 object with \"%s\" key and \"null\" version id in \"%s\" bucket. " +
-                "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE), e.getMessage());
+                    "Reason: %s (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", S3_KEY, S3_BUCKET_NAME, ERROR_MESSAGE),
+                e.getMessage());
         }
 
         // Verify the external calls.
@@ -329,17 +327,15 @@ public class S3DaoImplTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Call the method under test with a list of S3 version summaries passed as null.
-        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, null, tag);
+        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, null, tag);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
@@ -352,11 +348,9 @@ public class S3DaoImplTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 version summary for an S3 delete marker.
         S3VersionSummary s3VersionSummary = new S3VersionSummary();
@@ -368,7 +362,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Call the method under test.
-        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3VersionSummary), tag);
+        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3VersionSummary), tag);
 
         // Verify the external calls.
         verifyNoMoreInteractionsHelper();
@@ -492,14 +486,14 @@ public class S3DaoImplTest extends AbstractDaoTest
                 assertEquals(TEST_FILE, keyCaptor.getValue());
 
                 // Verify Bulk option is used when the option is not provided
-                assertEquals(StringUtils.isNotEmpty(Tier.Standard.toString())
-                    ? Tier.Standard.toString() : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+                assertEquals(StringUtils.isNotEmpty(Tier.Standard.toString()) ? Tier.Standard.toString() : Tier.Bulk.toString(),
+                    requestStore.getGlacierJobParameters().getTier());
             }
         }
         catch (IllegalStateException illegalStateException)
         {
-            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
+            assertEquals(String.format(
+                "Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " + "Reason: com.amazonaws.services.s3.model.AmazonS3Exception: %s " +
                     "(Service: null; Status Code: %s; Error Code: null; Request ID: null; S3 Extended Request ID: null; Proxy: null), S3 Extended Request ID: null",
                 TEST_FILE, S3_BUCKET_NAME, exceptionMessage, statusCode), illegalStateException.getMessage());
         }
@@ -552,8 +546,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         assertEquals(TEST_FILE, keyCaptor.getValue());
 
         // Verify Bulk option is used when the option is not provided
-        assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption)
-            ? archiveRetrievalOption : Tier.Bulk.toString(), requestStore.getGlacierJobParameters().getTier());
+        assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString(),
+            requestStore.getGlacierJobParameters().getTier());
 
         // Verify the external calls
         verify(retryPolicyFactory).getRetryPolicy();
@@ -567,12 +561,11 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
@@ -585,6 +578,9 @@ public class S3DaoImplTest extends AbstractDaoTest
         RetryPolicy retryPolicy =
             new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
 
+        // Create a client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
         // Create a get object tagging result.
         GetObjectTaggingResult getObjectTaggingResult = new GetObjectTaggingResult(null);
 
@@ -593,14 +589,16 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Mock the external calls.
         when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
 
         // Call the method under test.
-        s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
+        s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Verify the external calls.
         verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
@@ -611,12 +609,11 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
 
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 version summary.
         S3VersionSummary s3VersionSummary = new S3VersionSummary();
@@ -630,6 +627,9 @@ public class S3DaoImplTest extends AbstractDaoTest
         RetryPolicy retryPolicy =
             new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
 
+        // Create a client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
         // Create a get object tagging result.
         GetObjectTaggingResult getObjectTaggingResult = new GetObjectTaggingResult(null);
 
@@ -638,14 +638,16 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Mock the external calls.
         when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
 
         // Call the method under test.
-        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3VersionSummary), tag);
+        s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3VersionSummary), tag);
 
         // Verify the external calls.
         verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verifyNoMoreInteractionsHelper();
