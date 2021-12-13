@@ -459,7 +459,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * <p/>
      * This implementation keeps the current transaction context.
      */
-    @NamespacePermission(fields = "#businessObjectDataSearchRequest.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace", permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(fields = "#businessObjectDataSearchRequest.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
+        permissions = NamespacePermissionEnum.READ)
     @Override
     public BusinessObjectDataSearchResultPagingInfoDto searchBusinessObjectData(Integer pageNum, Integer pageSize,
         BusinessObjectDataSearchRequest businessObjectDataSearchRequest)

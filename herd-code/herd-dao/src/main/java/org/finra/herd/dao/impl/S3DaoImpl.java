@@ -1077,7 +1077,9 @@ public class S3DaoImpl implements S3Dao
      * Get S3 batch job configuration and status information
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters
+     * @param batchJobConfig the configuration parameters used to create batch job
      * @param jobId The ID for the S3 batch job
+     *
      * @return A container element for the job configuration and status information
      */
     DescribeJobResult getBatchJobDescription(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, BatchJobConfigDto batchJobConfig,

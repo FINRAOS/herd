@@ -336,6 +336,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object.
+     * @param batchMode the flag indicates that operation should be executed using S3 Batch Operations
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */
