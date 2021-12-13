@@ -187,8 +187,8 @@ public interface BusinessObjectDataService
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently, three options are supported: Expedited,
-     * Standard,
-     * @param batchMode the flag used to indicate that S3 Batch processing should be used to restore the business object and Bulk
+     * Standard, and Bulk
+     * @param batchMode the flag used to indicate that S3 Batch processing should be used to restore the business object data
      *
      * @return the business object data information
      */

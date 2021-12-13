@@ -1018,9 +1018,6 @@ public class S3DaoImpl implements S3Dao
     String createBatchRestoreJob(final S3FileTransferRequestParamsDto paramsDto, BatchJobConfigDto batchJobConfig, int expirationInDays,
         String archiveRetrievalOption)
     {
-        LOGGER.info("Creating batch job to restore a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", paramsDto.getS3KeyPrefix(),
-            paramsDto.getS3BucketName(), paramsDto.getFiles().size());
-
         // All information regarding processing of this request going to be logged with this ID
         // and easily accessible in using Splunk smart field batchJobId
         String jobId = UUID.randomUUID().toString();
@@ -1038,7 +1035,6 @@ public class S3DaoImpl implements S3Dao
             // Uploading manifest file to S3 before executing Batch Operation.
             // In this case manifest it CSV file with bucketName and file name S3 key to restore
             performTransfer(paramsDto, transferManager -> {
-                LOGGER.info("Initiate manifest transfer... batchJobId=\"{}\" ", jobId);
                 // Create and prepare the metadata.
                 ObjectMetadata metadata = new ObjectMetadata();
                 prepareMetadata(paramsDto, metadata);
@@ -1047,13 +1043,9 @@ public class S3DaoImpl implements S3Dao
                 PutObjectRequest putObjectRequest = new PutObjectRequest(manifest.getBucketName(), manifest.getKey(),
                     new ByteArrayInputStream(manifest.getContent().getBytes(StandardCharsets.UTF_8)), metadata);
 
-                LOGGER.info("Manifest S3 put request generated... batchJobId=\"{}\"", jobId);
-
                 // Upload file
                 return s3Operations.upload(putObjectRequest, transferManager);
             });
-
-            LOGGER.info("Manifest transfer complete... batchJobId=\"{}\"", jobId);
 
             // Generate request to create S3 batch job to restore files
             CreateJobRequest createRestoreJobRequest =

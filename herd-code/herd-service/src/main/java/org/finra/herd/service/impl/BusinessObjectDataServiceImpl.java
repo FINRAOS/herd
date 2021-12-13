@@ -1089,9 +1089,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      *
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
-     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
-     * and Bulk
-     * @param batchMode flag to indicate if herd should use S3 Batch processing to restore the business object
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. For regular restore three options are supported: Expedited,
+     * Standard, Bulk. If restore executed in batch mode, only 2 options available: STANDARD and BULK
+     * @param batchMode flag to indicate if herd should use S3 Batch operations to restore the business object data
      *
      * @return the business object data information
      */
