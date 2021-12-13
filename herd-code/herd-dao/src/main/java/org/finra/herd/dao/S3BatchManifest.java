@@ -17,6 +17,8 @@ package org.finra.herd.dao;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+
+//TODO: Move this dude to dto with extra helper for content and location arn
 public class S3BatchManifest
 {
     private String format;

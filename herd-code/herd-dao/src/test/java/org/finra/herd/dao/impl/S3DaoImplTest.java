@@ -17,10 +17,15 @@ package org.finra.herd.dao.impl;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -44,6 +49,7 @@ import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.ListVersionsRequest;
 import com.amazonaws.services.s3.model.MultiObjectDeleteException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
@@ -53,6 +59,19 @@ import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3.model.Tier;
 import com.amazonaws.services.s3.model.VersionListing;
+import com.amazonaws.services.s3.transfer.Transfer;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferProgress;
+import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.model.BadRequestException;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
+import com.amazonaws.services.s3control.model.InternalServiceException;
+import com.amazonaws.services.s3control.model.JobDescriptor;
+import com.amazonaws.services.s3control.model.JobStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -61,6 +80,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.AbstractDaoTest;
@@ -68,6 +88,10 @@ import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
+import org.finra.herd.model.dto.BatchJobConfigDto;
+import org.finra.herd.model.dto.BatchJobManifestDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 
 /**
@@ -75,7 +99,6 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
  */
 public class S3DaoImplTest extends AbstractDaoTest
 {
-
     private static final String OTHER_EXCEPTION_MESSAGE = "OtherExceptionMessage";
 
     private static final String RESTORE_ALREADY_IN_PROGRESS_EXCEPTION_MESSAGE = "RestoreAlreadyInProgress";
@@ -99,6 +122,12 @@ public class S3DaoImplTest extends AbstractDaoTest
 
     @Mock
     private AwsClientFactory awsClientFactory;
+
+    @Mock
+    private JsonHelper jsonHelper;
+
+    @Mock
+    private S3BatchHelper batchHelper;
 
     @Before
     public void before()
@@ -442,6 +471,733 @@ public class S3DaoImplTest extends AbstractDaoTest
     public void testRestoreObjectsWithS3ExceptionOther()
     {
         testRestoreObjectsWithS3Exception(OTHER_EXCEPTION_MESSAGE, HttpStatus.SC_METHOD_FAILURE);
+    }
+
+    @Test
+    public void testCreateBatchRestoreJobComplete()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        // Init captors
+        ArgumentCaptor<PutObjectRequest> uploadArgumentCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
+
+        // Create mocks
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+
+        // Configure mocks
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+
+        // Execute target method
+        s3DaoImpl.createBatchRestoreJob(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+
+        // Verify interactions
+        verify(batchHelper).createCSVBucketKeyManifest(jobIdCaptor.capture(), any(), any(), eq(jobConfig));
+        String jobId = jobIdCaptor.getValue();
+
+        verify(s3Operations).upload(uploadArgumentCaptor.capture(), any());
+
+        PutObjectRequest putRequest = uploadArgumentCaptor.getValue();
+        assertNotNull(putRequest);
+        assertEquals(S3_BUCKET_NAME_2, putRequest.getBucketName());
+        assertEquals(S3_KEY_2, putRequest.getKey());
+
+        verify(s3Operations).createBatchJob(eq(createJobRequest), any(AWSS3Control.class));
+        verify(awsClientFactory).getAmazonS3Control(any());
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), eq(jobId), anyInt(), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+
+        verifyNoMoreInteractions(batchHelper);
+        verifyNoMoreInteractions(s3Operations);
+    }
+
+    @Test
+    public void testCreateBatchRestoreUploadFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        // Init captors
+        ArgumentCaptor<PutObjectRequest> uploadArgumentCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
+
+        // Create mocks
+        BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
+
+        // Configure mocks
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Failed);
+            return mockedUpload;
+        });
+
+        try
+        {
+            // Execute target method
+            s3DaoImpl.createBatchRestoreJob(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail("Should throw an IllegalStateException when upload failed.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Failed to initiate"));
+        }
+
+        // Verify interactions
+        verify(batchHelper).createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig));
+        verify(s3Operations).upload(uploadArgumentCaptor.capture(), any());
+
+        PutObjectRequest putRequest = uploadArgumentCaptor.getValue();
+        assertNotNull(putRequest);
+        assertEquals(S3_BUCKET_NAME_2, putRequest.getBucketName());
+        assertEquals(S3_KEY_2, putRequest.getKey());
+
+        verifyNoMoreInteractions(batchHelper);
+        verifyNoMoreInteractions(s3Operations);
+    }
+
+    @Test
+    public void testCreateBatchRestoreCreateManifestFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        // Create mocks
+        BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
+
+        // Configure mocks
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenThrow(new IllegalArgumentException());
+
+        try
+        {
+            // Execute target method
+            s3DaoImpl.createBatchRestoreJob(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail("Should throw an IllegalStateException.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Failed to initiate"));
+        }
+
+        // Verify interactions
+        verify(batchHelper).createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig));
+
+        verifyNoMoreInteractions(batchHelper);
+        verifyNoMoreInteractions(s3Operations);
+    }
+
+    @Test
+    public void testCreateBatchRestoreJobGenerateRequestFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        // Create mocks
+        BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
+
+        // Configure mocks
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenThrow(new IllegalArgumentException());
+
+        try
+        {
+            // Execute target method
+            s3DaoImpl.createBatchRestoreJob(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail("Should throw an IllegalStateException when upload failed.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Failed to initiate"));
+        }
+
+        // Verify interactions
+        verify(batchHelper).createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), anyInt(), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+
+        verifyNoMoreInteractions(batchHelper);
+        verifyNoMoreInteractions(s3Operations);
+    }
+
+    @Test
+    public void testCreateBatchRestoreJobAWSCreateJobFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        // Init captors
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
+
+        // Create mocks
+        BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+
+        // Configure mocks
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
+        when(s3Operations.createBatchJob(any(), any())).thenThrow(new InternalServiceException("Internal Service Exception"));
+
+        try
+        {
+            // Execute target method
+            s3DaoImpl.createBatchRestoreJob(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail("Should throw an IllegalStateException.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("Failed to initiate"));
+            assertTrue(e.getCause().getMessage().contains("Internal Service Exception"));
+        }
+
+        // Verify interactions
+        verify(batchHelper).createCSVBucketKeyManifest(jobIdCaptor.capture(), any(), any(), eq(jobConfig));
+        String jobId = jobIdCaptor.getValue();
+
+        verify(s3Operations).upload(any(), any());
+        verify(s3Operations).createBatchJob(eq(createJobRequest), any(AWSS3Control.class));
+        verify(awsClientFactory).getAmazonS3Control(any());
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), eq(jobId), anyInt(), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+
+        verifyNoMoreInteractions(batchHelper);
+        verifyNoMoreInteractions(s3Operations);
+    }
+
+    @Test
+    public void testBatchRestoreObjectsSuccess()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(2)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchRestoreObjectsAwaitSuccess()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Complete.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchRestoreObjectsFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete."));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(2)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchRestoreObjectsDescribeBatchJobFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenThrow(new BadRequestException(ERROR_MESSAGE));
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().contains(ERROR_MESSAGE));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(2)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+
+    @Test
+    public void testBatchRestoreObjectsAwaitFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete."));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchRestoreObjectsAwaitCancelled()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Cancelled.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete."));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+    }
+
+    @Test
+    public void batchRestoreObjectsAwaitExhaustedTest()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString());
+
+        when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchRestoreObjects(params, jobConfig, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete. Detailed descriptor:"));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(5)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsClientFactory, times(6)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(5)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(6)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
     }
 
     private void testRestoreObjectsWithS3Exception(String exceptionMessage, int statusCode)

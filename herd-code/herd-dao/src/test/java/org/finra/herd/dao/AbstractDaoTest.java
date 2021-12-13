@@ -1345,6 +1345,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_DDL_2 = "DROP TABLE `Test`;\n" + "CREATE EXTERNAL TABLE `TEST`;";
 
+    public static final String TEST_CSV_FILE_CONTENT = RANDOM_SUFFIX + "," + RANDOM_SUFFIX;
+
     public static final String TEST_S3_KEY_PREFIX = "herd-dao-test-key-prefix" + RANDOM_SUFFIX;
 
     public static final String TEST_S3_KEY_PREFIX_2 = "herd-dao-test-key-prefix-2-" + RANDOM_SUFFIX;

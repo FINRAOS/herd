@@ -15,9 +15,6 @@
  */
 package org.finra.herd.dao.helper;
 
-import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME;
-import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_LOCATION;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -30,15 +27,17 @@ import com.amazonaws.services.s3control.model.JobOperation;
 import com.amazonaws.services.s3control.model.JobReport;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.S3BatchManifest;
-import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.BatchJobConfigDto;
+import org.finra.herd.model.dto.BatchJobManifestDto;
 
 @Component
 public class S3BatchHelper
@@ -46,7 +45,11 @@ public class S3BatchHelper
     private static final Logger LOGGER = LoggerFactory.getLogger(org.finra.herd.dao.helper.S3BatchHelper.class);
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
+    private AwsClientFactory awsClientFactory;
+
+    @Autowired
+    private JsonHelper jsonHelper;
+
 
     /**
      * Create container object for S3 batch job manifest
@@ -54,39 +57,41 @@ public class S3BatchHelper
      * @param jobId Unique batch job id
      * @param bucketName The bucket name where target files located
      * @param files The list of files to process by batch job
+     * @param batchJobConfig The batch job configuration parameters
      *
      * @return container object with job settings and manifest content
      */
-    public S3BatchManifest createCSVBucketKeyManifest(String jobId, String bucketName, Collection<File> files)
+    public BatchJobManifestDto createCSVBucketKeyManifest(String jobId, String bucketName, Collection<File> files, BatchJobConfigDto batchJobConfig)
     {
-        String manifestBucketName = configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class);
-        String manifestLocation = configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class);
+        // Get bucket name and location prefix from batch job configuration object
+        String manifestBucketName = batchJobConfig.getManifestS3BucketName();
+        String manifestLocation = batchJobConfig.getManifestS3Prefix();
 
-        if (bucketName == null || bucketName.isEmpty())
-        {
-            return null;
-        }
-        if (files == null || files.isEmpty())
-        {
-            return null;
-        }
-
-        // Create manifest content
+        // Build manifest content as a 2 columns comma separated file, where each line looks like "bucket name, file path"
         StringBuilder manifestContentBuilder = new StringBuilder();
         files.stream().map(file -> file.getPath().replaceAll("\\\\", "/")).map(path -> String.format("%s,%s%n", bucketName, path))
             .forEach(manifestContentBuilder::append);
+        String content = manifestContentBuilder.toString();
 
+        // Build manifest dto object to pass manifest content and configuration for further processing
         S3BatchManifest manifest = new S3BatchManifest();
-        manifest.setKey(
-            (manifestLocation != null && !manifestLocation.isEmpty()) ? String.format("%s/%s.csv", manifestLocation, jobId) : String.format("%s.csv", jobId));
-        manifest.setBucketName(manifestBucketName);
-        manifest.setFormat("S3BatchOperations_CSV_20180820");
-        manifest.setFields(new String[] {"Bucket", "Key"});
-        manifest.setContent(manifestContentBuilder.toString());
+        BatchJobManifestDto.Builder<Void> builder = BatchJobManifestDto.builder()
+            // S3 key of the manifest file
+            .withKey(String.format("%s/%s.csv", manifestLocation, jobId))
+            // Bucket name where manifest will be stored
+            .withBucketName(manifestBucketName)
+            // The manifest format, indicates which of the available formats the specified manifest uses
+            // Valid Values: S3BatchOperations_CSV_20180820 | S3InventoryReport_CSV_20161130
+            .withFormat("S3BatchOperations_CSV_20180820")
+            // If the specified manifest object is in the S3BatchOperations_CSV_20180820 format, this element describes which columns contain the required data.
+            // Valid Values: Ignore | Bucket | Key | VersionId
+            .withFields("Bucket", "Key")
+            // Manifest file content
+            .withContent(content)
+            // md5 checksum of the content of the manifest file
+            .withEtag(DigestUtils.md5Hex(content));
 
-        LOGGER.info("Manifest created, etag {} - batchJobId=\"{}\" ", manifest.getETag(), jobId);
-
-        return manifest;
+        return builder.build();
     }
 
     /**
@@ -97,35 +102,45 @@ public class S3BatchHelper
      * @param expirationInDays This argument specifies how long the S3 Glacier or S3 Glacier Deep Archive object remains available in Amazon S3. S3 Initiate
      * Restore Object jobs that target S3 Glacier and S3 Glacier Deep Archive objects require ExpirationInDays set to 1 or greater.
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     * @param batchJobConfig The batch job configuration parameters
      *
      * @return container object which contains the configuration parameters for an S3 Initiate Restore Object job.
      */
-    public CreateJobRequest generateCreateRestoreJobRequest(S3BatchManifest manifest, String jobId, int expirationInDays, String archiveRetrievalOption)
+    public CreateJobRequest generateCreateRestoreJobRequest(BatchJobManifestDto manifest, String jobId, int expirationInDays, String archiveRetrievalOption,
+        BatchJobConfigDto batchJobConfig)
     {
-        String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);
-        String batchRole = configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN);
-
+        // Create object to describe the batch restore operation in S3. The Restore operation initiates restore requests for archived objects on a list of
+        // Amazon S3 objects that you specify.
         JobOperation jobOperation = new JobOperation().withS3InitiateRestoreObject(new S3InitiateRestoreObjectOperation().withExpirationInDays(expirationInDays)
             .withGlacierJobTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : S3GlacierJobTier.BULK.toString()));
 
-        JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
-            .withLocation(new JobManifestLocation().withObjectArn(manifest.getLocationArn()).withETag(manifest.getETag()));
+        // Build manifest file s3 ARN
+        String manifestLocationArn = String.format("arn:aws:s3:::%s/%s", manifest.getBucketName(), manifest.getKey());
 
+        // Build JobManifest object, which contains the configuration information for a batch job's manifest.
+        JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
+            .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
+
+        // Build JobReport object, which indicates there is no need to create separate job report file on S3
         JobReport jobReport = new JobReport().withEnabled(false);
 
-        CreateJobRequest createRestoreJobRequest =
-            new CreateJobRequest().withAccountId(account).withOperation(jobOperation).withManifest(jobManifest).withReport(jobReport).withPriority(10)
-                .withRoleArn(batchRole).withClientRequestToken(jobId).withDescription(String.format("Restore batch job %s", jobId))
-                .withConfirmationRequired(false);
-
-        LOGGER.info("Create restore job request: {}", createRestoreJobRequest.toString());
-
-        return createRestoreJobRequest;
+        // Build the request object
+        return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
+            .withReport(jobReport).withPriority(10).withRoleArn(batchJobConfig.getS3BatchRoleArn()).withClientRequestToken(jobId)
+            .withDescription(String.format("Restore batch job %s", jobId)).withConfirmationRequired(false);
     }
 
-    public DescribeJobRequest generateDescribeJobRequest(String jobId)
+    /**
+     * Generate request object to retrieve the configuration parameters and status for a Batch Operations job.
+     *
+     * @param jobId the identifier of the specific batch job
+     * @param batchJobConfig The batch job configuration parameters
+     *
+     * @return The container object which contains the configuration parameters for an S3 Describe Job call.
+     */
+    public DescribeJobRequest generateDescribeJobRequest(String jobId, BatchJobConfigDto batchJobConfig)
     {
-        String account = configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID);
-        return new DescribeJobRequest().withAccountId(account).withJobId(jobId);
+        // Build DescribeJobRequest object using provided parameters
+        return new DescribeJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withJobId(jobId);
     }
 }

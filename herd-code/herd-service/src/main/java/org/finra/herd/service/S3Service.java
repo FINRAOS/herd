@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import java.util.List;
@@ -36,6 +36,7 @@ public interface S3Service
      * @param s3FileCopyRequestParamsDto the S3 file copy request parameters.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
@@ -88,6 +89,7 @@ public interface S3Service
      * local path is the local directory where the downloaded files will be copied into.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto downloadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -99,6 +101,7 @@ public interface S3Service
      * local path is the local file name where the downloaded file will be copied into.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -142,7 +145,7 @@ public interface S3Service
      * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
      */
-    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption, boolean batchMode);
+    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
 
     /**
      * Tags S3 objects with the specified S3 object tag.
@@ -173,6 +176,7 @@ public interface S3Service
      * local path is the local directory to be copied.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -184,6 +188,7 @@ public interface S3Service
      * local path is the local file to be copied.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -196,6 +201,7 @@ public interface S3Service
      * common parent directory (local path) and the S3 key prefix.
      *
      * @return the file transfer results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;

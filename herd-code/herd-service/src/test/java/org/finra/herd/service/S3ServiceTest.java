@@ -33,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.S3Dao;
-import org.finra.herd.dao.service.S3BatchWorkflowService;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -46,9 +45,6 @@ public class S3ServiceTest extends AbstractServiceTest
 {
     @Mock
     private S3Dao s3Dao;
-
-    @Mock
-    private S3BatchWorkflowService s3BatchWorkflowService;
 
     @InjectMocks
     private S3ServiceImpl s3Service;
@@ -254,7 +250,7 @@ public class S3ServiceTest extends AbstractServiceTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
         // Call the method under test.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
 
         // Verify the external calls.
         verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
@@ -370,20 +366,4 @@ public class S3ServiceTest extends AbstractServiceTest
         verify(s3Dao).validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
         verifyNoMoreInteractions(s3Dao);
     }
-
-    @Test
-    public void testBatchRestoreObjects()
-    {
-        // Create an S3 file transfer request parameters DTO.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-
-        // Call the method under test.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION, true);
-
-        verify(s3BatchWorkflowService).batchRestoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
-        verifyNoMoreInteractions(s3BatchWorkflowService);
-
-        verifyNoMoreInteractions(s3Dao);
-    }
-
 }

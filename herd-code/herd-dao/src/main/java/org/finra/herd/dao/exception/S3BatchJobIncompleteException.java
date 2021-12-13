@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.finra.herd.dao.service;
+package org.finra.herd.dao.exception;
 
 import com.amazonaws.services.s3control.model.DescribeJobResult;
 
@@ -31,6 +31,11 @@ public class S3BatchJobIncompleteException extends RuntimeException
     public String toString()
     {
         return "S3BatchJobIncompleteException{ jobDescriptor=" + jobDescriptor + '}';
+    }
+
+    public DescribeJobResult getJobDescriptor()
+    {
+        return jobDescriptor;
     }
 }
 

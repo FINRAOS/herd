@@ -1,45 +1,66 @@
 package org.finra.herd.dao.helper;
 
-import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME;
-import static org.finra.herd.model.dto.ConfigurationValue.S3_BATCH_MANIFEST_LOCATION;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.JobManifestFormat;
+import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.AbstractDaoTest;
-import org.finra.herd.dao.S3BatchManifest;
-import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.BatchJobConfigDto;
+import org.finra.herd.model.dto.BatchJobManifestDto;
 
 public class S3BatchHelperTest extends AbstractDaoTest
 {
-    @Mock
-    private ConfigurationHelper configurationHelper;
-
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+    protected String AWS_ACCOUNT_ID = "123456789012";
+    protected String S3_BATCH_ROLE_ARN = "arn:aws:iam::123456789012:role/S3_BATCH_ROLE";
+    protected String S3_BATCH_MANIFEST_BUCKET_NAME = "1234-5678-9012-batch-manifest-bucket";
+    protected String S3_BATCH_MANIFEST_LOCATION_PREFIX = "sub/batch";
+    protected Integer S3_BATCH_RESTORE_MAX_ATTEMPTS = 5;
+    protected Integer S3_BATCH_RESTORE_BACKOFF_PERIOD = 2000;
+    protected String TEST_JOB_ID = UUID.randomUUID().toString();
+    protected String TEST_BUCKET_NAME = "1234-5678-9012-batch-job-bucket";
+    protected List<String> defaultFileNames = Arrays.asList("testFile1.txt", "testFile2.txt");
+    protected Integer expirationInDays = 555;
+    protected String archiveRetrievalOption = S3GlacierJobTier.BULK.toString();
+    protected String manifestFormat = JobManifestFormat.S3BatchOperations_CSV_20180820.toString();
+    protected String manifestContent = "default manifest content";
+    protected String manifestEtag = "test_manifest_etag";
+    protected String[] manifestFields = new String[] {"test_field_1", "test_field_2"};
     @InjectMocks
     private S3BatchHelper s3BatchHelper;
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    private BatchJobConfigDto getDefaultBatchJobDataDto()
+    {
+        return new BatchJobConfigDto(AWS_ACCOUNT_ID, S3_BATCH_ROLE_ARN, S3_BATCH_MANIFEST_BUCKET_NAME, S3_BATCH_MANIFEST_LOCATION_PREFIX,
+            S3_BATCH_RESTORE_MAX_ATTEMPTS, S3_BATCH_RESTORE_BACKOFF_PERIOD);
+    }
+
+    private BatchJobManifestDto getDefaultBatchJobManifestDto()
+    {
+        return BatchJobManifestDto.builder().withKey(String.format("%s/%s.csv", S3_BATCH_MANIFEST_LOCATION_PREFIX, TEST_JOB_ID))
+            .withBucketName(S3_BATCH_MANIFEST_BUCKET_NAME).withFormat(manifestFormat).withContent(manifestContent).withFields(manifestFields)
+            .withEtag(manifestEtag).build();
+    }
 
     @Before
     public void before()
@@ -48,134 +69,37 @@ public class S3BatchHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testCreateCSVBucketKeyManifest()
+    public void testCreateCSVBucketKeyManifest() throws IOException
     {
-        List<File> files = new ArrayList<>();
-        try {
-            files.add(folder.newFile("testFile1.txt"));
-            files.add(folder.newFile("testFile2.txt"));
-        }
-        catch( IOException ioe ) {
-            System.err.println( "Error creating temporary test file in " + this.getClass().getSimpleName() );
-        }
+        List<File> files = createTemporaryFiles(defaultFileNames);
 
-        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class)).thenReturn("testManifestBucket");
-        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class)).thenReturn("testLocation");
-
-        S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", "testBucketName", files);
+        BatchJobManifestDto manifest = s3BatchHelper.createCSVBucketKeyManifest(TEST_JOB_ID, TEST_BUCKET_NAME, files, getDefaultBatchJobDataDto());
 
         assertNotNull(manifest);
         assertEquals("S3BatchOperations_CSV_20180820", manifest.getFormat());
-        assertEquals(2, manifest.getFields().length);
-        assertEquals("Bucket", manifest.getFields()[0]);
-        assertEquals("Key", manifest.getFields()[1]);
-        assertEquals("arn:aws:s3:::testManifestBucket/testLocation/testJobName.csv", manifest.getLocationArn());
-
+        assertEquals(2, manifest.getFields().size());
+        assertEquals("Bucket", manifest.getFields().get(0));
+        assertEquals("Key", manifest.getFields().get(1));
         assertNotNull(manifest.getContent());
-        assertNotNull(manifest.getETag());
+        assertNotNull(manifest.getEtag());
 
         String[] lines = manifest.getContent().split("\\R");
-        assertEquals(2, lines.length);
-        assertTrue(lines[0].startsWith("testBucketName,"));
-        assertTrue(lines[1].startsWith("testBucketName,"));
-        assertTrue(lines[0].endsWith("testFile1.txt"));
-        assertTrue(lines[1].endsWith("testFile2.txt"));
-    }
-
-    @Test
-    public void testCreateCSVBucketKeyManifestNoLocation()
-    {
-        List<File> files = new ArrayList<>();
-        try {
-            files.add(folder.newFile("testFile1.txt"));
-            files.add(folder.newFile("testFile2.txt"));
+        assertEquals(files.size(), lines.length);
+        for (int i = 0; i < files.size(); i++)
+        {
+            String expectedValue = String.format("%s,%s", TEST_BUCKET_NAME, files.get(i).getAbsolutePath());
+            assertEquals(expectedValue, lines[i]);
         }
-        catch( IOException ioe ) {
-            System.err.println( "Error creating temporary test file in " + this.getClass().getSimpleName() );
-        }
-
-        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_BUCKET_NAME, String.class)).thenReturn("testManifestBucket");
-        when(configurationHelper.getProperty(S3_BATCH_MANIFEST_LOCATION, String.class)).thenReturn(null);
-
-        S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", "testBucketName", files);
-
-        assertNotNull(manifest);
-        assertEquals("S3BatchOperations_CSV_20180820", manifest.getFormat());
-        assertEquals(2, manifest.getFields().length);
-        assertEquals("Bucket", manifest.getFields()[0]);
-        assertEquals("Key", manifest.getFields()[1]);
-        assertEquals("arn:aws:s3:::testManifestBucket/testJobName.csv", manifest.getLocationArn());
-
-        assertNotNull(manifest.getContent());
-        assertNotNull(manifest.getETag());
-
-        String[] lines = manifest.getContent().split("\\R");
-        assertEquals(2, lines.length);
-        assertTrue(lines[0].startsWith("testBucketName,"));
-        assertTrue(lines[1].startsWith("testBucketName,"));
-        assertTrue(lines[0].endsWith("testFile1.txt"));
-        assertTrue(lines[1].endsWith("testFile2.txt"));
-    }
-
-
-    @Test
-    public void testCreateCSVBucketKeyManifestWithoutFiles()
-    {
-        List<File> files = new ArrayList<>();
-
-        S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", "testBucketName", files);
-
-        assertNull(manifest);
-    }
-
-    @Test
-    public void testCreateCSVBucketKeyManifestWithoutBucket()
-    {
-        List<File> files = new ArrayList<>();
-
-        try {
-            files.add(folder.newFile("testFile1.txt"));
-            files.add(folder.newFile("testFile2.txt"));
-        }
-        catch( IOException ioe ) {
-            System.err.println( "Error creating temporary test file in " + this.getClass().getSimpleName() );
-        }
-
-        S3BatchManifest manifest = s3BatchHelper.createCSVBucketKeyManifest("testJobName", null,  files);
-
-        assertNull(manifest);
     }
 
     @Test
     public void testGenerateCreateRestoreJobRequest()
     {
-        // Define test values
-        String AWS_ACCOUNT_ID = "AWS_ACCOUNT_ID";
-        String S3_BATCH_ROLE_ARN = "S3_BATCH_ROLE_ARN";
-        String TEST_MANIFEST_FILE_NAME = "TEST_MANIFEST_FILE_NAME";
-        String TEST_MANIFEST_ARN = "TEST_MANIFEST_ARN";
-        String TEST_MANIFEST_FORMAT = "TEST_MANIFEST_FORMAT";
-        String TEST_MANIFEST_CONTENT = "TEST_MANIFEST_CONTENT";
-        String TEST_MANIFEST_ETAG = "TEST_MANIFEST_ETAG";
-        String[] TEST_MANIFEST_FIELDS = new String[] {"TEST_MANIFEST_FIELD1", "TEST_MANIFEST_FIELD2"};
-        String TEST_JOB_ID = "TEST_JOB_ID";
-        String TEST_ARCHIVE_RETRIEVAL_OPTION = "TEST_ARCHIVE_RETRIEVAL_OPTION";
-        Integer TEST_EXPIRATION = 555;
-
-        // Mock the call to external methods
-        when(configurationHelper.getPropertyAsString(ConfigurationValue.AWS_ACCOUNT_ID)).thenReturn(AWS_ACCOUNT_ID);
-        when(configurationHelper.getPropertyAsString(ConfigurationValue.S3_BATCH_ROLE_ARN)).thenReturn(S3_BATCH_ROLE_ARN);
-
-        S3BatchManifest manifest = mock(S3BatchManifest.class);
-        when(manifest.getS3Key()).thenReturn(TEST_MANIFEST_FILE_NAME);
-        when(manifest.getLocationArn()).thenReturn(TEST_MANIFEST_ARN);
-        when(manifest.getFormat()).thenReturn(TEST_MANIFEST_FORMAT);
-        when(manifest.getContent()).thenReturn(TEST_MANIFEST_CONTENT);
-        when(manifest.getFields()).thenReturn(TEST_MANIFEST_FIELDS);
-        when(manifest.getETag()).thenReturn(TEST_MANIFEST_ETAG);
+        BatchJobManifestDto manifest = getDefaultBatchJobManifestDto();
 
         // Execute target method
-        CreateJobRequest request = s3BatchHelper.generateCreateRestoreJobRequest(manifest, TEST_JOB_ID, TEST_EXPIRATION, TEST_ARCHIVE_RETRIEVAL_OPTION);
+        CreateJobRequest request =
+            s3BatchHelper.generateCreateRestoreJobRequest(manifest, TEST_JOB_ID, expirationInDays, archiveRetrievalOption, getDefaultBatchJobDataDto());
 
         // Check the result
         assertNotNull(request);
@@ -193,15 +117,45 @@ public class S3BatchHelperTest extends AbstractDaoTest
         assertEquals(TEST_JOB_ID, request.getClientRequestToken());
         assertFalse(request.getConfirmationRequired());
 
-        assertEquals(TEST_EXPIRATION, request.getOperation().getS3InitiateRestoreObject().getExpirationInDays());
-        assertEquals(TEST_ARCHIVE_RETRIEVAL_OPTION, request.getOperation().getS3InitiateRestoreObject().getGlacierJobTier());
+        assertEquals(expirationInDays, request.getOperation().getS3InitiateRestoreObject().getExpirationInDays());
+        assertEquals(archiveRetrievalOption, request.getOperation().getS3InitiateRestoreObject().getGlacierJobTier());
 
-        assertEquals(TEST_MANIFEST_FORMAT, request.getManifest().getSpec().getFormat());
-        assertArrayEquals(TEST_MANIFEST_FIELDS, request.getManifest().getSpec().getFields().toArray());
-        assertEquals(TEST_MANIFEST_ARN, request.getManifest().getLocation().getObjectArn());
-        assertEquals(TEST_MANIFEST_ETAG, request.getManifest().getLocation().getETag());
+        assertEquals(manifestFormat, request.getManifest().getSpec().getFormat());
+        assertArrayEquals(manifestFields, request.getManifest().getSpec().getFields().toArray());
+
+        String expectedLocation = String.format("arn:aws:s3:::%s/%s/%s.csv", S3_BATCH_MANIFEST_BUCKET_NAME, S3_BATCH_MANIFEST_LOCATION_PREFIX, TEST_JOB_ID);
+        assertEquals(expectedLocation, request.getManifest().getLocation().getObjectArn());
+
+        assertEquals(manifestEtag, request.getManifest().getLocation().getETag());
 
         assertFalse(request.getReport().getEnabled());
     }
 
+    @Test
+    public void testGenerateCreateRestoreJobRequestUseBulkByDefault()
+    {
+        BatchJobManifestDto manifest = getDefaultBatchJobManifestDto();
+
+        CreateJobRequest request = s3BatchHelper.generateCreateRestoreJobRequest(manifest, TEST_JOB_ID, expirationInDays, null, getDefaultBatchJobDataDto());
+
+        assertEquals(archiveRetrievalOption, request.getOperation().getS3InitiateRestoreObject().getGlacierJobTier());
+    }
+
+    private List<File> createTemporaryFiles(Collection<String> fileNames) throws IOException
+    {
+        List<File> files = new ArrayList<>();
+        try
+        {
+            for (String fileName : fileNames)
+            {
+                files.add(folder.newFile(fileName));
+            }
+        }
+        catch (IOException ioe)
+        {
+            System.err.println("Error creating temporary test file in " + this.getClass().getSimpleName());
+            throw ioe;
+        }
+        return files;
+    }
 }

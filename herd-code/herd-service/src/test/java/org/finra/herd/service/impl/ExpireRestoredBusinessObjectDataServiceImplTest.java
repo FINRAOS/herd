@@ -88,7 +88,7 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, StorageUnitStatusEntity.EXPIRING,
                 StorageUnitStatusEntity.RESTORED, Lists.newArrayList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
-                NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE);
+                NO_BUSINESS_OBJECT_DATA);
 
         // Mock the external calls.
         when(expireRestoredBusinessObjectDataHelperService.prepareToExpireStorageUnit(storageUnitKey)).thenReturn(businessObjectDataRestoreDto);
@@ -112,14 +112,12 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
 
         // Verify the external calls.
         verify(expireRestoredBusinessObjectDataHelperService).prepareToExpireStorageUnit(storageUnitKey);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.EXPIRING, StorageUnitStatusEntity.RESTORED);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.EXPIRING, StorageUnitStatusEntity.RESTORED);
         verify(expireRestoredBusinessObjectDataHelperService).executeS3SpecificSteps(businessObjectDataRestoreDto);
         verify(expireRestoredBusinessObjectDataHelperService).completeStorageUnitExpiration(businessObjectDataRestoreDto);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.EXPIRING);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.EXPIRING);
         verifyNoMoreInteractionsHelper();
     }
 

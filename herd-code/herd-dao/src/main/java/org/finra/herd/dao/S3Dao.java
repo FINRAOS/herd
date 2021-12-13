@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import java.util.Date;
@@ -23,8 +23,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
-import com.amazonaws.services.s3control.model.DescribeJobResult;
 
+import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -57,6 +57,7 @@ public interface S3Dao
      * @param s3FileCopyRequestParamsDto the S3 file copy request parameters.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
@@ -100,6 +101,7 @@ public interface S3Dao
      * local path is the local file to be copied.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto downloadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -111,6 +113,7 @@ public interface S3Dao
      * local path is the local file to be copied.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -196,6 +199,7 @@ public interface S3Dao
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 file
      *
      * @return true if the S3 file exists, false otherwise
+     *
      * @throws RuntimeException if file existence check fails
      */
     boolean s3FileExists(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
@@ -229,6 +233,7 @@ public interface S3Dao
      * local path is the local file to be copied.
      *
      * @return the results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -240,6 +245,7 @@ public interface S3Dao
      * local path is the local file to be copied.
      *
      * @return the file transfer results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -252,6 +258,7 @@ public interface S3Dao
      * common parent directory (local path) and the S3 key prefix.
      *
      * @return the file transfer results.
+     *
      * @throws InterruptedException if any problems were encountered.
      */
     S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws InterruptedException;
@@ -277,23 +284,14 @@ public interface S3Dao
     void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
 
     /**
-     * Creates S3 batch job
+     * Create the S3 batch job to restore a list of keys in the specified bucket.
+     *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
      * restored
-     * every object in the manifest.
+     * @param batchJobConfig the configuration parameters used to create batch job
      * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
-     *
-     * @return S3 batch job id
      */
-    String createBatchRestoreJob(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
-
-    /****
-     * Get S3 batch job configuration and status information
-     *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters
-     * @param jobId The ID for the S3 batch job
-     * @return A container element for the job configuration and status information
-     */
-    DescribeJobResult getBatchJobDescription(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String jobId);
+    void batchRestoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, BatchJobConfigDto batchJobConfig, int expirationInDays,
+        String archiveRetrievalOption);
 }

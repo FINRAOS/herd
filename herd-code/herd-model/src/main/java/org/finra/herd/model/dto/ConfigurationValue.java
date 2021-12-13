@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.model.dto;
 
 /**
@@ -47,8 +47,8 @@ public enum ConfigurationValue
     HIBERNATE_BATCH_SIZE("hibernate.batch_size", "30"),
 
     /**
-     * Controls the maximum number of statements JDBC will batch together before asking the driver to execute the batch. Zero or a negative number disables
-     * this feature.
+     * Controls the maximum number of statements JDBC will batch together before asking the driver to execute the batch. Zero or a negative number disables this
+     * feature.
      */
     JDBC_BATCH_SIZE("jdbc.batch_size", 10_000),
 
@@ -1000,17 +1000,13 @@ public enum ConfigurationValue
     S3_OBJECT_DELETE_ROLE_SESSION_NAME("s3.object.delete.role.session.name", null),
 
     /**
-     * The AWS account ID that creates the batch job.
-     * Length Constraints: Maximum length of 64.
-     * Pattern: ^\d{12}$
+     * The AWS account ID that creates the batch job. Length Constraints: Maximum length of 64. Pattern: ^\d{12}$
      */
     AWS_ACCOUNT_ID("aws.account.id", null),
 
     /**
-     * The Amazon Resource Name (ARN) for the AWS Identity and Access Management (IAM) role that Batch Operations will use to run this job's action on every object in the manifest.
-     * Type: String
-     * Length Constraints: Minimum length of 1. Maximum length of 2048.
-     * Pattern: arn:[^:]+:iam::\d{12}:role/.*
+     * The Amazon Resource Name (ARN) for the AWS Identity and Access Management (IAM) role that Batch Operations will use to run this job's action on every
+     * object in the manifest. Type: String Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: arn:[^:]+:iam::\d{12}:role/.*
      */
     S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
 
@@ -1022,17 +1018,15 @@ public enum ConfigurationValue
     /**
      * Parent folders structure where batch manifests should be uploaded
      */
-    S3_BATCH_MANIFEST_LOCATION("s3.batch.manifest.location", null),
+    S3_BATCH_MANIFEST_LOCATION_PREFIX("s3.batch.manifest.location.prefix", null),
 
     /**
-     * The maximum number of attempts that herd will call S3 describeJob while waiting for a batch job completion
-     * Type: Integer
+     * The maximum number of attempts that herd will call S3 describeJob while waiting for a batch job completion Type: Integer
      */
     S3_BATCH_RESTORE_MAX_ATTEMPTS("s3.batch.restore.maxAttempts", 30),
 
     /**
-     * The number of milliseconds between S3 describeJob call attempts, that herd will call while waiting for a batch job completion
-     * Type: Integer
+     * The number of milliseconds between S3 describeJob call attempts, that herd will call while waiting for a batch job completion Type: Integer
      */
     S3_BATCH_RESTORE_BACKOFF_PERIOD("s3.batch.restore.backoffPeriod", 30000),
 
@@ -1072,8 +1066,8 @@ public enum ConfigurationValue
     SES_RECORDS_COLLECTOR_ADDRESS("ses.records.collector.address", null),
 
     /**
-    * Notification header key published for filtering along with BusinessObjectDataStatusChange notification
-    */
+     * Notification header key published for filtering along with BusinessObjectDataStatusChange notification
+     */
     MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE("message.header.key.filter.attribute.value", "filterAttributeValue");
 
     private Object defaultValue;

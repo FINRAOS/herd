@@ -88,7 +88,7 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
                 NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(S3_KEY, FILE_SIZE, ROW_COUNT)), NO_EXCEPTION, ARCHIVE_RETRIEVAL_OPTION,
-                NO_BUSINESS_OBJECT_DATA, NO_BOOLEAN_DEFAULT_VALUE);
+                NO_BUSINESS_OBJECT_DATA);
 
         // Mock the external calls.
         when(businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(storageUnitKey)).thenReturn(businessObjectDataRestoreDto);
@@ -114,9 +114,8 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         verify(businessObjectDataFinalizeRestoreHelperService).prepareToFinalizeRestore(storageUnitKey);
         verify(businessObjectDataFinalizeRestoreHelperService).executeS3SpecificSteps(businessObjectDataRestoreDto);
         verify(businessObjectDataFinalizeRestoreHelperService).completeFinalizeRestore(businessObjectDataRestoreDto);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.RESTORING);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.RESTORING);
         verifyNoMoreInteractionsHelper();
     }
 
