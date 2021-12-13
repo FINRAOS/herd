@@ -80,6 +80,28 @@ public class StorageServiceTest extends AbstractServiceTest
         {
             assertEquals("Storage name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a storage instance when storage platform name contains a backward slash character.
+        try
+        {
+            storageService.createStorage(new StorageCreateRequest(STORAGE_NAME, addBackwardSlash(STORAGE_PLATFORM_CODE), NO_ATTRIBUTES));
+            fail("Should throw an IllegalArgumentException when storage platform name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Storage platform name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a storage instance when storage name contains a backward slash character.
+        try
+        {
+            storageService.createStorage(new StorageCreateRequest(addBackwardSlash(DATA_PROVIDER_NAME), STORAGE_PLATFORM_CODE, NO_ATTRIBUTES));
+            fail("Should throw an IllegalArgumentException when storage name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Storage name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

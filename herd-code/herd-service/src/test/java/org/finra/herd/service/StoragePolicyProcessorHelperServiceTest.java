@@ -47,6 +47,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -107,6 +108,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getKey(), S3_OBJECT_TAG_VALUE);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        overrideMap.put(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -120,9 +122,10 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
             // Validate the results.
             assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
-                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED,
-                Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                    StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED,
+                    Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                    new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+                storagePolicyTransitionParamsDto);
         }
         finally
         {
@@ -174,6 +177,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getKey(), S3_OBJECT_TAG_VALUE);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        overrideMap.put(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -187,9 +191,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
             // Validate the results.
             assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
-                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED,
-                new ArrayList<>(), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                    StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, new ArrayList<>(), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                    new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+                storagePolicyTransitionParamsDto);
         }
         finally
         {
@@ -241,6 +245,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getKey(), S3_OBJECT_TAG_VALUE);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        overrideMap.put(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
         modifyPropertySourceInEnvironment(overrideMap);
 
         try
@@ -254,9 +259,10 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
             // Validate the results.
             assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
-                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING,
-                Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                    StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING,
+                    Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                    new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+                storagePolicyTransitionParamsDto);
         }
         finally
         {
@@ -966,8 +972,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, NO_S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, storageFiles, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME));
+                NO_STORAGE_UNIT_STATUS, storageFiles, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME,
+                    S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)));
 
             // Validate that all S3 files are now tagged.
             for (StorageFile storageFile : storageFiles)
@@ -1009,14 +1016,16 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Complete a storage policy transition.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
-            StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY,
-            S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY,
+                S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+            storagePolicyTransitionParamsDto);
 
         // Validate that storage unit status is updated to ARCHIVED.
         assertEquals(StorageUnitStatusEntity.ARCHIVED, storageUnitEntity.getStatus().getCode());
@@ -1033,8 +1042,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when business object data does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1060,8 +1069,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when business object data status is not supported by the storage policy feature.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1094,8 +1103,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1129,8 +1138,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when storage unit does not have ARCHIVING status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-                S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);

@@ -326,6 +326,30 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             assertEquals("EMR cluster definition name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to perform a create when namespace contains a backward slash character.
+        try
+        {
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(addBackwardSlash(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster definition name contains a backward slash character.
+        try
+        {
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, addBackwardSlash(EMR_CLUSTER_DEFINITION_NAME),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster definition name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

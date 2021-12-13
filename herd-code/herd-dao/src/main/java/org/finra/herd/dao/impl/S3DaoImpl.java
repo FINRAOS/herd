@@ -34,6 +34,16 @@ import java.util.stream.Collectors;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -81,6 +91,8 @@ import com.amazonaws.services.s3control.model.CreateJobResult;
 import com.amazonaws.services.s3control.model.DescribeJobRequest;
 import com.amazonaws.services.s3control.model.DescribeJobResult;
 import com.amazonaws.services.s3control.model.JobStatus;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -111,6 +123,7 @@ import org.finra.herd.model.dto.BatchJobManifestDto;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 
 /**
  * The S3 DAO implementation.
@@ -668,7 +681,7 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto,
         final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag)
     {
         LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
@@ -688,7 +701,7 @@ public class S3DaoImpl implements S3Dao
             }
 
             // Tag S3 objects.
-            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, s3VersionSummaries, tag);
 
             // Log a list of files tagged in the S3 bucket.
             if (LOGGER.isInfoEnabled())
@@ -707,7 +720,7 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+    public void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto,
         final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
     {
         // Eliminate delete markers from the list of version summaries to be tagged.
@@ -726,7 +739,7 @@ public class S3DaoImpl implements S3Dao
         if (CollectionUtils.isNotEmpty(s3VersionSummariesWithoutDeleteMarkers))
         {
             // Tag S3 versions.
-            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummariesWithoutDeleteMarkers, tag);
+            tagVersionsHelper(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, s3VersionSummariesWithoutDeleteMarkers, tag);
 
             // Log a list of S3 versions that got tagged.
             if (LOGGER.isInfoEnabled())
@@ -1449,8 +1462,16 @@ public class S3DaoImpl implements S3Dao
         }
     }
 
+    /**
+     * Tags S3 versions with the specified S3 object tag.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
+     * @param s3ObjectTaggerRoleParamsDto the S3 objects tagger role parameters DTO
+     * @param s3VersionSummaries the list of S3 versions to be tagged
+     * @param tag the S3 object tag
+     */
     private void tagVersionsHelper(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto,
-        final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+        final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
     {
         // Initialize an S3 version for the error message in the catch block.
         S3VersionSummary currentS3VersionSummary = s3VersionSummaries.get(0);
@@ -1458,16 +1479,36 @@ public class S3DaoImpl implements S3Dao
         // Amazon S3 client to access S3 objects.
         AmazonS3Client s3Client = null;
 
+        // Amazon STS client to assume S3 tagger role.
+        AWSSecurityTokenService securityTokenService = null;
+
         // Amazon S3 client for S3 object tagging.
         AmazonS3Client s3ObjectTaggerClient = null;
 
         try
         {
+            // Log tagger role parameters.
+            LOGGER.info("Getting AWS temporary security credentials... sessionName={}, roleArn={}, awsRoleDurationSeconds={}",
+                s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionName(), s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleArn(),
+                s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds());
+
             // Create an S3 client to access S3 objects.
             s3Client = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
+            // Create an STS client.
+            securityTokenService =
+                AWSSecurityTokenServiceClientBuilder.standard().withClientConfiguration(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto))
+                    .withRegion(s3FileTransferRequestParamsDto.getAwsRegionName()).build();
+
+            // Create credentials provider for S3 object tagging operation.
+            STSAssumeRoleSessionCredentialsProvider credentialsProvider =
+                new STSAssumeRoleSessionCredentialsProvider.Builder(s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleArn(),
+                    s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionName())
+                    .withRoleSessionDurationSeconds(s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds())
+                    .withStsClient(securityTokenService).build();
+
             // Create an S3 client for S3 object tagging.
-            s3ObjectTaggerClient = awsClientFactory.getAmazonS3Client(s3ObjectTaggerParamsDto);
+            s3ObjectTaggerClient = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto, credentialsProvider);
 
             // Create a get object tagging request.
             GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
@@ -1517,6 +1558,11 @@ public class S3DaoImpl implements S3Dao
             if (s3Client != null)
             {
                 s3Client.shutdown();
+            }
+
+            if (securityTokenService != null)
+            {
+                securityTokenService.shutdown();
             }
 
             if (s3ObjectTaggerClient != null)

@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -254,33 +253,6 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
-        verifyNoMoreInteractions(s3Dao);
-    }
-
-    @Test
-    public void testTagObjects()
-    {
-        // Create an S3 file transfer request parameters DTO to access S3 objects.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
-
-        // Create an S3 object summary.
-        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
-        s3ObjectSummary.setKey(S3_KEY);
-
-        // Create an S3 object tag.
-        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
-
-        // Call the method under test.
-        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
-
-        // Verify the external calls.
-        verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
         verifyNoMoreInteractions(s3Dao);
     }
 

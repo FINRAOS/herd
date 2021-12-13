@@ -996,6 +996,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
 
+    public static final Integer S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS = getRandomInteger();
+
     public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
 
     public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;

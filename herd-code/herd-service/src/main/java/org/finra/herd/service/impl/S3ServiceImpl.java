@@ -18,8 +18,6 @@ package org.finra.herd.service.impl;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.S3VersionSummary;
-import com.amazonaws.services.s3.model.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,29 +114,9 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public List<S3VersionSummary> listVersions(S3FileTransferRequestParamsDto params)
-    {
-        return s3Dao.listVersions(params);
-    }
-
-    @Override
     public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
     {
         s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
-    }
-
-    @Override
-    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag)
-    {
-        s3Dao.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3ObjectSummaries, tag);
-    }
-
-    @Override
-    public void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
-    {
-        s3Dao.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries, tag);
     }
 
     @Override

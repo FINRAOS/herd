@@ -101,6 +101,13 @@ public class AwsHelper
     {
         ClientConfiguration clientConfiguration = getClientConfiguration(params);
 
+        // Set the proxy configuration, if proxy is specified.
+        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
+        {
+            clientConfiguration.setProxyHost(params.getHttpProxyHost());
+            clientConfiguration.setProxyPort(params.getHttpProxyPort());
+        }
+
         // Sign all S3 API's with V4 signing.
         // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
         // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.

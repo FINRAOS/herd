@@ -209,18 +209,36 @@ public class AwsClientFactory
     /**
      * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
      *
-     * @param params the parameters.
+     * @param params the parameters
      *
      * @return the Amazon S3 client.
      */
     public AmazonS3Client getAmazonS3Client(S3FileTransferRequestParamsDto params)
     {
+        return getAmazonS3Client(params, null);
+    }
+
+    /**
+     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
+     *
+     * @param params the parameters
+     * @param awsCredentialsProvider the AWS credentials provider, may be null
+     *
+     * @return the Amazon S3 client.
+     */
+    public AmazonS3Client getAmazonS3Client(S3FileTransferRequestParamsDto params, AWSCredentialsProvider awsCredentialsProvider)
+    {
         AmazonS3Client amazonS3Client;
 
         ClientConfiguration clientConfiguration = awsHelper.getS3ClientConfiguration(params);
 
-        // Create an S3 client using passed in credentials and HTTP proxy information.
-        if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
+        // Create an S3 client using passed in credentials provider or credentials.
+        if (awsCredentialsProvider != null)
+        {
+            // Create an S3 client using specified AWS credentials provider.
+            amazonS3Client = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
+        }
+        else if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
             StringUtils.isNotBlank(params.getSessionToken()))
         {
             // Create an S3 client using basic session credentials.

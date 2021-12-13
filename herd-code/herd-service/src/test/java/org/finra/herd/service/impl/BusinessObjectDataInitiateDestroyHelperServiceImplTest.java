@@ -53,6 +53,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -145,11 +146,15 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
+
         // Create a business object data destroy parameters DTO.
         BusinessObjectDataDestroyDto businessObjectDataDestroyDto =
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
@@ -193,8 +198,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         assertEquals(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
-            businessObjectDataDestroyDto);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS), businessObjectDataDestroyDto);
     }
 
     @Test
@@ -221,11 +225,15 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStatus(storageUnitStatusEntity);
 
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
+
         // Create a business object data destroy parameters DTO.
         BusinessObjectDataDestroyDto businessObjectDataDestroyDto =
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
@@ -259,8 +267,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         assertEquals(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
-            businessObjectDataDestroyDto);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS), businessObjectDataDestroyDto);
     }
 
     @Test
@@ -271,11 +278,15 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
+
         // Create a business object data destroy parameters DTO.
         BusinessObjectDataDestroyDto businessObjectDataDestroyDto =
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -298,21 +309,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         updatedS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
 
-        // Create an updated S3 file transfer parameters DTO to be used for S3 object tagging operation.
-        S3FileTransferRequestParamsDto updatedS3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        updatedS3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        updatedS3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        updatedS3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
-        updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
-
         // Mock the external calls.
-        int awsAssumeS3TaggingRoleDurationSecs = 43200;
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
-            .thenReturn(awsAssumeS3TaggingRoleDurationSecs);
-        when(storageHelper
-            .getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs))
-            .thenReturn(s3ObjectTaggerParamsDto);
         when(s3Dao.listVersions(s3FileTransferRequestParamsDto)).thenReturn(s3VersionSummaries);
 
         // Call the method under test.
@@ -322,16 +320,12 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         assertEquals(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
-            businessObjectDataDestroyDto);
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS), businessObjectDataDestroyDto);
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
-        verify(storageHelper).
-            getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, awsAssumeS3TaggingRoleDurationSecs);
         verify(s3Dao).listVersions(s3FileTransferRequestParamsDto);
-        verify(s3Dao).tagVersions(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, s3VersionSummaries,
+        verify(s3Dao).tagVersions(updatedS3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, s3VersionSummaries,
             new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
     }
@@ -549,6 +543,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_TAG_VALUE)).thenReturn(S3_OBJECT_TAG_VALUE);
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_ARN)).thenReturn(S3_OBJECT_TAGGER_ROLE_ARN);
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_SESSION_NAME)).thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
         when(herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS))
             .thenReturn(BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
@@ -609,6 +605,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_TAG_VALUE);
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_ARN);
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_SESSION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
         verify(herdStringHelper).getConfigurationValueAsInteger(ConfigurationValue.BDATA_FINAL_DESTROY_DELAY_IN_DAYS);
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(businessObjectDataHelper).getDateFromString(PARTITION_VALUE);
@@ -633,8 +630,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
         assertEquals(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
-            businessObjectDataDestroyDto);
+                S3_OBJECT_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS),
+                BDATA_FINAL_DESTROY_DELAY_IN_DAYS), businessObjectDataDestroyDto);
     }
 
     @Test
@@ -1044,7 +1042,6 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImplTest extends Abst
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectFormatDao, businessObjectFormatHelper,
-            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, storageFileHelper, storageHelper, storageUnitDao,
-            storageUnitDaoHelper);
+            configurationHelper, herdDao, herdStringHelper, s3Dao, s3KeyPrefixHelper, storageFileHelper, storageHelper, storageUnitDao, storageUnitDaoHelper);
     }
 }

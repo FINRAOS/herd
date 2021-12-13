@@ -18,8 +18,6 @@ package org.finra.herd.service;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.S3VersionSummary;
-import com.amazonaws.services.s3.model.Tag;
 
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -128,16 +126,6 @@ public interface S3Service
     List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
 
     /**
-     * Lists all S3 versions matching the S3 key prefix in the given bucket (S3 bucket name).
-     *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 versions to get
-     * listed.
-     *
-     * @return the list of all S3 versions that match the prefix in the given bucket
-     */
-    List<S3VersionSummary> listVersions(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
-
-    /**
      * Requests to restore a list of keys in the specified bucket.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
@@ -146,28 +134,6 @@ public interface S3Service
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
      */
     void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
-
-    /**
-     * Tags S3 objects with the specified S3 object tag.
-     *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
-     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
-     * @param s3ObjectSummaries the list of S3 objects to be tagged
-     * @param tag the S3 object tag
-     */
-    void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag);
-
-    /**
-     * Tags S3 versions with the specified S3 object tag.
-     *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters
-     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
-     * @param s3VersionSummaries the list of S3 versions to be tagged
-     * @param tag the S3 object tag
-     */
-    void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
-        final List<S3VersionSummary> s3VersionSummaries, final Tag tag);
 
     /**
      * Uploads a local directory of files into S3.

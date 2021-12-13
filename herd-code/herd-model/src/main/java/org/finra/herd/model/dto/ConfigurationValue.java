@@ -119,10 +119,10 @@ public enum ConfigurationValue
     AWS_REGION_NAME("aws.region.name", null),
 
     /**
-     * The duration, in seconds, of the role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum session duration that is
-     * set for the role.
+     * The duration, in seconds, of the S3 tagging assume role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum
+     * session duration that is set for the role. The default is 1 hour (3600 seconds).
      */
-    AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 43200),
+    AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 3600),
 
     /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.

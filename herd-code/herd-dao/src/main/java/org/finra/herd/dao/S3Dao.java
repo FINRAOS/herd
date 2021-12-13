@@ -28,6 +28,7 @@ import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 
 /**
  * A DAO for Amazon AWS S3.
@@ -208,22 +209,22 @@ public interface S3Dao
      * Tags S3 objects with the specified S3 object tag.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
-     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
+     * @param s3ObjectTaggerRoleParamsDto the S3 objects tagger role parameters DTO
      * @param s3ObjectSummaries the list of S3 objects to be tagged
      * @param tag the S3 object tag
      */
-    void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+    void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto,
         final List<S3ObjectSummary> s3ObjectSummaries, final Tag tag);
 
     /**
      * Tags S3 versions with the specified S3 object tag.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
-     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
+     * @param s3ObjectTaggerRoleParamsDto the S3 objects tagger role parameters DTO
      * @param s3VersionSummaries the list of S3 versions to be tagged
      * @param tag the S3 object tag
      */
-    void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+    void tagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto,
         final List<S3VersionSummary> s3VersionSummaries, final Tag tag);
 
     /**
