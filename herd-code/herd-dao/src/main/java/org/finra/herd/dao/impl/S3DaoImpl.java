@@ -1032,7 +1032,8 @@ public class S3DaoImpl implements S3Dao
         {
             // Generating dto object to combine info related to S3 Batch operation manifest
             BatchJobManifestDto manifest = batchHelper.createCSVBucketKeyManifest(jobId, paramsDto.getS3BucketName(), paramsDto.getFiles(), batchJobConfig);
-            LOGGER.info("Manifest created... batchJobId=\"{}\", manifestDto={}", jobId, jsonHelper.objectToJson(manifest));
+            LOGGER.info("Manifest created... batchJobId=\"{}\", manifestBucketName=\"{}\", manifestS3Key=\"{}\", manifestS3Etag=\"{}\"", jobId,
+                manifest.getBucketName(), manifest.getKey(), manifest.getEtag());
 
             // Uploading manifest file to S3 before executing Batch Operation.
             // In this case manifest it CSV file with bucketName and file name S3 key to restore
@@ -1083,7 +1084,6 @@ public class S3DaoImpl implements S3Dao
                 s3ControlClient.shutdown();
             }
         }
-
     }
 
     /****
