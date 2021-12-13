@@ -38,6 +38,7 @@ import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.s3.AmazonS3;
@@ -1328,10 +1329,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create a client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
 
@@ -1341,9 +1338,12 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create a set object tagging result.
         SetObjectTaggingResult setObjectTaggingResult = new SetObjectTaggingResult();
 
+        // Create mock of the s3 client used specifically for tagging
+        AmazonS3Client taggerS3client = mock(AmazonS3Client.class);
+
         // Mock the external calls.
         when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
-        //when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
         when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
@@ -1352,8 +1352,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Verify the external calls.
-        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
-        //verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
         verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
@@ -1379,9 +1379,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Create an S3 object tag.
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+        // Create mock of the s3 client used specifically for tagging
+        AmazonS3Client taggerS3client = mock(AmazonS3Client.class);
 
         // Create a client configuration.
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -1394,7 +1393,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Mock the external calls.
         when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
-        //when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
         when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
@@ -1403,8 +1402,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3VersionSummary), tag);
 
         // Verify the external calls.
-        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
-        //verify(retryPolicyFactory, times(2)).getRetryPolicy();
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
         verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
