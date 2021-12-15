@@ -697,12 +697,12 @@ public enum ConfigurationValue
     /**
      * The maximum number of records returned in business object data search result count
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 50_000),
 
     /**
      * The maximum number of records returned in business object data search page
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 1_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 5_000),
 
     /**
      * The pagination size for the query that returns raw business object data search results. The default is 100000 raw results.
