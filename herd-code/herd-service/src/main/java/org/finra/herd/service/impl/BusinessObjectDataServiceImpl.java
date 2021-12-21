@@ -467,6 +467,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Validate the business object data search request.
         businessObjectDataSearchHelper.validateBusinessObjectDataSearchRequest(businessObjectDataSearchRequest);
 
+        // Get the default number of results that to be returned on a page of data.
+        int defaultResultsPerPage = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_DEFAULT_PAGE_SIZE, Integer.class);
+
         // Get the maximum number of results that can be returned on any page of data. The "pageSize" query parameter should not be greater than
         // this value or an HTTP status of 400 (Bad Request) error would be returned.
         int maxResultsPerPage = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE, Integer.class);
@@ -479,7 +482,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Page number must be greater than 0
         // Page size must be greater than 0 and less than maximum page size
         pageNum = businessObjectDataSearchHelper.validatePagingParameter("pageNum", pageNum, 1, Integer.MAX_VALUE);
-        pageSize = businessObjectDataSearchHelper.validatePagingParameter("pageSize", pageSize, maxResultsPerPage, maxResultsPerPage);
+        pageSize = businessObjectDataSearchHelper.validatePagingParameter("pageSize", pageSize, defaultResultsPerPage, maxResultsPerPage);
 
         // Get the maximum record count that is configured in the system.
         Integer businessObjectDataSearchMaxResultCount =
