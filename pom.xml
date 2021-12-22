@@ -72,7 +72,7 @@
       <jodatime.version>2.10.1</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
-      <log4j.version>2.15.0</log4j.version>
+      <log4j.version>2.17.0</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>

@@ -695,6 +695,11 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT("business.object.data.get.all.max.result.count", 1_000),
 
     /**
+     * The default page size for business object data search
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_DEFAULT_PAGE_SIZE("business.object.data.search.default.page.size", 1_000),
+
+    /**
      * The maximum number of records returned in business object data search result count
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 50_000),
