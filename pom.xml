@@ -283,11 +283,6 @@
          </dependency>
          <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>herd-docs-swagger-new</artifactId>
-            <version>${project.version}</version>
-         </dependency>
-         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>herd-sdk</artifactId>
             <version>${project.version}</version>
          </dependency>
@@ -1288,11 +1283,6 @@
             <plugin>
                <groupId>${project.groupId}</groupId>
                <artifactId>herd-swaggergen-maven-plugin</artifactId>
-               <version>${project.version}</version>
-            </plugin>
-            <plugin>
-               <groupId>${project.groupId}</groupId>
-               <artifactId>herd-swaggergen-maven-plugin-new</artifactId>
                <version>${project.version}</version>
             </plugin>
             <plugin>

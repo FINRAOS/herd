@@ -326,11 +326,6 @@
                   <artifactId>herd-docs-swagger</artifactId>
                   <version>${project.version}</version>
                </dependency>
-               <dependency>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>herd-docs-swagger-new</artifactId>
-                  <version>${project.version}</version>
-               </dependency>
             </dependencies>
          </plugin>
 
