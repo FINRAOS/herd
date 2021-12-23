@@ -119,10 +119,10 @@ public enum ConfigurationValue
     AWS_REGION_NAME("aws.region.name", null),
 
     /**
-     * The duration, in seconds, of the role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum session duration that is
-     * set for the role.
+     * The duration, in seconds, of the S3 tagging assume role session. The value specified can can range from 900 seconds (15 minutes) up to the maximum
+     * session duration that is set for the role. The default is 1 hour (3600 seconds).
      */
-    AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 43200),
+    AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS("aws.assume.s3.tagging.role.duration.secs", 3600),
 
     /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.
@@ -695,14 +695,19 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_GET_ALL_MAX_RESULT_COUNT("business.object.data.get.all.max.result.count", 1_000),
 
     /**
+     * The default page size for business object data search
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_DEFAULT_PAGE_SIZE("business.object.data.search.default.page.size", 1_000),
+
+    /**
      * The maximum number of records returned in business object data search result count
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 10_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULT_COUNT("business.object.data.search.max.result.count", 50_000),
 
     /**
      * The maximum number of records returned in business object data search page
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 1_000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE("business.object.data.search.max.page.size", 5_000),
 
     /**
      * The pagination size for the query that returns raw business object data search results. The default is 100000 raw results.

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
@@ -104,6 +104,7 @@ import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 
 /**
  * This class tests various functionality within the S3Dao class.
@@ -2400,8 +2401,8 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                    "Reason: object is not in Glacier or DeepArchive (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)", TARGET_S3_KEY,
-                storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
+                    "Reason: object is not in Glacier or DeepArchive (Service: null; Status Code: 0; Error Code: null; Request ID: null; Proxy: null)",
+                TARGET_S3_KEY, storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
 
@@ -2504,6 +2505,11 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
@@ -2516,7 +2522,7 @@ public class S3DaoTest extends AbstractDaoTest
         s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata()), null);
 
         // Tag the file with an S3 object tag.
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tag);
+        s3Dao.tagObjects(params, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Validate that the object got tagged.
         GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -2529,6 +2535,11 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that would trigger an AWS exception.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
@@ -2539,7 +2550,7 @@ public class S3DaoTest extends AbstractDaoTest
 
         try
         {
-            s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tag);
+            s3Dao.tagObjects(params, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
             fail();
         }
         catch (IllegalStateException e)
@@ -2568,13 +2579,18 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
         s3ObjectSummary.setKey(TARGET_S3_KEY);
 
         // Tag the S3 file with the second S3 object tag.
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tags.get(1));
+        s3Dao.tagObjects(params, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tags.get(1));
 
         // Validate that the S3 object is now tagged with both tags.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -2600,13 +2616,18 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 object summary.
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
         s3ObjectSummary.setKey(TARGET_S3_KEY);
 
         // Tag the S3 file with the second S3 object tag.
-        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3ObjectSummary), tags.get(1));
+        s3Dao.tagObjects(params, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tags.get(1));
 
         // Validate that the S3 object is tagged with the second tag now.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -2619,6 +2640,11 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that would trigger an AWS exception.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Create an S3 version summary.
         S3VersionSummary s3VersionSummary = new S3VersionSummary();
@@ -2630,7 +2656,7 @@ public class S3DaoTest extends AbstractDaoTest
 
         try
         {
-            s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), Collections.singletonList(s3VersionSummary), tag);
+            s3Dao.tagVersions(params, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3VersionSummary), tag);
             fail();
         }
         catch (IllegalStateException e)
@@ -2668,10 +2694,15 @@ public class S3DaoTest extends AbstractDaoTest
                 versionListing.getVersionSummaries().get(0).getVersionId()), null);
         assertEquals(Collections.singletonList(tags.get(0)), getObjectTaggingResult.getTagSet());
 
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
+
         // Tag the S3 version with the second S3 object tag.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
-        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tags.get(1));
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+        s3Dao.tagVersions(params, s3ObjectTaggerRoleParamsDto, versionListing.getVersionSummaries(), tags.get(1));
 
         // Validate that the S3 object is now tagged with both tags.
         getObjectTaggingResult = s3Operations.getObjectTagging(
@@ -2705,9 +2736,14 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Tag listed S3 versions with an S3 object tag.
-        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
+        s3Dao.tagVersions(params, s3ObjectTaggerRoleParamsDto, versionListing.getVersionSummaries(), tag);
 
         // Validate that both S3 objects got tagged.
         for (int i = 0; i < 2; i++)
@@ -2745,9 +2781,14 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects with a mocked S3 bucket name that enables S3 bucket versioning.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Tag listed S3 version with an S3 object tag.
-        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tag);
+        s3Dao.tagVersions(params, s3ObjectTaggerRoleParamsDto, versionListing.getVersionSummaries(), tag);
 
         // Validate that both versions got tagged.
         for (int i = 0; i < 2; i++)
@@ -2789,9 +2830,14 @@ public class S3DaoTest extends AbstractDaoTest
         // Create an S3 file transfer request parameters DTO to access S3 objects.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+        params.setAwsRegionName(AWS_REGION_NAME_US_EAST_1);
+
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Tag the S3 version with the second S3 object tag.
-        s3Dao.tagVersions(params, new S3FileTransferRequestParamsDto(), versionListing.getVersionSummaries(), tags.get(1));
+        s3Dao.tagVersions(params, s3ObjectTaggerRoleParamsDto, versionListing.getVersionSummaries(), tags.get(1));
 
         // Validate that the S3 object is now tagged with the second tag only.
         getObjectTaggingResult = s3Operations.getObjectTagging(
@@ -3107,8 +3153,8 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
-                    TARGET_S3_KEY, storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
+                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}", TARGET_S3_KEY,
+                    storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
 
@@ -3134,8 +3180,8 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String
-                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}",
-                    TARGET_S3_KEY, storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
+                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}", TARGET_S3_KEY,
+                    storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
 
