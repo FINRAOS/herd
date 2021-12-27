@@ -114,8 +114,6 @@ definitions:
         format: "int64"
       name:
         type: "string"
-    example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<person>\n\
-      \    <id>0</id>\n    <name>string</name>\n</person>\n"
 security:
 - basicAuthentication: []
 - oauth2Authentication: []
