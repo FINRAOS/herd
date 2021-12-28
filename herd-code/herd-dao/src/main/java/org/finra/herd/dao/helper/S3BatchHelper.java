@@ -42,15 +42,6 @@ import org.finra.herd.model.dto.BatchJobManifestDto;
 @Component
 public class S3BatchHelper
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(org.finra.herd.dao.helper.S3BatchHelper.class);
-
-    @Autowired
-    private AwsClientFactory awsClientFactory;
-
-    @Autowired
-    private JsonHelper jsonHelper;
-
-
     /**
      * Create container object for S3 batch job manifest
      *
