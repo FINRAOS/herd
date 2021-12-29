@@ -77,6 +77,10 @@
       </dependency>
       <dependency>
          <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-s3control</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk-glacier</artifactId>
       </dependency>
       <dependency>
