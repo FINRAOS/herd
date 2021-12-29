@@ -31,21 +31,37 @@ public class S3BatchHelperTest extends AbstractDaoTest
 {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
     protected String AWS_ACCOUNT_ID = "123456789012";
+
     protected String S3_BATCH_ROLE_ARN = "arn:aws:iam::123456789012:role/S3_BATCH_ROLE";
+
     protected String S3_BATCH_MANIFEST_BUCKET_NAME = "1234-5678-9012-batch-manifest-bucket";
+
     protected String S3_BATCH_MANIFEST_LOCATION_PREFIX = "sub/batch";
+
     protected Integer S3_BATCH_RESTORE_MAX_ATTEMPTS = 5;
+
     protected Integer S3_BATCH_RESTORE_BACKOFF_PERIOD = 2000;
+
     protected String TEST_JOB_ID = UUID.randomUUID().toString();
+
     protected String TEST_BUCKET_NAME = "1234-5678-9012-batch-job-bucket";
+
     protected List<String> defaultFileNames = Arrays.asList("testFile1.txt", "testFile2.txt");
+
     protected Integer expirationInDays = 555;
+
     protected String archiveRetrievalOption = S3GlacierJobTier.BULK.toString();
+
     protected String manifestFormat = JobManifestFormat.S3BatchOperations_CSV_20180820.toString();
+
     protected String manifestContent = "default manifest content";
+
     protected String manifestEtag = "test_manifest_etag";
+
     protected String[] manifestFields = new String[] {"test_field_1", "test_field_2"};
+
     @InjectMocks
     private S3BatchHelper s3BatchHelper;
 
@@ -88,6 +104,7 @@ public class S3BatchHelperTest extends AbstractDaoTest
         for (int i = 0; i < files.size(); i++)
         {
             String expectedValue = String.format("%s,%s", TEST_BUCKET_NAME, files.get(i).getAbsolutePath());
+            expectedValue = expectedValue.replaceAll("\\\\", "/");
             assertEquals(expectedValue, lines[i]);
         }
     }

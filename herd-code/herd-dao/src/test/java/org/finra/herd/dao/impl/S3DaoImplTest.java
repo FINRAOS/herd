@@ -39,8 +39,6 @@ import java.util.List;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.retry.PredefinedRetryPolicies;
-import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
@@ -86,7 +84,7 @@ import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.AbstractDaoTest;
-import org.finra.herd.dao.AwsClientFactory;
+import org.finra.herd.dao.AwsS3ClientFactory;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
@@ -109,10 +107,19 @@ public class S3DaoImplTest extends AbstractDaoTest
     private static final String TEST_FILE = "UT_S3DaoImplTest_Test_File";
 
     @Mock
+    private AwsS3ClientFactory awsS3ClientFactory;
+
+    @Mock
     private AwsHelper awsHelper;
 
     @Mock
+    private S3BatchHelper batchHelper;
+
+    @Mock
     private JavaPropertiesHelper javaPropertiesHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
 
     @InjectMocks
     private S3DaoImpl s3DaoImpl;
@@ -121,16 +128,7 @@ public class S3DaoImplTest extends AbstractDaoTest
     private S3Operations s3Operations;
 
     @Mock
-    private AmazonS3Client s3client;
-
-    @Mock
-    private AwsClientFactory awsClientFactory;
-
-    @Mock
-    private JsonHelper jsonHelper;
-
-    @Mock
-    private S3BatchHelper batchHelper;
+    private AmazonS3Client s3Client;
 
     @Before
     public void before()
@@ -145,10 +143,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
-
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
 
         // Create an S3 version summary.
         S3VersionSummary s3VersionSummary = new S3VersionSummary();
@@ -170,7 +164,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         MultiObjectDeleteException multiObjectDeleteException = new MultiObjectDeleteException(Collections.singletonList(deleteError), new ArrayList<>());
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class))).thenReturn(versionListing);
         when(s3Operations.deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class))).thenThrow(multiObjectDeleteException);
 
@@ -188,9 +182,10 @@ public class S3DaoImplTest extends AbstractDaoTest
         }
 
         // Verify the external calls.
-        verify(awsClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).deleteObjects(any(DeleteObjectsRequest.class), any(AmazonS3Client.class));
+        verify(s3Client, times(2)).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -205,10 +200,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setFiles(files);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create an Object Metadata with DeepArchive storage class.
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setOngoingRestore(false);
@@ -219,7 +210,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
 
         doThrow(new AmazonServiceException("Retrieval option is not supported by this storage class")).when(s3Operations)
@@ -246,23 +237,20 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         s3FileTransferRequestParamsDto.setS3KeyPrefix(S3_KEY_PREFIX);
 
-        // Create a retry policy.
-        RetryPolicy retryPolicy =
-            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
-
         // Create an empty version listing.
         VersionListing versionListing = new VersionListing();
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class))).thenReturn(versionListing);
 
         // Call the method under test.
         s3DaoImpl.deleteDirectory(s3FileTransferRequestParamsDto);
 
         // Verify the external calls.
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).listVersions(any(ListVersionsRequest.class), any(AmazonS3Client.class));
+        verify(s3Client).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -312,7 +300,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenThrow(new AmazonServiceException(ERROR_MESSAGE));
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenThrow(new AmazonServiceException(ERROR_MESSAGE));
 
         // Try to call the method under test.
         try
@@ -327,7 +315,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         }
 
         // Verify the external calls.
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verifyNoMoreInteractionsHelper();
     }
 
@@ -490,7 +478,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Configure mocks
         when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
             TransferProgress transferProgress = new TransferProgress();
@@ -500,7 +488,7 @@ public class S3DaoImplTest extends AbstractDaoTest
             return mockedUpload;
         });
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
         when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
 
         // Execute target method
@@ -518,7 +506,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         assertEquals(TEST_S3_KEY_PREFIX_2, putRequest.getKey());
 
         verify(s3Operations).createBatchJob(eq(createJobRequest), any(AWSS3Control.class));
-        verify(awsClientFactory).getAmazonS3Control(any());
+        verify(awsS3ClientFactory).getAmazonS3Control(any());
         verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), eq(jobId), anyInt(), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
 
         verifyNoMoreInteractions(batchHelper);
@@ -544,7 +532,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Configure mocks
         when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
             TransferProgress transferProgress = new TransferProgress();
@@ -586,9 +574,6 @@ public class S3DaoImplTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
                 .withAwsRegionName(AWS_REGION_NAME).build();
 
-        final BatchJobManifestDto manifest =
-            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
-
         // Create mocks
         BatchJobConfigDto jobConfig = mock(BatchJobConfigDto.class);
 
@@ -629,7 +614,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Configure mocks
         when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
             TransferProgress transferProgress = new TransferProgress();
@@ -680,7 +665,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Configure mocks
         when(batchHelper.createCSVBucketKeyManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
             TransferProgress transferProgress = new TransferProgress();
@@ -690,7 +675,7 @@ public class S3DaoImplTest extends AbstractDaoTest
             return mockedUpload;
         });
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(mock(AWSS3Control.class));
         when(s3Operations.createBatchJob(any(), any())).thenThrow(new InternalServiceException("Internal Service Exception"));
 
         try
@@ -711,7 +696,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         verify(s3Operations).upload(any(), any());
         verify(s3Operations).createBatchJob(eq(createJobRequest), any(AWSS3Control.class));
-        verify(awsClientFactory).getAmazonS3Control(any());
+        verify(awsS3ClientFactory).getAmazonS3Control(any());
         verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), eq(jobId), anyInt(), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
 
         verifyNoMoreInteractions(batchHelper);
@@ -747,8 +732,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -775,16 +760,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
         verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(2)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     @Test
@@ -816,8 +801,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -836,16 +821,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
         verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(3)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     @Test
@@ -877,8 +862,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -906,16 +891,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
         verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(2)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     @Test
@@ -947,8 +932,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -975,16 +960,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
         verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(2)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
 
@@ -1017,8 +1002,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -1045,16 +1030,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
         verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(3)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     @Test
@@ -1086,8 +1071,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -1114,16 +1099,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
         verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(3)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     @Test
@@ -1155,8 +1140,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         when(batchHelper.generateCreateRestoreJobRequest(any(), any(), anyInt(), any(), any())).thenReturn(createJobRequest);
         when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
 
-        when(awsClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
-        when(awsClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
 
         when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
             Upload mockedUpload = mock(Upload.class);
@@ -1183,16 +1168,16 @@ public class S3DaoImplTest extends AbstractDaoTest
         // Verifications
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
-        verify(awsClientFactory).getTransferManager(eq(params));
-        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
-            eq(jobConfig));
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper)
+            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(5)).generateDescribeJobRequest(any(), eq(jobConfig));
-        verify(awsClientFactory, times(6)).getAmazonS3Control(eq(params));
+        verify(awsS3ClientFactory, times(6)).getAmazonS3Control(eq(params));
         verify(s3Operations, times(5)).describeBatchJob(eq(describeRequest), eq(s3Control));
         verify(s3Control, times(6)).shutdown();
 
-        verifyNoMoreInteractions(batchHelper, s3Operations, awsClientFactory, s3Control);
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
 
     private void testRestoreObjectsWithS3Exception(String exceptionMessage, int statusCode)
@@ -1220,7 +1205,7 @@ public class S3DaoImplTest extends AbstractDaoTest
         amazonS3Exception.setStatusCode(statusCode);
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
         doThrow(amazonS3Exception).when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
 
@@ -1256,9 +1241,10 @@ public class S3DaoImplTest extends AbstractDaoTest
         }
 
         // Verify the external calls
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
         verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
+        verify(s3Client).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1289,7 +1275,7 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         // Mock the external calls.
         //when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
         doNothing().when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
 
@@ -1298,16 +1284,17 @@ public class S3DaoImplTest extends AbstractDaoTest
         RestoreObjectRequest requestStore = requestStoreCaptor.getValue();
         assertEquals(S3_BUCKET_NAME, s3BucketNameCaptor.getValue());
         assertEquals(TEST_FILE, keyCaptor.getValue());
-        assertEquals(s3client, s3ClientCaptor.getValue());
+        assertEquals(s3Client, s3ClientCaptor.getValue());
 
         // Verify Bulk option is used when the option is not provided
         assertEquals(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString(),
             requestStore.getGlacierJobParameters().getTier());
 
         // Verify the external calls
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
         verify(s3Operations).getObjectMetadata(anyString(), anyString(), any(AmazonS3Client.class));
         verify(s3Operations).restoreObject(any(RestoreObjectRequest.class), any(AmazonS3Client.class));
+        verify(s3Client).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1342,8 +1329,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         AmazonS3Client taggerS3client = mock(AmazonS3Client.class);
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
         when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
@@ -1352,11 +1339,12 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3ObjectSummary), tag);
 
         // Verify the external calls.
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
         verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
+        verify(s3Client).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1392,8 +1380,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         SetObjectTaggingResult setObjectTaggingResult = new SetObjectTaggingResult();
 
         // Mock the external calls.
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3client);
-        when(awsClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
+        when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class))).thenReturn(taggerS3client);
         when(awsHelper.getClientConfiguration(s3FileTransferRequestParamsDto)).thenReturn(clientConfiguration);
         when(s3Operations.getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(getObjectTaggingResult);
         when(s3Operations.setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class))).thenReturn(setObjectTaggingResult);
@@ -1402,11 +1390,12 @@ public class S3DaoImplTest extends AbstractDaoTest
         s3DaoImpl.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, Collections.singletonList(s3VersionSummary), tag);
 
         // Verify the external calls.
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
-        verify(awsClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class));
+        verify(awsS3ClientFactory).getAmazonS3Client(any(S3FileTransferRequestParamsDto.class), any(AWSCredentialsProvider.class));
         verify(awsHelper).getClientConfiguration(s3FileTransferRequestParamsDto);
         verify(s3Operations).getObjectTagging(any(GetObjectTaggingRequest.class), any(AmazonS3Client.class));
         verify(s3Operations).setObjectTagging(any(SetObjectTaggingRequest.class), any(AmazonS3Client.class));
+        verify(s3Client).shutdown();
         verifyNoMoreInteractionsHelper();
     }
 
@@ -1415,6 +1404,6 @@ public class S3DaoImplTest extends AbstractDaoTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(awsHelper, javaPropertiesHelper, s3Operations, awsClientFactory);
+        verifyNoMoreInteractions(awsS3ClientFactory, awsHelper, batchHelper, javaPropertiesHelper, jsonHelper, s3Operations, s3Client);
     }
 }

@@ -34,16 +34,7 @@ import java.util.stream.Collectors;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -109,7 +100,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.AwsClientFactory;
+import org.finra.herd.dao.AwsS3ClientFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.exception.S3BatchJobIncompleteException;
@@ -146,19 +137,19 @@ public class S3DaoImpl implements S3Dao
     private AwsHelper awsHelper;
 
     @Autowired
-    private JavaPropertiesHelper javaPropertiesHelper;
-
-    @Autowired
-    private S3Operations s3Operations;
+    private AwsS3ClientFactory awsS3ClientFactory;
 
     @Autowired
     private S3BatchHelper batchHelper;
 
     @Autowired
-    private AwsClientFactory awsClientFactory;
+    private JavaPropertiesHelper javaPropertiesHelper;
 
     @Autowired
     private JsonHelper jsonHelper;
+
+    @Autowired
+    private S3Operations s3Operations;
 
     private long sleepIntervalsMillis = DEFAULT_SLEEP_INTERVAL_MILLIS;
 
@@ -166,7 +157,7 @@ public class S3DaoImpl implements S3Dao
     public int abortMultipartUploads(S3FileTransferRequestParamsDto params, Date thresholdDate)
     {
         // Create an Amazon S3 client.
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         int abortedMultipartUploadsCount = 0;
 
         try
@@ -191,8 +182,9 @@ public class S3DaoImpl implements S3Dao
                     if (upload.getInitiated().compareTo(thresholdDate) < 0)
                     {
                         // Abort the upload.
-                        s3Operations.abortMultipartUpload(TransferManager.appendSingleObjectUserAgent(
-                            new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())), s3Client);
+                        s3Operations.abortMultipartUpload(TransferManager
+                                .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
+                            s3Client);
 
                         // Log the information about the aborted multipart upload.
                         LOGGER.info("Aborted S3 multipart upload. s3Key=\"{}\" s3BucketName=\"{}\" s3MultipartUploadInitiatedDate=\"{}\"", upload.getKey(),
@@ -226,8 +218,9 @@ public class S3DaoImpl implements S3Dao
     @Override
     public S3FileTransferResultsDto copyFile(final S3FileCopyRequestParamsDto params) throws InterruptedException
     {
-        LOGGER.info("Copying S3 object... sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\"",
-            params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(), params.getTargetBucketName());
+        LOGGER
+            .info("Copying S3 object... sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\"", params.getSourceObjectKey(),
+                params.getSourceBucketName(), params.getTargetObjectKey(), params.getTargetBucketName());
 
         // Perform the copy.
         S3FileTransferResultsDto results = performTransfer(params, new Transferer()
@@ -295,7 +288,7 @@ public class S3DaoImpl implements S3Dao
             if (CollectionUtils.isNotEmpty(s3VersionSummaries))
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 // Build a list of objects to be deleted.
                 List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
@@ -317,8 +310,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(
-                String.format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
+            throw new IllegalStateException(String
+                .format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
                     params.getS3BucketName(), e.getMessage()), e);
         }
     }
@@ -334,7 +327,7 @@ public class S3DaoImpl implements S3Dao
             if (!params.getFiles().isEmpty())
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -406,10 +399,10 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER.info(
-            "Downloaded S3 file to the local system. s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
-            params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalBytesTransferred(),
-            HerdDateUtils.formatDuration(results.getDurationMillis()));
+        LOGGER
+            .info("Downloaded S3 file to the local system. s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
+                params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalBytesTransferred(),
+                HerdDateUtils.formatDuration(results.getDurationMillis()));
 
         logOverallTransferRate(results);
 
@@ -421,7 +414,7 @@ public class S3DaoImpl implements S3Dao
     {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
-        AmazonS3Client s3 = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3 = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
         try
         {
             return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
@@ -435,7 +428,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public ObjectMetadata getObjectMetadata(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -448,9 +441,9 @@ public class S3DaoImpl implements S3Dao
                 return null;
             }
 
-            throw new IllegalStateException(
-                String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
-                    params.getS3BucketName(), e.getMessage()), e);
+            throw new IllegalStateException(String
+                .format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+                    e.getMessage()), e);
         }
         finally
         {
@@ -462,7 +455,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
         try
         {
@@ -491,7 +484,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         List<S3ObjectSummary> s3ObjectSummaries = new ArrayList<>();
 
         try
@@ -526,8 +519,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(
-                String.format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+            throw new IllegalStateException(String
+                .format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -544,7 +537,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
 
         try
@@ -571,8 +564,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(
-                String.format("Failed to list S3 versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+            throw new IllegalStateException(String
+                .format("Failed to list S3 versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -601,7 +594,7 @@ public class S3DaoImpl implements S3Dao
         try
         {
             // Create an S3 client.
-            AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+            AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
             // Create a restore object request.
             RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
@@ -651,15 +644,15 @@ public class S3DaoImpl implements S3Dao
         {
             if (StringUtils.contains(e.getMessage(), "Retrieval option is not supported by this storage class"))
             {
-                throw new IllegalArgumentException(
-                    String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
-                        e.getMessage()), e);
+                throw new IllegalArgumentException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
             }
             else
             {
-                throw new IllegalStateException(
-                    String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
-                        e.getMessage()), e);
+                throw new IllegalStateException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
             }
         }
     }
@@ -667,7 +660,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -883,7 +876,7 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -895,8 +888,8 @@ public class S3DaoImpl implements S3Dao
                         // Fail if a not already restored object is detected.
                         if (BooleanUtils.isNotFalse(objectMetadata.getOngoingRestore()))
                         {
-                            throw new IllegalArgumentException(
-                                String.format("Archived S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}", key,
+                            throw new IllegalArgumentException(String
+                                .format("Archived S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}", key,
                                     objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
                         }
                     }
@@ -925,9 +918,9 @@ public class S3DaoImpl implements S3Dao
             throw new ObjectNotFoundException(String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), params.getS3KeyPrefix()));
         }
 
-        Assert.isTrue(fileSizeInBytes == null || Objects.equals(fileSizeInBytes, objectMetadata.getContentLength()),
-            String.format("Specified file size (%d bytes) does not match to the actual file size (%d bytes) reported by S3 for s3://%s/%s file.",
-                fileSizeInBytes, objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
+        Assert.isTrue(fileSizeInBytes == null || Objects.equals(fileSizeInBytes, objectMetadata.getContentLength()), String
+            .format("Specified file size (%d bytes) does not match to the actual file size (%d bytes) reported by S3 for s3://%s/%s file.", fileSizeInBytes,
+                objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
     }
 
     @Override
@@ -1055,7 +1048,7 @@ public class S3DaoImpl implements S3Dao
                 jsonHelper.objectToJson(createRestoreJobRequest));
 
             // Create S3 control client which is going to execute actual call to s3
-            s3ControlClient = awsClientFactory.getAmazonS3Control(paramsDto);
+            s3ControlClient = awsS3ClientFactory.getAmazonS3Control(paramsDto);
 
             // Execute create job request and capture response from S3
             CreateJobResult createJobResult = s3Operations.createBatchJob(createRestoreJobRequest, s3ControlClient);
@@ -1095,7 +1088,7 @@ public class S3DaoImpl implements S3Dao
         LOGGER.info("Describe job request generated... batchJobId=\"{}\", describeJobRequest={}", jobId, jsonHelper.objectToJson(describeJobRequest));
 
         // Create S3 control client which is going to execute actual call to s3
-        AWSS3Control s3ControlClient = awsClientFactory.getAmazonS3Control(s3FileTransferRequestParamsDto);
+        AWSS3Control s3ControlClient = awsS3ClientFactory.getAmazonS3Control(s3FileTransferRequestParamsDto);
         try
         {
             // Execute describe job request and capture response from S3
@@ -1143,7 +1136,7 @@ public class S3DaoImpl implements S3Dao
         PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
         // KMS key ID is being set through prepareMetadata()
 
-        AmazonS3Client s3Client = awsClientFactory.getAmazonS3Client(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -1151,8 +1144,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonServiceException e)
         {
-            throw new IllegalStateException(
-                String.format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
+            throw new IllegalStateException(String
+                .format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -1269,8 +1262,8 @@ public class S3DaoImpl implements S3Dao
             String versionId = deleteError.getVersionId();
             String code = deleteError.getCode();
             String message = deleteError.getMessage();
-            builder.append(
-                String.format("s3Key=\"%s\" s3VersionId=\"%s\" s3DeleteErrorCode=\"%s\" s3DeleteErrorMessage=\"%s\"%n", key, versionId, code, message));
+            builder
+                .append(String.format("s3Key=\"%s\" s3VersionId=\"%s\" s3DeleteErrorCode=\"%s\" s3DeleteErrorMessage=\"%s\"%n", key, versionId, code, message));
         }
         LOGGER.error(builder.toString());
     }
@@ -1286,11 +1279,10 @@ public class S3DaoImpl implements S3Dao
         {
             NumberFormat formatter = new DecimalFormat("#0.00");
 
-            LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(
-                awsHelper.getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(),
-                    s3FileTransferResultsDto.getDurationMillis())), formatter.format(
-                awsHelper.getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(),
-                    s3FileTransferResultsDto.getDurationMillis())));
+            LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(awsHelper
+                    .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
+                formatter.format(awsHelper
+                    .getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())));
         }
     }
 
@@ -1324,7 +1316,7 @@ public class S3DaoImpl implements S3Dao
     private S3FileTransferResultsDto performTransfer(final S3FileTransferRequestParamsDto params, Transferer transferer) throws InterruptedException
     {
         // Create a transfer manager.
-        TransferManager transferManager = awsClientFactory.getTransferManager(params);
+        TransferManager transferManager = awsS3ClientFactory.getTransferManager(params);
 
         try
         {
@@ -1386,8 +1378,8 @@ public class S3DaoImpl implements S3Dao
             if (!(transfer instanceof Copy))
             {
                 // Sanity check for the number of bytes transferred.
-                Assert.isTrue(transferProgress.getBytesTransferred() >= transferProgress.getTotalBytesToTransfer(),
-                    String.format("Actual number of bytes transferred is less than expected (actual: %d bytes; expected: %d bytes).",
+                Assert.isTrue(transferProgress.getBytesTransferred() >= transferProgress.getTotalBytesToTransfer(), String
+                    .format("Actual number of bytes transferred is less than expected (actual: %d bytes; expected: %d bytes).",
                         transferProgress.getBytesTransferred(), transferProgress.getTotalBytesToTransfer()));
             }
 
@@ -1485,7 +1477,7 @@ public class S3DaoImpl implements S3Dao
                 s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds());
 
             // Create an S3 client to access S3 objects.
-            s3Client = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
+            s3Client = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
             // Create an STS client.
             securityTokenService =
@@ -1500,7 +1492,7 @@ public class S3DaoImpl implements S3Dao
                     .withStsClient(securityTokenService).build();
 
             // Create an S3 client for S3 object tagging.
-            s3ObjectTaggerClient = awsClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto, credentialsProvider);
+            s3ObjectTaggerClient = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto, credentialsProvider);
 
             // Create a get object tagging request.
             GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
@@ -1541,8 +1533,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (Exception e)
         {
-            throw new IllegalStateException(
-                String.format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
+            throw new IllegalStateException(String
+                .format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
                     currentS3VersionSummary.getVersionId(), s3FileTransferRequestParamsDto.getS3BucketName(), e.getMessage()), e);
         }
         finally

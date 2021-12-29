@@ -23,7 +23,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.AwsClientFactory;
+import org.finra.herd.dao.AwsS3ClientFactory;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
@@ -72,6 +72,12 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
+    public AwsS3ClientFactory awsS3ClientFactory()
+    {
+        return new AwsS3ClientFactory();
+    }
+
+    @Bean
     public BackoffStrategy backoffStrategy()
     {
         return new SimpleExponentialBackoffStrategy();
@@ -113,6 +119,12 @@ public class DataBridgeSpringModuleConfig
     public JsonHelper jsonHelper()
     {
         return new JsonHelper();
+    }
+
+    @Bean
+    public OAuthTokenProvider oauthTokenProvider()
+    {
+        return new OAuthTokenProvider();
     }
 
     @Bean
@@ -161,17 +173,5 @@ public class DataBridgeSpringModuleConfig
     public StsDao stsDao()
     {
         return new StsDaoImpl();
-    }
-
-    @Bean
-    public AwsClientFactory awsClientFactory()
-    {
-        return new AwsClientFactory();
-    }
-
-    @Bean
-    public OAuthTokenProvider oauthTokenProvider()
-    {
-        return new OAuthTokenProvider();
     }
 }
