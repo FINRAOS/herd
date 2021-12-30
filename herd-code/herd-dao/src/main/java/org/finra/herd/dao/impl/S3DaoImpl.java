@@ -130,7 +130,7 @@ public class S3DaoImpl implements S3Dao
 
     private static final int MAX_KEYS_PER_DELETE_REQUEST = 1000;
 
-    private static final List<JobStatus> finalBatchProcessingStates =
+    private static final List<JobStatus> FINAL_BATCH_PROCESSING_STATES =
         Arrays.asList(JobStatus.Complete, JobStatus.Failed, JobStatus.Cancelled, JobStatus.Suspended);
 
     @Autowired
@@ -963,7 +963,7 @@ public class S3DaoImpl implements S3Dao
 
             // Read and check current status of the restore job.
             JobStatus jobStatus = JobStatus.fromValue(retryResult.getJob().getStatus());
-            if (!finalBatchProcessingStates.contains(jobStatus))
+            if (!FINAL_BATCH_PROCESSING_STATES.contains(jobStatus))
             {
                 // If the job is still not finished (successfully or not) throw exception, which serves as a signal to make another retry
                 throw new S3BatchJobIncompleteException(retryResult);
