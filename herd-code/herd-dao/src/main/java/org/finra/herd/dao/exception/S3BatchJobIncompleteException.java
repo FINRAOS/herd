@@ -33,7 +33,9 @@ public class S3BatchJobIncompleteException extends RuntimeException
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         if (getJobDescriptor() != null)
+        {
             sb.append("JobDescriptor: ").append(getJobDescriptor());
+        }
         sb.append("}");
         return sb.toString();
     }
