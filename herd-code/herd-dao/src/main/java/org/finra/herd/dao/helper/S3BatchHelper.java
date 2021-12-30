@@ -92,7 +92,8 @@ public class S3BatchHelper
      * @param jobId herd generated job id
      * @param expirationInDays This argument specifies how long the S3 Glacier or S3 Glacier Deep Archive object remains available in Amazon S3. S3 Initiate
      * Restore Object jobs that target S3 Glacier and S3 Glacier Deep Archive objects require ExpirationInDays set to 1 or greater.
-     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. For Batch Restore only 2 options are valid at the moment:
+     * BULK and STANDARD (case-sensitive). If not provided BULK option used by default.
      * @param batchJobConfig The batch job configuration parameters
      *
      * @return container object which contains the configuration parameters for an S3 Initiate Restore Object job.
