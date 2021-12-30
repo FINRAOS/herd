@@ -1274,7 +1274,6 @@ public class S3DaoImplTest extends AbstractDaoTest
         ArgumentCaptor<RestoreObjectRequest> requestStoreCaptor = ArgumentCaptor.forClass(RestoreObjectRequest.class);
 
         // Mock the external calls.
-        //when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
         when(awsS3ClientFactory.getAmazonS3Client(any(S3FileTransferRequestParamsDto.class))).thenReturn(s3Client);
         when(s3Operations.getObjectMetadata(s3BucketNameCaptor.capture(), keyCaptor.capture(), s3ClientCaptor.capture())).thenReturn(objectMetadata);
         doNothing().when(s3Operations).restoreObject(requestStoreCaptor.capture(), s3ClientCaptor.capture());
