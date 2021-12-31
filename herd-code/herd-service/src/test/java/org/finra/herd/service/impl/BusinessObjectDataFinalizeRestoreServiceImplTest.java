@@ -114,9 +114,8 @@ public class BusinessObjectDataFinalizeRestoreServiceImplTest extends AbstractSe
         verify(businessObjectDataFinalizeRestoreHelperService).prepareToFinalizeRestore(storageUnitKey);
         verify(businessObjectDataFinalizeRestoreHelperService).executeS3SpecificSteps(businessObjectDataRestoreDto);
         verify(businessObjectDataFinalizeRestoreHelperService).completeFinalizeRestore(businessObjectDataRestoreDto);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.RESTORING);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.RESTORING);
         verifyNoMoreInteractionsHelper();
     }
 

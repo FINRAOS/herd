@@ -90,6 +90,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -146,6 +147,7 @@ public class S3DaoTest extends AbstractDaoTest
     {
         // Create a local temp directory.
         localTempPath = Files.createTempDirectory(null);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
@@ -344,9 +346,8 @@ public class S3DaoTest extends AbstractDaoTest
     public void testCopyFile() throws InterruptedException
     {
         // Put a 1 byte file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
 
         S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
         transferDto.setSourceBucketName(storageDaoTestHelper.getS3LoadingDockBucketName());
@@ -365,9 +366,8 @@ public class S3DaoTest extends AbstractDaoTest
     public void testCopyFileInvalidKmsId() throws InterruptedException
     {
         // Put a 1 byte file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
 
         try
         {
@@ -394,9 +394,8 @@ public class S3DaoTest extends AbstractDaoTest
     public void testCopyFileInvalidKmsIdCancelled() throws InterruptedException
     {
         // Put a 1 byte file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
 
         try
         {
@@ -424,9 +423,8 @@ public class S3DaoTest extends AbstractDaoTest
     public void testCopyFileInvalidKmsIdIllegalStateException() throws InterruptedException
     {
         // Put a 1 byte file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
 
         try
         {
@@ -453,9 +451,8 @@ public class S3DaoTest extends AbstractDaoTest
     public void testCopyFileNoKmsId() throws InterruptedException
     {
         // Put a 1 byte file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
 
         // Perform an S3 file copy operation when KMS ID value is not specified.
         for (String kmsId : Arrays.asList(BLANK_TEXT, null))
@@ -1608,8 +1605,8 @@ public class S3DaoTest extends AbstractDaoTest
     {
         try
         {
-            s3Dao
-                .getProperties(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR, TARGET_S3_KEY, s3DaoTestHelper.getTestS3FileTransferRequestParamsDto());
+            s3Dao.getProperties(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR, TARGET_S3_KEY,
+                s3DaoTestHelper.getTestS3FileTransferRequestParamsDto());
             Assert.fail("expected AmazonServiceException to be thrown, but no exceptions were thrown");
         }
         catch (Exception e)
@@ -2302,9 +2299,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(false);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Initiate a restore request for the test S3 file.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
@@ -2327,8 +2323,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(false);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata), null);
+        s3Operations.putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata),
+            null);
 
         // Try to initiate a restore request for a mocked S3 file that would trigger an Amazon service exception when we request to restore an object.
         try
@@ -2363,9 +2359,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(true);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Initiate a restore request for the test S3 file.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
@@ -2385,9 +2380,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Standard);
         metadata.setOngoingRestore(false);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Try to initiate a restore request for a non-Glacier file.
         try
@@ -3079,9 +3073,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(false);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Validate the file.
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
@@ -3100,8 +3093,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(false);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata), null);
+        s3Operations.putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata),
+            null);
 
         // Try to validate if the Glacier S3 file is already restored for a mocked S3 file
         // that triggers an Amazon service exception when we request S3 metadata for the object.
@@ -3137,9 +3130,8 @@ public class S3DaoTest extends AbstractDaoTest
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
         metadata.setOngoingRestore(true);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Try to validate if the Glacier S3 file is already restored.
         try
@@ -3152,8 +3144,8 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}", TARGET_S3_KEY,
+            assertEquals(
+                String.format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}", TARGET_S3_KEY,
                     storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -3164,9 +3156,8 @@ public class S3DaoTest extends AbstractDaoTest
         // Put a 1 byte Glacier storage class file in S3 that has no restore initiated (OngoingRestore flag is null).
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
-        s3Operations
-            .putObject(new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata),
-                null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
 
         // Try to validate if the Glacier S3 file is already restored.
         try
@@ -3179,8 +3170,8 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}", TARGET_S3_KEY,
+            assertEquals(
+                String.format("Archived S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, S3 bucket name {%s}", TARGET_S3_KEY,
                     storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }

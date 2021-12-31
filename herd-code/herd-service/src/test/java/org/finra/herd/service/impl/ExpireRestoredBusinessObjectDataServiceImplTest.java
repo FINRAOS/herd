@@ -112,14 +112,12 @@ public class ExpireRestoredBusinessObjectDataServiceImplTest extends AbstractSer
 
         // Verify the external calls.
         verify(expireRestoredBusinessObjectDataHelperService).prepareToExpireStorageUnit(storageUnitKey);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.EXPIRING, StorageUnitStatusEntity.RESTORED);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.EXPIRING, StorageUnitStatusEntity.RESTORED);
         verify(expireRestoredBusinessObjectDataHelperService).executeS3SpecificSteps(businessObjectDataRestoreDto);
         verify(expireRestoredBusinessObjectDataHelperService).completeStorageUnitExpiration(businessObjectDataRestoreDto);
-        verify(notificationEventService)
-            .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.EXPIRING);
+        verify(notificationEventService).processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+            businessObjectDataKey, STORAGE_NAME, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.EXPIRING);
         verifyNoMoreInteractionsHelper();
     }
 

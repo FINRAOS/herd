@@ -18,30 +18,23 @@ package org.finra.herd.dao.impl;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.Executors;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -83,6 +76,12 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferProgress;
+import com.amazonaws.services.s3control.AWSS3Control;
+import com.amazonaws.services.s3control.model.CreateJobRequest;
+import com.amazonaws.services.s3control.model.CreateJobResult;
+import com.amazonaws.services.s3control.model.DescribeJobRequest;
+import com.amazonaws.services.s3control.model.DescribeJobResult;
+import com.amazonaws.services.s3control.model.JobStatus;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import org.apache.commons.collections4.CollectionUtils;
@@ -93,18 +92,25 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.RetryPolicyFactory;
+import org.finra.herd.dao.AwsS3ClientFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.exception.S3BatchJobIncompleteException;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
+import org.finra.herd.model.dto.BatchJobConfigDto;
+import org.finra.herd.model.dto.BatchJobManifestDto;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -124,14 +130,23 @@ public class S3DaoImpl implements S3Dao
 
     private static final int MAX_KEYS_PER_DELETE_REQUEST = 1000;
 
+    private static final List<JobStatus> FINAL_BATCH_PROCESSING_STATES =
+        Arrays.asList(JobStatus.Complete, JobStatus.Failed, JobStatus.Cancelled, JobStatus.Suspended);
+
     @Autowired
     private AwsHelper awsHelper;
+
+    @Autowired
+    private AwsS3ClientFactory awsS3ClientFactory;
+
+    @Autowired
+    private S3BatchHelper batchHelper;
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
 
     @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
+    private JsonHelper jsonHelper;
 
     @Autowired
     private S3Operations s3Operations;
@@ -142,7 +157,7 @@ public class S3DaoImpl implements S3Dao
     public int abortMultipartUploads(S3FileTransferRequestParamsDto params, Date thresholdDate)
     {
         // Create an Amazon S3 client.
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         int abortedMultipartUploadsCount = 0;
 
         try
@@ -273,7 +288,7 @@ public class S3DaoImpl implements S3Dao
             if (CollectionUtils.isNotEmpty(s3VersionSummaries))
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 // Build a list of objects to be deleted.
                 List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
@@ -312,7 +327,7 @@ public class S3DaoImpl implements S3Dao
             if (!params.getFiles().isEmpty())
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -399,7 +414,7 @@ public class S3DaoImpl implements S3Dao
     {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
-        AmazonS3Client s3 = getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3 = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
         try
         {
             return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
@@ -413,7 +428,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public ObjectMetadata getObjectMetadata(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -440,7 +455,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
     {
-        AmazonS3Client s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
         try
         {
@@ -469,7 +484,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         List<S3ObjectSummary> s3ObjectSummaries = new ArrayList<>();
 
         try
@@ -522,7 +537,7 @@ public class S3DaoImpl implements S3Dao
     {
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
         List<S3VersionSummary> s3VersionSummaries = new ArrayList<>();
 
         try
@@ -568,75 +583,76 @@ public class S3DaoImpl implements S3Dao
         LOGGER.info("Restoring a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
             params.getS3BucketName(), params.getFiles().size());
 
-        if (!CollectionUtils.isEmpty(params.getFiles()))
+        if (CollectionUtils.isEmpty(params.getFiles()))
         {
-            // Initialize a key value pair for the error message in the catch block.
-            String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+            return;
+        }
+
+        // Initialize a key value pair for the error message in the catch block.
+        String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+
+        try
+        {
+            // Create an S3 client.
+            AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
+
+            // Create a restore object request.
+            RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
+            // Make Bulk the default archive retrieval option if the option is not provided
+            requestRestore.setGlacierJobParameters(
+                new GlacierJobParameters().withTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
 
             try
             {
-                // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
-
-                // Create a restore object request.
-                RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
-
-                // Make Bulk the default archive retrieval option if the option is not provided
-                requestRestore.setGlacierJobParameters(
-                    new GlacierJobParameters().withTier(StringUtils.isNotEmpty(archiveRetrievalOption) ? archiveRetrievalOption : Tier.Bulk.toString()));
-
-                try
+                for (File file : params.getFiles())
                 {
-                    for (File file : params.getFiles())
+                    key = file.getPath().replaceAll("\\\\", "/");
+                    ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(params.getS3BucketName(), key, s3Client);
+
+                    // Request a restore for objects that are not already being restored.
+                    if (BooleanUtils.isNotTrue(objectMetadata.getOngoingRestore()))
                     {
-                        key = file.getPath().replaceAll("\\\\", "/");
-                        ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(params.getS3BucketName(), key, s3Client);
+                        requestRestore.setKey(key);
 
-                        // Request a restore for objects that are not already being restored.
-                        if (BooleanUtils.isNotTrue(objectMetadata.getOngoingRestore()))
+                        try
                         {
-                            requestRestore.setKey(key);
-
-                            try
+                            // Try the S3 restore operation on this file.
+                            s3Operations.restoreObject(requestRestore, s3Client);
+                        }
+                        catch (AmazonS3Exception amazonS3Exception)
+                        {
+                            // If this exception has a status code of 409, log the information and continue to the next file.
+                            if (amazonS3Exception.getStatusCode() == HttpStatus.SC_CONFLICT)
                             {
-                                // Try the S3 restore operation on this file.
-                                s3Operations.restoreObject(requestRestore, s3Client);
+                                LOGGER.info("Restore already in progress for file with s3Key=\"{}\".", key);
                             }
-                            catch (AmazonS3Exception amazonS3Exception)
+                            // Else, we need to propagate the exception to the next level of try/catch block.
+                            else
                             {
-                                // If this exception has a status code of 409, log the information and continue to the next file.
-                                if (amazonS3Exception.getStatusCode() == HttpStatus.SC_CONFLICT)
-                                {
-                                    LOGGER.info("Restore already in progress for file with s3Key=\"{}\".", key);
-                                }
-                                // Else, we need to propagate the exception to the next level of try/catch block.
-                                else
-                                {
-                                    throw new Exception(amazonS3Exception);
-                                }
+                                throw new Exception(amazonS3Exception);
                             }
                         }
                     }
                 }
-                finally
-                {
-                    s3Client.shutdown();
-                }
             }
-            catch (Exception e)
+            finally
             {
-                if (StringUtils.contains(e.getMessage(), "Retrieval option is not supported by this storage class"))
-                {
-                    throw new IllegalArgumentException(String
-                        .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
-                            e.getMessage()), e);
-                }
-                else
-                {
-                    throw new IllegalStateException(String
-                        .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
-                            e.getMessage()), e);
-                }
+                s3Client.shutdown();
+            }
+        }
+        catch (Exception e)
+        {
+            if (StringUtils.contains(e.getMessage(), "Retrieval option is not supported by this storage class"))
+            {
+                throw new IllegalArgumentException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
+            }
+            else
+            {
+                throw new IllegalStateException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
             }
         }
     }
@@ -644,7 +660,7 @@ public class S3DaoImpl implements S3Dao
     @Override
     public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
     {
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -704,8 +720,8 @@ public class S3DaoImpl implements S3Dao
         List<S3VersionSummary> s3VersionSummariesWithoutDeleteMarkers = null;
         if (CollectionUtils.isNotEmpty(s3VersionSummaries))
         {
-            s3VersionSummariesWithoutDeleteMarkers = s3VersionSummaries.stream().
-                filter(s3VersionSummary -> !s3VersionSummary.isDeleteMarker()).collect(Collectors.toList());
+            s3VersionSummariesWithoutDeleteMarkers =
+                s3VersionSummaries.stream().filter(s3VersionSummary -> !s3VersionSummary.isDeleteMarker()).collect(Collectors.toList());
         }
 
         LOGGER.info("Tagging versions in S3... s3BucketName=\"{}\" s3KeyPrefix=\"{}\" s3VersionCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\" " +
@@ -860,7 +876,7 @@ public class S3DaoImpl implements S3Dao
             try
             {
                 // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
                 try
                 {
@@ -907,6 +923,185 @@ public class S3DaoImpl implements S3Dao
                 objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
     }
 
+    @Override
+    public void batchRestoreObjects(final S3FileTransferRequestParamsDto params, BatchJobConfigDto batchJobConfig, int expirationInDays,
+        String archiveRetrievalOption)
+    {
+        LOGGER.info("Batch restoring a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
+            params.getS3BucketName(), params.getFiles().size());
+
+        // Do nothing if no files to restore.
+        if (CollectionUtils.isEmpty(params.getFiles()))
+        {
+            return;
+        }
+
+        // Create S3 Batch restore job, which supposed to be automatically executed by S3
+        String jobId = createBatchRestoreJob(params, batchJobConfig, expirationInDays, archiveRetrievalOption);
+
+        // Template class that simplifies the execution of operations with retry semantics executed by spring framework.
+        RetryTemplate template = new RetryTemplate();
+
+        // This policy determine how many repetitions this retry operation is going to do and which exceptions should be considered as repeatable.
+        SimpleRetryPolicy policy = new SimpleRetryPolicy(batchJobConfig.getMaxAttempts(), Collections.singletonMap(S3BatchJobIncompleteException.class, true));
+        template.setRetryPolicy(policy);
+
+        // This policy is used to wait fixed amount of time before making another retry.
+        FixedBackOffPolicy backoffPolicy = new FixedBackOffPolicy();
+
+        // Reading backoff timeout value from configuration and assign to policy.
+        backoffPolicy.setBackOffPeriod(batchJobConfig.getBackoffPeriod());
+        template.setBackOffPolicy(backoffPolicy);
+
+        // Turn off automatic re-throw of the exception after last repetition.
+        template.setThrowLastExceptionOnExhausted(false);
+
+        // Retry running provided lambda according to the retry and backoff policies assigned earlier.
+        DescribeJobResult result = template.execute((RetryCallback<DescribeJobResult, S3BatchJobIncompleteException>) context -> {
+            // Read current state of S3 Batch restore job.
+            DescribeJobResult retryResult = getBatchJobDescription(params, batchJobConfig, jobId);
+
+            // Read and check current status of the restore job.
+            JobStatus jobStatus = JobStatus.fromValue(retryResult.getJob().getStatus());
+            if (!FINAL_BATCH_PROCESSING_STATES.contains(jobStatus))
+            {
+                // If the job is still not finished (successfully or not) throw exception, which serves as a signal to make another retry
+                throw new S3BatchJobIncompleteException(retryResult);
+            }
+
+            return retryResult;
+        }, context -> {
+            // If last retry finished with still incomplete status, extract the job descriptor and return it as a result
+            if (context.getLastThrowable() instanceof S3BatchJobIncompleteException)
+            {
+                return ((S3BatchJobIncompleteException) context.getLastThrowable()).getJobDescriptor();
+            }
+            else
+            {
+                // If last describe job finished with different error re-throw it further
+                throw new IllegalStateException(context.getLastThrowable());
+            }
+        });
+
+        // Fail with exception if unable to retrieve descriptor of the batch job from AWS S3 after several retries
+        if (result == null || result.getJob() == null || result.getJob().getStatus() == null)
+        {
+            throw new IllegalStateException("Unable to retrieve descriptor of the batch job");
+        }
+
+        // if after configured number of retries the job is still not complete - throw IllegalStateException
+        JobStatus jobStatus = JobStatus.fromValue(result.getJob().getStatus());
+        if (jobStatus != JobStatus.Complete)
+        {
+            throw new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor: %s ", result));
+        }
+    }
+
+    /**
+     * Creates S3 batch job
+     *
+     * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
+     * manifest.
+     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     *
+     * @return S3 batch job id
+     */
+    String createBatchRestoreJob(final S3FileTransferRequestParamsDto paramsDto, BatchJobConfigDto batchJobConfig, int expirationInDays,
+        String archiveRetrievalOption)
+    {
+        // All information regarding processing of this request going to be logged with this ID
+        // and easily accessible in using Splunk smart field batchJobId
+        String jobId = UUID.randomUUID().toString();
+        LOGGER.info("Creating restore batch job... batchJobId=\"{}\", batchJobConfig={}", jobId, jsonHelper.objectToJson(batchJobConfig));
+
+        AWSS3Control s3ControlClient = null;
+
+        try
+        {
+            // Generating dto object to combine info related to S3 Batch operation manifest
+            BatchJobManifestDto manifest = batchHelper.createCSVBucketKeyManifest(jobId, paramsDto.getS3BucketName(), paramsDto.getFiles(), batchJobConfig);
+            LOGGER.info("Manifest created... batchJobId=\"{}\", manifestBucketName=\"{}\", manifestS3Key=\"{}\", manifestS3Etag=\"{}\"", jobId,
+                manifest.getBucketName(), manifest.getKey(), manifest.getEtag());
+
+            // Uploading manifest file to S3 before executing Batch Operation.
+            // In this case manifest it CSV file with bucketName and file name S3 key to restore
+            performTransfer(paramsDto, transferManager -> {
+                // Create and prepare the metadata.
+                ObjectMetadata metadata = new ObjectMetadata();
+                prepareMetadata(paramsDto, metadata);
+
+                // Create a put request with the parameters and the metadata.
+                PutObjectRequest putObjectRequest = new PutObjectRequest(manifest.getBucketName(), manifest.getKey(),
+                    new ByteArrayInputStream(manifest.getContent().getBytes(StandardCharsets.UTF_8)), metadata);
+
+                // Upload file
+                return s3Operations.upload(putObjectRequest, transferManager);
+            });
+
+            // Generate request to create S3 batch job to restore files
+            CreateJobRequest createRestoreJobRequest =
+                batchHelper.generateCreateRestoreJobRequest(manifest, jobId, expirationInDays, archiveRetrievalOption, batchJobConfig);
+
+            LOGGER.info("Create restore job request generated... batchJobId=\"{}\", createRestoreJobRequest={}", jobId,
+                jsonHelper.objectToJson(createRestoreJobRequest));
+
+            // Create S3 control client which is going to execute actual call to s3
+            s3ControlClient = awsS3ClientFactory.getAmazonS3Control(paramsDto);
+
+            // Execute create job request and capture response from S3
+            CreateJobResult createJobResult = s3Operations.createBatchJob(createRestoreJobRequest, s3ControlClient);
+
+            LOGGER.info("Create job request executed... batchJobId=\"{}\", createJobResult={}", jobId, jsonHelper.objectToJson(createJobResult));
+
+            return createJobResult.getJobId();
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(
+                String.format("Failed to initiate a restore job... batchJobId=\"%s\", bucket=\"%s\"", jobId, paramsDto.getS3BucketName()), e);
+        }
+        finally
+        {
+            if (s3ControlClient != null)
+            {
+                s3ControlClient.shutdown();
+            }
+        }
+    }
+
+    /****
+     * Get S3 batch job configuration and status information
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters
+     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param jobId The ID for the S3 batch job
+     *
+     * @return A container element for the job configuration and status information
+     */
+    DescribeJobResult getBatchJobDescription(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, BatchJobConfigDto batchJobConfig,
+        String jobId)
+    {
+        // Generate request to get S3 batch job current descriptor
+        DescribeJobRequest describeJobRequest = batchHelper.generateDescribeJobRequest(jobId, batchJobConfig);
+        LOGGER.info("Describe job request generated... batchJobId=\"{}\", describeJobRequest={}", jobId, jsonHelper.objectToJson(describeJobRequest));
+
+        // Create S3 control client which is going to execute actual call to s3
+        AWSS3Control s3ControlClient = awsS3ClientFactory.getAmazonS3Control(s3FileTransferRequestParamsDto);
+        try
+        {
+            // Execute describe job request and capture response from S3
+            DescribeJobResult response = s3Operations.describeBatchJob(describeJobRequest, s3ControlClient);
+            LOGGER.info("DescribeBatchJob call complete... batchJobId=\"{}\", response={}", jobId, jsonHelper.objectToJson(response));
+            return response;
+        }
+        finally
+        {
+            s3ControlClient.shutdown();
+        }
+    }
+
     /**
      * Returns true is S3 key prefix is a root.
      *
@@ -941,7 +1136,7 @@ public class S3DaoImpl implements S3Dao
         PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
         // KMS key ID is being set through prepareMetadata()
 
-        AmazonS3Client s3Client = getAmazonS3(params);
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
 
         try
         {
@@ -999,111 +1194,6 @@ public class S3DaoImpl implements S3Dao
     }
 
     /**
-     * <p> Gets the {@link AWSCredentialsProvider} based on the credentials in the given parameters. </p> <p> Returns {@link
-     * DefaultAWSCredentialsProviderChain} if either access or secret key is {@code null}. Otherwise returns a {@link StaticCredentialsProvider} with the
-     * credentials. </p>
-     *
-     * @param params - Access parameters
-     *
-     * @return AWS credentials provider implementation
-     */
-    private AWSCredentialsProvider getAWSCredentialsProvider(S3FileTransferRequestParamsDto params)
-    {
-        List<AWSCredentialsProvider> providers = new ArrayList<>();
-        String accessKey = params.getAwsAccessKeyId();
-        String secretKey = params.getAwsSecretKey();
-        if (accessKey != null && secretKey != null)
-        {
-            providers.add(new StaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)));
-        }
-        for (HerdAWSCredentialsProvider herdAWSCredentialsProvider : params.getAdditionalAwsCredentialsProviders())
-        {
-            providers.add(new HerdAwsCredentialsProviderWrapper(herdAWSCredentialsProvider));
-        }
-        providers.add(new DefaultAWSCredentialsProviderChain());
-        return new AWSCredentialsProviderChain(providers.toArray(new AWSCredentialsProvider[providers.size()]));
-    }
-
-    /**
-     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
-     *
-     * @param params the parameters
-     *
-     * @return the Amazon S3 client.
-     */
-    private AmazonS3Client getAmazonS3(S3FileTransferRequestParamsDto params)
-    {
-        return getAmazonS3(params, null);
-    }
-
-    /**
-     * Gets a new S3 client based on the specified parameters. The HTTP proxy information will be added if the host and port are specified in the parameters.
-     *
-     * @param params the parameters
-     * @param awsCredentialsProvider the AWS credentials provider, may be null
-     *
-     * @return the Amazon S3 client.
-     */
-    private AmazonS3Client getAmazonS3(S3FileTransferRequestParamsDto params, AWSCredentialsProvider awsCredentialsProvider)
-    {
-        AmazonS3Client amazonS3Client;
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Set the proxy configuration, if proxy is specified.
-        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
-        {
-            clientConfiguration.setProxyHost(params.getHttpProxyHost());
-            clientConfiguration.setProxyPort(params.getHttpProxyPort());
-        }
-
-        // Sign all S3 API's with V4 signing.
-        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
-        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
-        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
-        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
-
-        // Set the optional socket timeout, if configured.
-        if (params.getSocketTimeout() != null)
-        {
-            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
-        }
-
-        // Create an S3 client using passed in credentials provider or credentials.
-        if (awsCredentialsProvider != null)
-        {
-            // Create an S3 client using specified AWS credentials provider.
-            amazonS3Client = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
-        }
-        else if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
-            StringUtils.isNotBlank(params.getSessionToken()))
-        {
-            // Create an S3 client using basic session credentials.
-            amazonS3Client = new AmazonS3Client(new BasicSessionCredentials(params.getAwsAccessKeyId(), params.getAwsSecretKey(), params.getSessionToken()),
-                clientConfiguration);
-        }
-        else
-        {
-            // Create an S3 client using AWS credentials provider.
-            amazonS3Client = new AmazonS3Client(getAWSCredentialsProvider(params), clientConfiguration);
-        }
-
-        // Set the optional endpoint, if specified.
-        if (StringUtils.isNotBlank(params.getS3Endpoint()))
-        {
-            amazonS3Client.setEndpoint(params.getS3Endpoint());
-        }
-        // Otherwise, set AWS region, if specified.
-        else if (StringUtils.isNotBlank(params.getAwsRegionName()))
-        {
-            amazonS3Client.setRegion(Region.getRegion(Regions.fromName(params.getAwsRegionName())));
-        }
-
-        // Return the newly created client.
-        return amazonS3Client;
-    }
-
-    /**
      * Retrieves an S3 object.
      *
      * @param s3Client the S3 client
@@ -1154,30 +1244,6 @@ public class S3DaoImpl implements S3Dao
         }
     }
 
-    /**
-     * Gets a transfer manager with the specified parameters including proxy host, proxy port, S3 access key, S3 secret key, and max threads.
-     *
-     * @param params the parameters.
-     *
-     * @return a newly created transfer manager.
-     */
-    private TransferManager getTransferManager(final S3FileTransferRequestParamsDto params)
-    {
-        // We are returning a new transfer manager each time it is called. Although the Javadocs of TransferManager say to share a single instance
-        // if possible, this could potentially be a problem if TransferManager.shutdown(true) is called and underlying resources are not present when needed
-        // for subsequent transfers.
-        if (params.getMaxThreads() == null)
-        {
-            // Create a transfer manager that will internally use an appropriate number of threads.
-            return new TransferManager(getAmazonS3(params));
-        }
-        else
-        {
-            // Create a transfer manager with our own executor configured with the specified total threads.
-            LOGGER.info("Creating a transfer manager. fixedThreadPoolSize={}", params.getMaxThreads());
-            return new TransferManager(getAmazonS3(params), Executors.newFixedThreadPool(params.getMaxThreads()));
-        }
-    }
 
     /**
      * Logs the given MultiObjectDeleteException.
@@ -1250,7 +1316,7 @@ public class S3DaoImpl implements S3Dao
     private S3FileTransferResultsDto performTransfer(final S3FileTransferRequestParamsDto params, Transferer transferer) throws InterruptedException
     {
         // Create a transfer manager.
-        TransferManager transferManager = getTransferManager(params);
+        TransferManager transferManager = awsS3ClientFactory.getTransferManager(params);
 
         try
         {
@@ -1411,7 +1477,7 @@ public class S3DaoImpl implements S3Dao
                 s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds());
 
             // Create an S3 client to access S3 objects.
-            s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+            s3Client = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto);
 
             // Create an STS client.
             securityTokenService =
@@ -1426,7 +1492,7 @@ public class S3DaoImpl implements S3Dao
                     .withStsClient(securityTokenService).build();
 
             // Create an S3 client for S3 object tagging.
-            s3ObjectTaggerClient = getAmazonS3(s3FileTransferRequestParamsDto, credentialsProvider);
+            s3ObjectTaggerClient = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto, credentialsProvider);
 
             // Create a get object tagging request.
             GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
@@ -1502,33 +1568,6 @@ public class S3DaoImpl implements S3Dao
          *
          * @return the transfer information for the transfer. This will typically be returned from an operation on the transfer manager (e.g. upload).
          */
-        public Transfer performTransfer(TransferManager transferManager);
-    }
-
-    /**
-     * A {@link AWSCredentialsProvider} which delegates to its wrapped {@link HerdAWSCredentialsProvider}
-     */
-    private static class HerdAwsCredentialsProviderWrapper implements AWSCredentialsProvider
-    {
-        private HerdAWSCredentialsProvider herdAWSCredentialsProvider;
-
-        public HerdAwsCredentialsProviderWrapper(HerdAWSCredentialsProvider herdAWSCredentialsProvider)
-        {
-            this.herdAWSCredentialsProvider = herdAWSCredentialsProvider;
-        }
-
-        @Override
-        public AWSCredentials getCredentials()
-        {
-            AwsCredential herdAwsCredential = herdAWSCredentialsProvider.getAwsCredential();
-            return new BasicSessionCredentials(herdAwsCredential.getAwsAccessKey(), herdAwsCredential.getAwsSecretKey(),
-                herdAwsCredential.getAwsSessionToken());
-        }
-
-        @Override
-        public void refresh()
-        {
-            // No need to implement this. AWS doesn't use this.
-        }
+        Transfer performTransfer(TransferManager transferManager);
     }
 }

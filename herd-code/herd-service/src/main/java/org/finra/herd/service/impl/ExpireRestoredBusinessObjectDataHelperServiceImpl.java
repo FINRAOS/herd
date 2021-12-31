@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
@@ -67,6 +68,9 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
 
     @Autowired
     private S3Service s3Service;
+
+    @Autowired
+    private S3Dao s3Dao;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -181,7 +185,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImpl implements Expire
         s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(glacierS3Files)));
 
         // To expire the restored S3 objects, initiate restore requests with expiration set to 1 day.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, 1, null);
+        s3Dao.restoreObjects(s3FileTransferRequestParamsDto, 1, null);
     }
 
     /**
