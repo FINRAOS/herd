@@ -99,12 +99,12 @@ paths:
           schema:
             $ref: "#/definitions/errorResponse"
 securityDefinitions:
-  oauth2Authentication:
+  basicAuth:
+    type: "basic"
+  oauthAuth:
     type: "oauth2"
     tokenUrl: "https://{{TOKEN_URL}}"
     flow: "application"
-  basicAuthentication:
-    type: "basic"
 definitions:
   errorResponse: {}
   person:
@@ -115,5 +115,5 @@ definitions:
       name:
         type: "string"
 security:
-- basicAuthentication: []
-- oauth2Authentication: []
+- basicAuth: []
+- oauthAuth: []
