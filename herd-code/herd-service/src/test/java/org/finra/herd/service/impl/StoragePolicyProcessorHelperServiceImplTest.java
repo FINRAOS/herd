@@ -37,6 +37,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -45,6 +46,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -58,7 +60,6 @@ import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -84,10 +85,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     private JsonHelper jsonHelper;
 
     @Mock
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Mock
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -150,7 +151,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
                 StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
 
         // Mock the external calls.
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
@@ -186,8 +187,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
         // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
-            StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVING, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-            S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVING, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+            storagePolicyTransitionParamsDto);
     }
 
     @Test
@@ -208,7 +210,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
                 StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
-                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS));
 
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
@@ -231,38 +233,32 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         updatedS3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
         updatedS3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
 
-        // Create an updated S3 file transfer parameters DTO to be used for S3 object tagging operation.
-        S3FileTransferRequestParamsDto updatedS3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        updatedS3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        updatedS3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        updatedS3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
-        updatedS3ObjectTaggerParamsDto.setS3Endpoint(S3_ENDPOINT);
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
 
         // Mock the external calls.
         when(storageHelper.getS3FileTransferRequestParamsDto()).thenReturn(s3FileTransferRequestParamsDto);
-        when(storageHelper.getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME))
-            .thenReturn(s3ObjectTaggerParamsDto);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
-        when(s3Service.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(actualS3FilesWithoutZeroByteDirectoryMarkers);
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(actualS3Files);
 
         // Call the method under test.
         storagePolicyProcessorHelperServiceImpl.executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
 
         // Verify the external calls.
         verify(storageHelper).getS3FileTransferRequestParamsDto();
-        verify(storageHelper).getS3FileTransferRequestParamsDtoByRole(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, actualS3FilesWithoutZeroByteDirectoryMarkers, STORAGE_NAME, businessObjectDataKey);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, true);
-        verify(s3Service).listDirectory(s3FileTransferRequestParamsDto, false);
-        verify(s3Service)
-            .tagObjects(updatedS3FileTransferRequestParamsDto, updatedS3ObjectTaggerParamsDto, actualS3Files, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, false);
+        verify(s3Dao)
+            .tagObjects(updatedS3FileTransferRequestParamsDto, s3ObjectTaggerRoleParamsDto, actualS3Files, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
-            StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-            S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+            StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+            s3ObjectTaggerRoleParamsDto), storagePolicyTransitionParamsDto);
     }
 
     @Test
@@ -341,6 +337,8 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN)).thenReturn(S3_OBJECT_TAGGER_ROLE_ARN);
         when(configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME))
             .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        when(configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class))
+            .thenReturn(S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
         when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
         when(s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey)).thenReturn(S3_KEY_PREFIX);
         when(storageFileHelper.getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, false))
@@ -386,6 +384,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN);
         verify(configurationHelper).getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(s3KeyPrefixHelper).buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
         verify(storageFileHelper).getAndValidateStorageFiles(storageUnitEntity, S3_KEY_PREFIX, STORAGE_NAME, businessObjectDataKey, false);
@@ -398,8 +397,9 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
 
         // Validate the results.
         assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX,
-            StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
-            S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS)),
+            storagePolicyTransitionParamsDto);
     }
 
     @Test
@@ -523,7 +523,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3KeyPrefixHelper, s3Service,
+        verifyNoMoreInteractions(businessObjectDataDaoHelper, businessObjectDataHelper, configurationHelper, jsonHelper, s3Dao, s3KeyPrefixHelper,
             storageFileHelper, storageHelper, storagePolicyDaoHelper, storagePolicyHelper, storageUnitDao, storageUnitDaoHelper, storageUnitHelper);
     }
 }

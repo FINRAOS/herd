@@ -2,4 +2,7 @@ pandas == 1.2.3
 openpyxl
 boto3 >= 1.9.50
 xlsxwriter >= 1.1.0
+PySimpleGUI == 4.45.0
 pytest >= 5.0.1
+requests
+responses

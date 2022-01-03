@@ -51,6 +51,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdate
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -182,14 +183,18 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
+        // Create an S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto =
+            new S3ObjectTaggerRoleParamsDto(S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS);
+
         // Create multiple states of business object data destroy parameters DTO.
         List<BusinessObjectDataDestroyDto> businessObjectDataDestroyDtoStates = Arrays.asList(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
@@ -206,23 +211,21 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             businessObjectDataDestroyDtoStates.get(1).copyTo(businessObjectDataDestroyDto);
             return null;
         }).when(businessObjectDataInitiateDestroyHelperService).executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class));
-        when(businessObjectDataInitiateDestroyHelperService.executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class)))
-            .thenReturn(businessObjectData);
+        when(businessObjectDataInitiateDestroyHelperService.executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class))).thenReturn(
+            businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataServiceImpl.destroyBusinessObjectData(businessObjectDataKey);
 
         // Verify the external calls.
-        verify(businessObjectDataInitiateDestroyHelperService)
-            .prepareToInitiateDestroy(any(BusinessObjectDataDestroyDto.class), any(BusinessObjectDataKey.class));
+        verify(businessObjectDataInitiateDestroyHelperService).prepareToInitiateDestroy(any(BusinessObjectDataDestroyDto.class),
+            any(BusinessObjectDataKey.class));
         verify(businessObjectDataInitiateDestroyHelperService).executeS3SpecificSteps(any(BusinessObjectDataDestroyDto.class));
         verify(businessObjectDataInitiateDestroyHelperService).executeInitiateDestroyAfterStep(any(BusinessObjectDataDestroyDto.class));
-        verify(notificationEventService, times(2))
-            .processStorageUnitNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesStorageUnit.class), any(BusinessObjectDataKey.class),
-                any(String.class), any(String.class), any(String.class));
-        verify(notificationEventService)
-            .processBusinessObjectDataNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesBdata.class), any(BusinessObjectDataKey.class),
-                any(String.class), any(String.class));
+        verify(notificationEventService, times(2)).processStorageUnitNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesStorageUnit.class),
+            any(BusinessObjectDataKey.class), any(String.class), any(String.class), any(String.class));
+        verify(notificationEventService).processBusinessObjectDataNotificationEventAsync(any(NotificationEventTypeEntity.EventTypesBdata.class),
+            any(BusinessObjectDataKey.class), any(String.class), any(String.class));
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -246,18 +249,19 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         businessObjectDataRestoreDto.setBusinessObjectData(businessObjectData);
 
         // Mock the external calls.
-        when(businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION))
-            .thenReturn(businessObjectDataRestoreDto);
+        when(businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+            BATCH_RESTORE_MODE)).thenReturn(businessObjectDataRestoreDto);
 
         // Call the method under test.
         BusinessObjectData result =
-            businessObjectDataServiceImpl.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataServiceImpl.restoreBusinessObjectData(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Validate the results.
         assertEquals(businessObjectData, result);
 
         // Verify the external calls.
-        verify(businessObjectDataInitiateRestoreHelperService).prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+        verify(businessObjectDataInitiateRestoreHelperService).prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+            BATCH_RESTORE_MODE);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -376,8 +380,9 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentTwoKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create child business object data entity having a pre-registration status.
-        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
+        BusinessObjectDataEntity businessObjectDataChildEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.UPLOADING);
 
         // Associate child and first parent business object data entities.
         businessObjectDataParentOneEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
@@ -441,8 +446,9 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentOneKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a child business object data entity having a non pre-registration status.
-        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+        BusinessObjectDataEntity businessObjectDataChildEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
 
         // Associate child and first parent business object data entities.
         businessObjectDataParentOneEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
@@ -463,8 +469,8 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Unable to update parents for business object data because it has \"%s\" status, which is not one of pre-registration statuses.",
+            assertEquals(
+                String.format("Unable to update parents for business object data because it has \"%s\" status, which is not one of pre-registration statuses.",
                     BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
@@ -497,8 +503,9 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataParentKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a child business object data entity having a pre-registration status.
-        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
+        BusinessObjectDataEntity businessObjectDataChildEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataChildKey, LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.UPLOADING);
 
         // Associate child and parent business object data entities.
         businessObjectDataParentEntity.getBusinessObjectDataChildren().add(businessObjectDataChildEntity);
@@ -573,8 +580,8 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
 
         // Call the method under test.
-        BusinessObjectData result = businessObjectDataServiceImpl
-            .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+        BusinessObjectData result = businessObjectDataServiceImpl.updateBusinessObjectDataRetentionInformation(businessObjectDataKey,
+            businessObjectDataRetentionInformationUpdateRequest);
 
         // Verify the external calls.
         verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
@@ -624,14 +631,14 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         // Try to call the method under test when business object format has an invalid retention type.
         try
         {
-            businessObjectDataServiceImpl
-                .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+            businessObjectDataServiceImpl.updateBusinessObjectDataRetentionInformation(businessObjectDataKey,
+                businessObjectDataRetentionInformationUpdateRequest);
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
+            assertEquals(
+                String.format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
                     RetentionTypeEntity.BDATA_RETENTION_DATE, BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
         }
 
@@ -676,14 +683,14 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         // Try to call the method under test when business object format has no retention type configured.
         try
         {
-            businessObjectDataServiceImpl
-                .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+            businessObjectDataServiceImpl.updateBusinessObjectDataRetentionInformation(businessObjectDataKey,
+                businessObjectDataRetentionInformationUpdateRequest);
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
+            assertEquals(
+                String.format("Retention information with %s retention type must be configured for business object format. Business object format: {%s}",
                     RetentionTypeEntity.BDATA_RETENTION_DATE, BUSINESS_OBJECT_FORMAT_KEY_AS_STRING), e.getMessage());
         }
 
@@ -737,8 +744,8 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
 
         // Call the method under test.
-        BusinessObjectData result = businessObjectDataServiceImpl
-            .updateBusinessObjectDataRetentionInformation(businessObjectDataKey, businessObjectDataRetentionInformationUpdateRequest);
+        BusinessObjectData result = businessObjectDataServiceImpl.updateBusinessObjectDataRetentionInformation(businessObjectDataKey,
+            businessObjectDataRetentionInformationUpdateRequest);
 
         // Verify the external calls.
         verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);

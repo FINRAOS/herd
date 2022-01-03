@@ -51,8 +51,7 @@
          <xs:element name="s3KeyPrefix" type="xs:string" minOccurs="0"/>
          <xs:element name="s3ObjectTagKey" type="xs:string" minOccurs="0"/>
          <xs:element name="s3ObjectTagValue" type="xs:string" minOccurs="0"/>
-         <xs:element name="s3ObjectTaggerRoleArn" type="xs:string" minOccurs="0"/>
-         <xs:element name="s3ObjectTaggerRoleSessionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleParamsDto" type="s3ObjectTaggerRoleParamsDto" minOccurs="0"/>
          <xs:element name="finalDestroyInDays" type="xs:int" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
@@ -104,6 +103,38 @@
          <xs:element name="exception" type="runtimeException" minOccurs="0"/>
          <xs:element name="archiveRetrievalOption" type="xs:string" minOccurs="0"/>
          <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataBatchRestoreDto">
+      <xs:complexContent>
+         <xs:extension base="businessObjectDataRestoreDto">
+            <xs:sequence>
+               <xs:element name="jobConfig" type="batchJobConfigDto"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="batchJobConfigDto">
+      <xs:sequence>
+         <xs:element name="awsAccountId" type="xs:string"/>
+         <xs:element name="s3BatchRoleArn" type="xs:string"/>
+         <xs:element name="manifestS3BucketName" type="xs:string"/>
+         <xs:element name="manifestS3Prefix" type="xs:string" minOccurs="0"/>
+         <xs:element name="maxAttempts" type="xs:int" />
+         <xs:element name="backoffPeriod" type="xs:int" />
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="batchJobManifestDto">
+      <xs:sequence>
+         <xs:element name="format" type="xs:string"/>
+         <xs:element name="content" type="xs:string"/>
+         <xs:element name="etag" type="xs:string"/>
+         <xs:element name="key" type="xs:string"/>
+         <xs:element name="bucketName" type="xs:string"/>
+         <xs:element name="fields" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -430,6 +461,7 @@
          <xs:element name="trustSelfSignedCertificate" type="xs:boolean" minOccurs="0"/>
          <xs:element name="useSsl" type="xs:boolean" minOccurs="0"/>
          <xs:element name="username" type="xs:string" minOccurs="0"/>
+         <xs:element name="accessTokenUrl" type="xs:string" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -508,6 +540,14 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="s3ObjectTaggerRoleParamsDto">
+      <xs:sequence>
+         <xs:element name="s3ObjectTaggerRoleArn" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleSessionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleSessionDurationSeconds" type="xs:int" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:simpleType name="searchFilterType">
       <xs:restriction base="xs:string">
          <xs:enumeration value="EXCLUSION_SEARCH_FILTER"/>
@@ -559,8 +599,7 @@
          <xs:element name="storageFiles" type="storageFile" minOccurs="0" maxOccurs="unbounded"/>
          <xs:element name="s3ObjectTagKey" type="xs:string" minOccurs="0"/>
          <xs:element name="s3ObjectTagValue" type="xs:string" minOccurs="0"/>
-         <xs:element name="s3ObjectTaggerRoleArn" type="xs:string" minOccurs="0"/>
-         <xs:element name="s3ObjectTaggerRoleSessionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="s3ObjectTaggerRoleParamsDto" type="s3ObjectTaggerRoleParamsDto" minOccurs="0"/>
       </xs:sequence>
    </xs:complexType>
 

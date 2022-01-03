@@ -83,6 +83,7 @@ import org.finra.herd.service.helper.AwsServiceHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDdlPartitionsHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
 import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
@@ -567,6 +568,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_DRY_RUN = false;
 
+    public static final XMLGregorianCalendar NO_END_REGISTRATION_DATE = null;
+
     public static final DateTime NO_END_TIME = null;
 
     public static final RuntimeException NO_EXCEPTION = null;
@@ -639,6 +642,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
 
+    public static final XMLGregorianCalendar NO_START_REGISTRATION_DATE = null;
+
     public static final DateTime NO_START_TIME = null;
 
     public static final StorageDirectory NO_STORAGE_DIRECTORY = null;
@@ -650,6 +655,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
 
     public static final List<StorageUnitStatusChangeEvent> NO_STORAGE_UNIT_STATUS_HISTORY = null;
+
+    public static final Boolean NO_SUPPRESS_QUOTES_IN_NUMERIC_TYPE_PARTITION_VALUES = false;
 
     public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
@@ -758,6 +765,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end\n" + " ],\n" + "#end\n" + "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" + "  },\n" +
             "  \"storageName\" : \"$storageName\",\n" + "  \"newStorageUnitStatus\" : \"$newStorageUnitStatus\"" +
             "#if($StringUtils.isNotEmpty($oldStorageUnitStatus)),\n  \"oldStorageUnitStatus\" : \"$oldStorageUnitStatus\"" + "#end\n" + "}\n";
+
+    public static final Boolean SUPPRESS_QUOTES_IN_NUMERIC_TYPE_PARTITION_VALUES = true;
 
     public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
@@ -910,6 +919,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+
+    @Autowired
+    protected BusinessObjectDataDdlPartitionsHelper businessObjectDataDdlPartitionsHelper;
 
     @Autowired
     protected BusinessObjectDataFinalizeRestoreHelperService businessObjectDataFinalizeRestoreHelperService;
@@ -1294,6 +1306,18 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String addSlash(String string)
     {
         return String.format("%s/", string);
+    }
+
+    /**
+     * Returns a copy of the string, with a trailing backward slash character added.
+     *
+     * @param string the string that we want to add trailing backward slash character to
+     *
+     * @return the string with a trailing slash added
+     */
+    protected String addBackwardSlash(String string)
+    {
+        return String.format("%s\\", string);
     }
 
     /**

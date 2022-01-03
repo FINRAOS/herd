@@ -36,6 +36,7 @@
    <modules>
       <module>herd-docs-javadoc</module>
       <module>herd-docs-swagger</module>
+      <module>herd-docs-swagger-new</module>
    </modules>
 
 </project>

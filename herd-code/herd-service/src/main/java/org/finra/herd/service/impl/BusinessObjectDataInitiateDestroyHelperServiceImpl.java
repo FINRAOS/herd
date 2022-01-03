@@ -35,6 +35,7 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
@@ -44,6 +45,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -53,7 +55,6 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
-import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -94,10 +95,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private S3KeyPrefixHelper s3KeyPrefixHelper;
+    private S3Dao s3Dao;
 
     @Autowired
-    private S3Service s3Service;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -206,17 +207,11 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         s3FileTransferRequestParamsDto.setS3BucketName(businessObjectDataDestroyDto.getS3BucketName());
         s3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(businessObjectDataDestroyDto.getS3KeyPrefix(), "/"));
 
-        // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = storageHelper
-            .getS3FileTransferRequestParamsDtoByRole(businessObjectDataDestroyDto.getS3ObjectTaggerRoleArn(),
-                businessObjectDataDestroyDto.getS3ObjectTaggerRoleSessionName());
-        s3ObjectTaggerParamsDto.setS3Endpoint(businessObjectDataDestroyDto.getS3Endpoint());
-
         // Get all S3 objects matching the S3 key prefix from the S3 bucket.
-        List<S3VersionSummary> s3VersionSummaries = s3Service.listVersions(s3FileTransferRequestParamsDto);
+        List<S3VersionSummary> s3VersionSummaries = s3Dao.listVersions(s3FileTransferRequestParamsDto);
 
         // Tag the S3 objects to initiate the deletion.
-        s3Service.tagVersions(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, s3VersionSummaries,
+        s3Dao.tagVersions(s3FileTransferRequestParamsDto, businessObjectDataDestroyDto.getS3ObjectTaggerRoleParamsDto(), s3VersionSummaries,
             new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
     }
 
@@ -311,6 +306,10 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Get the session identifier for the assumed role to be used to tag S3 objects for archiving to Glacier.
         String s3ObjectTaggerRoleSessionName = configurationHelper.getRequiredProperty(ConfigurationValue.S3_OBJECT_DELETE_ROLE_SESSION_NAME);
 
+        // Get duration, in seconds, of the assumed role session.
+        Integer s3ObjectTaggerRoleSessionDurationSeconds =
+            configurationHelper.getProperty(ConfigurationValue.AWS_ASSUME_S3_TAGGING_ROLE_DURATION_SECS, Integer.class);
+
         // Get the configured delay (in days) for business object data finalize destroy.
         int finalDestroyInDays = getAndValidateFinalDestroyInDays();
 
@@ -359,6 +358,12 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         businessObjectDataDaoHelper.updateBusinessObjectDataStatus(businessObjectDataEntity, BusinessObjectDataStatusEntity.DELETED);
         businessObjectDataDestroyDto.setNewBusinessObjectDataStatus(businessObjectDataEntity.getStatus().getCode());
 
+        // Create and initialize the S3 object tagger role parameters DTO.
+        S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto = new S3ObjectTaggerRoleParamsDto();
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
+        s3ObjectTaggerRoleParamsDto.setS3ObjectTaggerRoleSessionDurationSeconds(s3ObjectTaggerRoleSessionDurationSeconds);
+
         // Initialize other parameters in the business object data destroy parameters DTO.
         businessObjectDataDestroyDto.setBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity));
         businessObjectDataDestroyDto.setStorageName(storageName);
@@ -367,8 +372,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         businessObjectDataDestroyDto.setS3KeyPrefix(s3KeyPrefix);
         businessObjectDataDestroyDto.setS3ObjectTagKey(s3ObjectTagKey);
         businessObjectDataDestroyDto.setS3ObjectTagValue(s3ObjectTagValue);
-        businessObjectDataDestroyDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
-        businessObjectDataDestroyDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
+        businessObjectDataDestroyDto.setS3ObjectTaggerRoleParamsDto(s3ObjectTaggerRoleParamsDto);
         businessObjectDataDestroyDto.setFinalDestroyInDays(finalDestroyInDays);
     }
 

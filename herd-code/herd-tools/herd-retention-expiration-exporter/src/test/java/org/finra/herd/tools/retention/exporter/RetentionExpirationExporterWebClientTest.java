@@ -18,15 +18,12 @@ package org.finra.herd.tools.retention.exporter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
-
 import org.apache.commons.collections4.CollectionUtils;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
+import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.junit.Test;
-
-import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 
 public class RetentionExpirationExporterWebClientTest extends AbstractExporterTest
 {
@@ -41,13 +38,11 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     @Test
     public void testGetBusinessObjectDefinitionException() throws Exception
     {
-        retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
-
         try
         {
             retentionExpirationExporterWebClient.getBusinessObjectDefinition(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
         }
-        catch (IOException e)
+        catch (ApiException e)
         {
             assertEquals("testThrowIoException", e.getMessage());
         }
@@ -64,13 +59,11 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     @Test
     public void testSearchBusinessObjectDataException() throws Exception
     {
-        retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION);
-
         try
         {
             retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
         }
-        catch (IOException e)
+        catch (ApiException e)
         {
             assertEquals("testThrowIoException", e.getMessage());
         }

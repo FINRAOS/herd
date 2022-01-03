@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -241,47 +240,6 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(s3ObjectSummaries, result);
-    }
-
-    @Test
-    public void testRestoreObjects()
-    {
-        // Create an S3 file transfer request parameters DTO.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-
-        // Call the method under test.
-        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
-
-        // Verify the external calls.
-        verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE, ARCHIVE_RETRIEVAL_OPTION);
-        verifyNoMoreInteractions(s3Dao);
-    }
-
-    @Test
-    public void testTagObjects()
-    {
-        // Create an S3 file transfer request parameters DTO to access S3 objects.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-
-        // Create an S3 file transfer request parameters DTO to tag S3 objects.
-        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
-        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
-        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
-        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
-
-        // Create an S3 object summary.
-        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
-        s3ObjectSummary.setKey(S3_KEY);
-
-        // Create an S3 object tag.
-        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
-
-        // Call the method under test.
-        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
-
-        // Verify the external calls.
-        verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, Collections.singletonList(s3ObjectSummary), tag);
-        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test

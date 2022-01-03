@@ -464,6 +464,54 @@ public class BusinessObjectDataServiceTestHelper
     }
 
     /**
+     * Creates and persists database entities required for generate business object data and format ddl testing.
+     */
+    public StorageUnitEntity createDatabaseEntitiesByPartitionValueTypeForBusinessObjectDataDdlTesting(String partitionValue, String partitionType)
+    {
+        // Build an S3 key prefix according to the herd S3 naming convention.
+        String s3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
+                AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
+                AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, AbstractServiceTest.DATA_VERSION);
+
+        // Build a list of schema columns.
+        List<SchemaColumn> schemaColumns = new ArrayList<>();
+        schemaColumns.add(
+            new SchemaColumn(AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partitionType, AbstractServiceTest.NO_COLUMN_SIZE, AbstractServiceTest.COLUMN_REQUIRED,
+                AbstractServiceTest.NO_COLUMN_DEFAULT_VALUE, AbstractServiceTest.NO_COLUMN_DESCRIPTION));
+        schemaColumns.add(new SchemaColumn(AbstractServiceTest.COLUMN_NAME, "NUMBER", AbstractServiceTest.COLUMN_SIZE, AbstractServiceTest.NO_COLUMN_REQUIRED,
+            AbstractServiceTest.COLUMN_DEFAULT_VALUE, AbstractServiceTest.COLUMN_DESCRIPTION));
+
+        // Use the first column as a partition column.
+        List<SchemaColumn> partitionColumns = schemaColumns.subList(0, 1);
+
+        // Create a business object format entity with the schema.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
+                FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
+                AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
+                AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
+                AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
+                AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, partitionValue, AbstractServiceTest.NO_SUBPARTITION_VALUES,
+                AbstractServiceTest.DATA_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        // Create an S3 storage entity.
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(AbstractServiceTest.STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), AbstractServiceTest.S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                    AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+
+        // Create a storage unit with a storage directory path.
+        return storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
+
+    }
+
+    /**
      * Creates and persists database entities required for generate business object data ddl testing.
      */
     public StorageUnitEntity createDatabaseEntitiesForBusinessObjectDataDdlTesting(String partitionValue, String s3KeyPrefix)
@@ -1554,6 +1602,59 @@ public class BusinessObjectDataServiceTestHelper
     }
 
     /**
+     * Returns the actual HIVE DDL expected to be generated.
+     *
+     * @param partitionValueToDrop the partition value to drop
+     * @param partitionValueToAdd the partition value to add
+     *
+     * @return the actual HIVE DDL expected to be generated
+     */
+    public String getExpectedBusinessObjectDataDdlWithSpecifiedType(String partitionValueToDrop, String partitionValueToAdd, String partitionValueType)
+    {
+        // Build ddl expected to be generated.
+        StringBuilder ddlBuilder = new StringBuilder();
+        ddlBuilder.append("DROP TABLE IF EXISTS `" + AbstractServiceTest.TABLE_NAME + "`;\n");
+        ddlBuilder.append("\n");
+        ddlBuilder.append("CREATE EXTERNAL TABLE IF NOT EXISTS `" + AbstractServiceTest.TABLE_NAME + "` (\n");
+        ddlBuilder.append("    `ORGNL_" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "` " + partitionValueType + ",\n");
+        ddlBuilder.append("    `" + AbstractServiceTest.COLUMN_NAME + "` DECIMAL(" + AbstractServiceTest.COLUMN_SIZE + ") COMMENT '" +
+            AbstractServiceTest.COLUMN_DESCRIPTION + "')\n");
+        ddlBuilder.append("PARTITIONED BY (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "` "+ partitionValueType + ")\n");
+        ddlBuilder.append("CLUSTERED BY (osi_sym_id) SORTED BY (osi_sym_id) INTO 500 BUCKETS\n");
+        ddlBuilder.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' COLLECTION ITEMS TERMINATED BY ',' MAP KEYS TERMINATED BY '#' " +
+            "NULL DEFINED AS '\\N'\n");
+        ddlBuilder.append("STORED AS TEXTFILE;");
+
+        if (partitionValueToDrop != null)
+        {
+            // Add the alter table drop partition statement.
+            ddlBuilder.append("\n\n");
+            ddlBuilder.append(
+                "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`=" +
+                    partitionValueToDrop + ");");
+        }
+
+        if (partitionValueToAdd != null)
+        {
+            // Build an expected S3 key prefix.
+            String expectedS3KeyPrefix = AbstractServiceTest
+                .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
+                    AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
+                    AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partitionValueToAdd, null, null, AbstractServiceTest.DATA_VERSION);
+
+            // Add the alter table add partition statement.
+            ddlBuilder.append("\n\n");
+            ddlBuilder.append(
+                "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME +
+                    "`=" + partitionValueToAdd + ") LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
+        }
+
+        String expectedDdl = ddlBuilder.toString();
+
+        return expectedDdl;
+    }
+
+    /**
      * Creates an expected generate business object data ddl collection response using hard coded test values.
      *
      * @return the business object data ddl collection response
@@ -2339,7 +2440,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION, AbstractServiceTest.NO_ALLOW_MISSING_DATA,
                 AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS, AbstractServiceTest.NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS,
                 AbstractServiceTest.NO_COMBINE_MULTIPLE_PARTITIONS_IN_SINGLE_ALTER_TABLE, AbstractServiceTest.NO_COMBINED_ALTER_TABLE_MAX_PARTITIONS,
-                AbstractServiceTest.NO_AS_OF_TIME);
+                AbstractServiceTest.NO_AS_OF_TIME, AbstractServiceTest.NO_SUPPRESS_QUOTES_IN_NUMERIC_TYPE_PARTITION_VALUES);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);

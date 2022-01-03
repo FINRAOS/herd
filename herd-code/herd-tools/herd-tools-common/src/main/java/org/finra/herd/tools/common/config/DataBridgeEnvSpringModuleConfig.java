@@ -15,6 +15,7 @@
 */
 package org.finra.herd.tools.common.config;
 
+import org.finra.herd.sdk.invoker.ApiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,5 +48,11 @@ public class DataBridgeEnvSpringModuleConfig
     public HttpClientOperations httpClientOperations()
     {
         return new HttpClientOperationsImpl();
+    }
+
+    @Bean
+    public ApiClient apiClient()
+    {
+        return new ApiClient();
     }
 }

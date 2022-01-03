@@ -140,7 +140,7 @@ public class BusinessObjectDataServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDataServiceImpl.restoreBusinessObjectData(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataServiceImpl.restoreBusinessObjectData(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
         }
         catch (IllegalArgumentException e)
         {

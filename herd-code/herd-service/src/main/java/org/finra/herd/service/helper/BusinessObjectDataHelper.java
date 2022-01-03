@@ -245,6 +245,8 @@ public class BusinessObjectDataHelper
         businessObjectData.setStatus(businessObjectDataEntity.getStatus().getCode());
         businessObjectData.setVersion(businessObjectDataEntity.getVersion());
         businessObjectData.setLatestVersion(businessObjectDataEntity.getLatestVersion());
+        businessObjectData.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataEntity.getCreatedOn()));
+        businessObjectData.setCreatedByUserId(businessObjectDataEntity.getCreatedBy());
 
         // Add in the storage units.
         businessObjectData.setStorageUnits(storageUnitHelper

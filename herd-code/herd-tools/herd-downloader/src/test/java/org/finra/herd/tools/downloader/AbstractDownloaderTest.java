@@ -20,16 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.tools.common.dto.DownloaderInputManifestDto;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
-import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.tools.common.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.tools.common.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
@@ -121,7 +121,7 @@ public abstract class AbstractDownloaderTest extends AbstractDataBridgeTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/");
         BusinessObjectData businessObjectData =
             downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
-        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+        BusinessObjectDataKey businessObjectDataKey = downloaderWebClient.getBusinessObjectDataKey(businessObjectData);
         downloaderWebClient.addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE);
         downloaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         // Clean up the local input directory used for the test data files upload.

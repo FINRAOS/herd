@@ -181,7 +181,7 @@ public class UserNamespaceAuthorizationHelper
     private NamespaceAuthorization toNamespaceAuthorization(UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity)
     {
         NamespaceAuthorization namespaceAuthorization = new NamespaceAuthorization();
-        namespaceAuthorization.setNamespace(userNamespaceAuthorizationEntity.getNamespace().getCode());
+        namespaceAuthorization.setNamespace(userNamespaceAuthorizationEntity.getNamespaceCode());
         namespaceAuthorization.setNamespacePermissions(getNamespacePermissions(userNamespaceAuthorizationEntity));
         return namespaceAuthorization;
     }

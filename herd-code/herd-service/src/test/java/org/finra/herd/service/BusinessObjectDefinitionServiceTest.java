@@ -374,6 +374,32 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             assertEquals("Business object definition name can not contain a forward slash character.", e.getMessage());
         }
 
+        // Try to create a business object definition when namespace contains a backward slash character.
+        request = new BusinessObjectDefinitionCreateRequest(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+            NO_ATTRIBUTES);
+        try
+        {
+            businessObjectDefinitionService.createBusinessObjectDefinition(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition when business object definition name contains a backward slash character.
+        request = new BusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+            NO_ATTRIBUTES);
+        try
+        {
+            businessObjectDefinitionService.createBusinessObjectDefinition(request);
+            fail("Should throw an IllegalArgumentException when business object definition name contains a backward slash character");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
         // Try to create a business object definition using non-existing data provider.
         request = new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, NO_ATTRIBUTES);
         try
@@ -397,6 +423,19 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("Data provider name can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition when data provider name contains a backward slash character.
+        request = new BusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addBackwardSlash(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+            NO_ATTRIBUTES);
+        try
+        {
+            businessObjectDefinitionService.createBusinessObjectDefinition(request);
+            fail("Should throw an IllegalArgumentException when data provider name contains a backward slash character");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Data provider name can not contain a backward slash character.", e.getMessage());
         }
     }
 

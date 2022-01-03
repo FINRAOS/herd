@@ -17,6 +17,7 @@ package org.finra.herd.tools.downloader;
 
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -78,7 +79,7 @@ public class DownloaderApp extends DataBridgeApp
         String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(regServerHost).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password).withAccessTokenUrl(argParser.getStringValue(accessTokenUrlOpt))
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
         controller.performDownload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params);
 
@@ -115,6 +116,11 @@ public class DownloaderApp extends DataBridgeApp
 
             DownloaderApp downloaderApp = new DownloaderApp();
             returnValue = downloaderApp.go(args);
+        }
+        catch (ApiException apiException)
+        {
+            LOGGER.error("Error running herd downloader. {} statusCode={}", apiException.toString(), apiException.getCode());
+            returnValue = ReturnValue.FAILURE;
         }
         catch (Exception e)
         {

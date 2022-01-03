@@ -122,11 +122,23 @@
             </exclusion>
          </exclusions>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/com.jayway.restassured/rest-assured -->
+      <dependency>
+         <groupId>com.jayway.restassured</groupId>
+         <artifactId>rest-assured</artifactId>
+         <version>2.9.0</version>
+         <scope>compile</scope>
+      </dependency>
       <dependency>
          <groupId>${project.groupId}</groupId>
          <artifactId>herd-dao</artifactId>
          <type>test-jar</type>
          <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>herd-sdk</artifactId>
+         <version>${project.version}</version>
       </dependency>
       <dependency>
          <groupId>${project.groupId}</groupId>

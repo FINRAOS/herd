@@ -360,7 +360,7 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         UserNamespaceAuthorizationKey userNamespaceAuthorizationKey = new UserNamespaceAuthorizationKey();
         userNamespaceAuthorization.setUserNamespaceAuthorizationKey(userNamespaceAuthorizationKey);
         userNamespaceAuthorizationKey.setUserId(userNamespaceAuthorizationEntity.getUserId());
-        userNamespaceAuthorizationKey.setNamespace(userNamespaceAuthorizationEntity.getNamespace().getCode());
+        userNamespaceAuthorizationKey.setNamespace(userNamespaceAuthorizationEntity.getNamespaceCode());
 
         userNamespaceAuthorization.setNamespacePermissions(userNamespaceAuthorizationHelper.getNamespacePermissions(userNamespaceAuthorizationEntity));
 

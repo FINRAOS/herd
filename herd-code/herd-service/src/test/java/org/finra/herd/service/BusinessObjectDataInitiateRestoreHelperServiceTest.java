@@ -59,8 +59,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
     {
         try
         {
-            businessObjectDataInitiateRestoreHelperServiceImpl
-                .prepareToInitiateRestore(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperServiceImpl.prepareToInitiateRestore(new BusinessObjectDataKey(), EXPIRATION_IN_DAYS,
+                ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException e)
@@ -98,14 +98,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -128,14 +127,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid business object definition name.
@@ -143,14 +141,14 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid format usage.
@@ -158,14 +156,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid format file type.
@@ -173,14 +170,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid business object format version.
@@ -188,14 +184,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid primary partition value.
@@ -203,14 +198,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    I_DO_NOT_EXIST, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid sub-partition value.
@@ -222,14 +216,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             {
                 businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                     new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        testSubPartitionValues, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                        testSubPartitionValues, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
                 fail();
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(businessObjectDataServiceTestHelper
-                    .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                        PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+                assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
             }
         }
 
@@ -238,14 +231,13 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, INVALID_DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, INVALID_DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid expiration time value.
@@ -253,7 +245,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), 0, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), 0, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -278,7 +270,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto = businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
             new BusinessObjectDataKey(BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS,
-            ARCHIVE_RETRIEVAL_OPTION);
+            ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
@@ -298,7 +290,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Execute a before step for the initiate a business object data restore request for business object data without sub-partition values.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, NO_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, NO_EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
@@ -319,7 +312,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -332,7 +325,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -345,7 +338,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -358,7 +351,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -371,7 +364,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, SUBPARTITION_VALUES,
-                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -385,7 +378,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(BLANK_TEXT, SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION),
-                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -399,7 +392,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), BLANK_TEXT, SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION),
-                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -413,7 +406,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), BLANK_TEXT, SUBPARTITION_VALUES.get(3)), DATA_VERSION),
-                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -427,7 +420,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), BLANK_TEXT), DATA_VERSION),
-                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -440,7 +433,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, NO_DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+                    SUBPARTITION_VALUES, NO_DATA_VERSION), EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -462,16 +455,17 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create multiple archived storage units for this business object data.
-        storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataEntity, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
-        storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, businessObjectDataEntity, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataEntity, STORAGE_UNIT_STATUS,
+            NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, businessObjectDataEntity, STORAGE_UNIT_STATUS,
+            NO_STORAGE_DIRECTORY_PATH);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when business object data has multiple S3 storage units.
         try
         {
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -490,15 +484,15 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with the storage not having S3 bucket name configured.
-        businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED,
-                LOCAL_FILES);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME,
+            StorageUnitStatusEntity.ARCHIVED, LOCAL_FILES);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when the storage does not have an S3 bucket name configured.
         try
         {
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalStateException e)
@@ -517,14 +511,14 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with a storage unit already being restored.
-        businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING,
-                LOCAL_FILES);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME,
+            StorageUnitStatusEntity.RESTORING, LOCAL_FILES);
 
         // Try to execute a before step for the initiate a business object data restore request when storage unit is already being restored.
         try
         {
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -543,9 +537,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.ARCHIVED,
-                LOCAL_FILES);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME,
+                StorageUnitStatusEntity.ARCHIVED, LOCAL_FILES);
 
         // Get the storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
@@ -555,7 +549,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Execute a before step for the initiate a business object data restore request  when storage unit has no storage files.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
@@ -579,7 +574,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Execute a before step for the initiate a business object data restore request.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertNotNull(storagePolicyTransitionParamsDto);
@@ -607,9 +603,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
-                StorageUnitStatusEntity.RESTORED, AbstractServiceTest.LOCAL_FILES);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME,
+                AbstractServiceTest.S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORED, AbstractServiceTest.LOCAL_FILES);
 
         // Get the current time and compute the expected timestamp value.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -617,7 +613,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
 
         // Execute a before step for the initiate a business object data restore request.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertNotNull(storagePolicyTransitionParamsDto);
@@ -651,7 +648,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         // Try to execute a before step for the initiate a business object data restore request when storage unit does not exist.
         try
         {
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -670,14 +668,14 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a storage unit not in ARCHIVED state along with other database entities required for testing.
-        storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS,
-                NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+            STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to execute a before step for the initiate a business object data restore request when storage unit is not in ARCHIVED state.
         try
         {
-            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION);
+            businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey, EXPIRATION_IN_DAYS, ARCHIVE_RETRIEVAL_OPTION,
+                BATCH_RESTORE_MODE);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -704,7 +702,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto = businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
             new BusinessObjectDataKey(addWhitespace(BDEF_NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), NO_SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS,
-            ARCHIVE_RETRIEVAL_OPTION);
+            ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
@@ -726,7 +724,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto = businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
             new BusinessObjectDataKey(BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION), EXPIRATION_IN_DAYS,
-            ARCHIVE_RETRIEVAL_OPTION);
+            ARCHIVE_RETRIEVAL_OPTION, BATCH_RESTORE_MODE);
 
         // Validate the returned object.
         assertEquals(businessObjectDataKey, storagePolicyTransitionParamsDto.getBusinessObjectDataKey());

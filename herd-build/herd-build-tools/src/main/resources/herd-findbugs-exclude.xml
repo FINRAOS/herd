@@ -49,6 +49,9 @@
    <Match>
       <Or>
          <Class name="~org.finra.herd.model.dto.AwsParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.BatchJobConfigDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataBatchRestoreDto"/>
+         <Class name="~org.finra.herd.model.dto.BusinessObjectDataBatchRestoreDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataDestroyDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto"/>
          <Class name="~org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto\$Builder"/>
@@ -105,6 +108,8 @@
          <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto"/>
          <Class name="~org.finra.herd.model.dto.S3FileTransferRequestParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.S3FileTransferResultsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto"/>
+         <Class name="~org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto\$Builder"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicyPriorityLevel"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicySelection"/>
          <Class name="~org.finra.herd.model.dto.StoragePolicyTransitionParamsDto"/>

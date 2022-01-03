@@ -163,6 +163,54 @@ public class BusinessObjectDefinitionTagServiceTest extends AbstractServiceTest
         {
             assertEquals("Tag code can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a business object definition tag when business object definition namespace contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionTagService.createBusinessObjectDefinitionTag(new BusinessObjectDefinitionTagCreateRequest(
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(addBackwardSlash(BDEF_NAMESPACE), BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition tag when business object definition name contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionTagService.createBusinessObjectDefinitionTag(new BusinessObjectDefinitionTagCreateRequest(
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, addBackwardSlash(BDEF_NAME)), new TagKey(TAG_TYPE, TAG_CODE))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition tag when business object definition namespace contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionTagService.createBusinessObjectDefinitionTag(new BusinessObjectDefinitionTagCreateRequest(
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(addBackwardSlash(TAG_TYPE), TAG_CODE))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag type code can not contain a backward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition tag when business object definition name contains a backward slash character.
+        try
+        {
+            businessObjectDefinitionTagService.createBusinessObjectDefinitionTag(new BusinessObjectDefinitionTagCreateRequest(
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, addBackwardSlash(TAG_CODE)))));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag code can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test

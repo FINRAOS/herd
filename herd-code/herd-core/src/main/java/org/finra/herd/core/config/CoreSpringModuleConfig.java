@@ -83,12 +83,11 @@ public class CoreSpringModuleConfig implements AsyncConfigurer
         BuildInformation buildInformation = new BuildInformation();
         buildInformation.setBuildDate(environment.getProperty("build.date"));
         buildInformation.setBuildNumber(environment.getProperty("build.number"));
-        buildInformation.setBuildOs(environment.getProperty("build.os"));
         buildInformation.setBuildUser(environment.getProperty("build.user"));
 
         // Log useful build and system property information.
-        LOGGER.info(String.format("Build Information: {buildNumber=%s, buildDate=%s, buildUser=%s, buildOs=%s}", buildInformation.getBuildNumber(),
-            buildInformation.getBuildDate(), buildInformation.getBuildUser(), buildInformation.getBuildOs()));
+        LOGGER.info(String.format("Build Information: {buildNumber=%s, buildDate=%s, buildUser=%s}", buildInformation.getBuildNumber(),
+            buildInformation.getBuildDate(), buildInformation.getBuildUser()));
         LOGGER.info("System Properties: " +
             getSystemPropertyMap("java.version", "java.runtime.version", "java.vm.version", "java.vm.name", "java.vendor", "java.vendor.url", "java.home",
                 "java.class.path", "os.name", "os.version", "os.arch", "user.name", "user.dir", "user.home", "file.separator", "path.separator"));

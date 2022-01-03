@@ -24,6 +24,8 @@ from unittest import mock
 
 # Third party imports
 import pandas as pd
+import requests
+import responses
 
 # Herd imports
 from herdsdk import rest
@@ -115,10 +117,13 @@ class TestUtilityMethods(unittest.TestCase):
 
         config = {
             'gui_enabled': True,
+            'debug_mode': False,
             'env': 'testenv',
             'action': 'SaMpLes',
-            'excel_file': 'testfile',
-            'sample_dir': 'testdir',
+            'excelFile': 'testfile',
+            'sampleDir': 'testdir',
+            'namespace': 'testnamespace',
+            'exportDir': 'exportdir',
             'userName': 'testuser',
             'userPwd': 'testpwd'
         }
@@ -128,10 +133,13 @@ class TestUtilityMethods(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.setup_run(config)
-        self.assertEqual(mock_config.get.call_count, 2)
+        self.assertEqual(mock_config.get.call_count, 3)
+        self.assertFalse(self.controller.debug_mode)
         self.assertEqual(self.controller.action, str.lower(config['action']))
-        self.assertEqual(self.controller.excel_file, config['excel_file'])
-        self.assertEqual(self.controller.sample_dir, config['sample_dir'])
+        self.assertEqual(self.controller.excel_file, config['excelFile'])
+        self.assertEqual(self.controller.sample_dir, config['sampleDir'])
+        self.assertEqual(self.controller.export_namespace, config['namespace'])
+        self.assertEqual(self.controller.export_dir, config['exportDir'])
         self.assertEqual(self.controller.configuration.username, config['userName'])
         self.assertEqual(self.controller.configuration.password, config['userPwd'])
 
@@ -147,8 +155,8 @@ class TestUtilityMethods(unittest.TestCase):
         }
 
         # Mock config.get so each call returns a different value
-        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testenv', 'testurl', 'testusername',
-                     'dGVzdHBhc3N3b3Jk']
+        test_vars = ['testdomain', 'SaMpLes', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+                     'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip']
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         self.controller.setup_run(config)
@@ -159,33 +167,65 @@ class TestUtilityMethods(unittest.TestCase):
         self.assertEqual(self.controller.action, str.lower(test_vars[1]))
         self.assertEqual(self.controller.excel_file, test_vars[2])
         self.assertEqual(self.controller.sample_dir, test_vars[3])
-        self.assertEqual(self.controller.configuration.host, test_vars[5])
-        self.assertEqual(self.controller.configuration.username, test_vars[6])
+        self.assertEqual(self.controller.export_namespace, test_vars[4])
+        self.assertEqual(self.controller.export_dir, test_vars[5])
+        self.assertEqual(self.controller.configuration.host, test_vars[7])
+        self.assertEqual(self.controller.configuration.username, test_vars[8])
         self.assertEqual(self.controller.configuration.password, 'testpassword')
+        self.assertEqual(self.controller.fip_endpoint, test_vars[10])
 
         # Check other actions
-        actions = ['descriptive info', 'sme', 'bdef tags', 'columns', 'lineage', 'samples', 'tags', 'relational table']
+        actions = ['descriptive info', 'contacts', 'data entity tags', 'columns', 'lineage', 'sample data', 'tags',
+                   'relational table']
         self.assertEqual(actions, [str.lower(x) for x in self.controller.actions])
 
         mock_config.reset_mock(side_effect=True)
-        test_vars = ['testdomain', 'descriptive info', 'testexcel', 'testenv', 'testurl', 'testusername',
-                     'dGVzdHBhc3N3b3Jk',
-                     'testdomain', 'SmE', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64(),
-                     'testdomain', 'Bdef Tags', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64(),
-                     'testdomain', 'CoLuMns', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64(),
-                     'testdomain', 'LiNeage', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64(),
-                     'testdomain', 'TaGs', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64(),
-                     'testdomain', 'reLATIONal tABLE', 'testexcel', 'testenv', 'testurl', string_generator(),
-                     string_generator_base64()
-                     ]
+        test_vars = [
+            'testdomain', 'descriptive info', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip',
+
+            'testdomain', 'SmE', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'Bdef Tags', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'CoLuMns', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'LiNeage', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'TaGs', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'reLATIONal tABLE', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+        ]
         mock_config.get.side_effect = test_vars
         self.controller.config = mock_config
         for x in range(len(actions) - 1):
+            self.controller.setup_run(config)
+        self.assertEqual(mock_config.get.call_count, len(test_vars))
+
+        # Check export actions
+        actions = ['latest descriptive info', 'latest columns', 'latest data entity tags']
+        self.assertEqual(actions, [str.lower(x) for x in self.controller.export_actions])
+
+        mock_config.reset_mock(side_effect=True)
+        test_vars = [
+            'testdomain', 'latest descriptive info', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', 'testusername', 'dGVzdHBhc3N3b3Jk', 'testfip',
+
+            'testdomain', 'latest CoLuMns', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+
+            'testdomain', 'latest Bdef Tags', 'testexcel', 'testdir', 'testnamespace', 'testdir', 'testenv',
+            'testurl', string_generator(), string_generator_base64(), 'testfip',
+        ]
+        mock_config.get.side_effect = test_vars
+        self.controller.config = mock_config
+        for x in range(len(actions)):
             self.controller.setup_run(config)
         self.assertEqual(mock_config.get.call_count, len(test_vars))
 
@@ -222,12 +262,44 @@ class TestUtilityMethods(unittest.TestCase):
         with self.assertRaises(configparser.NoOptionError):
             self.controller.setup_run(config)
 
+    @responses.activate
+    def test_oauth2_access_token(self):
+        """
+        Test of the setup oauth2 access token
+
+        """
+
+        self.controller.fip_endpoint = 'https://isso-devint.fip.dev.finra.org/fip/rest/isso/oauth2/access_token'
+        responses.add(responses.POST, self.controller.fip_endpoint,
+                      json={'access_token': 'token'}, status=200)
+
+        self.controller.setup_access_token()
+        self.assertEqual(self.controller.configuration.access_token, 'token')
+
+    @responses.activate
+    def test_oauth2_access_token_error(self):
+        """
+        Test of the setup oauth2 access token if status not 200 returns
+
+        """
+
+        self.controller.fip_endpoint = 'https://isso-devint.fip.dev.finra.org/fip/rest/isso/oauth2/access_token'
+        responses.add(responses.POST, self.controller.fip_endpoint,
+                      json={'error': 'bad request'}, status=400)
+
+        with self.assertRaises(requests.exceptions.HTTPError):
+            self.controller.setup_access_token()
+
     def test_get_key(self):
         """
         Test making sure self.acts keys exist
 
         """
         for act in self.controller.actions:
+            self.controller.action = str.lower(act)
+            self.controller.get_action()
+
+        for act in self.controller.export_actions:
             self.controller.action = str.lower(act)
             self.controller.get_action()
 
@@ -253,6 +325,32 @@ class TestUtilityMethods(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.controller.load_worksheet('Sheet')
 
+    def test_save_worksheet(self):
+        """
+        Test of the save worksheet with export directory
+
+        """
+        self.controller.get_current_directory()
+        self.controller.export_dir = self.controller.path
+        self.controller.data_frame = pd.DataFrame([], columns=['col1', 'col2'])
+
+        # Run scenario and check values
+        self.controller.save_worksheet('Sheet', TestUtilityMethods.temp_file)
+        os.remove(self.controller.export_path)
+
+    def test_save_worksheet_no_export_dir(self):
+        """
+        Test of the save worksheet with no data and no export directory
+
+        """
+        self.controller.get_current_directory()
+        self.controller.data_frame = pd.DataFrame([], columns=['col1', 'col2'])
+
+        # Run scenario and check values
+        self.controller.save_worksheet('Sheet', TestUtilityMethods.temp_file)
+        self.assertEqual(self.controller.export_dir, '')
+        os.remove(self.controller.export_path)
+
     @mock.patch('herdsdk.CurrentUserApi.current_user_get_current_user')
     def test_run(self, mock_user):
         """
@@ -265,7 +363,7 @@ class TestUtilityMethods(unittest.TestCase):
         # Run scenario and check values
         method()
         mock_user.assert_called_once()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
 
 
 class TestObjectAction(unittest.TestCase):
@@ -296,12 +394,13 @@ class TestObjectAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_object()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_index'], [])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 0)
 
     def test_load_object_exception(self):
@@ -318,16 +417,18 @@ class TestObjectAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_object()
-        self.assertEqual(self.controller.run_summary['total_rows'], 3)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 3)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [3, 4])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -427,7 +528,7 @@ class TestObjectAction(unittest.TestCase):
 
 class TestSMEAction(unittest.TestCase):
     """
-    Test Suite for Action SME
+    Test Suite for Action Contacts
 
     """
 
@@ -452,16 +553,18 @@ class TestSMEAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_sme()
-        self.assertEqual(self.controller.run_summary['total_rows'], 3)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 4])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 3)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 4])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0][
+            Summary.MESSAGE.value])
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1]['message']))
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1][Summary.MESSAGE.value]))
 
     @mock.patch(
         'herdsdk.BusinessObjectDefinitionSubjectMatterExpertApi.'
@@ -643,16 +746,18 @@ class TestObjectTagAction(unittest.TestCase):
         )
         # Run scenario and check values
         self.controller.load_object_tags()
-        self.assertEqual(self.controller.run_summary['total_rows'], 3)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 3)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0][
+            Summary.MESSAGE.value])
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1]['message']))
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][1][Summary.MESSAGE.value]))
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
@@ -823,7 +928,7 @@ class TestObjectTagAction(unittest.TestCase):
 
 class TestColumnAction(unittest.TestCase):
     """
-    Test Suite for Action Column
+    Test Suite for Action Columns
 
     """
 
@@ -849,7 +954,7 @@ class TestColumnAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_columns()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
 
     def test_load_columns_exception(self):
         """
@@ -874,16 +979,18 @@ class TestColumnAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_columns()
-        self.assertEqual(self.controller.run_summary['total_rows'], 2)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     def test_check_format_schema_columns(self):
         """
@@ -897,8 +1004,8 @@ class TestColumnAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.check_format_schema_columns()
-        self.assertEqual(self.controller.run_summary['fail_rows'], 3)
-        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 3)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [3, 4, 5])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -957,7 +1064,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef_columns.assert_called_once()
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names))
         self.assertTrue(all(self.controller.format_columns[key]['Found']))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -992,9 +1099,10 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         mock_format.assert_called_once()
         self.assertEqual(mock_bdef_columns.call_count, 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue('No Schema Columns found' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
+        self.assertTrue(
+            'No Schema Columns found' in self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1019,10 +1127,10 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         self.assertEqual(mock_format.call_count, 0)
         self.assertEqual(mock_bdef_columns.call_count, 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue(
-            'No Descriptive Format defined' in self.controller.run_summary[Summary.ERRORS.value][0]['message'])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
+        self.assertTrue('No Descriptive Format defined' in self.controller.run_summary[Summary.ERRORS.value][0][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1077,9 +1185,10 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef.assert_called_once()
         mock_format.assert_called_once()
         mock_bdef_columns.assert_called_once()
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1148,7 +1257,7 @@ class TestColumnAction(unittest.TestCase):
         mock_bdef_columns.assert_called_once()
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names) + 1)
         self.assertFalse(all(self.controller.format_columns[key]['Found']))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1199,7 +1308,7 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(len(self.controller.format_columns[key].index), len(column_names))
         self.assertTrue(all(x == False for x in self.controller.format_columns[key]['Found']))
         self.assertTrue(all(x == '' for x in self.controller.format_columns[key][Columns.COLUMN_NAME.value]))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1231,11 +1340,12 @@ class TestColumnAction(unittest.TestCase):
         self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following bdef columns' in
-                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+                        self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value])
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1264,10 +1374,11 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_create_column.call_count, 0)
         self.assertEqual(mock_delete_column.call_count, 0)
         self.assertFalse(all(self.controller.format_columns[key][Columns.SCHEMA_NAME.value].isna()))
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1299,11 +1410,12 @@ class TestColumnAction(unittest.TestCase):
         self.assertTrue(all(x for x in self.controller.format_columns[key]['Found']))
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find a schema name for the following bdef columns' in
-                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+                        self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value])
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1334,11 +1446,12 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_delete_column.call_count, 0)
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], index_array[1] + 2)
         self.assertTrue('Could not find schema column for bdef column name' in
-                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+                        self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value])
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1369,11 +1482,12 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_delete_column.call_count, 0)
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
         self.assertTrue('Could not find bdef column info for the following schema columns' in
-                        self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+                        self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value])
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
                 'business_object_definition_column_delete_business_object_definition_column')
@@ -1407,16 +1521,17 @@ class TestColumnAction(unittest.TestCase):
         self.assertEqual(mock_create_column.call_count, 1)
         self.assertEqual(mock_delete_column.call_count, 1)
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], otags.ERROR_CODE)
-        self.assertTrue('Error during deleting empty schema names' in
-                        str(self.controller.run_summary[Summary.WARNINGS.value][0]['message']))
+        self.assertTrue('Error during deleting empty schema names' in str(
+            self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value]))
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 1)
         self.assertEqual(self.controller.run_summary[Summary.ERRORS.value][0]['index'], index_array[1] + 2)
-        self.assertTrue('Error during creating bdef column names' in
-                        str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 1)
+        self.assertTrue('Error during creating bdef column names' in str(
+            self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 1)
 
 
 class TestLineageAction(unittest.TestCase):
@@ -1449,7 +1564,7 @@ class TestLineageAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_lineage()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
 
     def test_load_lineage_exception(self):
         """
@@ -1468,17 +1583,19 @@ class TestLineageAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_lineage()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 1)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 1)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 1)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
-        self.controller.load_lineage()
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.controller.load_lineage()
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     def test_check_lineage(self):
         """
@@ -1543,10 +1660,10 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 1)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
         self.assertTrue(
-            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_update_business_object_format_parents')
@@ -1591,12 +1708,12 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 0)
         self.assertEqual(len(self.controller.run_summary[Summary.WARNINGS.value]), 1)
         self.assertEqual(self.controller.run_summary[Summary.WARNINGS.value][0]['index'], [3])
         self.assertTrue(
-            'Skipping empty rows' in self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
+            'Skipping empty rows' in self.controller.run_summary[Summary.WARNINGS.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_update_business_object_format_parents')
@@ -1649,10 +1766,10 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 1)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
         self.assertTrue(
-            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_update_business_object_format_parents')
@@ -1701,10 +1818,10 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 1)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
         self.assertTrue(
-            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+            'Updated parents' in self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_update_business_object_format_parents')
@@ -1734,10 +1851,10 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 1)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 1)
         self.assertTrue(
-            'All parents removed' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+            'All parents removed' in self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.BusinessObjectFormatApi.'
                 'business_object_format_update_business_object_format_parents')
@@ -1763,13 +1880,13 @@ class TestLineageAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.update_lineage(key, index_array)
         self.assertEqual(mock_update.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 0)
 
 
 class TestSampleAction(unittest.TestCase):
     """
-    Test Suite for Action Sample
+    Test Suite for Action Sample Data
 
     """
 
@@ -1795,7 +1912,7 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_samples()
-        self.assertEqual(self.controller.run_summary['total_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 1)
 
     def test_load_samples_exception(self):
         """
@@ -1816,16 +1933,18 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_samples()
-        self.assertEqual(self.controller.run_summary['total_rows'], 2)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     def test_check_sample_files(self):
         """
@@ -1838,7 +1957,7 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.check_sample_files()
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
 
     @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
                 'business_object_definition_get_business_object_definition')
@@ -1920,10 +2039,11 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
         mock_cmp.assert_called_once()
         mock_remove.assert_called_once()
@@ -1971,11 +2091,12 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_index'], [i + 2 for i in index_array])
-        self.assertEqual(self.controller.run_summary['fail_rows'], len(index_array))
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [i + 2 for i in index_array])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], len(index_array))
 
         mock_os_exists.assert_called_once()
         self.assertEqual(mock_cmp.call_count, 0)
@@ -2023,10 +2144,11 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
         self.assertEqual(mock_os_exists.call_count, 2)
         self.assertEqual(mock_cmp.call_count, 1)
@@ -2074,10 +2196,11 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], len(index_array))
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
         self.assertEqual(mock_os_exists.call_count, 1)
         self.assertEqual(mock_cmp.call_count, 1)
@@ -2125,11 +2248,12 @@ class TestSampleAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.upload_download_sample_files(key, index_array)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         len(index_array))
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_index'], [i + 2 for i in index_array])
-        self.assertEqual(self.controller.run_summary['fail_rows'], len(index_array))
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            len(index_array))
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [i + 2 for i in index_array])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], len(index_array))
 
         self.assertEqual(mock_os_exists.call_count, 1)
         self.assertEqual(mock_cmp.call_count, 0)
@@ -2231,7 +2355,7 @@ class TestSampleAction(unittest.TestCase):
 
 class TestTagAction(unittest.TestCase):
     """
-    Test Suite for Action Sample
+    Test Suite for Action Tags
 
     """
 
@@ -2261,7 +2385,7 @@ class TestTagAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_tags()
-        self.assertEqual(self.controller.run_summary['total_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
     def test_load_tags_fail(self, mock_create):
@@ -2285,13 +2409,14 @@ class TestTagAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.load_tags()
-        self.assertEqual(self.controller.run_summary['total_rows'], 3)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 3)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
         self.assertEqual(self.controller.delete_tag_type_code_list.call_count, 0)
         self.assertEqual(self.controller.update_tag_list.call_count, 0)
         self.assertEqual(self.controller.delete_tag_list.call_count, 0)
@@ -2308,8 +2433,8 @@ class TestTagAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.check_tag_types()
-        self.assertEqual(self.controller.run_summary['fail_rows'], 3)
-        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 3)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [3, 4, 5])
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
     @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
@@ -2355,9 +2480,10 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tag_types.call_count, 2)
         self.assertEqual(mock_tag_type.call_count, 2)
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_update_tag_type')
     @mock.patch('herdsdk.TagApi.tag_get_tags')
@@ -2408,7 +2534,7 @@ class TestTagAction(unittest.TestCase):
         self.assertFalse(run_fail)
         self.assertEqual(mock_tags.call_count, 2)
         self.assertEqual(mock_update.call_count, 2)
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
 
         self.assertEqual(self.controller.tag_types['remove'], [])
         remove_tags = [(tag_type_code, tag_code_1), ('CODE', tag_code_2)]
@@ -2439,10 +2565,10 @@ class TestTagAction(unittest.TestCase):
         self.assertFalse(run_fail)
         self.assertEqual(mock_tags.call_count, 0)
         self.assertEqual(mock_create.call_count, 1)
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
         self.assertTrue(
             'Change in row. Old Tag Type Code:\nNone' in self.controller.run_summary[Summary.CHANGES.value][0][
-                'message'])
+                Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
     @mock.patch('herdsdk.TagTypeApi.tag_type_update_tag_type')
@@ -2489,7 +2615,7 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tags.call_count, 2)
         self.assertEqual(mock_update.call_count, 0)
         self.assertEqual(mock_create.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], 1)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
 
     @mock.patch('herdsdk.TagTypeApi.tag_type_create_tag_type')
     @mock.patch('herdsdk.TagApi.tag_get_tags')
@@ -2518,13 +2644,14 @@ class TestTagAction(unittest.TestCase):
         self.assertTrue(run_fail)
         self.assertEqual(mock_tags.call_count, 0)
         self.assertEqual(mock_create.call_count, 2)
-        self.assertEqual(self.controller.run_summary['success_rows'], 0)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.TagApi.tag_delete_tag')
     @mock.patch('herdsdk.TagTypeApi.tag_type_delete_tag_type')
@@ -2559,7 +2686,7 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_delete_tag_type.call_count, 1)
         self.assertEqual(mock_delete_tag.call_count, 2)
         self.assertTrue('Tag Type Codes not found in Excel and Children deleted' in
-                        self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+                        self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
 
         deleted = {
             tag_type_code: [tag],
@@ -2586,9 +2713,10 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_delete_tag_type.call_count, 0)
         self.assertEqual(mock_delete_tag.call_count, 0)
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
     def test_check_tags(self):
         """
@@ -2605,8 +2733,8 @@ class TestTagAction(unittest.TestCase):
 
         # Run scenario and check values
         self.controller.check_tags()
-        self.assertEqual(self.controller.run_summary['fail_rows'], 4)
-        self.assertEqual(self.controller.run_summary['fail_index'], [3, 4, 5, 6])
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 4)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [3, 4, 5, 6])
 
     @mock.patch('herdsdk.TagApi.tag_create_tag')
     @mock.patch('herdsdk.TagApi.tag_update_tag')
@@ -2663,12 +2791,13 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tags.call_count, 3)
         self.assertEqual(mock_update.call_count, 3)
         self.assertEqual(mock_create.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], 3)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 3)
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 3)
-        self.assertTrue('Change in row. Old Tag' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
-        self.assertEqual(len(self.controller.run_summary[Summary.WARNINGS.value]), 1)
         self.assertTrue(
-            'Please double check spelling' in self.controller.run_summary[Summary.WARNINGS.value][0]['message'])
+            'Change in row. Old Tag' in self.controller.run_summary[Summary.CHANGES.value][0][Summary.MESSAGE.value])
+        self.assertEqual(len(self.controller.run_summary[Summary.WARNINGS.value]), 1)
+        self.assertTrue('Please double check spelling' in self.controller.run_summary[Summary.WARNINGS.value][0][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.TagApi.tag_create_tag')
     @mock.patch('herdsdk.TagApi.tag_update_tag')
@@ -2699,10 +2828,10 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tags.call_count, 0)
         self.assertEqual(mock_update.call_count, 0)
         self.assertEqual(mock_create.call_count, 2)
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
         self.assertEqual(len(self.controller.run_summary[Summary.CHANGES.value]), 2)
-        self.assertTrue(
-            'Change in row. Old Tag:\nNone' in self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+        self.assertTrue('Change in row. Old Tag:\nNone' in self.controller.run_summary[Summary.CHANGES.value][0][
+            Summary.MESSAGE.value])
 
     @mock.patch('herdsdk.TagApi.tag_create_tag')
     @mock.patch('herdsdk.TagApi.tag_update_tag')
@@ -2750,7 +2879,7 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tags.call_count, 2)
         self.assertEqual(mock_update.call_count, 0)
         self.assertEqual(mock_create.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
 
     @mock.patch('herdsdk.TagApi.tag_create_tag')
     @mock.patch('herdsdk.TagApi.tag_update_tag')
@@ -2800,7 +2929,7 @@ class TestTagAction(unittest.TestCase):
         self.assertEqual(mock_tags.call_count, 2)
         self.assertEqual(mock_update.call_count, 0)
         self.assertEqual(mock_create.call_count, 0)
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
 
     @mock.patch('herdsdk.TagApi.tag_delete_tag')
     def test_delete_tag_list(self, mock_delete):
@@ -2816,8 +2945,8 @@ class TestTagAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.delete_tag_list()
         self.assertEqual(mock_delete.call_count, 2)
-        self.assertTrue('Tags not found in Excel and deleted' in
-                        self.controller.run_summary[Summary.CHANGES.value][0]['message'])
+        self.assertTrue('Tags not found in Excel and deleted' in self.controller.run_summary[Summary.CHANGES.value][0][
+            Summary.MESSAGE.value])
 
         deleted = {
             tag_type_code: [tag_1, tag_2]
@@ -2841,14 +2970,15 @@ class TestTagAction(unittest.TestCase):
         self.controller.delete_tag_list()
         self.assertEqual(mock_delete.call_count, 2)
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
 
 
 class TestRelationalAction(unittest.TestCase):
     """
-    Test Suite for Action Relational
+    Test Suite for Action Relational Table
 
     """
 
@@ -2880,11 +3010,12 @@ class TestRelationalAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.load_relational()
         self.assertEqual(mock_create.call_count, 2)
-        self.assertEqual(self.controller.run_summary['total_rows'], 2)
-        self.assertEqual(self.controller.run_summary['success_rows'] + self.controller.run_summary['fail_rows'],
-                         self.controller.run_summary['total_rows'])
-        self.assertEqual(self.controller.run_summary['success_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 0)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(
+            self.controller.run_summary[Summary.SUCCESS.value] + self.controller.run_summary[Summary.FAIL.value],
+            self.controller.run_summary[Summary.TOTAL.value])
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
 
     @mock.patch('herdsdk.RelationalTableRegistrationApi.'
                 'relational_table_registration_create_relational_table_registration')
@@ -2908,10 +3039,572 @@ class TestRelationalAction(unittest.TestCase):
         # Run scenario and check values
         self.controller.load_relational()
         self.assertEqual(mock_create.call_count, 2)
-        self.assertEqual(self.controller.run_summary['total_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_rows'], 2)
-        self.assertEqual(self.controller.run_summary['fail_index'], [2, 3])
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [2, 3])
         self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
-        self.assertTrue('Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0]['message']))
         self.assertTrue(
-            'Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1]['message'])
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+
+class TestExportDescInfoAction(unittest.TestCase):
+    """
+    Test Suite for Action Latest Descriptive Info
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_get_all_bdefs(self, mock_bdefs):
+        """
+        Test of the herdsdk call get all business object definitions
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[bdef]
+        )
+
+        bdef_keys = self.controller.get_all_bdefs()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(bdef_keys[0], bdef)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_get_all_bdefs_fail(self, mock_bdefs):
+        """
+        Test of the herdsdk call get all business object definitions with errors
+
+        """
+        mock_bdefs.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        self.controller.export_descriptive()
+        self.controller.export_descriptive()
+        self.assertEqual(mock_bdefs.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL.value], 0)
+        self.assertEqual(self.controller.run_summary[Summary.FAIL_INDEX.value], [])
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_get_all_bdefs_empty(self, mock_bdefs):
+        """
+        Test of the herdsdk call get all business object definitions with no bdefs found
+
+        """
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[]
+        )
+
+        # Run scenario and check values
+        self.controller.export_descriptive()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
+        self.assertTrue('No data entities found' in self.controller.run_summary[Summary.COMMENTS.value])
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_descriptive_info(self, mock_bdefs, mock_bdef):
+        """
+        Test of exporting business object definition descriptive info
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        description = string_generator()
+        file_type = string_generator()
+        format_usage = string_generator()
+        display_name = string_generator()
+
+        mock_bdef.side_effect = [
+            mock.Mock(
+                description=description,
+                descriptive_business_object_format=mock.Mock(
+                    business_object_format_file_type=file_type,
+                    business_object_format_usage=format_usage
+                ),
+                display_name=display_name
+            ),
+            mock.Mock(
+                description='description',
+                descriptive_business_object_format=None,
+                display_name='display_name'
+            )
+        ]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_descriptive()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_bdef.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 2)
+        self.assertEqual(len(self.controller.data_frame.index), 2)
+        self.assertEqual(self.controller.data_frame.iloc[0][Objects.DEFINITION_NAME.value], bdef)
+        self.assertEqual(self.controller.data_frame.iloc[0][Objects.FORMAT_USAGE.value], format_usage)
+        self.assertEqual(self.controller.data_frame.iloc[0][Objects.FILE_TYPE.value], file_type)
+        self.assertEqual(self.controller.data_frame.iloc[0][Objects.DISPLAY_NAME.value], display_name)
+        self.assertEqual(self.controller.data_frame.iloc[0][Objects.DESCRIPTION.value], description)
+        self.assertEqual(self.controller.data_frame.iloc[1][Objects.DEFINITION_NAME.value], bdef)
+        self.assertEqual(self.controller.data_frame.iloc[1][Objects.FORMAT_USAGE.value], '')
+        self.assertEqual(self.controller.data_frame.iloc[1][Objects.FILE_TYPE.value], '')
+        self.assertEqual(self.controller.data_frame.iloc[1][Objects.DISPLAY_NAME.value], 'display_name')
+        self.assertEqual(self.controller.data_frame.iloc[1][Objects.DESCRIPTION.value], 'description')
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_descriptive_info_fail(self, mock_bdefs, mock_bdef):
+        """
+        Test of exporting business object definition descriptive info with error
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        mock_bdef.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_descriptive()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_bdef.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+
+class TestExportColumns(unittest.TestCase):
+    """
+    Test Suite for Action Latest Columns
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_search_business_object_definition_columns')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_columns(self, mock_bdefs, mock_column):
+        """
+        Test of exporting business object definition columns
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        schema_name = string_generator()
+        column_name = string_generator()
+        description = string_generator()
+
+        mock_column.side_effect = [
+            mock.Mock(
+                business_object_definition_columns=[
+                    mock.Mock(
+                        schema_column_name=schema_name,
+                        business_object_definition_column_key=mock.Mock(
+                            business_object_definition_column_name=column_name),
+                        description=description
+                    ),
+                ]
+            ),
+            mock.Mock(
+                business_object_definition_columns=[]
+            )
+        ]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_columns()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_column.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(len(self.controller.data_frame.index), 1)
+        self.assertEqual(self.controller.data_frame.iloc[0][Columns.DEFINITION_NAME.value], bdef)
+        self.assertEqual(self.controller.data_frame.iloc[0][Columns.SCHEMA_NAME.value], schema_name)
+        self.assertEqual(self.controller.data_frame.iloc[0][Columns.COLUMN_NAME.value], column_name)
+        self.assertEqual(self.controller.data_frame.iloc[0][Columns.DESCRIPTION.value], description)
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_search_business_object_definition_columns')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_columns_fail(self, mock_bdefs, mock_columns):
+        """
+        Test of exporting business object definition columns with error
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        mock_columns.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_columns()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_columns.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+    @mock.patch('herdsdk.BusinessObjectDefinitionColumnApi.'
+                'business_object_definition_column_search_business_object_definition_columns')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_columns_no_bdef(self, mock_bdefs, mock_columns):
+        """
+        Test of exporting business object definition columns with no bdef
+
+        """
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[]
+        )
+
+        # Run scenario and check values
+        self.controller.export_columns()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_columns.call_count, 0)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
+
+
+class TestExportBdefTagsAction(unittest.TestCase):
+    """
+    Test Suite for Action Latest Data Entity Tags
+
+    """
+
+    def setUp(self):
+        """
+        The setup method that will be called before each test
+
+        """
+        self.controller = otags.Controller()
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    def test_get_all_tags(self, mock_tag_api, mock_tag_types_api):
+        """
+        Test of herdsdk api get tag types and tag type codes
+
+        """
+        code_1 = string_generator()
+        code_2 = string_generator()
+        column_1 = 'display name 1'
+        column_2 = 'display name 2'
+
+        mock_tag_types_api.return_value = mock.Mock(
+            tag_type_keys=[
+                mock.Mock(tag_type_code=code_1),
+                mock.Mock(tag_type_code=code_2)
+            ]
+        )
+
+        mock_tag_api.side_effect = [
+            mock.Mock(display_name=column_1),
+            mock.Mock(display_name=column_2),
+        ]
+
+        # Run scenario and check values
+        self.controller.get_all_tags()
+        mock_tag_types_api.assert_called_once()
+        self.assertEqual(mock_tag_api.call_count, 2)
+        self.assertEqual(self.controller.tag_types['columns'], [column_1, column_2])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    def test_get_all_tags_fail(self, mock_tag_api, mock_tag_types_api):
+        """
+        Test of herdsdk api get tag types and tag type codes with error
+
+        """
+        code_1 = string_generator()
+
+        mock_tag_types_api.return_value = mock.Mock(
+            tag_type_keys=[mock.Mock(tag_type_code=code_1)]
+        )
+
+        mock_tag_api.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        # Run scenario and check values
+        self.controller.get_all_tags()
+        self.controller.get_all_tags()
+        self.assertEqual(mock_tag_types_api.call_count, 2)
+        self.assertEqual(mock_tag_api.call_count, 2)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_bdef_tags(self, mock_bdefs, mock_bdef_tag, mock_tag, mock_tag_types):
+        """
+        Test of exporting business object definition tags
+
+        """
+        tag_type_code_1 = string_generator()
+        tag_type_code_2 = string_generator()
+        tag_code_1 = string_generator()
+        tag_code_2 = string_generator()
+        tag_code_3 = string_generator()
+        column_1 = 'display name 1'
+        column_2 = 'display name 2'
+
+        mock_tag_types.return_value = mock.Mock(
+            tag_type_keys=[
+                mock.Mock(tag_type_code=tag_type_code_1),
+                mock.Mock(tag_type_code=tag_type_code_2)
+            ]
+        )
+
+        mock_tag.side_effect = [
+            mock.Mock(display_name=column_1),
+            mock.Mock(display_name=column_2),
+        ]
+
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        mock_bdef_tag.side_effect = [
+            mock.Mock(
+                business_object_definition_tag_keys=[
+                    mock.Mock(tag_key=mock.Mock(tag_type_code=tag_type_code_1, tag_code=tag_code_1)),
+                    mock.Mock(tag_key=mock.Mock(tag_type_code=tag_type_code_2, tag_code=tag_code_2)),
+                    mock.Mock(tag_key=mock.Mock(tag_type_code=tag_type_code_2, tag_code=tag_code_3)),
+                ]
+            ),
+            mock.Mock(
+                business_object_definition_tag_keys=[]
+            ),
+        ]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_bdef_tags()
+        self.assertEqual(mock_tag_types.call_count, 1)
+        self.assertEqual(mock_tag.call_count, 2)
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_bdef_tag.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 1)
+        self.assertEqual(len(self.controller.data_frame.index), 1)
+        self.assertEqual(self.controller.data_frame.iloc[0][ObjectTags.DEFINITION_NAME.value], bdef)
+        self.assertEqual(self.controller.data_frame.iloc[0][column_1], tag_code_1)
+        self.assertEqual(self.controller.data_frame.iloc[0][column_2], '{},{}'.format(tag_code_2, tag_code_3))
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_bdef_tags_fail(self, mock_bdefs, mock_bdef_tag, mock_tag, mock_tag_types):
+        """
+        Test of exporting business object definition tags with error
+
+        """
+        tag_type_code_1 = string_generator()
+        tag_type_code_2 = string_generator()
+        column_1 = 'display name 1'
+        column_2 = 'display name 2'
+
+        mock_tag_types.return_value = mock.Mock(
+            tag_type_keys=[
+                mock.Mock(tag_type_code=tag_type_code_1),
+                mock.Mock(tag_type_code=tag_type_code_2)
+            ]
+        )
+
+        mock_tag.side_effect = [
+            mock.Mock(display_name=column_1),
+            mock.Mock(display_name=column_2),
+        ]
+
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        mock_bdef_tag.side_effect = [rest.ApiException(reason='Error'), Exception('Exception Thrown 2')]
+
+        self.controller.save_worksheet = mock.Mock()
+
+        # Run scenario and check values
+        self.controller.export_bdef_tags()
+        self.assertEqual(mock_tag_types.call_count, 1)
+        self.assertEqual(mock_tag.call_count, 2)
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_bdef_tag.call_count, 2)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 2)
+        self.assertEqual(self.controller.run_summary[Summary.SUCCESS.value], 0)
+        self.assertEqual(len(self.controller.run_summary[Summary.ERRORS.value]), 2)
+        self.assertTrue(
+            'Reason: Error' in str(self.controller.run_summary[Summary.ERRORS.value][0][Summary.MESSAGE.value]))
+        self.assertTrue('Traceback (most recent call last)' in self.controller.run_summary[Summary.ERRORS.value][1][
+            Summary.MESSAGE.value])
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_bdef_tags_no_tags(self, mock_bdefs, mock_bdef_tag, mock_tag, mock_tag_types):
+        """
+        Test of exporting business object definition tags with no tags
+
+        """
+        bdef = string_generator()
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[
+                mock.Mock(
+                    namespace='ns1',
+                    business_object_definition_name=bdef
+                ),
+                mock.Mock(
+                    namespace='ns2',
+                    business_object_definition_name=bdef
+                ),
+            ]
+        )
+
+        mock_tag_types.side_effect = [rest.ApiException(reason='Error')]
+
+        # Run scenario and check values
+        self.controller.export_bdef_tags()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_tag_types.call_count, 1)
+        self.assertEqual(mock_tag.call_count, 0)
+        self.assertEqual(mock_bdef_tag.call_count, 0)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)
+
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_types')
+    @mock.patch('herdsdk.TagTypeApi.tag_type_get_tag_type')
+    @mock.patch('herdsdk.BusinessObjectDefinitionTagApi.'
+                'business_object_definition_tag_get_business_object_definition_tags_by_business_object_definition')
+    @mock.patch('herdsdk.BusinessObjectDefinitionApi.'
+                'business_object_definition_get_business_object_definitions1')
+    def test_export_bdef_tags_no_bdef(self, mock_bdefs, mock_bdef_tag, mock_tag, mock_tag_types):
+        """
+        Test of exporting business object definition tags with no bdef
+
+        """
+        mock_bdefs.return_value = mock.Mock(
+            business_object_definition_keys=[]
+        )
+
+        # Run scenario and check values
+        self.controller.export_bdef_tags()
+        self.assertEqual(mock_bdefs.call_count, 1)
+        self.assertEqual(mock_tag_types.call_count, 0)
+        self.assertEqual(mock_tag.call_count, 0)
+        self.assertEqual(mock_bdef_tag.call_count, 0)
+        self.assertEqual(self.controller.run_summary[Summary.TOTAL.value], 0)

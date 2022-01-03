@@ -182,6 +182,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BACKSLASH = "\\";
 
+    public static final boolean BATCH_RESTORE_MODE = false;
+
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
 
     public static final Integer BDATA_FINAL_DESTROY_DELAY_IN_DAYS = 15;
@@ -331,8 +333,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CUSTOM_DDL_NAME_2 = "UT_CustomDdl_2" + RANDOM_SUFFIX;
 
-    public static final List<DataProviderKey> DATA_PROVIDER_KEYS = Collections
-        .unmodifiableList(Arrays.asList(new DataProviderKey("UT_DataProvider_1_" + RANDOM_SUFFIX), new DataProviderKey("UT_DataProvider_2_" + RANDOM_SUFFIX)));
+    public static final List<DataProviderKey> DATA_PROVIDER_KEYS = Collections.unmodifiableList(
+        Arrays.asList(new DataProviderKey("UT_DataProvider_1_" + RANDOM_SUFFIX), new DataProviderKey("UT_DataProvider_2_" + RANDOM_SUFFIX)));
 
     public static final String DATA_PROVIDER_NAME = "UT_DataProvider_1_" + RANDOM_SUFFIX;
 
@@ -652,8 +654,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_INTERSECTION = Collections.unmodifiableList(Arrays.asList("2014-04-08"));
 
-    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION = Collections.unmodifiableList(Arrays
-        .asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-06", "2014-04-08", "2014-04-09", "2014-04-10", "2014-04-11"));
+    public static final List<String> MULTI_STORAGE_AVAILABLE_PARTITION_VALUES_UNION = Collections.unmodifiableList(
+        Arrays.asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-06", "2014-04-08", "2014-04-09", "2014-04-10",
+            "2014-04-11"));
 
     public static final String MULTI_STORAGE_GREATEST_PARTITION_VALUE = "2014-04-11";
 
@@ -745,6 +748,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<SchemaColumn> NO_COLUMNS = null;
 
     public static final String NO_COLUMN_NAME = null;
+
+    public static final String NO_CREATED_BY = null;
 
     public static final XMLGregorianCalendar NO_CREATED_ON = null;
 
@@ -991,6 +996,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
 
+    public static final Integer S3_OBJECT_TAGGER_ROLE_SESSION_DURATION_SECONDS = getRandomInteger();
+
     public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
 
     public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
@@ -1145,9 +1152,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> SORTED_LOCAL_FILES =
         Arrays.asList("FOO3.DAT", "Foo2.dat", "folder/foo1.dat", "folder/foo2.dat", "folder/foo3.dat", "foo1.dat");
 
-    public static final List<String> SORTED_PARTITION_VALUES = Arrays
-        .asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-04", "2014-04-05", "2014-04-06", "2014-04-07", "2014-04-08", "2014-04-09",
-            "2014-04-10", "2014-04-11");
+    public static final List<String> SORTED_PARTITION_VALUES =
+        Arrays.asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-04", "2014-04-05", "2014-04-06", "2014-04-07", "2014-04-08",
+            "2014-04-09", "2014-04-10", "2014-04-11");
 
     public static final List<String> STORAGE_1_AVAILABLE_AS_UPLOADING_PARTITION_VALUES =
         Collections.unmodifiableList(Arrays.asList("2014-04-01", "2014-04-09", "2014-04-10"));
@@ -1155,8 +1162,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> STORAGE_1_AVAILABLE_AS_VALID_PARTITION_VALUES =
         Collections.unmodifiableList(Arrays.asList("2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-08"));
 
-    public static final List<String> STORAGE_1_AVAILABLE_PARTITION_VALUES = Collections
-        .unmodifiableList(Arrays.asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-08", "2014-04-09", "2014-04-10"));
+    public static final List<String> STORAGE_1_AVAILABLE_PARTITION_VALUES = Collections.unmodifiableList(
+        Arrays.asList("2014-04-01", "2014-04-02", "2014-04-02A", "2014-04-03", "2014-04-05", "2014-04-08", "2014-04-09", "2014-04-10"));
 
     public static final String STORAGE_1_GREATEST_PARTITION_VALUE = "2014-04-10";
 
@@ -1253,8 +1260,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SUB_PARTITION_VALUE_4 = "UT_SubPartition_4_" + RANDOM_SUFFIX;
 
-    public static final List<NamespacePermissionEnum> SUPPORTED_NAMESPACE_PERMISSIONS = Collections.unmodifiableList(Arrays
-        .asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
+    public static final List<NamespacePermissionEnum> SUPPORTED_NAMESPACE_PERMISSIONS = Collections.unmodifiableList(
+        Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT,
             NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT, NamespacePermissionEnum.WRITE_ATTRIBUTE));
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
@@ -1340,6 +1347,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_DDL_2 = "DROP TABLE `Test`;\n" + "CREATE EXTERNAL TABLE `TEST`;";
 
+    public static final String TEST_CSV_FILE_CONTENT = RANDOM_SUFFIX + "," + RANDOM_SUFFIX;
+
     public static final String TEST_S3_KEY_PREFIX = "herd-dao-test-key-prefix" + RANDOM_SUFFIX;
 
     public static final String TEST_S3_KEY_PREFIX_2 = "herd-dao-test-key-prefix-2-" + RANDOM_SUFFIX;
@@ -1356,9 +1365,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Long TOTAL_INDEX_SEARCH_RESULTS = (long) (Math.random() * Long.MAX_VALUE);
 
-    public static final List<String> UNSORTED_PARTITION_VALUES = Arrays
-        .asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-01", "2014-04-10", "2014-04-09", "2014-04-11", "2014-04-08", "2014-04-07",
-            "2014-04-05", "2014-04-06");
+    public static final List<String> UNSORTED_PARTITION_VALUES =
+        Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-01", "2014-04-10", "2014-04-09", "2014-04-11", "2014-04-08",
+            "2014-04-07", "2014-04-05", "2014-04-06");
 
     public static final String UPDATED_BY = "UT_UpdatedBy_" + RANDOM_SUFFIX;
 

@@ -23,6 +23,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -61,6 +62,8 @@ public class RetentionExpirationExporterApp
     private Option namespaceOpt;
 
     private Option passwordOpt;
+
+    protected Option accessTokenUrlOpt;
 
     private Option enableEnvVariablesOpt;
 
@@ -112,6 +115,11 @@ public class RetentionExpirationExporterApp
             RetentionExpirationExporterApp retentionExpirationExporterApp = new RetentionExpirationExporterApp();
             returnValue = retentionExpirationExporterApp.go(args);
         }
+        catch (ApiException apiException)
+        {
+            LOGGER.error("Error running herd retention expiration exporter application. {} statusCode={}", apiException.toString(), apiException.getCode());
+            returnValue = ToolsCommonConstants.ReturnValue.FAILURE;
+        }
         catch (Exception e)
         {
             LOGGER.error("Error running herd retention expiration exporter application. {}", e.toString(), e);
@@ -147,7 +155,7 @@ public class RetentionExpirationExporterApp
         String password = ToolsArgumentHelper.getCliEnvArgumentValue(argParser, passwordOpt, enableEnvVariablesOpt);
         RegServerAccessParamsDto regServerAccessParamsDto =
             RegServerAccessParamsDto.builder().withRegServerHost(argParser.getStringValue(regServerHostOpt)).withRegServerPort(regServerPort).withUseSsl(useSsl)
-                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password)
+                .withUsername(argParser.getStringValue(usernameOpt)).withPassword(password).withAccessTokenUrl(argParser.getStringValue(accessTokenUrlOpt))
                 .withTrustSelfSignedCertificate(trustSelfSignedCertificate).withDisableHostnameVerification(disableHostnameVerification).build();
 
         // Call the controller with the user specified parameters to perform the upload.
@@ -187,6 +195,7 @@ public class RetentionExpirationExporterApp
             enableEnvVariablesOpt = argParser
                 .addArgument("E", "enableEnvVariables", true, "The enableEnvVariables used for HTTPS client authentication through environment provided var.",
                     false);
+            accessTokenUrlOpt = argParser.addArgument("T", "accessTokenUrl", true, "The access token url used for oauth token retrieval.", false);
             trustSelfSignedCertificateOpt =
                 argParser.addArgument("C", "trustSelfSignedCertificate", true, "If set to true, makes HTTPS client trust self-signed certificate.", false);
             disableHostnameVerificationOpt =
@@ -210,7 +219,7 @@ public class RetentionExpirationExporterApp
                 BuildInformation buildInformation = applicationContext.getBean(BuildInformation.class);
                 System.out.println(String
                     .format(ToolsCommonConstants.BUILD_INFO_STRING_FORMAT, buildInformation.getBuildDate(), buildInformation.getBuildNumber(),
-                        buildInformation.getBuildOs(), buildInformation.getBuildUser()));
+                        buildInformation.getBuildUser()));
                 return ToolsCommonConstants.ReturnValue.SUCCESS;
             }
 

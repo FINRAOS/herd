@@ -102,6 +102,17 @@ public class DataProviderServiceTest extends AbstractServiceTest
         {
             assertEquals("Data provider name can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a data provider instance when data provider name contains a backward slash character.
+        try
+        {
+            dataProviderService.createDataProvider(new DataProviderCreateRequest(addBackwardSlash(DATA_PROVIDER_NAME)));
+            fail("Should throw an IllegalArgumentException when data provider name contains a backward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Data provider name can not contain a backward slash character.", e.getMessage());
+        }
     }
 
     @Test
