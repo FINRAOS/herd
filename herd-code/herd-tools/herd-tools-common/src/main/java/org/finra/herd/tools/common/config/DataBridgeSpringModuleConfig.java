@@ -23,6 +23,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsS3ClientFactory;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
@@ -31,6 +32,7 @@ import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.dao.helper.S3BatchHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.dao.impl.StsDaoImpl;
 import org.finra.herd.service.S3Service;
@@ -67,6 +69,12 @@ public class DataBridgeSpringModuleConfig
     public AwsHelper awsHelper()
     {
         return new AwsHelper();
+    }
+
+    @Bean
+    public AwsS3ClientFactory awsS3ClientFactory()
+    {
+        return new AwsS3ClientFactory();
     }
 
     @Bean
@@ -114,9 +122,21 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
+    public OAuthTokenProvider oauthTokenProvider()
+    {
+        return new OAuthTokenProvider();
+    }
+
+    @Bean
     public RetryPolicyFactory retryPolicyFactory()
     {
         return new RetryPolicyFactory();
+    }
+
+    @Bean
+    public S3BatchHelper s3BatchHelper()
+    {
+        return new S3BatchHelper();
     }
 
     @Bean
@@ -153,11 +173,5 @@ public class DataBridgeSpringModuleConfig
     public StsDao stsDao()
     {
         return new StsDaoImpl();
-    }
-
-    @Bean
-    public OAuthTokenProvider oauthTokenProvider()
-    {
-        return new OAuthTokenProvider();
     }
 }

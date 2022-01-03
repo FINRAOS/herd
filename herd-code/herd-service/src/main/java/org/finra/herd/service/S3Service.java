@@ -126,16 +126,6 @@ public interface S3Service
     List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
 
     /**
-     * Requests to restore a list of keys in the specified bucket.
-     *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
-     * restored
-     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
-     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
-     */
-    void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays, String archiveRetrievalOption);
-
-    /**
      * Uploads a local directory of files into S3.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix are for the target of the copy. The

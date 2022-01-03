@@ -167,6 +167,10 @@
       </dependency>
       <dependency>
          <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-s3control</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk-sts</artifactId>
       </dependency>
       <dependency>

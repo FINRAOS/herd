@@ -106,6 +106,38 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectDataBatchRestoreDto">
+      <xs:complexContent>
+         <xs:extension base="businessObjectDataRestoreDto">
+            <xs:sequence>
+               <xs:element name="jobConfig" type="batchJobConfigDto"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:complexType name="batchJobConfigDto">
+      <xs:sequence>
+         <xs:element name="awsAccountId" type="xs:string"/>
+         <xs:element name="s3BatchRoleArn" type="xs:string"/>
+         <xs:element name="manifestS3BucketName" type="xs:string"/>
+         <xs:element name="manifestS3Prefix" type="xs:string" minOccurs="0"/>
+         <xs:element name="maxAttempts" type="xs:int" />
+         <xs:element name="backoffPeriod" type="xs:int" />
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="batchJobManifestDto">
+      <xs:sequence>
+         <xs:element name="format" type="xs:string"/>
+         <xs:element name="content" type="xs:string"/>
+         <xs:element name="etag" type="xs:string"/>
+         <xs:element name="key" type="xs:string"/>
+         <xs:element name="bucketName" type="xs:string"/>
+         <xs:element name="fields" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="businessObjectDataSearchResult">
       <xs:annotation>
          <xs:appinfo>

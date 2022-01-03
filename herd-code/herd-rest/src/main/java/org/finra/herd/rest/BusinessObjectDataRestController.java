@@ -712,6 +712,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
      * @param expirationInDays the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object. Currently three options are supported: Expedited, Standard,
+     * @param batchMode the flag used to indicate that S3 Batch processing should be used to restore the business object
      * and Bulk
      *
      * @return the business object data information
@@ -727,16 +728,18 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
         @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
-        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion,
+        @PathVariable("partitionValue") String partitionValue,
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
         @RequestParam(value = "subPartitionValues", required = false) String subPartitionValues,
         @RequestParam(value = "expirationInDays", required = false) Integer expirationInDays,
-        @RequestParam(value = "archiveRetrievalOption", required = false) String archiveRetrievalOption)
+        @RequestParam(value = "archiveRetrievalOption", required = false) String archiveRetrievalOption,
+        @RequestParam(value = "batchMode", required = false) Boolean batchMode)
     {
         return businessObjectDataService.restoreBusinessObjectData(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, herdStringHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValues),
-                businessObjectDataVersion), expirationInDays, archiveRetrievalOption);
+                businessObjectDataVersion), expirationInDays, archiveRetrievalOption, batchMode);
     }
 
     /**
