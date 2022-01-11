@@ -388,6 +388,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setOldStorageUnitStatus(storageUnitEntity.getStatus().getCode());
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, reason);
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
+
+        // Log storage policy transition detail information
+        LOGGER.info("Storage Policy Transition Complete. storagePolicyTransitionParams={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
     }
 
     @Override
