@@ -82,7 +82,7 @@ public class StoragePolicyProcessorServiceImpl implements StoragePolicyProcessor
         catch (RuntimeException e)
         {
             // Try to increment the count for failed storage policy transition attempts for the specified storage unit.
-            storagePolicyProcessorHelperService.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+            storagePolicyProcessorHelperService.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto, e);
 
             // Rethrow the original exception.
             throw e;
