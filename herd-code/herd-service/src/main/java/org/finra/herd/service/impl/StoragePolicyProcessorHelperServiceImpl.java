@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -390,15 +391,15 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
 
         // Log storage policy transition detail information
-        LOGGER.info("Storage Policy Transition Complete. storagePolicyTransitionParams={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
+        LOGGER.info("Storage Policy Transition Complete. storagePolicyTransitionParamsDto={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        RuntimeException ignoreException)
+        RuntimeException ignoredException)
     {
-        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, ignoreException);
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, ignoredException);
     }
 
     /**
@@ -407,10 +408,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
      * business object data key and storage name identify the storage unit to be updated
-     * @param ignoreException the storage policy transition exception that will be ignored
+     * @param ignoredException the storage policy transition exception that will be ignored
      */
     protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        RuntimeException ignoreException)
+        RuntimeException ignoredException)
     {
         // Continue only when business object data kay and storage name are specified.
         if (storagePolicyTransitionParamsDto.getBusinessObjectDataKey() != null && storagePolicyTransitionParamsDto.getStorageName() != null)
@@ -432,9 +433,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
                 // Log the new value for the storage policy transition failed attempts counter, transition DTO and transition exception
                 LOGGER.info("Incremented storage policy transition failed attempts counter. " +
-                        "storagePolicyTransitionFailedAttempts={} storagePolicyTransitionParamsDto={} storyPolicyTransitionErrors={}",
+                        "storagePolicyTransitionFailedAttempts={} storagePolicyTransitionParamsDto={} storyPolicyTransitionError=\"{}\"",
                     storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(storagePolicyTransitionParamsDto),
-                    ignoreException.getMessage());
+                    StringEscapeUtils.escapeJava(ignoredException.getMessage()));
             }
             catch (Exception e)
             {
