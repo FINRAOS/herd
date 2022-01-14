@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.tools.retention.exporter;
 
 import static org.junit.Assert.assertEquals;
@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,23 +41,27 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 {
     static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
 
-    static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
-
     static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
 
-    static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
+    static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
 
     static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
 
+    static final String BUSINESS_OBJECT_FORMAT_USAGE = "testBusinessObjectFormatUsage";
+
     static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
+
+    static final DateTime END_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
 
     static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 
     static final String NAMESPACE = "testNamespace";
 
+    static final DateTime START_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
+
     static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
 
-    private static Logger logger = LoggerFactory.getLogger(AbstractExporterTest.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(AbstractExporterTest.class);
 
     /**
      * Provide easy access to the controller for all test methods.
@@ -162,7 +167,7 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
             {
                 if (!(ex.getClass().equals(expectedException.getClass())))
                 {
-                    logger.error("Error running Data Bridge.", ex);
+                    LOGGER.error("Error running Data Bridge.", ex);
                     fail("Expected exception with class " + expectedException.getClass().getName() + ", but got an exception with class " +
                         ex.getClass().getName());
                 }

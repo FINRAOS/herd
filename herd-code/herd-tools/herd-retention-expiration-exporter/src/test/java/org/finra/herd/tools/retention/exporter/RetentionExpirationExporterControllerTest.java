@@ -24,12 +24,12 @@ import java.io.FileInputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
-import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 public class RetentionExpirationExporterControllerTest extends AbstractExporterTest
@@ -85,7 +85,8 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         try
         {
             retentionExpirationExporterController
-                .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, new RegServerAccessParamsDto(), UDC_SERVICE_HOSTNAME);
+                .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, START_REGISTRATION_DATE_TIME, END_REGISTRATION_DATE_TIME,
+                    outputFile, new RegServerAccessParamsDto(), UDC_SERVICE_HOSTNAME);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -107,7 +108,8 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
 
         // Perform the retention expiration export.
         retentionExpirationExporterController
-            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
+            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, START_REGISTRATION_DATE_TIME, END_REGISTRATION_DATE_TIME, outputFile,
+                regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
 
         // Create the expected URI.
         String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);

@@ -1,19 +1,28 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.tools.retention.exporter;
+
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import org.finra.herd.sdk.api.BusinessObjectDataApi;
 import org.finra.herd.sdk.api.BusinessObjectDefinitionApi;
@@ -21,16 +30,7 @@ import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
 import org.finra.herd.sdk.model.BusinessObjectDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
-
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * This class encapsulates web client functionality required to communicate with the registration server.
@@ -47,6 +47,7 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      * @param businessObjectDefinitionName the name of the business object definition
      *
      * @return the business object definition
+     *
      * @throws ApiException if an Api exception was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
@@ -73,22 +74,24 @@ class RetentionExpirationExporterWebClient extends DataBridgeWebClient
      *
      * @param businessObjectDataSearchRequest the business object definition search request
      * @param pageNum the page number for the result to contain
+     * @param pageSize the page size for the results to contain
      *
      * @return the business object definition
+     *
      * @throws ApiException if an Api exception was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
      * @throws KeyManagementException if key management exception
      */
-    BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum)
+    BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest businessObjectDataSearchRequest, Integer pageNum, Integer pageSize)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
-        LOGGER.info("Sending business object data search request to the registration server...");
+        LOGGER.info("Sending business object data search request to the registration server... pageNum={} pageSize={}", pageNum, pageSize);
 
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
         BusinessObjectDataSearchResult sdkResponse =
-            businessObjectDataApi.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, null);
+            businessObjectDataApi.businessObjectDataSearchBusinessObjectData(businessObjectDataSearchRequest, pageNum, pageSize);
 
         LOGGER.info("Successfully received search business object data response from the registration server.");
         return sdkResponse;
