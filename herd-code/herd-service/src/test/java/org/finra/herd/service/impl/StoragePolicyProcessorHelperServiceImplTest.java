@@ -183,7 +183,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVED);
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -433,11 +433,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
             new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
+        verify(jsonHelper).objectToJson(businessObjectDataStorageUnitKey);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The counter value now should be equal to 1.
@@ -510,11 +509,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
             new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
+        verify(jsonHelper).objectToJson(businessObjectDataStorageUnitKey);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results. The counter value now should be equal to 2.

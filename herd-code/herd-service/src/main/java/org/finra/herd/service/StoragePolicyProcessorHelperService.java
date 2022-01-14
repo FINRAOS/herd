@@ -53,8 +53,8 @@ public interface StoragePolicyProcessorHelperService
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
      * business object data key and storage name identify the storage unit to be updated
-     * @param ignoredException the storage policy transition exception that will be ignored
+     * @param exception the storage policy transition exception that will be ignored
      */
     public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        RuntimeException ignoredException);
+        RuntimeException exception);
 }

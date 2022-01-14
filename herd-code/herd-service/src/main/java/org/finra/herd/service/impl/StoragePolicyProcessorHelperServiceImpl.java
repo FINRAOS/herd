@@ -391,15 +391,15 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
 
         // Log storage policy transition detail information
-        LOGGER.info("Storage Policy Transition Complete. storagePolicyTransitionParamsDto={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
+        LOGGER.info("Storage Policy Transition Complete. businessObjectDataKey={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey()));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        RuntimeException ignoredException)
+        RuntimeException exception)
     {
-        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, ignoredException);
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, exception);
     }
 
     /**
@@ -408,10 +408,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
      * business object data key and storage name identify the storage unit to be updated
-     * @param ignoredException the storage policy transition exception that will be ignored
+     * @param exception the storage policy transition exception that will be ignored
      */
     protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
-        RuntimeException ignoredException)
+        RuntimeException exception)
     {
         // Continue only when business object data kay and storage name are specified.
         if (storagePolicyTransitionParamsDto.getBusinessObjectDataKey() != null && storagePolicyTransitionParamsDto.getStorageName() != null)
@@ -431,11 +431,11 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                     storageUnitEntity.getStoragePolicyTransitionFailedAttempts() + 1);
                 storageUnitDao.saveAndRefresh(storageUnitEntity);
 
-                // Log the new value for the storage policy transition failed attempts counter, transition DTO and transition exception
+                // Log the new value for the storage policy transition failed attempts counter, businessObjectDataKey and transition exception
                 LOGGER.info("Incremented storage policy transition failed attempts counter. " +
-                        "storagePolicyTransitionFailedAttempts={} storagePolicyTransitionParamsDto={} storyPolicyTransitionError=\"{}\"",
-                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(storagePolicyTransitionParamsDto),
-                    StringEscapeUtils.escapeJava(ignoredException.getMessage()));
+                        "storagePolicyTransitionFailedAttempts={};businessObjectDataStorageUnitKey={};storyPolicyTransitionException={}",
+                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(businessObjectDataStorageUnitKey),
+                    exception.getMessage());
             }
             catch (Exception e)
             {
