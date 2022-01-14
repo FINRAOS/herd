@@ -16,7 +16,6 @@
 package org.finra.herd.tools.retention.exporter;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -53,11 +52,17 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 
     static final DateTime END_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
 
+    static final String END_REGISTRATION_DATE_TIME_AS_TEXT = "2016-03-29T10:34:11";
+
     static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 
     static final String NAMESPACE = "testNamespace";
 
+    static final DateTime NO_REGISTRATION_DATE_TIME = null;
+
     static final DateTime START_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
+
+    static final String START_REGISTRATION_DATE_TIME_AS_TEXT = "2016-03-29T22:34:11";
 
     static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
 
@@ -176,8 +181,8 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
                     // This will ensure the returned status code matches what we are expecting.
                     HttpErrorResponseException httpErrorResponseException = (HttpErrorResponseException) ex;
                     HttpErrorResponseException expectedHttpErrorResponseException = (HttpErrorResponseException) expectedException;
-                    assertTrue("Expecting HTTP response status of " + expectedHttpErrorResponseException.getStatusCode() + ", but got " +
-                        httpErrorResponseException.getStatusCode(), expectedException.equals(httpErrorResponseException));
+                    assertEquals("Expecting HTTP response status of " + expectedHttpErrorResponseException.getStatusCode() + ", but got " +
+                        httpErrorResponseException.getStatusCode(), expectedException, httpErrorResponseException);
                 }
             }
             else
