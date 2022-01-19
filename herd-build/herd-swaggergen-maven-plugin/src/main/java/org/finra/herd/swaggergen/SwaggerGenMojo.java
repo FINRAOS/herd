@@ -142,11 +142,13 @@ public class SwaggerGenMojo extends AbstractMojo
 
     // A Map of the Swagger security scheme definitions. Each one has a key of security name and value of "type" to identify it if necessary.
     private static final Map<String, SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS = new HashMap<String, SecuritySchemeDefinition>()
-    {{
-        put("basicAuth", new BasicAuthDefinition());
-        put("oauthAuth", new OAuth2Definition());
-        put("apiKeyAuth", new ApiKeyAuthDefinition());
-    }};
+    {
+        {
+            put("basicAuth", new BasicAuthDefinition());
+            put("oauthAuth", new OAuth2Definition());
+            put("apiKeyAuth", new ApiKeyAuthDefinition());
+        }
+    };
 
     /**
      * The main execution method for this Mojo.
