@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -178,7 +179,7 @@ public class ActivitiServiceImpl implements ActivitiService
     {
         try
         {
-            return IOUtils.toString(activitiRepositoryService.getProcessModel(processDefinitionId));
+            return IOUtils.toString(activitiRepositoryService.getProcessModel(processDefinitionId), StandardCharsets.UTF_8);
         }
         catch (IOException e)
         {
@@ -194,12 +195,12 @@ public class ActivitiServiceImpl implements ActivitiService
 
     /**
      * Creates a HistoricProcessInstanceQuery in the given process definitions, optionally filtering by the given job status, start and end times.
-     * 
+     *
      * @param processDefinitionKeys Collection of process definition keys
      * @param jobStatus The job status. Optional.
      * @param startTime The start time. Optional.
      * @param endTime The end time. Optional.
-     * 
+     *
      * @return A HistoricProcessInstanceQuery
      */
     private HistoricProcessInstanceQuery createHistoricProcessInstanceQuery(Collection<String> processDefinitionKeys, JobStatusEnum jobStatus,

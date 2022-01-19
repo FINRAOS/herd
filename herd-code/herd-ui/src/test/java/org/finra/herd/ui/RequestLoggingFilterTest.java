@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import javax.servlet.FilterChain;
@@ -159,7 +160,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
         {
             public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException
             {
-                String payload = IOUtils.toString(request.getInputStream());
+                String payload = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
                 assertEquals(payload, PAYLOAD_CONTENT);
             }
         };
@@ -175,7 +176,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
         {
             public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException
             {
-                String payload = IOUtils.toString(request.getInputStream());
+                String payload = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
                 assertEquals("", payload);
             }
         };
@@ -197,7 +198,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
         {
             public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException
             {
-                String payload = IOUtils.toString(request.getInputStream());
+                String payload = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
                 assertEquals("", payload);
             }
         };

@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -130,7 +131,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
         // Just remove "startEvent" text from the XML file which makes the following line in the XML file as INVALID
         // <startEvent id="startevent1" name="Start"></startEvent>
-        request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("startEvent", ""));
+        request.setActivitiJobXml(IOUtils.toString(xmlStream, StandardCharsets.UTF_8).replaceAll("startEvent", ""));
 
         // Try creating the job definition and this must throw XMLException.
         jobDefinitionService.createJobDefinition(request, false);
@@ -197,7 +198,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         // Note that XML file structure is correct as per the XML schema. However, there is an invalid Activiti element in the XML file.
         // The line below will be affected in the XML file as per this error injection.
         // <serviceTask id="servicetask1" name="Test Service Step" activiti:class="org.activiti.engine.impl.test.NoOpServiceTask">
-        request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("serviceTask", "invalidActivitiTask"));
+        request.setActivitiJobXml(IOUtils.toString(xmlStream, StandardCharsets.UTF_8).replaceAll("serviceTask", "invalidActivitiTask"));
 
         // Try creating the job definition and the Activiti layer mush throw an exception.
         jobDefinitionService.createJobDefinition(request, false);
@@ -352,7 +353,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
         // Update Activiti XML such that service task is modified to use not allowed activiti:class
         request.setActivitiJobXml(
-            IOUtils.toString(xmlStream).replaceAll("org.activiti.engine.impl.test.NoOpServiceTask", "org.activiti.engine.impl.behavior.ShellActivityBehavior"));
+            IOUtils.toString(xmlStream, StandardCharsets.UTF_8).replaceAll("org.activiti.engine.impl.test.NoOpServiceTask", "org.activiti.engine.impl.behavior.ShellActivityBehavior"));
 
         // Try creating the job definition and the Activiti layer must throw an exception.
         try
