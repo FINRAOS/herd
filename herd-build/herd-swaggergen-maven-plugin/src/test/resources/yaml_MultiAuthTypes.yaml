@@ -99,12 +99,12 @@ paths:
           schema:
             $ref: "#/definitions/errorResponse"
 securityDefinitions:
-  oauth2Authentication:
+  basicAuth:
+    type: "basic"
+  oauthAuth:
     type: "oauth2"
     tokenUrl: "https://{{TOKEN_URL}}"
     flow: "application"
-  basicAuthentication:
-    type: "basic"
 definitions:
   errorResponse: {}
   person:
@@ -114,8 +114,6 @@ definitions:
         format: "int64"
       name:
         type: "string"
-    example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<person>\n\
-      \    <id>0</id>\n    <name>string</name>\n</person>\n"
 security:
-- basicAuthentication: []
-- oauth2Authentication: []
+- basicAuth: []
+- oauthAuth: []

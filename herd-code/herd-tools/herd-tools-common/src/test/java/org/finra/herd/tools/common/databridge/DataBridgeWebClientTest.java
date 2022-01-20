@@ -257,8 +257,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
 
         // Basic Auth
         ApiClient oauthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
-        OAuth oauth = (OAuth) oauthApiClient.getAuthentication("oauth2Authentication");
-        HttpBasicAuth basicAuth = (HttpBasicAuth) oauthApiClient.getAuthentication("basicAuthentication");
+        OAuth oauth = (OAuth) oauthApiClient.getAuthentication("oauthAuth");
+        HttpBasicAuth basicAuth = (HttpBasicAuth) oauthApiClient.getAuthentication("basicAuth");
         assertNull(oauth.getAccessToken());
         assertEquals(regServerAccessParamsDto.getUsername(), basicAuth.getUsername());
         assertEquals(regServerAccessParamsDto.getPassword(), basicAuth.getPassword());
@@ -268,8 +268,8 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         // OAuth
         regServerAccessParamsDto.setAccessTokenUrl("dummyUrl");
         ApiClient basicAuthApiClient = dataBridgeWebClient.createApiClient(regServerAccessParamsDto);
-        oauth = (OAuth) basicAuthApiClient.getAuthentication("oauth2Authentication");
-        basicAuth = (HttpBasicAuth) basicAuthApiClient.getAuthentication("basicAuthentication");
+        oauth = (OAuth) basicAuthApiClient.getAuthentication("oauthAuth");
+        basicAuth = (HttpBasicAuth) basicAuthApiClient.getAuthentication("basicAuth");
         assertNotNull(oauth.getAccessToken());
         assertNull(basicAuth.getUsername());
         assertNull(basicAuth.getPassword());

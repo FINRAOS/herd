@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.core;
 
 import static org.junit.Assert.assertEquals;
@@ -33,6 +33,7 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 
@@ -402,6 +403,39 @@ public class ArgumentParserTest extends AbstractCoreTest
         resultValue = argParser.getFileValue(fileOpt);
         assertNotNull(resultValue);
         assertEquals(inputValue, resultValue);
+    }
+
+    @Test
+    public void testGetDateTimeValue() throws Exception
+    {
+        ArgumentParser argParser = new ArgumentParser("");
+        Option dateTimeOpt = argParser.addArgument("t", "dateTime", true, "Some date time command line argument", false);
+
+        final String inputText = "2016-03-29T10:34:11+02:00";
+        final DateTime expectedResult = new DateTime(inputText);
+
+        final String shortDateTimeOpt = String.format("-%s", dateTimeOpt.getOpt());
+        final String longDateTimeOpt = String.format("--%s", dateTimeOpt.getLongOpt());
+
+        argParser.parseArguments(new String[] {""});
+        assertNull(argParser.getDateTimeValue(dateTimeOpt));
+
+        argParser.parseArguments(new String[] {shortDateTimeOpt, inputText});
+        assertEquals(expectedResult, argParser.getDateTimeValue(dateTimeOpt));
+
+        argParser.parseArguments(new String[] {longDateTimeOpt, inputText});
+        assertEquals(expectedResult, argParser.getDateTimeValue(dateTimeOpt));
+
+        argParser.parseArguments(new String[] {shortDateTimeOpt, STRING_VALUE});
+        try
+        {
+            argParser.getDateTimeValue(dateTimeOpt);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Valid date or date and time format must be used for dateTime option.", e.getMessage());
+        }
     }
 
     /**
