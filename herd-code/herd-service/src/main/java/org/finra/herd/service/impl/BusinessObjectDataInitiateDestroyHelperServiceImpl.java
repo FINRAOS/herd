@@ -42,6 +42,9 @@ import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.BatchJobConfigDto;
+import org.finra.herd.model.dto.BusinessObjectDataBatchDestroyDto;
+import org.finra.herd.model.dto.BusinessObjectDataBatchRestoreDto;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -210,9 +213,20 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Get all S3 objects matching the S3 key prefix from the S3 bucket.
         List<S3VersionSummary> s3VersionSummaries = s3Dao.listVersions(s3FileTransferRequestParamsDto);
 
-        // Tag the S3 objects to initiate the deletion.
-        s3Dao.tagVersions(s3FileTransferRequestParamsDto, businessObjectDataDestroyDto.getS3ObjectTaggerRoleParamsDto(), s3VersionSummaries,
-            new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
+        // Check if the operation needs to be executed in batch mode.
+        if (businessObjectDataDestroyDto instanceof BusinessObjectDataBatchDestroyDto)
+        {
+            BatchJobConfigDto jobConfig = ((BusinessObjectDataBatchDestroyDto) businessObjectDataDestroyDto).getJobConfig();
+            // Create and execute s3 batch job to tag the S3 objects to initiate deletion
+            s3Dao.batchTagVersions(s3FileTransferRequestParamsDto, jobConfig, businessObjectDataDestroyDto.getS3ObjectTaggerRoleParamsDto(), s3VersionSummaries,
+                new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
+        }
+        else
+        {
+            // Tag the S3 objects to initiate the deletion.
+            s3Dao.tagVersions(s3FileTransferRequestParamsDto, businessObjectDataDestroyDto.getS3ObjectTaggerRoleParamsDto(), s3VersionSummaries,
+                new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
+        }
     }
 
     /**
@@ -374,6 +388,19 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         businessObjectDataDestroyDto.setS3ObjectTagValue(s3ObjectTagValue);
         businessObjectDataDestroyDto.setS3ObjectTaggerRoleParamsDto(s3ObjectTaggerRoleParamsDto);
         businessObjectDataDestroyDto.setFinalDestroyInDays(finalDestroyInDays);
+
+        if (businessObjectDataDestroyDto instanceof BusinessObjectDataBatchDestroyDto)
+        {
+            BatchJobConfigDto batchJobConfig = new BatchJobConfigDto();
+            batchJobConfig.setAwsAccountId(configurationHelper.getRequiredProperty(ConfigurationValue.AWS_ACCOUNT_ID));
+            batchJobConfig.setS3BatchRoleArn(configurationHelper.getRequiredProperty(ConfigurationValue.S3_BATCH_DESTROY_ROLE_ARN));
+            batchJobConfig.setManifestS3BucketName(configurationHelper.getRequiredProperty(ConfigurationValue.S3_BATCH_MANIFEST_BUCKET_NAME));
+            batchJobConfig.setManifestS3Prefix(configurationHelper.getRequiredProperty(ConfigurationValue.S3_BATCH_MANIFEST_LOCATION_PREFIX));
+            batchJobConfig.setBackoffPeriod(configurationHelper.getProperty(ConfigurationValue.S3_BATCH_RESTORE_BACKOFF_PERIOD, Integer.class));
+            batchJobConfig.setMaxAttempts(configurationHelper.getProperty(ConfigurationValue.S3_BATCH_RESTORE_MAX_ATTEMPTS, Integer.class));
+
+            ((BusinessObjectDataBatchDestroyDto) businessObjectDataDestroyDto).setJobConfig(batchJobConfig);
+        }
     }
 
     /**

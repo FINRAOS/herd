@@ -182,9 +182,8 @@ public class S3DaoImpl implements S3Dao
                     if (upload.getInitiated().compareTo(thresholdDate) < 0)
                     {
                         // Abort the upload.
-                        s3Operations.abortMultipartUpload(TransferManager
-                                .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
-                            s3Client);
+                        s3Operations.abortMultipartUpload(TransferManager.appendSingleObjectUserAgent(
+                            new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())), s3Client);
 
                         // Log the information about the aborted multipart upload.
                         LOGGER.info("Aborted S3 multipart upload. s3Key=\"{}\" s3BucketName=\"{}\" s3MultipartUploadInitiatedDate=\"{}\"", upload.getKey(),
@@ -218,9 +217,8 @@ public class S3DaoImpl implements S3Dao
     @Override
     public S3FileTransferResultsDto copyFile(final S3FileCopyRequestParamsDto params) throws InterruptedException
     {
-        LOGGER
-            .info("Copying S3 object... sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\"", params.getSourceObjectKey(),
-                params.getSourceBucketName(), params.getTargetObjectKey(), params.getTargetBucketName());
+        LOGGER.info("Copying S3 object... sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\"",
+            params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(), params.getTargetBucketName());
 
         // Perform the copy.
         S3FileTransferResultsDto results = performTransfer(params, new Transferer()
@@ -310,8 +308,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
+            throw new IllegalStateException(
+                String.format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
                     params.getS3BucketName(), e.getMessage()), e);
         }
     }
@@ -399,10 +397,10 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER
-            .info("Downloaded S3 file to the local system. s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
-                params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalBytesTransferred(),
-                HerdDateUtils.formatDuration(results.getDurationMillis()));
+        LOGGER.info(
+            "Downloaded S3 file to the local system. s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
+            params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalBytesTransferred(),
+            HerdDateUtils.formatDuration(results.getDurationMillis()));
 
         logOverallTransferRate(results);
 
@@ -441,9 +439,9 @@ public class S3DaoImpl implements S3Dao
                 return null;
             }
 
-            throw new IllegalStateException(String
-                .format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
-                    e.getMessage()), e);
+            throw new IllegalStateException(
+                String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
+                    params.getS3BucketName(), e.getMessage()), e);
         }
         finally
         {
@@ -519,8 +517,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+            throw new IllegalStateException(
+                String.format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -564,8 +562,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonClientException e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to list S3 versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+            throw new IllegalStateException(
+                String.format("Failed to list S3 versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -644,15 +642,15 @@ public class S3DaoImpl implements S3Dao
         {
             if (StringUtils.contains(e.getMessage(), "Retrieval option is not supported by this storage class"))
             {
-                throw new IllegalArgumentException(String
-                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
-                    e);
+                throw new IllegalArgumentException(
+                    String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
+                        e.getMessage()), e);
             }
             else
             {
-                throw new IllegalStateException(String
-                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
-                    e);
+                throw new IllegalStateException(
+                    String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(),
+                        e.getMessage()), e);
             }
         }
     }
@@ -747,6 +745,80 @@ public class S3DaoImpl implements S3Dao
                     LOGGER.info("s3Key=\"{}\" s3VersionId=\"{}\"", s3VersionSummary.getKey(), s3VersionSummary.getVersionId());
                 }
             }
+        }
+    }
+
+    @Override
+    public void batchTagVersions(final S3FileTransferRequestParamsDto params, final BatchJobConfigDto batchJobConfig,
+        final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+    {
+        LOGGER.info("Batch tagging a list of object version in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} s3ObjectVersionsCount={}",
+            params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size(), s3VersionSummaries.size());
+
+        // Do nothing if no file versions to tag.
+        if (CollectionUtils.isEmpty(s3VersionSummaries))
+        {
+            return;
+        }
+
+        // Create S3 Batch tagging job
+        String jobId = createBatchVersionsTaggingJob(params, batchJobConfig, s3VersionSummaries, tag);
+
+        // Template class that simplifies the execution of operations with retry semantics executed by spring framework.
+        RetryTemplate template = new RetryTemplate();
+
+        // This policy determine how many repetitions this retry operation is going to do and which exceptions should be considered as repeatable.
+        SimpleRetryPolicy policy = new SimpleRetryPolicy(batchJobConfig.getMaxAttempts(), Collections.singletonMap(S3BatchJobIncompleteException.class, true));
+        template.setRetryPolicy(policy);
+
+        // This policy is used to wait fixed amount of time before making another retry.
+        FixedBackOffPolicy backoffPolicy = new FixedBackOffPolicy();
+
+        // Reading backoff timeout value from configuration and assign to policy.
+        backoffPolicy.setBackOffPeriod(batchJobConfig.getBackoffPeriod());
+        template.setBackOffPolicy(backoffPolicy);
+
+        // Turn off automatic re-throw of the exception after last repetition.
+        template.setThrowLastExceptionOnExhausted(false);
+
+        // Retry running provided lambda according to the retry and backoff policies assigned earlier.
+        DescribeJobResult result = template.execute((RetryCallback<DescribeJobResult, S3BatchJobIncompleteException>) context -> {
+            // Read current state of S3 Batch restore job.
+            DescribeJobResult retryResult = getBatchJobDescription(params, batchJobConfig, jobId);
+
+            // Read and check current status of the restore job.
+            JobStatus jobStatus = JobStatus.fromValue(retryResult.getJob().getStatus());
+            if (!FINAL_BATCH_PROCESSING_STATES.contains(jobStatus))
+            {
+                // If the job is still not finished (successfully or not) throw exception, which serves as a signal to make another retry
+                throw new S3BatchJobIncompleteException(retryResult);
+            }
+
+            return retryResult;
+        }, context -> {
+            // If last retry finished with still incomplete status, extract the job descriptor and return it as a result
+            if (context.getLastThrowable() instanceof S3BatchJobIncompleteException)
+            {
+                return ((S3BatchJobIncompleteException) context.getLastThrowable()).getJobDescriptor();
+            }
+            else
+            {
+                // If last describe job finished with different error re-throw it further
+                throw new IllegalStateException(context.getLastThrowable());
+            }
+        });
+
+        // Fail with exception if unable to retrieve descriptor of the batch job from AWS S3 after several retries
+        if (result == null || result.getJob() == null || result.getJob().getStatus() == null)
+        {
+            throw new IllegalStateException("Unable to retrieve descriptor of the batch job");
+        }
+
+        // if after configured number of retries the job is still not complete - throw IllegalStateException
+        JobStatus jobStatus = JobStatus.fromValue(result.getJob().getStatus());
+        if (jobStatus != JobStatus.Complete)
+        {
+            throw new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor: %s ", result));
         }
     }
 
@@ -888,8 +960,8 @@ public class S3DaoImpl implements S3Dao
                         // Fail if a not already restored object is detected.
                         if (BooleanUtils.isNotFalse(objectMetadata.getOngoingRestore()))
                         {
-                            throw new IllegalArgumentException(String
-                                .format("Archived S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}", key,
+                            throw new IllegalArgumentException(
+                                String.format("Archived S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, S3 bucket name {%s}", key,
                                     objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
                         }
                     }
@@ -918,9 +990,9 @@ public class S3DaoImpl implements S3Dao
             throw new ObjectNotFoundException(String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), params.getS3KeyPrefix()));
         }
 
-        Assert.isTrue(fileSizeInBytes == null || Objects.equals(fileSizeInBytes, objectMetadata.getContentLength()), String
-            .format("Specified file size (%d bytes) does not match to the actual file size (%d bytes) reported by S3 for s3://%s/%s file.", fileSizeInBytes,
-                objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
+        Assert.isTrue(fileSizeInBytes == null || Objects.equals(fileSizeInBytes, objectMetadata.getContentLength()),
+            String.format("Specified file size (%d bytes) does not match to the actual file size (%d bytes) reported by S3 for s3://%s/%s file.",
+                fileSizeInBytes, objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
     }
 
     @Override
@@ -1071,6 +1143,80 @@ public class S3DaoImpl implements S3Dao
         }
     }
 
+    /**
+     * Creates S3 batch job
+     *
+     * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
+     * manifest.
+     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param s3VersionSummaries
+     * @param tag
+     *
+     * @return S3 batch job id
+     */
+    String createBatchVersionsTaggingJob(final S3FileTransferRequestParamsDto paramsDto, BatchJobConfigDto batchJobConfig,
+        final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+    {
+        // All information regarding processing of this request going to be logged with this ID
+        // and easily accessible in using Splunk smart field batchJobId
+        String jobId = UUID.randomUUID().toString();
+        LOGGER.info("Creating tagging batch job... batchJobId=\"{}\", batchJobConfig={}", jobId, jsonHelper.objectToJson(batchJobConfig));
+
+        AWSS3Control s3ControlClient = null;
+
+        try
+        {
+            // Generating dto object to combine info related to S3 Batch operation manifest
+            BatchJobManifestDto manifest =
+                batchHelper.createCSVBucketKeyVersionManifest(jobId, paramsDto.getS3BucketName(), s3VersionSummaries, batchJobConfig);
+            LOGGER.info("Manifest created... batchJobId=\"{}\", manifestBucketName=\"{}\", manifestS3Key=\"{}\", manifestS3Etag=\"{}\"", jobId,
+                manifest.getBucketName(), manifest.getKey(), manifest.getEtag());
+
+            // Uploading manifest file to S3 before executing Batch Operation.
+            // In this case manifest it CSV file with bucketName, object key and object version id
+            performTransfer(paramsDto, transferManager -> {
+                // Create and prepare the metadata.
+                ObjectMetadata metadata = new ObjectMetadata();
+                prepareMetadata(paramsDto, metadata);
+
+                // Create a put request with the parameters and the metadata.
+                PutObjectRequest putObjectRequest = new PutObjectRequest(manifest.getBucketName(), manifest.getKey(),
+                    new ByteArrayInputStream(manifest.getContent().getBytes(StandardCharsets.UTF_8)), metadata);
+
+                // Upload file
+                return s3Operations.upload(putObjectRequest, transferManager);
+            });
+
+            // Generate request to create S3 batch job
+            CreateJobRequest createJobRequest = batchHelper.generateCreatePutObjectTaggingJobRequest(manifest, jobId, batchJobConfig, tag);
+
+            LOGGER.info("Create restore job request generated... batchJobId=\"{}\", createJobRequest={}", jobId, jsonHelper.objectToJson(createJobRequest));
+
+            // Create S3 control client which is going to execute actual call to s3
+            s3ControlClient = awsS3ClientFactory.getAmazonS3Control(paramsDto);
+
+            // Execute create job request and capture response from S3
+            CreateJobResult createJobResult = s3Operations.createBatchJob(createJobRequest, s3ControlClient);
+
+            LOGGER.info("Create job request executed... batchJobId=\"{}\", createJobResult={}", jobId, jsonHelper.objectToJson(createJobResult));
+
+            return createJobResult.getJobId();
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(
+                String.format("Failed to initiate a restore job... batchJobId=\"%s\", bucket=\"%s\"", jobId, paramsDto.getS3BucketName()), e);
+        }
+        finally
+        {
+            if (s3ControlClient != null)
+            {
+                s3ControlClient.shutdown();
+            }
+        }
+    }
+
+
     /****
      * Get S3 batch job configuration and status information
      *
@@ -1144,8 +1290,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (AmazonServiceException e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
+            throw new IllegalStateException(
+                String.format("Failed to create 0 byte S3 object with \"%s\" key in bucket \"%s\". Reason: %s", directoryName, params.getS3BucketName(),
                     e.getMessage()), e);
         }
         finally
@@ -1262,8 +1408,8 @@ public class S3DaoImpl implements S3Dao
             String versionId = deleteError.getVersionId();
             String code = deleteError.getCode();
             String message = deleteError.getMessage();
-            builder
-                .append(String.format("s3Key=\"%s\" s3VersionId=\"%s\" s3DeleteErrorCode=\"%s\" s3DeleteErrorMessage=\"%s\"%n", key, versionId, code, message));
+            builder.append(
+                String.format("s3Key=\"%s\" s3VersionId=\"%s\" s3DeleteErrorCode=\"%s\" s3DeleteErrorMessage=\"%s\"%n", key, versionId, code, message));
         }
         LOGGER.error(builder.toString());
     }
@@ -1279,10 +1425,11 @@ public class S3DaoImpl implements S3Dao
         {
             NumberFormat formatter = new DecimalFormat("#0.00");
 
-            LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(awsHelper
-                    .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
-                formatter.format(awsHelper
-                    .getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())));
+            LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(
+                awsHelper.getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(),
+                    s3FileTransferResultsDto.getDurationMillis())), formatter.format(
+                awsHelper.getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(),
+                    s3FileTransferResultsDto.getDurationMillis())));
         }
     }
 
@@ -1378,8 +1525,8 @@ public class S3DaoImpl implements S3Dao
             if (!(transfer instanceof Copy))
             {
                 // Sanity check for the number of bytes transferred.
-                Assert.isTrue(transferProgress.getBytesTransferred() >= transferProgress.getTotalBytesToTransfer(), String
-                    .format("Actual number of bytes transferred is less than expected (actual: %d bytes; expected: %d bytes).",
+                Assert.isTrue(transferProgress.getBytesTransferred() >= transferProgress.getTotalBytesToTransfer(),
+                    String.format("Actual number of bytes transferred is less than expected (actual: %d bytes; expected: %d bytes).",
                         transferProgress.getBytesTransferred(), transferProgress.getTotalBytesToTransfer()));
             }
 
@@ -1487,9 +1634,8 @@ public class S3DaoImpl implements S3Dao
             // Create credentials provider for S3 object tagging operation.
             STSAssumeRoleSessionCredentialsProvider credentialsProvider =
                 new STSAssumeRoleSessionCredentialsProvider.Builder(s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleArn(),
-                    s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionName())
-                    .withRoleSessionDurationSeconds(s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds())
-                    .withStsClient(securityTokenService).build();
+                    s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionName()).withRoleSessionDurationSeconds(
+                    s3ObjectTaggerRoleParamsDto.getS3ObjectTaggerRoleSessionDurationSeconds()).withStsClient(securityTokenService).build();
 
             // Create an S3 client for S3 object tagging.
             s3ObjectTaggerClient = awsS3ClientFactory.getAmazonS3Client(s3FileTransferRequestParamsDto, credentialsProvider);
@@ -1533,8 +1679,8 @@ public class S3DaoImpl implements S3Dao
         }
         catch (Exception e)
         {
-            throw new IllegalStateException(String
-                .format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
+            throw new IllegalStateException(
+                String.format("Failed to tag S3 object with \"%s\" key and \"%s\" version id in \"%s\" bucket. Reason: %s", currentS3VersionSummary.getKey(),
                     currentS3VersionSummary.getVersionId(), s3FileTransferRequestParamsDto.getS3BucketName(), e.getMessage()), e);
         }
         finally

@@ -128,7 +128,7 @@ public class BusinessObjectDataServiceDestroyBusinessObjectDataTest extends Abst
             assertEquals(storageFiles.size() + 1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
 
             // Request to destroy business object data.
-            BusinessObjectData result = businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey);
+            BusinessObjectData result = businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey, BATCH_DESTROY_MODE);
 
             // Validate the result.
             assertNotNull(result);

@@ -15,21 +15,21 @@
  */
 package org.finra.herd.tools.retention.destroyer;
 
-import org.finra.herd.sdk.api.BusinessObjectDataApi;
-import org.finra.herd.sdk.invoker.ApiException;
-import org.finra.herd.sdk.model.BusinessObjectData;
-import org.finra.herd.sdk.model.BusinessObjectDataKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import org.finra.herd.tools.common.ToolsDtoHelper;
-import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
-
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import org.finra.herd.sdk.api.BusinessObjectDataApi;
+import org.finra.herd.sdk.invoker.ApiException;
+import org.finra.herd.sdk.model.BusinessObjectData;
+import org.finra.herd.sdk.model.BusinessObjectDataKey;
+import org.finra.herd.tools.common.ToolsDtoHelper;
+import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 @Component
 public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
@@ -42,6 +42,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @param businessObjectDataKey the name of the business object data key
      *
      * @return the business object definition
+     *
      * @throws ApiException if an Api exception was encountered
      * @throws URISyntaxException if a URI syntax error was encountered
      * @throws KeyStoreException if a key store exception occurs
@@ -58,7 +59,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
             businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
             businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
             businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getBusinessObjectDataVersion(),
-            herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
+            herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"), false);
 
         LOGGER.info("Successfully destroyed business object data from the registration server.");
         return sdkResponse;
