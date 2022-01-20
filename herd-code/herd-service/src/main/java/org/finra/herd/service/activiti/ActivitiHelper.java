@@ -17,6 +17,7 @@ package org.finra.herd.service.activiti;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -25,7 +26,6 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 import org.activiti.engine.impl.util.io.InputStreamSource;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.stereotype.Component;
@@ -190,7 +190,7 @@ public class ActivitiHelper
      */
     public BpmnModel constructBpmnModelFromXmlAndValidate(String xmlString) throws UnsupportedEncodingException, XMLStreamException
     {
-        InputStreamSource source = new InputStreamSource(new ByteArrayInputStream(xmlString.trim().getBytes(Charsets.UTF_8)));
+        InputStreamSource source = new InputStreamSource(new ByteArrayInputStream(xmlString.trim().getBytes(StandardCharsets.UTF_8)));
         return new BpmnXMLConverter().convertToBpmnModel(source, true, true);
     }
 }

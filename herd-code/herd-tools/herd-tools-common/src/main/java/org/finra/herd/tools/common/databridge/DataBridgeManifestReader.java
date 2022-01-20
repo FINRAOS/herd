@@ -22,11 +22,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.Charsets;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdFileUtils;
@@ -64,7 +64,7 @@ public abstract class DataBridgeManifestReader<M extends DataBridgeBaseManifestD
 
         // Deserialize the JSON manifest.
         BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(jsonManifestFile));
-        BufferedReader reader = new BufferedReader(new InputStreamReader(buffer, Charsets.UTF_8));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(buffer, StandardCharsets.UTF_8));
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
         objectMapper.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);

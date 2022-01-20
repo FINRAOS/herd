@@ -17,10 +17,10 @@ package org.finra.herd.service.helper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import com.amazonaws.services.s3.event.S3EventNotification;
-import org.apache.commons.lang3.CharEncoding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,7 +140,7 @@ public class HerdJmsMessageListener
         {
             // Process messages coming from S3 bucket.
             S3EventNotification s3EventNotification = S3EventNotification.parseJson(payload);
-            String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), CharEncoding.UTF_8);
+            String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), StandardCharsets.UTF_8.name());
 
             // Perform the complete upload single file.
             CompleteUploadSingleMessageResult completeUploadSingleMessageResult = uploadDownloadService.performCompleteUploadSingleMessage(objectKey);
