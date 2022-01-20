@@ -19,11 +19,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.junit.Test;
+
 import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
 import org.finra.herd.sdk.model.BusinessObjectDefinition;
-import org.junit.Test;
 
 public class RetentionExpirationExporterWebClientTest extends AbstractExporterTest
 {
@@ -61,7 +62,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     {
         try
         {
-            retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
+            retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1, 2);
         }
         catch (ApiException e)
         {
@@ -73,7 +74,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     public void testSearchBusinessObjectDataPageNum1() throws Exception
     {
         retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setUseSsl(false);
-        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
+        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1, 2);
         assertNotNull(result);
         assertEquals(2, CollectionUtils.size(result.getBusinessObjectDataElements()));
     }
@@ -82,7 +83,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     public void testSearchBusinessObjectDataPageNum2() throws Exception
     {
         retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setUseSsl(false);
-        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 2);
+        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 2, 2);
         assertNotNull(result);
         assertEquals(0, CollectionUtils.size(result.getBusinessObjectDataElements()));
     }
@@ -91,7 +92,7 @@ public class RetentionExpirationExporterWebClientTest extends AbstractExporterTe
     public void testSearchBusinessObjectDataUseSsl() throws Exception
     {
         retentionExpirationExporterWebClient.getRegServerAccessParamsDto().setUseSsl(true);
-        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1);
+        BusinessObjectDataSearchResult result = retentionExpirationExporterWebClient.searchBusinessObjectData(new BusinessObjectDataSearchRequest(), 1, 2);
         assertNotNull(result);
     }
 }

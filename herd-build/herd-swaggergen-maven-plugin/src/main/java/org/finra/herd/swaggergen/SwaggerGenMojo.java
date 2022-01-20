@@ -20,8 +20,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -139,9 +140,15 @@ public class SwaggerGenMojo extends AbstractMojo
     @org.apache.maven.plugins.annotations.Parameter(property = "includeOperations")
     private String[] includeOperations;
 
-    // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
-    private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
-        new ArrayList<>(Arrays.asList(new BasicAuthDefinition(), new OAuth2Definition(), new ApiKeyAuthDefinition()));
+    // A Map of the Swagger security scheme definitions. Each one has a key of security name and value of "type" to identify it if necessary.
+    private static final Map<String, SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS = new HashMap<String, SecuritySchemeDefinition>()
+    {
+        {
+            put("basicAuth", new BasicAuthDefinition());
+            put("oauthAuth", new OAuth2Definition());
+            put("apiKeyAuth", new ApiKeyAuthDefinition());
+        }
+    };
 
     /**
      * The main execution method for this Mojo.
@@ -235,15 +242,12 @@ public class SwaggerGenMojo extends AbstractMojo
             // Find the definition for the user specified type.
             for (String authType : authTypes)
             {
-                for (SecuritySchemeDefinition securitySchemeDefinition : SECURITY_SCHEME_DEFINITIONS)
+                for (String securityName : SECURITY_SCHEME_DEFINITIONS.keySet())
                 {
-                    if (securitySchemeDefinition.getType().equalsIgnoreCase(authType))
+                    if (SECURITY_SCHEME_DEFINITIONS.get(securityName).getType().equalsIgnoreCase(authType))
                     {
-                        // Come up with an authentication name for easy identification (e.g. basicAuthentication, etc.).
-                        String securityName = securitySchemeDefinition.getType() + "Authentication";
-
                         // Add the security definition.
-                        swagger.addSecurityDefinition(securityName, securitySchemeDefinition);
+                        swagger.addSecurityDefinition(securityName, SECURITY_SCHEME_DEFINITIONS.get(securityName));
 
                         // Add the security for everything based on the name of the definition.
                         SecurityRequirement securityRequirement = new SecurityRequirement();
@@ -291,11 +295,11 @@ public class SwaggerGenMojo extends AbstractMojo
      */
     private void updateOauthSecurityDefinition()
     {
-        for (SecuritySchemeDefinition securitySchemeDefinition : SwaggerGenMojo.SECURITY_SCHEME_DEFINITIONS)
+        for (String securityName : SwaggerGenMojo.SECURITY_SCHEME_DEFINITIONS.keySet())
         {
-            if (securitySchemeDefinition instanceof OAuth2Definition)
+            if (SECURITY_SCHEME_DEFINITIONS.get(securityName) instanceof OAuth2Definition)
             {
-                ((OAuth2Definition) securitySchemeDefinition).application(TOKEN_URL);
+                ((OAuth2Definition) SECURITY_SCHEME_DEFINITIONS.get(securityName)).application(TOKEN_URL);
             }
         }
     }

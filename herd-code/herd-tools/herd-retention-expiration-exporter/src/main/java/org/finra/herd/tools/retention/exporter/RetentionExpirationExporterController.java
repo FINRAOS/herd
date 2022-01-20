@@ -15,6 +15,8 @@
  */
 package org.finra.herd.tools.retention.exporter;
 
+import static org.finra.herd.model.dto.ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +46,7 @@ import org.finra.herd.sdk.model.BusinessObjectDataSearchKey;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchRequest;
 import org.finra.herd.sdk.model.BusinessObjectDataSearchResult;
 import org.finra.herd.sdk.model.BusinessObjectDefinition;
+import org.finra.herd.sdk.model.RegistrationDateRangeFilter;
 
 @Component
 class RetentionExpirationExporterController
@@ -57,14 +61,16 @@ class RetentionExpirationExporterController
      *
      * @param namespace the namespace of business object data
      * @param businessObjectDefinitionName the business object definition name of business object data
+     * @param startRegistrationDateTime the start date-time for the registration date-time range
+     * @param endRegistrationDateTime the end date-time for the registration date-time range
      * @param localOutputFile the local output file
      * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
      * @param udcServerHost the hostname of the UDC application server
      *
      * @throws Exception if any problems were encountered
      */
-    void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, File localOutputFile,
-        RegServerAccessParamsDto regServerAccessParamsDto, String udcServerHost) throws Exception
+    void performRetentionExpirationExport(String namespace, String businessObjectDefinitionName, DateTime startRegistrationDateTime,
+        DateTime endRegistrationDateTime, File localOutputFile, RegServerAccessParamsDto regServerAccessParamsDto, String udcServerHost) throws Exception
     {
         // Fail if local output file already exists.
         if (localOutputFile.exists())
@@ -86,6 +92,13 @@ class RetentionExpirationExporterController
         BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
         businessObjectDataSearchKey.setNamespace(namespace);
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(businessObjectDefinitionName);
+        if (startRegistrationDateTime != null || endRegistrationDateTime != null)
+        {
+            RegistrationDateRangeFilter registrationDateRangeFilter = new RegistrationDateRangeFilter();
+            registrationDateRangeFilter.setStartRegistrationDate(startRegistrationDateTime);
+            registrationDateRangeFilter.setEndRegistrationDate(endRegistrationDateTime);
+            businessObjectDataSearchKey.setRegistrationDateRangeFilter(registrationDateRangeFilter);
+        }
         businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         businessObjectDataSearchKeys.add(businessObjectDataSearchKey);
@@ -97,16 +110,20 @@ class RetentionExpirationExporterController
         // Create a result list for business object data.
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
+        // Use maximum allowed page size as defined in the application server side code as the page size when extracting the data from the application server.
+        Integer pageSize = (Integer) BUSINESS_OBJECT_DATA_SEARCH_MAX_PAGE_SIZE.getDefaultValue();
+
         // Fetch business object data from server until no records found.
-        int pageNumber = 1;
-        BusinessObjectDataSearchResult businessObjectDataSearchResult = retentionExpirationExporterWebClient.searchBusinessObjectData(request, pageNumber);
+        Integer pageNumber = 1;
+        BusinessObjectDataSearchResult businessObjectDataSearchResult =
+            retentionExpirationExporterWebClient.searchBusinessObjectData(request, pageNumber, pageSize);
         while (CollectionUtils.isNotEmpty(businessObjectDataSearchResult.getBusinessObjectDataElements()))
         {
             LOGGER.info("Fetched {} business object data records from the registration server.",
                 CollectionUtils.size(businessObjectDataSearchResult.getBusinessObjectDataElements()));
             businessObjectDataList.addAll(businessObjectDataSearchResult.getBusinessObjectDataElements());
             pageNumber++;
-            businessObjectDataSearchResult = retentionExpirationExporterWebClient.searchBusinessObjectData(request, pageNumber);
+            businessObjectDataSearchResult = retentionExpirationExporterWebClient.searchBusinessObjectData(request, pageNumber, pageSize);
         }
 
         // Write business object data to the output CSV file.
@@ -135,6 +152,7 @@ class RetentionExpirationExporterController
      * @param businessObjectDefinitionName the name of the business object definition
      *
      * @return the business object definition URI
+     *
      * @throws URISyntaxException if an URI syntax error was encountered
      * @throws MalformedURLException if an URL syntax error was encountered
      */

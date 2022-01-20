@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.tools.retention.exporter;
 
 import java.io.FileNotFoundException;
@@ -23,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.finra.herd.sdk.invoker.ApiException;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -34,6 +34,7 @@ import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.sdk.invoker.ApiException;
 import org.finra.herd.tools.common.ToolsArgumentHelper;
 import org.finra.herd.tools.common.ToolsCommonConstants;
 import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
@@ -49,6 +50,8 @@ public class RetentionExpirationExporterApp
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationExporterApp.class);
 
+    protected Option accessTokenUrlOpt;
+
     private ArgumentParser argParser;
 
     private Option businessObjectDefinitionNameOpt;
@@ -57,19 +60,21 @@ public class RetentionExpirationExporterApp
 
     private Option disableHostnameVerificationOpt;
 
+    private Option enableEnvVariablesOpt;
+
+    private DateTime endRegistrationDateTime;
+
     private Option localOutputFileOpt;
 
     private Option namespaceOpt;
 
     private Option passwordOpt;
 
-    protected Option accessTokenUrlOpt;
-
-    private Option enableEnvVariablesOpt;
-
     private Option regServerHostOpt;
 
     private Integer regServerPort;
+
+    private DateTime startRegistrationDateTime;
 
     private Boolean trustSelfSignedCertificate;
 
@@ -137,6 +142,7 @@ public class RetentionExpirationExporterApp
      * @param args the command line arguments passed to the program
      *
      * @return the return value of the application
+     *
      * @throws Exception if any problems were encountered
      */
     ToolsCommonConstants.ReturnValue go(String[] args) throws Exception
@@ -161,7 +167,8 @@ public class RetentionExpirationExporterApp
         // Call the controller with the user specified parameters to perform the upload.
         RetentionExpirationExporterController controller = applicationContext.getBean(RetentionExpirationExporterController.class);
         controller.performRetentionExpirationExport(argParser.getStringValue(namespaceOpt), argParser.getStringValue(businessObjectDefinitionNameOpt),
-            argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto, argParser.getStringValue(udcServerHostOpt));
+            startRegistrationDateTime, endRegistrationDateTime, argParser.getFileValue(localOutputFileOpt), regServerAccessParamsDto,
+            argParser.getStringValue(udcServerHostOpt));
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -185,6 +192,10 @@ public class RetentionExpirationExporterApp
         {
             namespaceOpt = argParser.addArgument("n", "namespace", true, "Namespace.", true);
             businessObjectDefinitionNameOpt = argParser.addArgument("b", "businessObjectDefinitionName", true, "Business object definition.", true);
+            Option startRegistrationDateTimeOpt =
+                argParser.addArgument("S", "startRegistrationDateTime", true, "The start date-time for the registration date-time range.", false);
+            Option endRegistrationDateTimeOpt =
+                argParser.addArgument("N", "endRegistrationDateTime", true, "The end date-time for the registration date-time range.", false);
             localOutputFileOpt = argParser.addArgument("o", "localOutputFile", true, "The path to files on your local file system.", true);
             regServerHostOpt = argParser.addArgument("H", "regServerHost", true, "Registration Service hostname.", true);
             Option regServerPortOpt = argParser.addArgument("P", "regServerPort", true, "Registration Service port.", true);
@@ -244,6 +255,10 @@ public class RetentionExpirationExporterApp
 
             // Extract all Integer option values here to catch any NumberFormatException exceptions.
             regServerPort = argParser.getIntegerValue(regServerPortOpt);
+
+            // Extract all date-time option values here to catch any IllegalArgumentException exceptions.
+            startRegistrationDateTime = argParser.getDateTimeValue(startRegistrationDateTimeOpt);
+            endRegistrationDateTime = argParser.getDateTimeValue(endRegistrationDateTimeOpt);
         }
         catch (ParseException ex)
         {

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.core;
 
 import java.io.File;
@@ -29,8 +29,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.util.Assert;
+
+import org.finra.herd.model.api.adapters.RegistrationDateAdapter;
 
 /**
  * This class makes it easy to write user-friendly command-line interfaces. It is basically a wrapper around Apache Commons CLI.
@@ -169,6 +172,7 @@ public class ArgumentParser
      * @param defaultValue the default value to return if option is not set or missing an argument value
      *
      * @return the value of the argument converted to a boolean value or default value when the option is not set or missing an argument value
+     *
      * @throws ParseException if the value of the argument is an invalid boolean value
      */
     @SuppressFBWarnings(value = "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR", justification = "This is a false positive. A null check is present.")
@@ -248,6 +252,7 @@ public class ArgumentParser
      * @param option the option that we want argument value to be returned for
      *
      * @return Value of the argument if option is set, and has an argument, otherwise defaultValue.
+     *
      * @throws NumberFormatException if there are problems parsing the option value into the Integer type
      */
     public Integer getIntegerValue(Option option) throws NumberFormatException
@@ -264,6 +269,7 @@ public class ArgumentParser
      * @param defaultValue is the default value to be returned if the option is not specified
      *
      * @return Value of the argument if option is set, and has an argument, otherwise defaultValue.
+     *
      * @throws NumberFormatException if there are problems parsing the option value into the Integer type
      */
     public Integer getIntegerValue(Option option, Integer defaultValue) throws NumberFormatException
@@ -282,6 +288,7 @@ public class ArgumentParser
      * @param maxValue the maximum allowed Integer value for the option
      *
      * @return Value of the argument if option is set, and has an argument, otherwise defaultValue.
+     *
      * @throws IllegalArgumentException if there are problems with the option value
      */
     public Integer getIntegerValue(Option option, Integer defaultValue, Integer minValue, Integer maxValue) throws IllegalArgumentException
@@ -326,5 +333,37 @@ public class ArgumentParser
         File answer = getFileValue(option);
 
         return (answer != null) ? answer : defaultValue;
+    }
+
+    /**
+     * Retrieves the argument as a DateTime object, if any.
+     *
+     * @param option the option that we want argument value to be returned for
+     *
+     * @return the value of the argument if option is set, and has an argument, otherwise null
+     *
+     * @throws IllegalArgumentException if there are problems with the option value
+     */
+    public DateTime getDateTimeValue(Option option) throws IllegalArgumentException
+    {
+        DateTime dateTimeValue = null;
+        String stringValue = getStringValue(option);
+
+        if (stringValue != null)
+        {
+            RegistrationDateAdapter registrationDateAdapter = new RegistrationDateAdapter();
+            try
+            {
+                dateTimeValue = new DateTime(registrationDateAdapter.unmarshal(stringValue.trim()).toGregorianCalendar().getTime());
+            }
+            catch (Exception e)
+            {
+                // Since the original exception carries an error message which gives away 'too much information', we are having it
+                // swallowed and instead returning a generic error message.
+                throw new IllegalArgumentException("Valid date or date and time format must be used for " + option.getLongOpt() + " option.");
+            }
+        }
+
+        return dateTimeValue;
     }
 }
