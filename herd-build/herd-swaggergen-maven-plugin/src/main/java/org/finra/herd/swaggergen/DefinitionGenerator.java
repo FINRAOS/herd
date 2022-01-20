@@ -120,13 +120,6 @@ public class DefinitionGenerator
             if (!swagger.getDefinitions().containsKey(name))
             {
                 ModelImpl model = new ModelImpl();
-
-                if (exampleClassNames.contains(clazz.getSimpleName()))
-                {
-                    // Only provide examples for root elements. If we do them for child elements, the JSON examples use the XML examples which is a problem.
-                    model.setExample(new ExampleXmlGenerator(log, clazz).getExampleXml());
-                }
-
                 swagger.addDefinition(name, model);
                 model.name(name);
 

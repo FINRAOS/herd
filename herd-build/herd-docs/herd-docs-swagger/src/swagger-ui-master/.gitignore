@@ -1,12 +1,16 @@
-.DS_STORE
-*.ipr
-*.iml
-*.iws
-web/
-lib/*.zip
-version.properties
-.sass-cache
-swagger-ui.sublime-workspace
+node_modules
 .idea
-.project
-/nbproject/private/
+.vscode
+.deps_check
+.DS_Store
+.nyc_output
+npm-debug.log*
+.eslintcache
+*.iml
+selenium-debug.log
+test/e2e/db.json
+docs/_book
+
+# Cypress
+test/e2e-cypress/screenshots
+test/e2e-cypress/videos
