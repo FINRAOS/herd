@@ -750,10 +750,10 @@ public class S3DaoImpl implements S3Dao
 
     @Override
     public void batchTagVersions(final S3FileTransferRequestParamsDto params, final BatchJobConfigDto batchJobConfig,
-        final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
+        final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
     {
-        LOGGER.info("Batch tagging a list of object version in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} s3ObjectVersionsCount={}",
-            params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size(), s3VersionSummaries.size());
+        LOGGER.info("Batch tagging a list of object version in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} s3ObjectVersionsCount={} tag=\"{}\"",
+            params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size(), s3VersionSummaries.size(), new JsonHelper().objectToJson(tag));
 
         // Do nothing if no file versions to tag.
         if (CollectionUtils.isEmpty(s3VersionSummaries))
@@ -783,10 +783,10 @@ public class S3DaoImpl implements S3Dao
 
         // Retry running provided lambda according to the retry and backoff policies assigned earlier.
         DescribeJobResult result = template.execute((RetryCallback<DescribeJobResult, S3BatchJobIncompleteException>) context -> {
-            // Read current state of S3 Batch restore job.
+            // Read current state of S3 Batch job.
             DescribeJobResult retryResult = getBatchJobDescription(params, batchJobConfig, jobId);
 
-            // Read and check current status of the restore job.
+            // Read and check current status of the job.
             JobStatus jobStatus = JobStatus.fromValue(retryResult.getJob().getStatus());
             if (!FINAL_BATCH_PROCESSING_STATES.contains(jobStatus))
             {
@@ -1149,8 +1149,8 @@ public class S3DaoImpl implements S3Dao
      * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
      * manifest.
      * @param batchJobConfig the configuration parameters used to create batch job
-     * @param s3VersionSummaries
-     * @param tag
+     * @param s3VersionSummaries the list of S3 versions to be tagged
+     * @param tag the S3 object tag
      *
      * @return S3 batch job id
      */
@@ -1190,7 +1190,7 @@ public class S3DaoImpl implements S3Dao
             // Generate request to create S3 batch job
             CreateJobRequest createJobRequest = batchHelper.generateCreatePutObjectTaggingJobRequest(manifest, jobId, batchJobConfig, tag);
 
-            LOGGER.info("Create restore job request generated... batchJobId=\"{}\", createJobRequest={}", jobId, jsonHelper.objectToJson(createJobRequest));
+            LOGGER.info("Create tagging job request generated... batchJobId=\"{}\", createJobRequest={}", jobId, jsonHelper.objectToJson(createJobRequest));
 
             // Create S3 control client which is going to execute actual call to s3
             s3ControlClient = awsS3ClientFactory.getAmazonS3Control(paramsDto);
@@ -1205,7 +1205,7 @@ public class S3DaoImpl implements S3Dao
         catch (Exception e)
         {
             throw new IllegalStateException(
-                String.format("Failed to initiate a restore job... batchJobId=\"%s\", bucket=\"%s\"", jobId, paramsDto.getS3BucketName()), e);
+                String.format("Failed to initiate a tagging job... batchJobId=\"%s\", bucket=\"%s\"", jobId, paramsDto.getS3BucketName()), e);
         }
         finally
         {
@@ -1215,7 +1215,6 @@ public class S3DaoImpl implements S3Dao
             }
         }
     }
-
 
     /****
      * Get S3 batch job configuration and status information

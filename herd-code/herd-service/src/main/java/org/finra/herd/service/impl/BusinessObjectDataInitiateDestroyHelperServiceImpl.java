@@ -44,7 +44,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.BusinessObjectDataBatchDestroyDto;
-import org.finra.herd.model.dto.BusinessObjectDataBatchRestoreDto;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -72,8 +71,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     /**
      * List of storage unit statuses that are supported by business object data destroy feature.
      */
-    private static final List<String> SUPPORTED_STORAGE_UNIT_STATUSES = Collections.unmodifiableList(Arrays
-        .asList(StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.DISABLING,
+    private static final List<String> SUPPORTED_STORAGE_UNIT_STATUSES = Collections.unmodifiableList(
+        Arrays.asList(StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.RESTORED, StorageUnitStatusEntity.DISABLING,
             StorageUnitStatusEntity.DISABLED));
 
     @Autowired
@@ -176,10 +175,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Validate that storage unit status is DISABLING.
         if (!StorageUnitStatusEntity.DISABLING.equals(storageUnitEntity.getStatus().getCode()))
         {
-            throw new IllegalArgumentException(String
-                .format("Storage unit status is \"%s\", but must be \"%s\". Storage: {%s}, business object data: {%s}", storageUnitEntity.getStatus().getCode(),
-                    StorageUnitStatusEntity.DISABLING, businessObjectDataDestroyDto.getStorageName(),
-                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+            throw new IllegalArgumentException(String.format("Storage unit status is \"%s\", but must be \"%s\". Storage: {%s}, business object data: {%s}",
+                storageUnitEntity.getStatus().getCode(), StorageUnitStatusEntity.DISABLING, businessObjectDataDestroyDto.getStorageName(),
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         // Set timestamp of when it is OK to finalize deletion of the business object data.
@@ -218,7 +216,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         {
             BatchJobConfigDto jobConfig = ((BusinessObjectDataBatchDestroyDto) businessObjectDataDestroyDto).getJobConfig();
             // Create and execute s3 batch job to tag the S3 objects to initiate deletion
-            s3Dao.batchTagVersions(s3FileTransferRequestParamsDto, jobConfig, businessObjectDataDestroyDto.getS3ObjectTaggerRoleParamsDto(), s3VersionSummaries,
+            s3Dao.batchTagVersions(s3FileTransferRequestParamsDto, jobConfig, s3VersionSummaries,
                 new Tag(businessObjectDataDestroyDto.getS3ObjectTagKey(), businessObjectDataDestroyDto.getS3ObjectTagValue()));
         }
         else
@@ -273,8 +271,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Validate that this business object data has no multiple S3 storage units.
         if (CollectionUtils.size(s3StorageUnitEntities) > 1)
         {
-            throw new IllegalArgumentException(String
-                .format("Business object data has multiple (%s) %s storage units. Business object data: {%s}", s3StorageUnitEntities.size(),
+            throw new IllegalArgumentException(
+                String.format("Business object data has multiple (%s) %s storage units. Business object data: {%s}", s3StorageUnitEntities.size(),
                     StoragePlatformEntity.S3, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
@@ -287,10 +285,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         // Validate storage unit status.
         if (!BusinessObjectDataInitiateDestroyHelperServiceImpl.SUPPORTED_STORAGE_UNIT_STATUSES.contains(storageUnitStatus))
         {
-            throw new IllegalArgumentException(String
-                .format("Storage unit status \"%s\" is not supported by the business object data destroy feature. Storage: {%s}, business object data: {%s}",
-                    storageUnitStatus, storageUnitEntity.getStorage().getName(),
-                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+            throw new IllegalArgumentException(String.format(
+                "Storage unit status \"%s\" is not supported by the business object data destroy feature. Storage: {%s}, business object data: {%s}",
+                storageUnitStatus, storageUnitEntity.getStorage().getName(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         return storageUnitEntity;
@@ -344,8 +341,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
 
         // Validate that S3 storage has S3 bucket name configured.
         // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        String s3BucketName = storageHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+        String s3BucketName =
+            storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity,
+                true);
 
         // Get storage specific S3 key prefix for this business object data.
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
@@ -389,6 +387,7 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         businessObjectDataDestroyDto.setS3ObjectTaggerRoleParamsDto(s3ObjectTaggerRoleParamsDto);
         businessObjectDataDestroyDto.setFinalDestroyInDays(finalDestroyInDays);
 
+        // Pull all configuration values for batch job processing
         if (businessObjectDataDestroyDto instanceof BusinessObjectDataBatchDestroyDto)
         {
             BatchJobConfigDto batchJobConfig = new BatchJobConfigDto();
@@ -449,8 +448,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
                     // If primary partition values is not a date, this business object data is not supported by the business object data destroy feature.
                     if (primaryPartitionValue == null)
                     {
-                        throw new IllegalArgumentException(String
-                            .format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
+                        throw new IllegalArgumentException(
+                            String.format("Primary partition value \"%s\" cannot get converted to a valid date. Business object data: {%s}",
                                 businessObjectDataEntity.getPartitionValue(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
                     }
 
@@ -471,8 +470,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
                     Assert.isNull(retentionPeriodInDays, String.format("A retention period in days cannot be specified for %s retention type.", retentionType));
 
                     // Validate that the retention information is specified for business object data with retention type as BDATA_RETENTION_DATE.
-                    Assert.notNull(businessObjectDataEntity.getRetentionExpiration(), String
-                        .format("Retention information with retention type %s must be specified for the Business Object Data: {%s}", retentionType,
+                    Assert.notNull(businessObjectDataEntity.getRetentionExpiration(),
+                        String.format("Retention information with retention type %s must be specified for the Business Object Data: {%s}", retentionType,
                             businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
                     // Validate that the business object data retention expiration date is in the past.
@@ -485,15 +484,15 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException(String
-                        .format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}",
+                    throw new IllegalArgumentException(
+                        String.format("Retention type \"%s\" is not supported by the business object data destroy feature. Business object format: {%s}",
                             retentionType, businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
             }
         }
         else
         {
-            throw new IllegalArgumentException(String
-                .format("Retention information is not configured for the business object format. Business object format: {%s}",
+            throw new IllegalArgumentException(
+                String.format("Retention information is not configured for the business object format. Business object format: {%s}",
                     businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
         }
     }
@@ -506,9 +505,8 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
     void validateStorage(StorageEntity storageEntity)
     {
         // Validate that storage policy filter storage has the S3 path prefix validation enabled.
-        if (!storageHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
-                false, true))
+        if (!storageHelper.getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
+            storageEntity, false, true))
         {
             throw new IllegalStateException(String.format("Path prefix validation must be enabled on \"%s\" storage.", storageEntity.getName()));
         }
