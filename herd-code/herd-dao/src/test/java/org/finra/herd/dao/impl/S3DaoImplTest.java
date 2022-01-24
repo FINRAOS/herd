@@ -1623,7 +1623,6 @@ public class S3DaoImplTest extends AbstractDaoTest
     }
 
 
-
     private void testRestoreObjectsWithS3Exception(String exceptionMessage, int statusCode)
     {
         List<File> files = Collections.singletonList(new File(TEST_FILE));
