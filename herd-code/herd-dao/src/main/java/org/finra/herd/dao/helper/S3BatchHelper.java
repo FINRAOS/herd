@@ -167,7 +167,7 @@ public class S3BatchHelper
     }
 
     /**
-     * Generate AWS SDK CreateJobRequest object to restore files using S3 Batch operation
+     * Generate AWS SDK CreateJobRequest object to tag file versions using S3 Batch operation
      *
      * @param manifest the container object containing configuration parameters and content for the manifest.
      * @param jobId herd generated job id

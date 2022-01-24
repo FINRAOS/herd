@@ -1144,7 +1144,7 @@ public class S3DaoImpl implements S3Dao
     }
 
     /**
-     * Creates S3 batch job
+     * Creates S3 batch job to put the tag on listed S3 files versions (replacing existing ones)
      *
      * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
      * manifest.
@@ -1173,7 +1173,7 @@ public class S3DaoImpl implements S3Dao
                 manifest.getBucketName(), manifest.getKey(), manifest.getEtag());
 
             // Uploading manifest file to S3 before executing Batch Operation.
-            // In this case manifest it CSV file with bucketName, object key and object version id
+            // In this case manifest is CSV file with bucketName, object key and object version id
             performTransfer(paramsDto, transferManager -> {
                 // Create and prepare the metadata.
                 ObjectMetadata metadata = new ObjectMetadata();
