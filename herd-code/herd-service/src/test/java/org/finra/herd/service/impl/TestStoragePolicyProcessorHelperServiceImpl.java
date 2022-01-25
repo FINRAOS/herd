@@ -68,8 +68,9 @@ public class TestStoragePolicyProcessorHelperServiceImpl extends StoragePolicyPr
      * This implementation keeps the current transaction context.
      */
     @Override
-    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        RuntimeException e)
     {
-        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto);
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, e);
     }
 }

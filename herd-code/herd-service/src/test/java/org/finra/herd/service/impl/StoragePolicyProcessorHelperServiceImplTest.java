@@ -183,6 +183,7 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
         verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
         verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVED);
+        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -428,10 +429,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey)).thenReturn(storageUnitEntity);
 
         // Call the method under test.
-        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto,
+            new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);
@@ -450,10 +451,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyTransitionParamsDto.setStorageName(STORAGE_NAME);
 
         // Call the method under test.
-        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto,
+            new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -470,10 +471,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
 
         // Call the method under test.
-        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto,
+            new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -504,10 +505,10 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
         when(storageUnitDaoHelper.getStorageUnitEntityByKey(businessObjectDataStorageUnitKey)).thenReturn(storageUnitEntity);
 
         // Call the method under test.
-        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto);
+        storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(storagePolicyTransitionParamsDto,
+            new RuntimeException());
 
         // Verify the external calls.
-        verify(jsonHelper).objectToJson(storagePolicyTransitionParamsDto);
         verify(storageUnitHelper).createBusinessObjectDataStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
         verify(storageUnitDaoHelper).getStorageUnitEntityByKey(businessObjectDataStorageUnitKey);
         verify(storageUnitDao).saveAndRefresh(storageUnitEntity);

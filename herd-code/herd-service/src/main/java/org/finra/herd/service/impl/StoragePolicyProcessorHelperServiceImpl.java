@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.Tag;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -388,13 +389,17 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setOldStorageUnitStatus(storageUnitEntity.getStatus().getCode());
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, reason);
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
+
+        // Log storage policy transition detail information
+        LOGGER.info("Storage Policy Transition Complete. businessObjectDataKey={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey()));
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    public void updateStoragePolicyTransitionFailedAttemptsIgnoreException(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        RuntimeException exception)
     {
-        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto);
+        updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(storagePolicyTransitionParamsDto, exception);
     }
 
     /**
@@ -403,12 +408,11 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to complete a storage policy transition. The
      * business object data key and storage name identify the storage unit to be updated
+     * @param exception the storage policy transition exception that will be ignored
      */
-    protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    protected void updateStoragePolicyTransitionFailedAttemptsIgnoreExceptionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto,
+        RuntimeException exception)
     {
-        // Log the DTO contents.
-        LOGGER.info("storagePolicyTransitionParamsDto={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto));
-
         // Continue only when business object data kay and storage name are specified.
         if (storagePolicyTransitionParamsDto.getBusinessObjectDataKey() != null && storagePolicyTransitionParamsDto.getStorageName() != null)
         {
@@ -427,10 +431,11 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                     storageUnitEntity.getStoragePolicyTransitionFailedAttempts() + 1);
                 storageUnitDao.saveAndRefresh(storageUnitEntity);
 
-                // Log the new value for the storage policy transition failed attempts counter.
+                // Log the new value for the storage policy transition failed attempts counter, businessObjectDataKey and transition exception
                 LOGGER.info("Incremented storage policy transition failed attempts counter. " +
-                        "storagePolicyTransitionFailedAttempts={} businessObjectDataStorageUnitKey={}",
-                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(businessObjectDataStorageUnitKey));
+                        "storagePolicyTransitionFailedAttempts={};businessObjectDataStorageUnitKey={};storyPolicyTransitionException={}",
+                    storageUnitEntity.getStoragePolicyTransitionFailedAttempts(), jsonHelper.objectToJson(businessObjectDataStorageUnitKey),
+                    exception.getMessage());
             }
             catch (Exception e)
             {
