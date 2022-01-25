@@ -91,10 +91,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         String filePath = resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, 0L, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, 0L, null, null, null), null);
 
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
@@ -117,10 +117,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         String filePath = resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, 0L, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, 0L, null, null, null), null);
 
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
@@ -134,9 +134,9 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testS3MessageNoKey() throws Exception
     {
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity("key_does_not_exist", 0L, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity("key_does_not_exist", 0L, null, null, null), null);
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
