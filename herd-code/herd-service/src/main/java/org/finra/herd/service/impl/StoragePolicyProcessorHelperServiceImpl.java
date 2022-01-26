@@ -391,7 +391,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
 
         // Log storage policy transition detail information
-        LOGGER.info("Storage Policy Transition Complete. businessObjectDataKey={}", jsonHelper.objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey()));
+        LOGGER.info("Storage Policy Transition Complete. businessObjectDataKey={}",
+            jsonHelper.objectToJson(storagePolicyTransitionParamsDto.getBusinessObjectDataKey()));
     }
 
     @Override
