@@ -4,10 +4,10 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -370,7 +370,7 @@ public class JobServiceGetJobsTest extends AbstractServiceTest
 
         jobServiceImpl.getJobs(namespace, jobName, jobStatus, NO_START_TIME, NO_END_TIME);
 
-        verify(jobDefinitionDao).getJobDefinitionsByFilter(eq(authorizedNamespaces), isNull(String.class));
+        verify(jobDefinitionDao).getJobDefinitionsByFilter(eq(authorizedNamespaces), isNull());
     }
 
     @SuppressWarnings("unchecked")
@@ -399,8 +399,8 @@ public class JobServiceGetJobsTest extends AbstractServiceTest
         jobServiceImpl.getJobs(namespace, jobName, jobStatus, NO_START_TIME, NO_END_TIME);
 
         // Assert neither status filter was called on the query
-        verify(activitiService).getHistoricProcessInstancesCountByStatusAndProcessDefinitionKeys(isNull(JobStatusEnum.class), any(), any(), any());
-        verify(activitiService).getHistoricProcessInstancesByStatusAndProcessDefinitionKeys(isNull(JobStatusEnum.class), any(), any(), any());
+        verify(activitiService).getHistoricProcessInstancesCountByStatusAndProcessDefinitionKeys(isNull(), any(), any(), any());
+        verify(activitiService).getHistoricProcessInstancesByStatusAndProcessDefinitionKeys(isNull(), any(), any(), any());
     }
 
     @SuppressWarnings("unchecked")

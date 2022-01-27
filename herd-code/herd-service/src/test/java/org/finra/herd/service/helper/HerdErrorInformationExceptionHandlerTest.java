@@ -235,7 +235,7 @@ public class HerdErrorInformationExceptionHandlerTest extends AbstractServiceTes
     {
         // JSON parse exception
         String originalErrorMessage = "original error Message";
-        HttpMessageNotReadableException ex = new HttpMessageNotReadableException(originalErrorMessage, new JsonMappingException("cause_1_exception"));
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException(originalErrorMessage, new JsonMappingException(null, "cause_1_exception"));
         // validate original message is wrapped in Spring HttpMessageNotReadableException
         assertEquals(originalErrorMessage + "; nested exception is com.fasterxml.jackson.databind.JsonMappingException: cause_1_exception", ex.getMessage());
 

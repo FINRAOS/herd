@@ -20,6 +20,7 @@ import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
@@ -113,7 +114,7 @@ public class HerdStringUtils
         {
             // Get the actual tag name from the whitelist tag
             // this is vulnerable in general to complex tags but will suffice for our simple needs
-            whitelistTag = StringUtils.removePattern(whitelistTag, "[^\\{IsAlphabetic}]");
+            whitelistTag = RegExUtils.removePattern(whitelistTag, "[^\\{IsAlphabetic}]");
 
             // Add all specified tags to the whitelist while preserving inline css
             whitelist.addTags(whitelistTag).addAttributes(whitelistTag, "class");

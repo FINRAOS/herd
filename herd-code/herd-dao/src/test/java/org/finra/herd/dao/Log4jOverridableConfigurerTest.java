@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -374,7 +375,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
     private void writeFileFromResourceLocation(String resourceLocation, Path configPath, Path outputPath, int refreshInterval) throws Exception
     {
         // Get the Log4J configuration contents from the classpath file.
-        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream());
+        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream(), StandardCharsets.UTF_8);
 
         // Change the tokenized output filename (if it exists) and replace it with a random filename to support multiple invocations of the JUnit.
         log4JFileContents = log4JFileContents.replace(LOG4J_FILENAME_TOKEN, outputPath.toAbsolutePath().toString().replace("\\", "/"));
@@ -385,7 +386,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         // Write the Log4J configuration to the temporary file.
         try (FileOutputStream fileOutputStream = new FileOutputStream(configPath.toAbsolutePath().toString()))
         {
-            IOUtils.write(log4JFileContents, fileOutputStream);
+            IOUtils.write(log4JFileContents, fileOutputStream, StandardCharsets.UTF_8);
         }
     }
 
@@ -404,7 +405,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         String configEntityKey) throws Exception
     {
         // Get the Log4J configuration contents from the classpath file.
-        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream());
+        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream(), StandardCharsets.UTF_8);
 
         // Change the tokenized output filename (if it exists) and replace it with a random filename to support multiple invocations of the JUnit.
         log4JFileContents = log4JFileContents.replace(LOG4J_FILENAME_TOKEN, outputPath.toAbsolutePath().toString().replace("\\", "/"));
@@ -432,7 +433,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         String configEntityKey) throws Exception
     {
         // Get the Log4J configuration contents from the classpath file.
-        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream());
+        String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream(), StandardCharsets.UTF_8);
 
         // Update the refresh interval to 1 second.
         log4JFileContents = log4JFileContents.replace("monitorInterval=\"0\"", "monitorInterval=\"1\"");
