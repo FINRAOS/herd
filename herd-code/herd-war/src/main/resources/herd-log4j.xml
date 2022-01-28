@@ -27,7 +27,7 @@
 
    <Loggers>
       <!-- The default logging level for herd is "info". -->
-      <Logger name="org.finra.herd" level="info" additivity="false">
+      <Logger name="org.finra.herd" level="debug" additivity="false">
           <AppenderRef ref="Console"/>
       </Logger>
 
