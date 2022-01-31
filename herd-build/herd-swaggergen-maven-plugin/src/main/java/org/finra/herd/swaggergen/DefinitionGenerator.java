@@ -164,6 +164,12 @@ public class DefinitionGenerator
             {
                 property = new ArrayProperty(getPropertyFromType(FieldUtils.getCollectionType(field)));
                 property.setXml(new Xml().wrapped(true));
+                ArrayProperty arrayProperty = (ArrayProperty) property;
+                Property itemProperty = arrayProperty.getItems();
+                final String fieldName = field.getName();
+                itemProperty.setXml(new Xml().name(fieldName.substring(0, fieldName.length() - 1)));
+                arrayProperty.setItems(itemProperty);
+                property = arrayProperty;
             }
             else
             {
