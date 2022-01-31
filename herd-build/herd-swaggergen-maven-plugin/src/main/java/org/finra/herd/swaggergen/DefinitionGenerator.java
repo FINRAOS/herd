@@ -30,6 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import io.swagger.models.ModelImpl;
 import io.swagger.models.Swagger;
+import io.swagger.models.Xml;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateTimeProperty;
@@ -120,6 +121,13 @@ public class DefinitionGenerator
             if (!swagger.getDefinitions().containsKey(name))
             {
                 ModelImpl model = new ModelImpl();
+
+                if (exampleClassNames.contains(clazz.getSimpleName()))
+                {
+                    // Only provide examples for root elements. If we do them for child elements, the JSON examples use the XML examples which is a problem.
+                    model.setExample(new ExampleXmlGenerator(log, clazz).getExampleXml());
+                }
+
                 swagger.addDefinition(name, model);
                 model.name(name);
 
@@ -155,6 +163,7 @@ public class DefinitionGenerator
             if (Collection.class.isAssignableFrom(fieldClass))
             {
                 property = new ArrayProperty(getPropertyFromType(FieldUtils.getCollectionType(field)));
+                property.setXml(new Xml().wrapped(true));
             }
             else
             {
