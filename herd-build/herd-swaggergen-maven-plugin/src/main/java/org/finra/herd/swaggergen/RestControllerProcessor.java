@@ -379,10 +379,12 @@ public class RestControllerProcessor
 
             if (!produces.isEmpty())
             {
+                Collections.sort(produces);
                 operation.setProduces(produces);
             }
             if (!consumes.isEmpty())
             {
+                Collections.sort(consumes);
                 operation.setConsumes(consumes);
             }
             path.set(requestMethods.get(0).name().toLowerCase(), operation); // HTTP method MUST be lower cased
