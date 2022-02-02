@@ -158,14 +158,19 @@ public class DefinitionGenerator
             {
                 property = new ArrayProperty(getPropertyFromType(FieldUtils.getCollectionType(field)));
 
+                // The following code add extra lines in our generated yaml file to fix the defected swagger-ui xml example
+                // add "xml: wrapped: true" to xml
                 property.setXml(new Xml().wrapped(true));
 
+                // add "xml: name: element" under items
                 ArrayProperty arrayProperty = (ArrayProperty) property;
                 Property itemProperty = arrayProperty.getItems();
                 final String fieldName = field.getName();
+
+                // e.g. according to our naming convention, array name is "elements" (plural form)
+                // so we use item name as "element" (singular form)
                 itemProperty.setXml(new Xml().name(fieldName.substring(0, fieldName.length() - 1)));
                 arrayProperty.setItems(itemProperty);
-
                 property = arrayProperty;
             }
             else

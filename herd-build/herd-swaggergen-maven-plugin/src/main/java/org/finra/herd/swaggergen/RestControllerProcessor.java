@@ -379,11 +379,13 @@ public class RestControllerProcessor
 
             if (!produces.isEmpty())
             {
+                // sort the list. let "application/json" be ahead of "application/xml"
                 Collections.sort(produces);
                 operation.setProduces(produces);
             }
             if (!consumes.isEmpty())
             {
+                // sort the list. let "application/json" be ahead of "application/xml"
                 Collections.sort(consumes);
                 operation.setConsumes(consumes);
             }
