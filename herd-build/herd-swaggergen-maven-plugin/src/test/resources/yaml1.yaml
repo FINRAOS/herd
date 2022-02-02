@@ -33,8 +33,12 @@ definitions:
         - "C"
       list:
         type: "array"
+        xml:
+          wrapped: true
         items:
           type: "string"
+          xml:
+            name: "lis"
       basicCase:
         $ref: "#/definitions/basicCase"
       serializable:
