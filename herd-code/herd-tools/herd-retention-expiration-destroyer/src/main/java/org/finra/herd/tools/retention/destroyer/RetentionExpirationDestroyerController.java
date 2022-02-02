@@ -27,7 +27,9 @@ import java.util.List;
 import com.opencsv.CSVReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+
 import org.finra.herd.sdk.model.BusinessObjectDataKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +39,12 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 
 @Component
-public class RetentionExpirationDestroyerController {
+public class RetentionExpirationDestroyerController
+{
     private static final String[] CSV_FILE_HEADER_COLUMNS =
-            {"Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type", "Business Object Format Version",
-                    "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3", "Sub-Partition Value 4",
-                    "Business Object Data Version", "Business Object Definition Display Name", "Business Object Definition URI"};
+        {"Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type", "Business Object Format Version",
+            "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3", "Sub-Partition Value 4",
+            "Business Object Data Version", "Business Object Definition Display Name", "Business Object Definition URI"};
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationDestroyerController.class);
 
@@ -57,10 +60,11 @@ public class RetentionExpirationDestroyerController {
      * @param localInputFile           the local input file
      * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
      * @param batchMode                flag to indicate if herd should use S3 Batch Operations to destroy the business object data
-     *
      * @throws Exception if any problems were encountered
      */
-    public void performRetentionExpirationDestruction(File localInputFile, RegServerAccessParamsDto regServerAccessParamsDto, Boolean batchMode) throws Exception {
+    public void performRetentionExpirationDestruction(File localInputFile, RegServerAccessParamsDto regServerAccessParamsDto, Boolean batchMode)
+        throws Exception
+    {
         // Read business object data keys from the input CSV file.
         List<BusinessObjectDataKey> businessObjectDataKeys = getBusinessObjectDataKeys(localInputFile);
 
@@ -69,7 +73,8 @@ public class RetentionExpirationDestroyerController {
 
         // Process business object data keys one by one.
         LOGGER.info("Processing {} business object data instances for destruction.", CollectionUtils.size(businessObjectDataKeys));
-        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys) {
+        for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+        {
             retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey, batchMode);
             LOGGER.info("Successfully marked for destruction. Business object data {}", jsonHelper.objectToJson(businessObjectDataKey));
         }
@@ -85,43 +90,55 @@ public class RetentionExpirationDestroyerController {
      * @param inputCsvFile the input CSV file
      * @return the business object data key
      */
-    protected BusinessObjectDataKey getBusinessObjectDataKey(String[] line, int lineNumber, File inputCsvFile) {
-        if (line.length != CSV_FILE_HEADER_COLUMNS.length) {
+    protected BusinessObjectDataKey getBusinessObjectDataKey(String[] line, int lineNumber, File inputCsvFile)
+    {
+        if (line.length != CSV_FILE_HEADER_COLUMNS.length)
+        {
             throw new IllegalArgumentException(
-                    String.format("Line number %d of input file \"%s\" does not match the expected format.", lineNumber, inputCsvFile.toString()));
+                String.format("Line number %d of input file \"%s\" does not match the expected format.", lineNumber, inputCsvFile.toString()));
         }
 
         Integer businessObjectFormatVersion;
         Integer businessObjectDataVersion;
 
-        try {
+        try
+        {
             businessObjectFormatVersion = Integer.valueOf(line[4]);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(String
-                    .format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
-                            lineNumber, inputCsvFile.toString()), e);
+        }
+        catch (NumberFormatException e)
+        {
+            throw new IllegalArgumentException(
+                String.format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
+                    lineNumber, inputCsvFile.toString()), e);
         }
 
-        try {
+        try
+        {
             businessObjectDataVersion = Integer.valueOf(line[10]);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(String
-                    .format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.", lineNumber,
-                            inputCsvFile.toString()), e);
+        }
+        catch (NumberFormatException e)
+        {
+            throw new IllegalArgumentException(
+                String.format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.",
+                    lineNumber, inputCsvFile.toString()), e);
         }
 
         // Build a list of optional sub-partition values.
         List<String> subPartitionValues = new ArrayList<>();
-        for (String subPartitionValue : Arrays.asList(line[6], line[7], line[8], line[9])) {
-            if (StringUtils.isNotBlank(subPartitionValue)) {
+        for (String subPartitionValue : Arrays.asList(line[6], line[7], line[8], line[9]))
+        {
+            if (StringUtils.isNotBlank(subPartitionValue))
+            {
                 subPartitionValues.add(subPartitionValue);
-            } else {
+            }
+            else
+            {
                 break;
             }
         }
 
         return buildBusinessObjectDataKey(line[0], line[1], line[2], line[3], businessObjectFormatVersion, line[5], subPartitionValues,
-                businessObjectDataVersion);
+            businessObjectDataVersion);
     }
 
     /**
@@ -131,21 +148,25 @@ public class RetentionExpirationDestroyerController {
      * @return the list of business object data keys
      * @throws IOException if any problems were encountered
      */
-    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputCsvFile) throws IOException {
+    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputCsvFile) throws IOException
+    {
         List<BusinessObjectDataKey> businessObjectDataKeyList = new ArrayList<>();
 
         // Read the input CSV file and populate business object data key list.
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8))) {
+        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8)))
+        {
             String[] line;
 
             // Validate required header of the CSV input file.
-            if ((line = csvReader.readNext()) == null || !Arrays.equals(line, CSV_FILE_HEADER_COLUMNS)) {
+            if ((line = csvReader.readNext()) == null || !Arrays.equals(line, CSV_FILE_HEADER_COLUMNS))
+            {
                 throw new IllegalArgumentException(String.format("Input file \"%s\" does not contain the expected CSV file header.", inputCsvFile.toString()));
             }
 
             // Process the input CSV file line by line.
             int lineCount = 2;
-            while ((line = csvReader.readNext()) != null) {
+            while ((line = csvReader.readNext()) != null)
+            {
                 businessObjectDataKeyList.add(getBusinessObjectDataKey(line, lineCount++, inputCsvFile));
             }
         }
@@ -167,8 +188,9 @@ public class RetentionExpirationDestroyerController {
      * @return the built business object data key object
      */
     BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage,
-                                                     final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue,
-                                                     final List<String> subPartitionValues, final Integer businessObjectDataVersion) {
+        final String businessObjectFormatFileType, final Integer businessObjectFormatVersion, final String partitionValue,
+        final List<String> subPartitionValues, final Integer businessObjectDataVersion)
+    {
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
 
         businessObjectDataKey.setNamespace(namespace);

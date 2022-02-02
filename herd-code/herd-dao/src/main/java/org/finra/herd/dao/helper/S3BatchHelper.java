@@ -109,7 +109,6 @@ public class S3BatchHelper
         String content = manifestContentBuilder.toString();
 
         // Build manifest dto object to pass manifest content and configuration for further processing
-        //S3BatchManifest manifest = new S3BatchManifest();
         BatchJobManifestDto.Builder<Void> builder = BatchJobManifestDto.builder()
             // S3 key of the manifest file
             .withKey(String.format("%s/%s.csv", manifestLocation, jobId))
