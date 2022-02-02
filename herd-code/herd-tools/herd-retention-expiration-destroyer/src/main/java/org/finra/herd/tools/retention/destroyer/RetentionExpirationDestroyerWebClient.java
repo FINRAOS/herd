@@ -40,6 +40,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * Retrieves business object definition from the herd registration server.
      *
      * @param businessObjectDataKey the name of the business object data key
+     * @param batchMode flag to indicate if herd should use S3 Batch Operations to destroy the business object data
      *
      * @return the business object definition
      *
@@ -49,7 +50,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
      * @throws NoSuchAlgorithmException if a no such algorithm exception occurs
      * @throws KeyManagementException if key management exception
      */
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean batchMode)
         throws ApiException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
     {
         BusinessObjectDataApi businessObjectDataApi = new BusinessObjectDataApi(createApiClient(regServerAccessParamsDto));
@@ -59,7 +60,7 @@ public class RetentionExpirationDestroyerWebClient extends DataBridgeWebClient
             businessObjectDataKey.getBusinessObjectDefinitionName(), businessObjectDataKey.getBusinessObjectFormatUsage(),
             businessObjectDataKey.getBusinessObjectFormatFileType(), businessObjectDataKey.getBusinessObjectFormatVersion(),
             businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getBusinessObjectDataVersion(),
-            herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"), false);
+            herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"), batchMode);
 
         LOGGER.info("Successfully destroyed business object data from the registration server.");
         return sdkResponse;
