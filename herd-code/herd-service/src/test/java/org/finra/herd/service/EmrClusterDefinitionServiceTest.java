@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1188,7 +1189,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and persist an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create an EMR cluster definition key.
         EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
@@ -1217,7 +1218,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and persist an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create an EMR cluster definition key.
         EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
@@ -1232,7 +1233,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and persist an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create an EMR cluster definition key.
         EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
@@ -1247,7 +1248,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and persist an EMR cluster definition entity.
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create an EMR cluster definition key.
         EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
@@ -1273,7 +1274,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
      */
     private String getTestEmrClusterDefinitionConfigurationXml(String xmlFileClasspath) throws Exception
     {
-        return IOUtils.toString(resourceLoader.getResource(xmlFileClasspath).getInputStream());
+        return IOUtils.toString(resourceLoader.getResource(xmlFileClasspath).getInputStream(), StandardCharsets.UTF_8);
     }
 
     /**

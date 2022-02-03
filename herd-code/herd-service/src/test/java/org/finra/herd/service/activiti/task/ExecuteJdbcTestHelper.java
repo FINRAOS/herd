@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -99,7 +101,7 @@ public class ExecuteJdbcTestHelper
         jobDefinitionCreateRequest.setNamespace(jobDefinitionNamespace);
         jobDefinitionCreateRequest.setJobName(jobDefinitionName);
         jobDefinitionCreateRequest.setDescription("This is a test job definition.");
-        jobDefinitionCreateRequest.setActivitiJobXml(IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream()));
+        jobDefinitionCreateRequest.setActivitiJobXml(IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream(), StandardCharsets.UTF_8));
         jobDefinitionCreateRequest.setParameters(null);
 
         // Create and persist a valid test job definition.

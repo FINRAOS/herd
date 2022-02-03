@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Clob;
@@ -511,7 +512,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
             // Write the Log4J configuration to the temporary file every time.
             try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile.toAbsolutePath().toString()))
             {
-                IOUtils.write(xmlConfigurationString, fileOutputStream);
+                IOUtils.write(xmlConfigurationString, fileOutputStream, StandardCharsets.UTF_8);
             }
 
             if (initialConfiguration)

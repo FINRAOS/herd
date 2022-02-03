@@ -351,7 +351,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         cacheConfiguration.setName(HERD_CACHE_NAME);
         cacheConfiguration.setTimeToLiveSeconds(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_TIME_TO_LIVE_SECONDS, Long.class));
         cacheConfiguration.setTimeToIdleSeconds(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_TIME_TO_IDLE_SECONDS, Long.class));
-        cacheConfiguration.setMaxElementsInMemory(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_MAX_ELEMENTS_IN_MEMORY, Integer.class));
+        cacheConfiguration.setMaxEntriesLocalHeap(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_MAX_ELEMENTS_IN_MEMORY, Integer.class));
         cacheConfiguration.setMemoryStoreEvictionPolicy(configurationHelper.getProperty(ConfigurationValue.HERD_CACHE_MEMORY_STORE_EVICTION_POLICY));
 
         net.sf.ehcache.config.Configuration config = new net.sf.ehcache.config.Configuration();

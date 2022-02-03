@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -470,7 +471,7 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
 
         InputStream xmlStream = activitiRepositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
 
-        jobDefinition.setActivitiJobXml(IOUtils.toString(xmlStream));
+        jobDefinition.setActivitiJobXml(IOUtils.toString(xmlStream, StandardCharsets.UTF_8));
 
         // Add in the parameters.
         List<Parameter> parameters = new ArrayList<>();
