@@ -16,8 +16,8 @@
 package org.finra.herd.service.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -41,6 +41,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageUnitKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -84,6 +85,9 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
 
     @Mock
     private S3Service s3Service;
+
+    @Mock
+    private S3Dao s3Dao;
 
     @Mock
     private StorageFileHelper storageFileHelper;
@@ -225,7 +229,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         verify(storageFileHelper).validateRegisteredS3Files(storageFiles, s3Files, STORAGE_NAME, businessObjectDataKey);
         verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(glacierS3Files);
         verify(storageFileHelper).getFiles(glacierStorageFiles);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 1, null);
+        verify(s3Dao).restoreObjects(finalS3FileTransferRequestParamsDto, 1, null);
         verifyNoMoreInteractionsHelper();
     }
 
@@ -293,7 +297,7 @@ public class ExpireRestoredBusinessObjectDataHelperServiceImplTest extends Abstr
         verify(s3Service).listDirectory(any(S3FileTransferRequestParamsDto.class), eq(true));
         verify(storageFileHelper).createStorageFilesFromS3ObjectSummaries(glacierS3Files);
         verify(storageFileHelper).getFiles(glacierStorageFiles);
-        verify(s3Service).restoreObjects(finalS3FileTransferRequestParamsDto, 1, null);
+        verify(s3Dao).restoreObjects(finalS3FileTransferRequestParamsDto, 1, null);
         verifyNoMoreInteractionsHelper();
     }
 

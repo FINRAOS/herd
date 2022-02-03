@@ -24,12 +24,12 @@ import java.io.FileInputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
-import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.sdk.model.BusinessObjectDefinition;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 public class RetentionExpirationExporterControllerTest extends AbstractExporterTest
@@ -85,7 +85,8 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         try
         {
             retentionExpirationExporterController
-                .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, new RegServerAccessParamsDto(), UDC_SERVICE_HOSTNAME);
+                .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, START_REGISTRATION_DATE_TIME, END_REGISTRATION_DATE_TIME,
+                    outputFile, new RegServerAccessParamsDto(), UDC_SERVICE_HOSTNAME);
             fail();
         }
         catch (IllegalArgumentException e)
@@ -107,7 +108,50 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
 
         // Perform the retention expiration export.
         retentionExpirationExporterController
-            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, outputFile, regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
+            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, NO_REGISTRATION_DATE_TIME, NO_REGISTRATION_DATE_TIME, outputFile,
+                regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
+
+        // Create the expected URI.
+        String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
+
+        // Create the expected output file content.
+        String expectedOutputFileContent =
+            ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
+                "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\"," +
+                "\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\"," +
+                "\"Business Object Definition URI\"") + System.lineSeparator() + String
+                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE,
+                    BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION,
+                    "primaryPartitionValue", "subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4",
+                    BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri) + String
+                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE,
+                    BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION,
+                    "primaryPartitionValue", "", "", "", "", BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri);
+
+        // Validate the output file.
+        String outputFileContent;
+        try (FileInputStream inputStream = new FileInputStream(outputFile))
+        {
+            outputFileContent = IOUtils.toString(inputStream, Charset.defaultCharset());
+        }
+        assertEquals(expectedOutputFileContent, outputFileContent);
+    }
+
+    @Test
+    public void testPerformRetentionExpirationExportWithRegistrationDateTimeRange() throws Exception
+    {
+        File outputFile = new File(LOCAL_OUTPUT_FILE);
+
+        // Create and initialize the registration server DTO.
+        RegServerAccessParamsDto regServerAccessParamsDto =
+            RegServerAccessParamsDto.builder().withRegServerHost(WEB_SERVICE_HOSTNAME).withRegServerPort(WEB_SERVICE_HTTPS_PORT).withUseSsl(true)
+                .withUsername(WEB_SERVICE_HTTPS_USERNAME).withPassword(WEB_SERVICE_HTTPS_PASSWORD).withTrustSelfSignedCertificate(true)
+                .withDisableHostnameVerification(true).build();
+
+        // Perform the retention expiration export.
+        retentionExpirationExporterController
+            .performRetentionExpirationExport(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, START_REGISTRATION_DATE_TIME, END_REGISTRATION_DATE_TIME, outputFile,
+                regServerAccessParamsDto, UDC_SERVICE_HOSTNAME);
 
         // Create the expected URI.
         String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);

@@ -232,8 +232,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             }
             catch (IllegalArgumentException e)
             {
-                assertEquals(String
-                    .format("Archived S3 file \"%s/%s\" is not restored. " + "StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
+                assertEquals(
+                    String.format("Archived S3 file \"%s/%s\" is not restored. " + "StorageClass {GLACIER}, OngoingRestore flag {true}, S3 bucket name {%s}",
                         TEST_S3_KEY_PREFIX, LOCAL_FILE, S3_BUCKET_NAME), e.getMessage());
             }
 
@@ -292,9 +292,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -322,9 +321,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid business object definition name.
@@ -337,9 +335,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid format usage.
@@ -352,9 +350,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid format file type.
@@ -367,9 +364,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                I_DO_NOT_EXIST, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid business object format version.
@@ -382,9 +378,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid primary partition value.
@@ -397,9 +392,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    I_DO_NOT_EXIST, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, I_DO_NOT_EXIST, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid sub-partition value.
@@ -416,9 +410,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(businessObjectDataServiceTestHelper
-                    .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                        PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+                assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
             }
         }
 
@@ -432,9 +425,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDataServiceTestHelper
-                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid storage name.
@@ -448,9 +440,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", I_DO_NOT_EXIST,
-                businessObjectDataServiceTestHelper
-                    .getExpectedBusinessObjectDataKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                        PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -490,8 +481,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with the storage not having an S3 bucket name configured.
-        businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, NO_S3_BUCKET_NAME,
+            StorageUnitStatusEntity.RESTORING);
 
         // Create a storage unit key.
         BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
@@ -518,8 +509,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with an already restored storage unit.
-        businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORED);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME,
+            StorageUnitStatusEntity.RESTORED);
 
         // Create a storage unit key.
         BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
@@ -546,8 +537,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
-            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, StorageUnitStatusEntity.RESTORING);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME,
+                StorageUnitStatusEntity.RESTORING);
 
         // Get the origin storage unit entity.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
@@ -603,9 +595,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a storage unit not in RESTORING state along with other database entities required for testing.
-        storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS,
-                NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper.createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+            STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Create a storage unit key.
         BusinessObjectDataStorageUnitKey storageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME);
@@ -618,8 +609,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
+            assertEquals(
+                String.format("S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
                     STORAGE_NAME, StorageUnitStatusEntity.RESTORING, STORAGE_UNIT_STATUS,
                     businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }

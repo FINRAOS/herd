@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.dao.helper;
 
 import com.amazonaws.ClientConfiguration;
@@ -24,6 +24,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 
 /**
  * A base helper class that provides AWS functions.
@@ -32,6 +33,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 public class AwsHelper
 {
     private static final int BITS_PER_BYTE = 8;
+    private static final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
 
     @Autowired
     protected ConfigurationHelper configurationHelper;
@@ -83,6 +85,39 @@ public class AwsHelper
         if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
         {
             clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
+        }
+
+        return clientConfiguration;
+    }
+
+    /**
+     * Creates a client configuration object for AWS S3 client that contains client configuration options such as proxy settings and max retry attempts.
+     *
+     * @param params the AWS related parameters that contain optional proxy information
+     *
+     * @return the client configuration object
+     */
+    public ClientConfiguration getS3ClientConfiguration(S3FileTransferRequestParamsDto params)
+    {
+        ClientConfiguration clientConfiguration = getClientConfiguration(params);
+
+        // Set the proxy configuration, if proxy is specified.
+        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
+        {
+            clientConfiguration.setProxyHost(params.getHttpProxyHost());
+            clientConfiguration.setProxyPort(params.getHttpProxyPort());
+        }
+
+        // Sign all S3 API's with V4 signing.
+        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
+        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
+        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
+        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
+
+        // Set the optional socket timeout, if configured.
+        if (params.getSocketTimeout() != null)
+        {
+            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
         }
 
         return clientConfiguration;

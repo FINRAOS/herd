@@ -1192,7 +1192,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         try
         {
-            storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(null);
+            storagePolicyProcessorHelperServiceImpl.updateStoragePolicyTransitionFailedAttemptsIgnoreException(null, new RuntimeException());
             fail("Should throw an NullPointerException.");
         }
         catch (NullPointerException e)

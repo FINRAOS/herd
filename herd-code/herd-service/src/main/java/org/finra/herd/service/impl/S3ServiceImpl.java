@@ -114,12 +114,6 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays, String archiveRetrievalOption)
-    {
-        s3Dao.restoreObjects(params, expirationInDays, archiveRetrievalOption);
-    }
-
-    @Override
     public S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto params) throws InterruptedException
     {
         return s3Dao.uploadDirectory(params);

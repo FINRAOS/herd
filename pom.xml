@@ -32,10 +32,10 @@
    <properties>
 
       <!-- NOTE: This version number should be updated after EACH sprint at the same time as the herd snapshot version above. -->
-      <revision>0.162.0-SNAPSHOT</revision>
+      <revision>0.164.0-SNAPSHOT</revision>
       <!-- NOTE: Match version with herd snapshot version. For herd-sdk python -->
-      <herd.sdk.version>0.162.0</herd.sdk.version>
-      <herd-ui.version>0.132.0</herd-ui.version>
+      <herd.sdk.version>0.164.0</herd.sdk.version>
+      <herd-ui.version>0.134.0</herd-ui.version>
 
       <!-- Third Party JAR Dependencies -->
       <!--
@@ -72,7 +72,7 @@
       <jodatime.version>2.10.1</jodatime.version>
       <jstl-impl.version>1.2.4</jstl-impl.version>
       <junit.version>4.12</junit.version>
-      <log4j.version>2.17.0</log4j.version>
+      <log4j.version>2.17.1</log4j.version>
       <maven.artifact.version>3.5.0</maven.artifact.version>
       <maven.plugin.api.version>3.5.0</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.5</maven.plugin.annotations.version>
@@ -283,11 +283,6 @@
          </dependency>
          <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>herd-docs-swagger-new</artifactId>
-            <version>${project.version}</version>
-         </dependency>
-         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>herd-sdk</artifactId>
             <version>${project.version}</version>
          </dependency>
@@ -323,6 +318,11 @@
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3control</artifactId>
             <version>${aws.sdk.version}</version>
          </dependency>
          <dependency>
@@ -1288,11 +1288,6 @@
             <plugin>
                <groupId>${project.groupId}</groupId>
                <artifactId>herd-swaggergen-maven-plugin</artifactId>
-               <version>${project.version}</version>
-            </plugin>
-            <plugin>
-               <groupId>${project.groupId}</groupId>
-               <artifactId>herd-swaggergen-maven-plugin-new</artifactId>
                <version>${project.version}</version>
             </plugin>
             <plugin>

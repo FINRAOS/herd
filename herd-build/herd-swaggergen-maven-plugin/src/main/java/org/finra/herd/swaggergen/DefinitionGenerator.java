@@ -30,6 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import io.swagger.models.ModelImpl;
 import io.swagger.models.Swagger;
+import io.swagger.models.Xml;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateTimeProperty;
@@ -121,12 +122,6 @@ public class DefinitionGenerator
             {
                 ModelImpl model = new ModelImpl();
 
-                if (exampleClassNames.contains(clazz.getSimpleName()))
-                {
-                    // Only provide examples for root elements. If we do them for child elements, the JSON examples use the XML examples which is a problem.
-                    model.setExample(new ExampleXmlGenerator(log, clazz).getExampleXml());
-                }
-
                 swagger.addDefinition(name, model);
                 model.name(name);
 
@@ -162,6 +157,21 @@ public class DefinitionGenerator
             if (Collection.class.isAssignableFrom(fieldClass))
             {
                 property = new ArrayProperty(getPropertyFromType(FieldUtils.getCollectionType(field)));
+
+                // The following code add extra lines in our generated yaml file to fix the defected swagger-ui xml example
+                // add "xml: wrapped: true" to xml
+                property.setXml(new Xml().wrapped(true));
+
+                // add "xml: name: element" under items
+                ArrayProperty arrayProperty = (ArrayProperty) property;
+                Property itemProperty = arrayProperty.getItems();
+                final String fieldName = field.getName();
+
+                // e.g. according to our naming convention, array name is "elements" (plural form)
+                // so we use item name as "element" (singular form)
+                itemProperty.setXml(new Xml().name(fieldName.substring(0, fieldName.length() - 1)));
+                arrayProperty.setItems(itemProperty);
+                property = arrayProperty;
             }
             else
             {

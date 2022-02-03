@@ -167,6 +167,10 @@
       </dependency>
       <dependency>
          <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-s3control</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk-sts</artifactId>
       </dependency>
       <dependency>
@@ -324,11 +328,6 @@
                <dependency>
                   <groupId>${project.groupId}</groupId>
                   <artifactId>herd-docs-swagger</artifactId>
-                  <version>${project.version}</version>
-               </dependency>
-               <dependency>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>herd-docs-swagger-new</artifactId>
                   <version>${project.version}</version>
                </dependency>
             </dependencies>

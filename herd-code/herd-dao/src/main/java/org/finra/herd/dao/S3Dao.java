@@ -24,6 +24,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 
+import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -282,4 +283,16 @@ public interface S3Dao
      * @throws RuntimeException if file validation fails
      */
     void validateS3File(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Long fileSizeInBytes) throws RuntimeException;
+
+    /**
+     * Create the S3 batch job to restore a list of keys in the specified bucket.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * restored
+     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
+     * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
+     */
+    void batchRestoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, BatchJobConfigDto batchJobConfig, int expirationInDays,
+        String archiveRetrievalOption);
 }
