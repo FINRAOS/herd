@@ -46,6 +46,8 @@ public class RetentionExpirationDestroyerApp
 
     private ArgumentParser argParser;
 
+    private Boolean batchMode;
+
     private Boolean disableHostnameVerification;
 
     private Option disableHostnameVerificationOpt;
@@ -144,7 +146,7 @@ public class RetentionExpirationDestroyerApp
 
         // Call the controller with the user specified parameters to perform the upload.
         RetentionExpirationDestroyerController controller = applicationContext.getBean(RetentionExpirationDestroyerController.class);
-        controller.performRetentionExpirationDestruction(argParser.getFileValue(localInputFileOpt), regServerAccessParamsDto);
+        controller.performRetentionExpirationDestruction(argParser.getFileValue(localInputFileOpt), regServerAccessParamsDto, batchMode);
 
         // No exceptions were returned so return success.
         return ToolsCommonConstants.ReturnValue.SUCCESS;
@@ -182,6 +184,7 @@ public class RetentionExpirationDestroyerApp
                 argParser.addArgument("d", "disableHostnameVerification", true, "If set to true, turns off hostname verification.", false);
             Option helpOpt = argParser.addArgument("h", "help", false, "Display usage information and exit.", false);
             Option versionOpt = argParser.addArgument("v", "version", false, "Display version information and exit.", false);
+            Option batchModeOpt = argParser.addArgument("b", "batchMode", false, "Perform delete using S3 Batch Operation", false);
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);
@@ -210,6 +213,7 @@ public class RetentionExpirationDestroyerApp
             useSsl = argParser.getStringValueAsBoolean(sslOpt, false);
             trustSelfSignedCertificate = argParser.getStringValueAsBoolean(trustSelfSignedCertificateOpt, false);
             disableHostnameVerification = argParser.getStringValueAsBoolean(disableHostnameVerificationOpt, false);
+            batchMode = argParser.getBooleanValue(batchModeOpt);
 
             if (useSsl)
             {

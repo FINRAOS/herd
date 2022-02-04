@@ -184,6 +184,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final boolean BATCH_RESTORE_MODE = false;
 
+    public static final boolean BATCH_DESTROY_MODE = false;
+
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
 
     public static final Integer BDATA_FINAL_DESTROY_DELAY_IN_DAYS = 15;

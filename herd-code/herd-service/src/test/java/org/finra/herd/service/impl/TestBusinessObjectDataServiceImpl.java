@@ -91,9 +91,9 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean batchMode)
     {
-        return destroyBusinessObjectDataImpl(businessObjectDataKey);
+        return destroyBusinessObjectDataImpl(businessObjectDataKey, false);
     }
 
     /**
@@ -162,7 +162,8 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption, Boolean batchMode)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays, String archiveRetrievalOption,
+        Boolean batchMode)
     {
         return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays, archiveRetrievalOption, batchMode);
     }

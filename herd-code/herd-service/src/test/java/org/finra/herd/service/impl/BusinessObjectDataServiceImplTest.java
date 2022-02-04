@@ -215,7 +215,7 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
             businessObjectData);
 
         // Call the method under test.
-        BusinessObjectData result = businessObjectDataServiceImpl.destroyBusinessObjectData(businessObjectDataKey);
+        BusinessObjectData result = businessObjectDataServiceImpl.destroyBusinessObjectData(businessObjectDataKey, BATCH_DESTROY_MODE);
 
         // Verify the external calls.
         verify(businessObjectDataInitiateDestroyHelperService).prepareToInitiateDestroy(any(BusinessObjectDataDestroyDto.class),

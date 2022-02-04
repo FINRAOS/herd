@@ -228,6 +228,17 @@ public interface S3Dao
         final List<S3VersionSummary> s3VersionSummaries, final Tag tag);
 
     /**
+     * Create the S3 batch job to replace S3 object version tags with the specified S3 object tag.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix.
+     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param s3VersionSummaries the list of S3 versions to be tagged
+     * @param tag the S3 object tag
+     */
+    void batchTagVersions(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final BatchJobConfigDto batchJobConfig,
+        final List<S3VersionSummary> s3VersionSummaries, final Tag tag);
+
+    /**
      * Uploads a local directory of files into S3.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix are for the target of the copy. The

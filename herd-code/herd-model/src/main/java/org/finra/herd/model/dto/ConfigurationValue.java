@@ -1016,6 +1016,12 @@ public enum ConfigurationValue
     S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
 
     /**
+     * The Amazon Resource Name (ARN) for the AWS Identity and Access Management (IAM) role that Batch Operations will use to run destroy job's action on every
+     * object in the manifest. Type: String Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: arn:[^:]+:iam::\d{12}:role/.*
+     */
+    S3_BATCH_DESTROY_ROLE_ARN("s3.batch.destroy.role.arn", null),
+
+    /**
      * The bucket where all batch job manifests will be stored
      */
     S3_BATCH_MANIFEST_BUCKET_NAME("s3.batch.manifest.bucket.name", null),

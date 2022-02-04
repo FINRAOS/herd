@@ -761,8 +761,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
@@ -822,8 +822,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
@@ -892,8 +892,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
@@ -961,8 +961,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
@@ -1031,8 +1031,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
@@ -1100,8 +1100,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
@@ -1169,8 +1169,8 @@ public class S3DaoImplTest extends AbstractDaoTest
         verify(batchHelper).createCSVBucketKeyManifest(any(), eq(S3_BUCKET_NAME), eq(params.getFiles()), eq(jobConfig));
         verify(s3Operations).upload(any(), any());
         verify(awsS3ClientFactory).getTransferManager(eq(params));
-        verify(batchHelper)
-            .generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION), eq(jobConfig));
+        verify(batchHelper).generateCreateRestoreJobRequest(eq(manifest), any(), eq(S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS), eq(ARCHIVE_RETRIEVAL_OPTION),
+            eq(jobConfig));
         verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
         verify(batchHelper, times(5)).generateDescribeJobRequest(any(), eq(jobConfig));
         verify(awsS3ClientFactory, times(6)).getAmazonS3Control(eq(params));
@@ -1179,6 +1179,449 @@ public class S3DaoImplTest extends AbstractDaoTest
 
         verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
     }
+
+    @Test
+    public void testBatchTagVersionsSuccess()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Complete.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(2)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchTagVersionsAwaitSuccess()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Complete.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchTagVersionsFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(2)).getAmazonS3Control(eq(params));
+        verify(s3Operations).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(2)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchTagVersionsAwaitFailed()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Failed.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchTagVersionsAwaitCancelled()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString(), JobStatus.Cancelled.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete."));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(2)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(3)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(2)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(3)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
+    @Test
+    public void testBatchTagVersionsAwaitExhausted()
+    {
+        // Setup test objects
+        final S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().withS3BucketName(S3_BUCKET_NAME).withFiles(Collections.singletonList(new File(TARGET_S3_KEY)))
+                .withAwsRegionName(AWS_REGION_NAME).build();
+
+        final BatchJobManifestDto manifest =
+            BatchJobManifestDto.builder().withBucketName(S3_BUCKET_NAME_2).withKey(TEST_S3_KEY_PREFIX_2).withContent(TEST_CSV_FILE_CONTENT).build();
+
+        final BatchJobConfigDto jobConfig = BatchJobConfigDto.builder().withMaxAttempts(5).withBackoffPeriod(2000).build();
+
+        final Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Create mocks
+        AWSS3Control s3Control = mock(AWSS3Control.class);
+        CreateJobResult mockCreateJobResult = mock(CreateJobResult.class);
+        CreateJobRequest createJobRequest = mock(CreateJobRequest.class);
+        DescribeJobRequest describeRequest = mock(DescribeJobRequest.class);
+        DescribeJobResult describeResult = mock(DescribeJobResult.class);
+        JobDescriptor jobDescriptor = mock(JobDescriptor.class);
+        S3VersionSummary s3VersionSummary = mock(S3VersionSummary.class);
+
+        List<S3VersionSummary> s3Versions = Collections.singletonList(s3VersionSummary);
+
+        // Configure mocks
+        when(describeResult.getJob()).thenReturn(jobDescriptor);
+        when(jobDescriptor.getStatus()).thenReturn(JobStatus.Active.toString());
+
+        when(batchHelper.createCSVBucketKeyVersionManifest(any(), any(), any(), eq(jobConfig))).thenReturn(manifest);
+        when(batchHelper.generateCreatePutObjectTaggingJobRequest(any(), any(), any(), any())).thenReturn(createJobRequest);
+        when(batchHelper.generateDescribeJobRequest(any(), any())).thenReturn(describeRequest);
+
+        when(awsS3ClientFactory.getTransferManager(any())).thenReturn(mock(TransferManager.class));
+        when(awsS3ClientFactory.getAmazonS3Control(any())).thenReturn(s3Control);
+
+        when(s3VersionSummary.getKey()).thenReturn(S3_KEY);
+        when(s3VersionSummary.getVersionId()).thenReturn(S3_VERSION_ID);
+
+        when(s3Operations.upload(any(), any())).then((Answer<Upload>) invocation -> {
+            Upload mockedUpload = mock(Upload.class);
+            TransferProgress transferProgress = new TransferProgress();
+            when(mockedUpload.getProgress()).thenReturn(transferProgress);
+            when(mockedUpload.isDone()).thenReturn(true);
+            when(mockedUpload.getState()).thenReturn(Transfer.TransferState.Completed);
+            return mockedUpload;
+        });
+        when(s3Operations.createBatchJob(any(), any())).thenReturn(mockCreateJobResult);
+        when(s3Operations.describeBatchJob(any(), any())).thenReturn(describeResult);
+
+        // Execute target method
+        try
+        {
+            s3DaoImpl.batchTagVersions(params, jobConfig, s3Versions, tag);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertTrue(e.getMessage().startsWith("S3 batch job was not complete."));
+            assertTrue(e.getMessage().contains(describeResult.toString()));
+        }
+
+        // Verifications
+        verify(batchHelper).createCSVBucketKeyVersionManifest(any(), eq(S3_BUCKET_NAME), eq(s3Versions), eq(jobConfig));
+        verify(s3Operations).upload(any(), any());
+        verify(awsS3ClientFactory).getTransferManager(eq(params));
+        verify(batchHelper).generateCreatePutObjectTaggingJobRequest(eq(manifest), any(), eq(jobConfig), eq(tag));
+        verify(s3Operations).createBatchJob(eq(createJobRequest), eq(s3Control));
+        verify(batchHelper, times(5)).generateDescribeJobRequest(any(), eq(jobConfig));
+        verify(awsS3ClientFactory, times(6)).getAmazonS3Control(eq(params));
+        verify(s3Operations, times(5)).describeBatchJob(eq(describeRequest), eq(s3Control));
+        verify(s3Control, times(6)).shutdown();
+
+        verifyNoMoreInteractions(batchHelper, s3Operations, awsS3ClientFactory, s3Control);
+    }
+
 
     private void testRestoreObjectsWithS3Exception(String exceptionMessage, int statusCode)
     {
