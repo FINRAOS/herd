@@ -13,8 +13,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.JobManifestFormat;
+import com.amazonaws.services.s3control.model.JobReportScope;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import org.junit.Before;
 import org.junit.Rule;
@@ -110,6 +113,39 @@ public class S3BatchHelperTest extends AbstractDaoTest
     }
 
     @Test
+    public void testCreateCSVBucketKeyValueManifest() throws IOException
+    {
+        List<S3VersionSummary> versions = new ArrayList();
+        for (String key: defaultFileNames) {
+            S3VersionSummary fileVersion = new S3VersionSummary();
+            fileVersion.setBucketName(TEST_BUCKET_NAME);
+            fileVersion.setKey(key);
+            fileVersion.setVersionId(UUID.randomUUID().toString());
+            versions.add(fileVersion);
+        }
+
+        BatchJobManifestDto manifest = s3BatchHelper.createCSVBucketKeyVersionManifest(TEST_JOB_ID, TEST_BUCKET_NAME, versions, getDefaultBatchJobDataDto());
+
+        assertNotNull(manifest);
+        assertEquals("S3BatchOperations_CSV_20180820", manifest.getFormat());
+        assertEquals(3, manifest.getFields().size());
+        assertEquals("Bucket", manifest.getFields().get(0));
+        assertEquals("Key", manifest.getFields().get(1));
+        assertEquals("VersionId", manifest.getFields().get(2));
+        assertNotNull(manifest.getContent());
+        assertNotNull(manifest.getEtag());
+
+        String[] lines = manifest.getContent().split("\\R");
+        assertEquals(versions.size(), lines.length);
+        for (int i = 0; i < versions.size(); i++)
+        {
+            String expectedValue = String.format("%s,%s,%s", TEST_BUCKET_NAME, versions.get(i).getKey(), versions.get(i).getVersionId());
+            expectedValue = expectedValue.replaceAll("\\\\", "/");
+            assertEquals(expectedValue, lines[i]);
+        }
+    }
+
+    @Test
     public void testGenerateCreateRestoreJobRequest()
     {
         BatchJobManifestDto manifest = getDefaultBatchJobManifestDto();
@@ -145,7 +181,11 @@ public class S3BatchHelperTest extends AbstractDaoTest
 
         assertEquals(manifestEtag, request.getManifest().getLocation().getETag());
 
-        assertFalse(request.getReport().getEnabled());
+        assertNotNull(request.getReport());
+        assertEquals(true, request.getReport().getEnabled());
+        assertEquals(S3_BATCH_MANIFEST_BUCKET_NAME, request.getReport().getBucket());
+        assertEquals(S3_BATCH_MANIFEST_LOCATION_PREFIX, request.getReport().getPrefix());
+        assertEquals(JobReportScope.FailedTasksOnly.toString(), request.getReport().getReportScope());
     }
 
     @Test
@@ -156,6 +196,53 @@ public class S3BatchHelperTest extends AbstractDaoTest
         CreateJobRequest request = s3BatchHelper.generateCreateRestoreJobRequest(manifest, TEST_JOB_ID, expirationInDays, null, getDefaultBatchJobDataDto());
 
         assertEquals(archiveRetrievalOption, request.getOperation().getS3InitiateRestoreObject().getGlacierJobTier());
+    }
+
+    @Test
+    public void testGenerateCreatePutObjectTaggingJobRequest()
+    {
+        BatchJobManifestDto manifest = getDefaultBatchJobManifestDto();
+        BatchJobConfigDto config = getDefaultBatchJobDataDto();
+        Tag tag = new Tag("test_key", "test_value");
+
+        // Execute target method
+        CreateJobRequest request =
+            s3BatchHelper.generateCreatePutObjectTaggingJobRequest(manifest, TEST_JOB_ID, config, tag);
+
+        // Check the result
+        assertNotNull(request);
+        assertNotNull(request.getPriority());
+        assertNotNull(request.getDescription());
+        assertNotNull(request.getOperation());
+        assertNotNull(request.getManifest());
+        assertNotNull(request.getReport());
+        assertNotNull(request.getOperation().getS3PutObjectTagging());
+        assertNotNull(request.getManifest().getSpec());
+        assertNotNull(request.getManifest().getLocation());
+
+        assertEquals(AWS_ACCOUNT_ID, request.getAccountId());
+        assertEquals(S3_BATCH_ROLE_ARN, request.getRoleArn());
+        assertEquals(TEST_JOB_ID, request.getClientRequestToken());
+        assertFalse(request.getConfirmationRequired());
+
+        assertNotNull(request.getOperation().getS3PutObjectTagging().getTagSet());
+        assertEquals(1, request.getOperation().getS3PutObjectTagging().getTagSet().size());
+        assertEquals("test_key", request.getOperation().getS3PutObjectTagging().getTagSet().get(0).getKey());
+        assertEquals("test_value", request.getOperation().getS3PutObjectTagging().getTagSet().get(0).getValue());
+
+        assertEquals(manifestFormat, request.getManifest().getSpec().getFormat());
+        assertArrayEquals(manifestFields, request.getManifest().getSpec().getFields().toArray());
+
+        String expectedLocation = String.format("arn:aws:s3:::%s/%s/%s.csv", S3_BATCH_MANIFEST_BUCKET_NAME, S3_BATCH_MANIFEST_LOCATION_PREFIX, TEST_JOB_ID);
+        assertEquals(expectedLocation, request.getManifest().getLocation().getObjectArn());
+
+        assertEquals(manifestEtag, request.getManifest().getLocation().getETag());
+
+        assertNotNull(request.getReport());
+        assertEquals(true, request.getReport().getEnabled());
+        assertEquals(S3_BATCH_MANIFEST_BUCKET_NAME, request.getReport().getBucket());
+        assertEquals(S3_BATCH_MANIFEST_LOCATION_PREFIX, request.getReport().getPrefix());
+        assertEquals(JobReportScope.FailedTasksOnly.toString(), request.getReport().getReportScope());
     }
 
     private List<File> createTemporaryFiles(Collection<String> fileNames) throws IOException

@@ -81,6 +81,7 @@ import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.CreateJobResult;
 import com.amazonaws.services.s3control.model.DescribeJobRequest;
 import com.amazonaws.services.s3control.model.DescribeJobResult;
+import com.amazonaws.services.s3control.model.JobProgressSummary;
 import com.amazonaws.services.s3control.model.JobStatus;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
@@ -820,6 +821,15 @@ public class S3DaoImpl implements S3Dao
         {
             throw new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor: %s ", result));
         }
+
+        // check if all tasks in the job completed successfully
+        JobProgressSummary progressSummary = result.getJob().getProgressSummary();
+        if (progressSummary.getNumberOfTasksFailed() > 0)
+        {
+            throw new IllegalStateException(
+                String.format("S3 batch job was complete with errors. Job report includes detailed results for each failed task. " + "Detailed descriptor: %s ",
+                    result));
+        }
     }
 
     @Override
@@ -1067,17 +1077,25 @@ public class S3DaoImpl implements S3Dao
         {
             throw new IllegalStateException(String.format("S3 batch job was not complete. Detailed descriptor: %s ", result));
         }
+
+        // check if all tasks in the job completed successfully
+        JobProgressSummary progressSummary = result.getJob().getProgressSummary();
+        if (progressSummary.getNumberOfTasksFailed() > 0)
+        {
+            throw new IllegalStateException(
+                String.format("S3 batch job was complete with errors. Job report includes detailed results for each failed task. " + "Detailed descriptor: %s ",
+                    result));
+        }
     }
 
     /**
      * Creates S3 batch job
      *
-     * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
-     * manifest.
-     * @param batchJobConfig the configuration parameters used to create batch job
-     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
+     * @param paramsDto              the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every
+     *                               object in the manifest.
+     * @param batchJobConfig         the configuration parameters used to create batch job
+     * @param expirationInDays       the time, in days, between when an object is restored to the bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object
-     *
      * @return S3 batch job id
      */
     String createBatchRestoreJob(final S3FileTransferRequestParamsDto paramsDto, BatchJobConfigDto batchJobConfig, int expirationInDays,
@@ -1089,9 +1107,9 @@ public class S3DaoImpl implements S3Dao
         LOGGER.info("Creating restore batch job... batchJobId=\"{}\", batchJobConfig={}", jobId, jsonHelper.objectToJson(batchJobConfig));
 
         AWSS3Control s3ControlClient = null;
-
         try
         {
+
             // Generating dto object to combine info related to S3 Batch operation manifest
             BatchJobManifestDto manifest = batchHelper.createCSVBucketKeyManifest(jobId, paramsDto.getS3BucketName(), paramsDto.getFiles(), batchJobConfig);
             LOGGER.info("Manifest created... batchJobId=\"{}\", manifestBucketName=\"{}\", manifestS3Key=\"{}\", manifestS3Etag=\"{}\"", jobId,
@@ -1118,6 +1136,7 @@ public class S3DaoImpl implements S3Dao
 
             LOGGER.info("Create restore job request generated... batchJobId=\"{}\", createRestoreJobRequest={}", jobId,
                 jsonHelper.objectToJson(createRestoreJobRequest));
+
 
             // Create S3 control client which is going to execute actual call to s3
             s3ControlClient = awsS3ClientFactory.getAmazonS3Control(paramsDto);
@@ -1146,12 +1165,11 @@ public class S3DaoImpl implements S3Dao
     /**
      * Creates S3 batch job to put the tag on listed S3 files versions (replacing existing ones)
      *
-     * @param paramsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every object in the
-     * manifest.
-     * @param batchJobConfig the configuration parameters used to create batch job
+     * @param paramsDto          the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be restored every
+     *                           object in the manifest.
+     * @param batchJobConfig     the configuration parameters used to create batch job
      * @param s3VersionSummaries the list of S3 versions to be tagged
-     * @param tag the S3 object tag
-     *
+     * @param tag                the S3 object tag
      * @return S3 batch job id
      */
     String createBatchVersionsTaggingJob(final S3FileTransferRequestParamsDto paramsDto, BatchJobConfigDto batchJobConfig,
@@ -1251,7 +1269,6 @@ public class S3DaoImpl implements S3Dao
      * Returns true is S3 key prefix is a root.
      *
      * @param s3KeyPrefix the S3 key prefix to be validated
-     *
      * @return true if S3 key prefix is a root; false otherwise
      */
     protected boolean isRootKeyPrefix(String s3KeyPrefix)
@@ -1262,7 +1279,7 @@ public class S3DaoImpl implements S3Dao
     /**
      * Creates an S3 object of 0 byte size that represents a directory.
      *
-     * @param params the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 object to be created.
+     * @param params           the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 object to be created.
      * @param isEmptyDirectory a boolean flag that will determine if we are creating an empty directory.
      */
     private void createDirectory(final S3FileTransferRequestParamsDto params, final boolean isEmptyDirectory)
@@ -1303,9 +1320,9 @@ public class S3DaoImpl implements S3Dao
     /**
      * Deletes a list of keys/key versions from the specified S3 bucket.
      *
-     * @param s3Client the S3 client
+     * @param s3Client     the S3 client
      * @param s3BucketName the S3 bucket name
-     * @param keyVersions the list of S3 keys/key versions
+     * @param keyVersions  the list of S3 keys/key versions
      */
     private void deleteKeyVersions(AmazonS3Client s3Client, String s3BucketName, List<DeleteObjectsRequest.KeyVersion> keyVersions)
     {
@@ -1341,13 +1358,11 @@ public class S3DaoImpl implements S3Dao
     /**
      * Retrieves an S3 object.
      *
-     * @param s3Client the S3 client
-     * @param bucketName the S3 bucket name
-     * @param key the S3 object key
+     * @param s3Client         the S3 client
+     * @param bucketName       the S3 bucket name
+     * @param key              the S3 object key
      * @param errorOnNoSuchKey true to throw an error when the object key is not found, otherwise return null
-     *
      * @return the S3 object
-     *
      * @throws ObjectNotFoundException when specified bucket or key does not exist or access to bucket or key is denied
      */
     private S3Object getS3Object(AmazonS3Client s3Client, String bucketName, String key, boolean errorOnNoSuchKey)
@@ -1452,11 +1467,9 @@ public class S3DaoImpl implements S3Dao
     /**
      * Performs a file/directory transfer.
      *
-     * @param params the parameters.
+     * @param params     the parameters.
      * @param transferer a transferer that knows how to perform the transfer.
-     *
      * @return the results.
-     *
      * @throws InterruptedException if a problem is encountered.
      */
     private S3FileTransferResultsDto performTransfer(final S3FileTransferRequestParamsDto params, Transferer transferer) throws InterruptedException
@@ -1559,7 +1572,7 @@ public class S3DaoImpl implements S3Dao
     /**
      * Prepares the object metadata for server side encryption and reduced redundancy storage.
      *
-     * @param params the parameters.
+     * @param params   the parameters.
      * @param metadata the metadata to prepare.
      */
     private void prepareMetadata(final S3FileTransferRequestParamsDto params, ObjectMetadata metadata)
@@ -1596,9 +1609,9 @@ public class S3DaoImpl implements S3Dao
      * Tags S3 versions with the specified S3 object tag.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. This set of parameters contains the S3 bucket name
-     * @param s3ObjectTaggerRoleParamsDto the S3 objects tagger role parameters DTO
-     * @param s3VersionSummaries the list of S3 versions to be tagged
-     * @param tag the S3 object tag
+     * @param s3ObjectTaggerRoleParamsDto    the S3 objects tagger role parameters DTO
+     * @param s3VersionSummaries             the list of S3 versions to be tagged
+     * @param tag                            the S3 object tag
      */
     private void tagVersionsHelper(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto,
         final S3ObjectTaggerRoleParamsDto s3ObjectTaggerRoleParamsDto, final List<S3VersionSummary> s3VersionSummaries, final Tag tag)
@@ -1710,7 +1723,6 @@ public class S3DaoImpl implements S3Dao
          * Perform a transfer using the specified transfer manager.
          *
          * @param transferManager the transfer manager.
-         *
          * @return the transfer information for the transfer. This will typically be returned from an operation on the transfer manager (e.g. upload).
          */
         Transfer performTransfer(TransferManager transferManager);

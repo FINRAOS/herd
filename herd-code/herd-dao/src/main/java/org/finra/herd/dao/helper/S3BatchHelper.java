@@ -27,6 +27,7 @@ import com.amazonaws.services.s3control.model.JobManifestLocation;
 import com.amazonaws.services.s3control.model.JobManifestSpec;
 import com.amazonaws.services.s3control.model.JobOperation;
 import com.amazonaws.services.s3control.model.JobReport;
+import com.amazonaws.services.s3control.model.JobReportScope;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
 import com.amazonaws.services.s3control.model.S3SetObjectTaggingOperation;
@@ -65,7 +66,6 @@ public class S3BatchHelper
         String content = manifestContentBuilder.toString();
 
         // Build manifest dto object to pass manifest content and configuration for further processing
-        S3BatchManifest manifest = new S3BatchManifest();
         BatchJobManifestDto.Builder<Void> builder = BatchJobManifestDto.builder()
             // S3 key of the manifest file
             .withKey(String.format("%s/%s.csv", manifestLocation, jobId))
@@ -156,8 +156,13 @@ public class S3BatchHelper
         JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
             .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
 
-        // Build JobReport object, which indicates there is no need to create separate job report file on S3
-        JobReport jobReport = new JobReport().withEnabled(false);
+        // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
+        String reportBucketName = batchJobConfig.getManifestS3BucketName();
+        String reportLocation = batchJobConfig.getManifestS3Prefix();
+
+        // Build JobReport object
+        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketName)
+            .withPrefix(reportLocation);
 
         // Build the request object
         return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
@@ -190,13 +195,18 @@ public class S3BatchHelper
         JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
             .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
 
-        // Build JobReport object, which indicates there is no need to create separate job report file on S3
-        JobReport jobReport = new JobReport().withEnabled(false);
+        // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
+        String reportBucketName = batchJobConfig.getManifestS3BucketName();
+        String reportLocation = batchJobConfig.getManifestS3Prefix();
+
+        // Build JobReport object
+        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketName)
+            .withPrefix(reportLocation);
 
         // Build the request object
         return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
             .withReport(jobReport).withPriority(10).withRoleArn(batchJobConfig.getS3BatchRoleArn()).withClientRequestToken(jobId)
-            .withDescription(String.format("Restore batch job %s", jobId)).withConfirmationRequired(false);
+            .withDescription(String.format("Tagging batch job %s", jobId)).withConfirmationRequired(false);
     }
 
     /**
