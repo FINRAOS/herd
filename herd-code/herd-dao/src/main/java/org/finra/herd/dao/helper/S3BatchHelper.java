@@ -27,6 +27,7 @@ import com.amazonaws.services.s3control.model.JobManifestLocation;
 import com.amazonaws.services.s3control.model.JobManifestSpec;
 import com.amazonaws.services.s3control.model.JobOperation;
 import com.amazonaws.services.s3control.model.JobReport;
+import com.amazonaws.services.s3control.model.JobReportFormat;
 import com.amazonaws.services.s3control.model.JobReportScope;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
@@ -162,7 +163,7 @@ public class S3BatchHelper
 
         // Build JobReport object
         JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketName)
-            .withPrefix(reportLocation);
+            .withPrefix(reportLocation).withFormat(JobReportFormat.Report_CSV_20180820);
 
         // Build the request object
         return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
@@ -201,7 +202,7 @@ public class S3BatchHelper
 
         // Build JobReport object
         JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketName)
-            .withPrefix(reportLocation);
+            .withPrefix(reportLocation).withFormat(JobReportFormat.Report_CSV_20180820);
 
         // Build the request object
         return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)

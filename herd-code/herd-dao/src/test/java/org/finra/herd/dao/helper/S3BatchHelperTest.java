@@ -17,6 +17,7 @@ import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.JobManifestFormat;
+import com.amazonaws.services.s3control.model.JobReportFormat;
 import com.amazonaws.services.s3control.model.JobReportScope;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import org.junit.Before;
@@ -186,6 +187,7 @@ public class S3BatchHelperTest extends AbstractDaoTest
         assertEquals(String.format("arn:aws:s3:::%s", S3_BATCH_MANIFEST_BUCKET_NAME), request.getReport().getBucket());
         assertEquals(S3_BATCH_MANIFEST_LOCATION_PREFIX, request.getReport().getPrefix());
         assertEquals(JobReportScope.FailedTasksOnly.toString(), request.getReport().getReportScope());
+        assertEquals(JobReportFormat.Report_CSV_20180820.toString(), request.getReport().getFormat());
     }
 
     @Test
@@ -243,6 +245,7 @@ public class S3BatchHelperTest extends AbstractDaoTest
         assertEquals(String.format("arn:aws:s3:::%s" , S3_BATCH_MANIFEST_BUCKET_NAME), request.getReport().getBucket());
         assertEquals(S3_BATCH_MANIFEST_LOCATION_PREFIX, request.getReport().getPrefix());
         assertEquals(JobReportScope.FailedTasksOnly.toString(), request.getReport().getReportScope());
+        assertEquals(JobReportFormat.Report_CSV_20180820.toString(), request.getReport().getFormat());
     }
 
     private List<File> createTemporaryFiles(Collection<String> fileNames) throws IOException
