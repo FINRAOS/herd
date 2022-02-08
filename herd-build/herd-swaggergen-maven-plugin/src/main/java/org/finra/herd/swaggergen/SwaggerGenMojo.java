@@ -195,8 +195,14 @@ public class SwaggerGenMojo extends AbstractMojo
 
         if (applyOperationsFilter != null && applyOperationsFilter.equals(Boolean.TRUE))
         {
+            List<SecurityRequirement> securityRequirements = swagger.getSecurity();
             OperationsFilter specFilter = new OperationsFilter(includeOperations);
             swagger = new SpecFilter().filter(swagger, specFilter, null, null, null);
+            if (!CollectionUtils.isEmpty(securityRequirements)) {
+                for (SecurityRequirement securityRequirement: securityRequirements) {
+                    swagger.addSecurity(securityRequirement);
+                }
+            }
         }
 
         // Write to Swagger information to a YAML file.
