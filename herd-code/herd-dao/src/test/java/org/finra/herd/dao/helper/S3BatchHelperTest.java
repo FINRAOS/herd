@@ -240,7 +240,7 @@ public class S3BatchHelperTest extends AbstractDaoTest
 
         assertNotNull(request.getReport());
         assertEquals(true, request.getReport().getEnabled());
-        assertEquals(S3_BATCH_MANIFEST_BUCKET_NAME, request.getReport().getBucket());
+        assertEquals(String.format("arn:aws:s3:::%s" , S3_BATCH_MANIFEST_BUCKET_NAME), request.getReport().getBucket());
         assertEquals(S3_BATCH_MANIFEST_LOCATION_PREFIX, request.getReport().getPrefix());
         assertEquals(JobReportScope.FailedTasksOnly.toString(), request.getReport().getReportScope());
     }
