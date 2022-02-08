@@ -157,7 +157,7 @@ public class S3BatchHelper
             .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
 
         // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
-        String reportBucketName = batchJobConfig.getManifestS3BucketName();
+        String reportBucketName = String.format("arn:aws:s3:::%s", manifest.getBucketName());;
         String reportLocation = batchJobConfig.getManifestS3Prefix();
 
         // Build JobReport object
