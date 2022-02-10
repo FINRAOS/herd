@@ -524,6 +524,11 @@ public enum ConfigurationValue
     STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE("storage.file.paths.query.pagination.size", 100000),
 
     /**
+     * The optional Log4J override configuration name.
+     */
+    LOG4J_OVERRIDE_CONFIGURATION_NAME("log4j.override.configuration.name", "log4j.override.configuration"),
+
+    /**
      * The optional Log4J override configuration.
      */
     LOG4J_OVERRIDE_CONFIGURATION("log4j.override.configuration", null),

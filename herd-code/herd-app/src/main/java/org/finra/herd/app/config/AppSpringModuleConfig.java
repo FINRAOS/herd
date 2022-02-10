@@ -97,7 +97,7 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
         log4jConfigurer.setTableName(ConfigurationEntity.TABLE_NAME);
         log4jConfigurer.setSelectColumn(ConfigurationEntity.COLUMN_VALUE_CLOB);
         log4jConfigurer.setWhereColumn(ConfigurationEntity.COLUMN_KEY);
-        log4jConfigurer.setWhereValue(ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION.getKey());
+        log4jConfigurer.setWhereValue(ConfigurationHelper.getProperty(ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION_NAME, environment));
 
         // This is the secondary override location (if present and if the primary location isn't present). This resource needs to be present at application
         // startup for this configuration to be used.
