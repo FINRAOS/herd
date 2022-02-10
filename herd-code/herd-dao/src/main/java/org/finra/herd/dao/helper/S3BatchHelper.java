@@ -37,7 +37,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.S3BatchManifest;
 import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.BatchJobManifestDto;
 
@@ -158,11 +157,11 @@ public class S3BatchHelper
             .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
 
         // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
-        String reportBucketName = String.format("arn:aws:s3:::%s", manifest.getBucketName());;
+        String reportBucketArn = String.format("arn:aws:s3:::%s", manifest.getBucketName());
         String reportLocation = batchJobConfig.getManifestS3Prefix();
 
         // Build JobReport object
-        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketName)
+        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketArn)
             .withPrefix(reportLocation).withFormat(JobReportFormat.Report_CSV_20180820);
 
         // Build the request object
