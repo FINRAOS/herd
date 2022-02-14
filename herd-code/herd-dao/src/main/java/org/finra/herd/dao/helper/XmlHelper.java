@@ -108,7 +108,7 @@ public class XmlHelper
     {
         JAXBContext context = JAXBContext.newInstance(classType);
         Unmarshaller un = context.createUnmarshaller();
-        return (T) un.unmarshal(IOUtils.toInputStream(xmlString));
+        return (T) un.unmarshal(IOUtils.toInputStream(xmlString, StandardCharsets.UTF_8));
     }
 
     /**

@@ -84,10 +84,10 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         String fileName = "test1.csv";
         String filePath = NAMESPACE + "/" + BDEF_NAME + "/" + fileName;
         long fileSize = 1024L;
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null, null), null);
 
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
@@ -132,10 +132,10 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         String fileName = "test1.csv";
         String filePath = namespace + "/" + businessObjectDefinitionName + "/" + fileName;
         long fileSize = 1024L;
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null, null), null);
 
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
@@ -173,10 +173,10 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         String fileName = "test1.csv";
         String filePath = NAMESPACE + "/" + BDEF_NAME + fileName;
         long fileSize = 1024L;
-        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null), null);
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fileSize, null, null, null), null);
 
         List<S3EventNotificationRecord> records = new ArrayList<>();
-        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null, null));
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
@@ -220,7 +220,7 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
         verify(mockMessageListenerContainer, Mockito.times(0)).start();
-        // the listener is not running, but it is enabled, should start        
+        // the listener is not running, but it is enabled, should start
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
         verify(mockMessageListenerContainer).start();

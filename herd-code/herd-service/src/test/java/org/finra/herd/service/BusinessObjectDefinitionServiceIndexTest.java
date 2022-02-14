@@ -19,8 +19,8 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINES
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -35,7 +35,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -188,7 +188,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
-        verify(indexFunctionsDao).updateIndexDocuments(eq(SEARCH_INDEX_NAME), Matchers.<Map<String, String>>any());
+        verify(indexFunctionsDao).updateIndexDocuments(eq(SEARCH_INDEX_NAME), ArgumentMatchers.<Map<String, String>>any());
         verifyNoMoreInteractionsHelper();
     }
 
@@ -222,7 +222,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
-        verify(indexFunctionsDao).updateIndexDocuments(eq(SEARCH_INDEX_NAME), Matchers.<Map<String, String>>any());
+        verify(indexFunctionsDao).updateIndexDocuments(eq(SEARCH_INDEX_NAME), ArgumentMatchers.<Map<String, String>>any());
         verifyNoMoreInteractionsHelper();
     }
 
@@ -263,7 +263,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .subList(BusinessObjectDefinitionServiceImpl.UPDATE_SEARCH_INDEX_DOCUMENT_CHUNK_SIZE, businessObjectDefinitionIds.size()));
         verify(businessObjectDefinitionHelper).safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(0).get(0));
         verify(businessObjectDefinitionHelper).safeObjectMapperWriteValueAsString(businessObjectDefinitionEntities.get(1).get(0));
-        verify(indexFunctionsDao, times(2)).updateIndexDocuments(eq(SEARCH_INDEX_NAME), Matchers.<Map<String, String>>any());
+        verify(indexFunctionsDao, times(2)).updateIndexDocuments(eq(SEARCH_INDEX_NAME), ArgumentMatchers.<Map<String, String>>any());
         verifyNoMoreInteractionsHelper();
     }
 

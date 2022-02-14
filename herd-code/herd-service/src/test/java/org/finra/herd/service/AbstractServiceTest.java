@@ -15,6 +15,7 @@
  */
 package org.finra.herd.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -1463,7 +1464,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     protected BpmnModel getBpmnModelForXmlResource(String activitiXmlResource) throws Exception
     {
-        String activitiXml = IOUtils.toString(resourceLoader.getResource(activitiXmlResource).getInputStream());
+        String activitiXml = IOUtils.toString(resourceLoader.getResource(activitiXmlResource).getInputStream(), StandardCharsets.UTF_8);
 
         BpmnModel bpmnModel;
         try

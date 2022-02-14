@@ -70,6 +70,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.dto.BusinessObjectDataBatchDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.BusinessObjectDataSearchResultPagingInfoDto;
@@ -271,9 +272,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    public BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean batchMode)
     {
-        return destroyBusinessObjectDataImpl(businessObjectDataKey);
+        return destroyBusinessObjectDataImpl(businessObjectDataKey, batchMode);
     }
 
     /**
@@ -824,13 +825,15 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
      *
      * @param businessObjectDataKey the business object data key
+     * @param batchMode the flag used to indicate that related S3 operations should be processed in S3 Batch mode
      *
      * @return the business object data information
      */
-    BusinessObjectData destroyBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey)
+    BusinessObjectData destroyBusinessObjectDataImpl(BusinessObjectDataKey businessObjectDataKey, Boolean batchMode)
     {
         // Create a business object data destroy parameters DTO.
-        BusinessObjectDataDestroyDto businessObjectDataDestroyDto = new BusinessObjectDataDestroyDto();
+        BusinessObjectDataDestroyDto businessObjectDataDestroyDto =
+            BooleanUtils.isTrue(batchMode) ? new BusinessObjectDataBatchDestroyDto() : new BusinessObjectDataDestroyDto();
 
         // Prepare to initiate a business object data destroy request.
         businessObjectDataInitiateDestroyHelperService.prepareToInitiateDestroy(businessObjectDataDestroyDto, businessObjectDataKey);

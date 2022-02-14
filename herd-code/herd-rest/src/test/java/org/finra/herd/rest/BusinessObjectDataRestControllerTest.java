@@ -252,16 +252,16 @@ public class BusinessObjectDataRestControllerTest extends AbstractRestTest
 
         // Mock the external calls.
         when(herdStringHelper.splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues)).thenReturn(SUBPARTITION_VALUES);
-        when(businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey)).thenReturn(businessObjectData);
+        when(businessObjectDataService.destroyBusinessObjectData(businessObjectDataKey, BATCH_DESTROY_MODE)).thenReturn(businessObjectData);
 
         // Call the method under test.
         BusinessObjectData result = businessObjectDataRestController
             .destroyBusinessObjectData(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                delimitedSubPartitionValues);
+                delimitedSubPartitionValues, BATCH_DESTROY_MODE);
 
         // Verify the external calls.
         verify(herdStringHelper).splitStringWithDefaultDelimiterEscaped(delimitedSubPartitionValues);
-        verify(businessObjectDataService).destroyBusinessObjectData(businessObjectDataKey);
+        verify(businessObjectDataService).destroyBusinessObjectData(businessObjectDataKey, BATCH_DESTROY_MODE);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.

@@ -27,7 +27,9 @@ import java.util.List;
 import com.opencsv.CSVReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+
 import org.finra.herd.sdk.model.BusinessObjectDataKey;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,12 +57,13 @@ public class RetentionExpirationDestroyerController
     /**
      * Executes the retention expiration destroyer workflow.
      *
-     * @param localInputFile the local input file
+     * @param localInputFile           the local input file
      * @param regServerAccessParamsDto the DTO for the parameters required to communicate with the registration server
-     *
+     * @param batchMode                flag to indicate if herd should use S3 Batch Operations to destroy the business object data
      * @throws Exception if any problems were encountered
      */
-    public void performRetentionExpirationDestruction(File localInputFile, RegServerAccessParamsDto regServerAccessParamsDto) throws Exception
+    public void performRetentionExpirationDestruction(File localInputFile, RegServerAccessParamsDto regServerAccessParamsDto, Boolean batchMode)
+        throws Exception
     {
         // Read business object data keys from the input CSV file.
         List<BusinessObjectDataKey> businessObjectDataKeys = getBusinessObjectDataKeys(localInputFile);
@@ -72,7 +75,7 @@ public class RetentionExpirationDestroyerController
         LOGGER.info("Processing {} business object data instances for destruction.", CollectionUtils.size(businessObjectDataKeys));
         for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
         {
-            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey, batchMode);
             LOGGER.info("Successfully marked for destruction. Business object data {}", jsonHelper.objectToJson(businessObjectDataKey));
         }
 
@@ -82,10 +85,9 @@ public class RetentionExpirationDestroyerController
     /**
      * Extracts business object data key from a CSV file line. This method also validates the format of the line.
      *
-     * @param line the input line
-     * @param lineNumber the input line number
+     * @param line         the input line
+     * @param lineNumber   the input line number
      * @param inputCsvFile the input CSV file
-     *
      * @return the business object data key
      */
     protected BusinessObjectDataKey getBusinessObjectDataKey(String[] line, int lineNumber, File inputCsvFile)
@@ -105,8 +107,8 @@ public class RetentionExpirationDestroyerController
         }
         catch (NumberFormatException e)
         {
-            throw new IllegalArgumentException(String
-                .format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
+            throw new IllegalArgumentException(
+                String.format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
                     lineNumber, inputCsvFile.toString()), e);
         }
 
@@ -116,9 +118,9 @@ public class RetentionExpirationDestroyerController
         }
         catch (NumberFormatException e)
         {
-            throw new IllegalArgumentException(String
-                .format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.", lineNumber,
-                    inputCsvFile.toString()), e);
+            throw new IllegalArgumentException(
+                String.format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.",
+                    lineNumber, inputCsvFile.toString()), e);
         }
 
         // Build a list of optional sub-partition values.
@@ -143,7 +145,6 @@ public class RetentionExpirationDestroyerController
      * Get business object data keys from the input CSV tile. This method also validates the input file format.
      *
      * @param inputCsvFile the input CSV file
-     *
      * @return the list of business object data keys
      * @throws IOException if any problems were encountered
      */
@@ -175,14 +176,15 @@ public class RetentionExpirationDestroyerController
 
     /**
      * Build Business Object Data Key object
-     * @param namespace the namespace
+     *
+     * @param namespace                    the namespace
      * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatUsage    the business object format usage
      * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business objcet format version
-     * @param partitionValue the partition value
-     * @param subPartitionValues the sub partition values
-     * @param businessObjectDataVersion the business object data version
+     * @param businessObjectFormatVersion  the business objcet format version
+     * @param partitionValue               the partition value
+     * @param subPartitionValues           the sub partition values
+     * @param businessObjectDataVersion    the business object data version
      * @return the built business object data key object
      */
     BusinessObjectDataKey buildBusinessObjectDataKey(final String namespace, final String businessObjectDefinitionName, final String businessObjectFormatUsage,

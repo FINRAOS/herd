@@ -524,6 +524,11 @@ public enum ConfigurationValue
     STORAGE_FILE_PATHS_QUERY_PAGINATION_SIZE("storage.file.paths.query.pagination.size", 100000),
 
     /**
+     * The optional Log4J override configuration name.
+     */
+    LOG4J_OVERRIDE_CONFIGURATION_NAME("log4j.override.configuration.name", "log4j.override.configuration"),
+
+    /**
      * The optional Log4J override configuration.
      */
     LOG4J_OVERRIDE_CONFIGURATION("log4j.override.configuration", null),
@@ -1014,6 +1019,12 @@ public enum ConfigurationValue
      * object in the manifest. Type: String Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: arn:[^:]+:iam::\d{12}:role/.*
      */
     S3_BATCH_ROLE_ARN("s3.batch.role.arn", null),
+
+    /**
+     * The Amazon Resource Name (ARN) for the AWS Identity and Access Management (IAM) role that Batch Operations will use to run destroy job's action on every
+     * object in the manifest. Type: String Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: arn:[^:]+:iam::\d{12}:role/.*
+     */
+    S3_BATCH_DESTROY_ROLE_ARN("s3.batch.destroy.role.arn", null),
 
     /**
      * The bucket where all batch job manifests will be stored

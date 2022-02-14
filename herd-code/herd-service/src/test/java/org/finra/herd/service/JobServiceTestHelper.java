@@ -15,6 +15,7 @@
  */
 package org.finra.herd.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -160,7 +161,7 @@ public class JobServiceTestHelper
             .createNamespaceIamRoleAuthorization(AbstractServiceTest.TEST_ACTIVITI_NAMESPACE_CD, AbstractServiceTest.TEST_EC2_NODE_IAM_PROFILE_NAME,
                 AbstractServiceTest.TEST_EC2_NODE_IAM_PROFILE_NAME_DESCRIPTION);
 
-        String configXml = IOUtils.toString(resourceLoader.getResource(AbstractServiceTest.EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(AbstractServiceTest.EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(amiVersion);
@@ -216,7 +217,7 @@ public class JobServiceTestHelper
 
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
             .createEmrClusterDefinitionEntity(namespaceEntity, AbstractServiceTest.EMR_CLUSTER_DEFINITION_NAME,
-                IOUtils.toString(resourceLoader.getResource(AbstractServiceTest.EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+                IOUtils.toString(resourceLoader.getResource(AbstractServiceTest.EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         Parameter parameter = new Parameter("namespace", namespaceEntity.getCode());
         parameters.add(parameter);
