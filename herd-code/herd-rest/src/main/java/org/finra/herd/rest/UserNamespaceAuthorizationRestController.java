@@ -116,6 +116,20 @@ public class UserNamespaceAuthorizationRestController extends HerdBaseController
     }
 
     /**
+     * Deletes all existing user namespace authorizations for the specified user.
+     *
+     * @param userId the user id
+     *
+     * @return the list of deleted user namespace authorizations
+     */
+    @RequestMapping(value = USER_NAMESPACE_AUTHORIZATIONS_URI_PREFIX + "/userIds/{userId}", method = RequestMethod.DELETE)
+    @Secured(SecurityFunctions.FN_USER_NAMESPACE_AUTHORIZATIONS_BY_USERID_DELETE)
+    public UserNamespaceAuthorizations deleteUserNamespaceAuthorizationsByUserId(@PathVariable("userId") String userId)
+    {
+        return userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(userId);
+    }
+
+    /**
      * Gets a list of user namespace authorizations for the specified user.
      *
      * @param userId the user id
