@@ -271,6 +271,11 @@
                <xs:documentation>The Namespace code</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="chargeCode" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional charge code that is associated with the Namespace</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -280,6 +285,11 @@
          <xs:element name="namespaceCode" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Namespace code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="chargeCode" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional charge code that is associated with the Namespace</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -7249,7 +7259,7 @@
       <xs:all>
          <xs:element name="idleTimeout" type="xs:long" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>IdleTimeout in seconds.  If you don't specify idleTimeout the value defaults to one hour
+               <xs:documentation>IdleTimeout in seconds. If you don't specify idleTimeout the value defaults to one hour
                </xs:documentation>
             </xs:annotation>
          </xs:element>

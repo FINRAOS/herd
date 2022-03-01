@@ -261,9 +261,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CAPACITY_PREFERENCE_1 = "open";
 
+    public static final String CAPACITY_RESERVATION_RESOURCE_GROUP_ARN = "arn:aws:resource-groups:us-east-1:123456789012:group/TestGroup";
+
     public static final String CAPACITY_USAGE_STRATEGY_1 = "use-capacity-reservations-first";
 
-    public static final String CAPACITY_RESERVATION_RESOURCE_GROUP_ARN = "arn:aws:resource-groups:us-east-1:123456789012:group/TestGroup";
+    public static final String CHARGE_CODE = "UT_ChargeCode_" + RANDOM_SUFFIX;
 
     public static final String CODE = "code";
 
@@ -746,6 +748,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_BDEF_SHORT_DESCRIPTION = null;
 
     public static final BigDecimal NO_BID_PRICE = null;
+
+    public static final String NO_CHARGE_CODE = null;
 
     public static final List<SchemaColumn> NO_COLUMNS = null;
 
