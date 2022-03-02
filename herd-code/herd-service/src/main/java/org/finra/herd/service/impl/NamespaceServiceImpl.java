@@ -31,6 +31,7 @@ import org.finra.herd.service.NamespaceService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceHelper;
+import org.finra.herd.service.helper.S3KeyPrefixHelper;
 
 /**
  * The namespace service implementation.
@@ -50,6 +51,9 @@ public class NamespaceServiceImpl implements NamespaceService
 
     @Autowired
     private NamespaceHelper namespaceHelper;
+
+    @Autowired
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Override
     public Namespace createNamespace(NamespaceCreateRequest request)
@@ -160,6 +164,7 @@ public class NamespaceServiceImpl implements NamespaceService
         Namespace namespace = new Namespace();
         namespace.setNamespaceCode(namespaceEntity.getCode());
         namespace.setChargeCode(namespaceEntity.getChargeCode());
+        namespace.setS3KeyPrefix(s3KeyPrefixHelper.s3KeyPrefixFormat(namespaceEntity.getCode()));
         return namespace;
     }
 }
