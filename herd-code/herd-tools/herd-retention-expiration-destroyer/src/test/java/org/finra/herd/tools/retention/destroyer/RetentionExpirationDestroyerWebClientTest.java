@@ -36,7 +36,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(false);
         BusinessObjectDataKey businessObjectDataKey =
                 buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
-        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey, false);
         assertNotNull(result);
     }
 
@@ -49,7 +49,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
         {
             BusinessObjectDataKey businessObjectDataKey =
                     buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
-            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+            retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey, false);
             fail();
         }
         catch (ClientHandlerException e)
@@ -64,7 +64,7 @@ public class RetentionExpirationDestroyerWebClientTest extends AbstractRetention
         retentionExpirationDestroyerWebClient.getRegServerAccessParamsDto().setUseSsl(true);
         BusinessObjectDataKey businessObjectDataKey =
                 buildBusinessObjectDataKey("test", "test", "test", "test", 0, "test", Collections.singletonList("test"), 0);
-        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey);
+        BusinessObjectData result = retentionExpirationDestroyerWebClient.destroyBusinessObjectData(businessObjectDataKey, false);
         assertNotNull(result);
     }
 }

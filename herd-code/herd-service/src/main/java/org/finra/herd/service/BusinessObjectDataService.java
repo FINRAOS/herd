@@ -93,10 +93,11 @@ public interface BusinessObjectDataService
      * of the business object data and its storage unit. The S3 data then gets deleted by S3 bucket lifecycle policy that is based on S3 tagging.
      *
      * @param businessObjectDataKey the business object data key
+     * @param batchMode the flag used to indicate that related S3 operations should be processed in S3 Batch mode
      *
      * @return the business object data information
      */
-    BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
+    BusinessObjectData destroyBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean batchMode);
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the

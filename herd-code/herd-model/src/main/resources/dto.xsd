@@ -56,6 +56,16 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectDataBatchDestroyDto">
+      <xs:complexContent>
+         <xs:extension base="businessObjectDataDestroyDto">
+            <xs:sequence>
+               <xs:element name="jobConfig" type="batchJobConfigDto"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
    <xs:complexType name="businessObjectDataKey">
       <xs:annotation>
          <xs:appinfo>
@@ -122,8 +132,8 @@
          <xs:element name="s3BatchRoleArn" type="xs:string"/>
          <xs:element name="manifestS3BucketName" type="xs:string"/>
          <xs:element name="manifestS3Prefix" type="xs:string" minOccurs="0"/>
-         <xs:element name="maxAttempts" type="xs:int" />
-         <xs:element name="backoffPeriod" type="xs:int" />
+         <xs:element name="maxAttempts" type="xs:int"/>
+         <xs:element name="backoffPeriod" type="xs:int"/>
       </xs:sequence>
    </xs:complexType>
 

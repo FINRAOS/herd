@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
@@ -43,7 +43,6 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 import org.finra.herd.service.CurrentUserService;
 import org.finra.herd.service.MessageNotificationEventService;
-import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.UserNamespaceAuthorizationService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -101,7 +100,8 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key.getUserId(), namespaceEntity, request.getNamespacePermissions());
 
         // Create a user namespace authorization change notification to be sent on create user namespace authorization event.
-        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(
+            new UserNamespaceAuthorizationKey(userNamespaceAuthorizationEntity.getUserId(), userNamespaceAuthorizationEntity.getNamespaceCode()));
 
         // Create and return the user namespace authorization object from the persisted entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
@@ -139,7 +139,8 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         userNamespaceAuthorizationDao.saveAndRefresh(userNamespaceAuthorizationEntity);
 
         // Create a user namespace authorization change notification to be sent on update user namespace authorization event.
-        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(
+            new UserNamespaceAuthorizationKey(userNamespaceAuthorizationEntity.getUserId(), userNamespaceAuthorizationEntity.getNamespaceCode()));
 
         // Create and return the user namespace authorization object from the updated entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
@@ -174,18 +175,46 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
         userNamespaceAuthorizationDao.delete(userNamespaceAuthorizationEntity);
 
         // Create a user namespace authorization change notification to be sent on delete user namespace authorization event.
-        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(key);
+        messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(
+            new UserNamespaceAuthorizationKey(userNamespaceAuthorizationEntity.getUserId(), userNamespaceAuthorizationEntity.getNamespaceCode()));
 
         // Create and return the user namespace authorization object from the deleted entity.
         return createUserNamespaceAuthorizationFromEntity(userNamespaceAuthorizationEntity);
     }
 
     @Override
+    public UserNamespaceAuthorizations deleteUserNamespaceAuthorizationsByUserId(String userId)
+    {
+        // Validate and trim the user id.
+        String userIdLocal = alternateKeyHelper.validateStringParameter("user id", userId);
+
+        // Retrieve and return a list of user namespace authorization entities for the specified user id.
+        List<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntities =
+            userNamespaceAuthorizationDao.getUserNamespaceAuthorizationsByUserId(userIdLocal);
+
+        // Delete all user namespace authorizations that exist for the specified user id.
+        for (UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity : userNamespaceAuthorizationEntities)
+        {
+            // Delete the business object definition.
+            userNamespaceAuthorizationDao.delete(userNamespaceAuthorizationEntity);
+
+            // Create a user namespace authorization change notification to be sent on delete user namespace authorization event.
+            messageNotificationEventService.processUserNamespaceAuthorizationChangeNotificationEvent(
+                new UserNamespaceAuthorizationKey(userNamespaceAuthorizationEntity.getUserId(), userNamespaceAuthorizationEntity.getNamespaceCode()));
+        }
+
+        // Create and populate the user namespace authorizations object from the returned entities.
+        UserNamespaceAuthorizations userNamespaceAuthorizations = new UserNamespaceAuthorizations();
+        userNamespaceAuthorizations.getUserNamespaceAuthorizations().addAll(createUserNamespaceAuthorizationsFromEntities(userNamespaceAuthorizationEntities));
+
+        return userNamespaceAuthorizations;
+    }
+
+    @Override
     public UserNamespaceAuthorizations getUserNamespaceAuthorizationsByUserId(String userId)
     {
         // Validate and trim the user id.
-        Assert.hasText(userId, "A user id must be specified.");
-        String userIdLocal = userId.trim();
+        String userIdLocal = alternateKeyHelper.validateStringParameter("user id", userId);
 
         // Retrieve and return a list of user namespace authorization entities for the specified user id.
         List<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntities =
@@ -203,8 +232,7 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
     public UserNamespaceAuthorizations getUserNamespaceAuthorizationsByNamespace(String namespace)
     {
         // Validate and trim the namespace code.
-        Assert.hasText(namespace, "A namespace must be specified.");
-        String namespaceLocal = namespace.trim();
+        String namespaceLocal = alternateKeyHelper.validateStringParameter("namespace", namespace);
 
         // Validate that specified namespace exists.
         namespaceDaoHelper.getNamespaceEntity(namespaceLocal);
@@ -373,6 +401,7 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
      * @param key the user namespace authorization key (case insensitive)
      *
      * @return the user namespace authorization entity
+     *
      * @throws org.finra.herd.model.ObjectNotFoundException if the user namespace authorization entity doesn't exist
      */
     private UserNamespaceAuthorizationEntity getUserNamespaceAuthorizationEntity(UserNamespaceAuthorizationKey key) throws ObjectNotFoundException

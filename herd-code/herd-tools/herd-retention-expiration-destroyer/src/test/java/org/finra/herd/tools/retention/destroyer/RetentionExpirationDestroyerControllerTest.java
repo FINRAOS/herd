@@ -15,9 +15,6 @@
  */
 package org.finra.herd.tools.retention.destroyer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +29,8 @@ import org.junit.Test;
 import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
+
+import static org.junit.Assert.*;
 
 public class RetentionExpirationDestroyerControllerTest extends AbstractRetentionExpirationDestroyerTest
 {
@@ -156,7 +155,7 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
                 .withDisableHostnameVerification(true).build();
 
         // Perform the retention expiration destruction.
-        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputCsvFile, regServerAccessParamsDto);
+        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputCsvFile, regServerAccessParamsDto, false);
     }
 
     /**

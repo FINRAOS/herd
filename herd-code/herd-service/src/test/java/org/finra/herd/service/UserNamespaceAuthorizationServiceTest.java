@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +47,6 @@ import org.finra.herd.model.api.xml.UserNamespaceAuthorizationUpdateRequest;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.SecurityRoleEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 
@@ -67,8 +67,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization.
-        UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.createUserNamespaceAuthorization(
-            new UserNamespaceAuthorizationCreateRequest(key, SUPPORTED_NAMESPACE_PERMISSIONS));
+        UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
+            .createUserNamespaceAuthorization(new UserNamespaceAuthorizationCreateRequest(key, SUPPORTED_NAMESPACE_PERMISSIONS));
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(resultUserNamespaceAuthorization.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS),
@@ -131,7 +131,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Try to create a user namespace authorization when permissions are not specified (passed as an empty list).
         try
         {
-            userNamespaceAuthorizationService.createUserNamespaceAuthorization(new UserNamespaceAuthorizationCreateRequest(key, Arrays.asList()));
+            userNamespaceAuthorizationService.createUserNamespaceAuthorization(new UserNamespaceAuthorizationCreateRequest(key, Collections.emptyList()));
             fail("Should throw an IllegalArgumentException when permissions are not specified.");
         }
         catch (IllegalArgumentException e)
@@ -175,7 +175,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(resultUserNamespaceAuthorization.getId(),
-            new UserNamespaceAuthorizationKey(key.getUserId().toUpperCase(), key.getNamespace()), SUPPORTED_NAMESPACE_PERMISSIONS),
+                new UserNamespaceAuthorizationKey(key.getUserId().toUpperCase(), key.getNamespace()), SUPPORTED_NAMESPACE_PERMISSIONS),
             resultUserNamespaceAuthorization);
     }
 
@@ -195,7 +195,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorization(resultUserNamespaceAuthorization.getId(),
-            new UserNamespaceAuthorizationKey(key.getUserId().toLowerCase(), key.getNamespace()), SUPPORTED_NAMESPACE_PERMISSIONS),
+                new UserNamespaceAuthorizationKey(key.getUserId().toLowerCase(), key.getNamespace()), SUPPORTED_NAMESPACE_PERMISSIONS),
             resultUserNamespaceAuthorization);
     }
 
@@ -379,8 +379,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         }
         catch (final IllegalArgumentException illegalArgumentException)
         {
-            assertEquals("Users are not allowed to remove their own GRANT namespace permission."
-                + " Please include the GRANT namespace permission in this request, or have another user remove the GRANT permission.",
+            assertEquals("Users are not allowed to remove their own GRANT namespace permission." +
+                    " Please include the GRANT namespace permission in this request, or have another user remove the GRANT permission.",
                 illegalArgumentException.getMessage());
         }
 
@@ -633,8 +633,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get a user namespace authorization using input parameters with leading and trailing empty spaces.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -652,9 +652,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get a user namespace authorization using uppercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -672,9 +671,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get a user namespace authorization using lowercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -775,8 +773,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Validate that this user namespace authorization exists.
         assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
@@ -800,8 +798,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Validate that this user namespace authorization exists.
         assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
@@ -825,8 +823,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Validate that this user namespace authorization exists.
         assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
@@ -866,9 +864,9 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     // Unit tests for getUserNamespaceAuthorizationsByUserId().
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByUserId() throws Exception
+    public void testGetUserNamespaceAuthorizationsByUserId()
     {
-        // Create user namespace authorization keys. The keys are listed out of order to validate the order by logic.
+        // Create user namespace authorization keys. The keys are listed out of order to validate the "order by" logic.
         List<UserNamespaceAuthorizationKey> keys = Arrays
             .asList(new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE),
                 new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE));
@@ -906,7 +904,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByUserIdTrimParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByUserIdTrimParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -921,12 +919,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByUserIdUpperCaseParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByUserIdUpperCaseParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -941,12 +939,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByUserIdLowerCaseParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByUserIdLowerCaseParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -961,12 +959,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByUserIdEmptyList() throws Exception
+    public void testGetUserNamespaceAuthorizationsByUserIdEmptyList()
     {
         // Retrieve an empty list of user namespace authorizations.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -979,9 +977,9 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     // Unit tests for getUserNamespaceAuthorizationsByNamespace().
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespace() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespace()
     {
-        // Create user namespace authorization keys. The keys are listed out of order to validate the order by logic.
+        // Create user namespace authorization keys. The keys are listed out of order to validate the "order by" logic.
         List<UserNamespaceAuthorizationKey> keys = Arrays
             .asList(new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE),
                 new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE));
@@ -1019,7 +1017,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespaceTrimParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespaceTrimParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -1034,12 +1032,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespaceUpperCaseParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespaceUpperCaseParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -1054,12 +1052,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespaceLowerCaseParameters() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespaceLowerCaseParameters()
     {
         // Create a user namespace authorization key.
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
@@ -1074,12 +1072,12 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(
-            Arrays.asList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
             resultUserNamespaceAuthorizations);
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespaceNamespaceNoExists() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespaceNamespaceNoExists()
     {
         // Try to retrieve user namespace authorizations for a non-existing namespace.
         try
@@ -1094,13 +1092,138 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetUserNamespaceAuthorizationsByNamespaceEmptyList() throws Exception
+    public void testGetUserNamespaceAuthorizationsByNamespaceEmptyList()
     {
         // Create and persist the relative database entities.
         namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve an empty list of user namespace authorizations.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations = userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByNamespace(NAMESPACE);
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorizations(), resultUserNamespaceAuthorizations);
+    }
+
+    // Unit tests for deleteUserNamespaceAuthorizationsByUserId().
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserId()
+    {
+        // Create user namespace authorization keys. The keys are listed out of order to validate the "order by" logic.
+        List<UserNamespaceAuthorizationKey> keys = Arrays
+            .asList(new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID_2, NAMESPACE),
+                new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE_2), new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE));
+
+        // Create and persist the relative database entities.
+        for (UserNamespaceAuthorizationKey key : keys)
+        {
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        }
+
+        // Delete user namespace authorizations for the specified user id.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations = userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(USER_ID);
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorizations(Arrays.asList(
+            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(0).getId(), keys.get(3),
+                SUPPORTED_NAMESPACE_PERMISSIONS),
+            new UserNamespaceAuthorization(resultUserNamespaceAuthorizations.getUserNamespaceAuthorizations().get(1).getId(), keys.get(2),
+                SUPPORTED_NAMESPACE_PERMISSIONS))), resultUserNamespaceAuthorizations);
+
+        // Confirm that all user namespace authorizations for this user are deleted.
+        assertEquals(new UserNamespaceAuthorizations(), userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByUserId(USER_ID));
+    }
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserIdMissingRequiredParameters()
+    {
+        // Try to delete user namespace authorizations by user id when user id is not specified.
+        try
+        {
+            userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(BLANK_TEXT);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A user id must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserIdTrimParameters()
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Delete user namespace authorizations for the test user using user id value with leading and trailing empty spaces.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
+            userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(addWhitespace(key.getUserId()));
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorizations(
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+            resultUserNamespaceAuthorizations);
+
+        // Confirm that all user namespace authorizations for this user are deleted.
+        assertEquals(new UserNamespaceAuthorizations(), userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByUserId(USER_ID));
+    }
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserIdUpperCaseParameters()
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Delete user namespace authorizations for the test user using uppercase user id value.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
+            userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(key.getUserId().toUpperCase());
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorizations(
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+            resultUserNamespaceAuthorizations);
+
+        // Confirm that all user namespace authorizations for this user are deleted.
+        assertEquals(new UserNamespaceAuthorizations(), userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByUserId(USER_ID));
+    }
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserIdLowerCaseParameters()
+    {
+        // Create a user namespace authorization key.
+        UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
+
+        // Create and persist the relative database entities.
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Delete user namespace authorizations for the specified user id using lowercase user id value.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
+            userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(key.getUserId().toLowerCase());
+
+        // Validate the returned object.
+        assertEquals(new UserNamespaceAuthorizations(
+                Collections.singletonList(new UserNamespaceAuthorization(userNamespaceAuthorizationEntity.getId(), key, SUPPORTED_NAMESPACE_PERMISSIONS))),
+            resultUserNamespaceAuthorizations);
+
+        // Confirm that all user namespace authorizations for this user are deleted.
+        assertEquals(new UserNamespaceAuthorizations(), userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByUserId(USER_ID));
+    }
+
+    @Test
+    public void testDeleteUserNamespaceAuthorizationsByUserIdEmptyList()
+    {
+        // Try to delete user namespace authorizations for a non-existing user id.
+        UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
+            userNamespaceAuthorizationService.deleteUserNamespaceAuthorizationsByUserId(I_DO_NOT_EXIST);
 
         // Validate the returned object.
         assertEquals(new UserNamespaceAuthorizations(), resultUserNamespaceAuthorizations);

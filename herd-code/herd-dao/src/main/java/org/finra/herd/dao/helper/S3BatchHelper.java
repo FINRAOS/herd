@@ -18,6 +18,8 @@ package org.finra.herd.dao.helper;
 import java.io.File;
 import java.util.Collection;
 
+import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3control.model.CreateJobRequest;
 import com.amazonaws.services.s3control.model.DescribeJobRequest;
 import com.amazonaws.services.s3control.model.JobManifest;
@@ -25,17 +27,16 @@ import com.amazonaws.services.s3control.model.JobManifestLocation;
 import com.amazonaws.services.s3control.model.JobManifestSpec;
 import com.amazonaws.services.s3control.model.JobOperation;
 import com.amazonaws.services.s3control.model.JobReport;
+import com.amazonaws.services.s3control.model.JobReportFormat;
+import com.amazonaws.services.s3control.model.JobReportScope;
 import com.amazonaws.services.s3control.model.S3GlacierJobTier;
 import com.amazonaws.services.s3control.model.S3InitiateRestoreObjectOperation;
+import com.amazonaws.services.s3control.model.S3SetObjectTaggingOperation;
+import com.amazonaws.services.s3control.model.S3Tag;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.AwsClientFactory;
-import org.finra.herd.dao.S3BatchManifest;
 import org.finra.herd.model.dto.BatchJobConfigDto;
 import org.finra.herd.model.dto.BatchJobManifestDto;
 
@@ -65,7 +66,6 @@ public class S3BatchHelper
         String content = manifestContentBuilder.toString();
 
         // Build manifest dto object to pass manifest content and configuration for further processing
-        S3BatchManifest manifest = new S3BatchManifest();
         BatchJobManifestDto.Builder<Void> builder = BatchJobManifestDto.builder()
             // S3 key of the manifest file
             .withKey(String.format("%s/%s.csv", manifestLocation, jobId))
@@ -77,6 +77,49 @@ public class S3BatchHelper
             // If the specified manifest object is in the S3BatchOperations_CSV_20180820 format, this element describes which columns contain the required data.
             // Valid Values: Ignore | Bucket | Key | VersionId
             .withFields("Bucket", "Key")
+            // Manifest file content
+            .withContent(content)
+            // md5 checksum of the content of the manifest file
+            .withEtag(DigestUtils.md5Hex(content));
+
+        return builder.build();
+    }
+
+    /**
+     * Create container object for S3 batch job manifest
+     *
+     * @param jobId Unique batch job id
+     * @param bucketName The bucket name where target files located
+     * @param objectVersions The collection of S3 objects version information to include in the manifest
+     * @param batchJobConfig The batch job configuration parameters
+     *
+     * @return container object with job settings and manifest content
+     */
+    public BatchJobManifestDto createCSVBucketKeyVersionManifest(String jobId, String bucketName, Collection<S3VersionSummary> objectVersions,
+        BatchJobConfigDto batchJobConfig)
+    {
+        // Get bucket name and location prefix from batch job configuration object
+        String manifestBucketName = batchJobConfig.getManifestS3BucketName();
+        String manifestLocation = batchJobConfig.getManifestS3Prefix();
+
+        // Build manifest content as a 3 columns comma separated file, where each line looks like "bucket name, S3 object key, S3 object version"
+        StringBuilder manifestContentBuilder = new StringBuilder();
+        objectVersions.stream().map(file -> String.format("%s,%s,%s%n", bucketName, file.getKey(), file.getVersionId()))
+            .forEach(manifestContentBuilder::append);
+        String content = manifestContentBuilder.toString();
+
+        // Build manifest dto object to pass manifest content and configuration for further processing
+        BatchJobManifestDto.Builder<Void> builder = BatchJobManifestDto.builder()
+            // S3 key of the manifest file
+            .withKey(String.format("%s/%s.csv", manifestLocation, jobId))
+            // Bucket name where manifest will be stored
+            .withBucketName(manifestBucketName)
+            // The manifest format, indicates which of the available formats the specified manifest uses
+            // Valid Values: S3BatchOperations_CSV_20180820 | S3InventoryReport_CSV_20161130
+            .withFormat("S3BatchOperations_CSV_20180820")
+            // If the specified manifest object is in the S3BatchOperations_CSV_20180820 format, this element describes which columns contain the required data.
+            // Valid Values: Ignore | Bucket | Key | VersionId
+            .withFields("Bucket", "Key", "VersionId")
             // Manifest file content
             .withContent(content)
             // md5 checksum of the content of the manifest file
@@ -113,13 +156,57 @@ public class S3BatchHelper
         JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
             .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
 
-        // Build JobReport object, which indicates there is no need to create separate job report file on S3
-        JobReport jobReport = new JobReport().withEnabled(false);
+        // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
+        String reportBucketArn = String.format("arn:aws:s3:::%s", manifest.getBucketName());
+        String reportLocation = batchJobConfig.getManifestS3Prefix();
+
+        // Build JobReport object
+        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketArn)
+            .withPrefix(reportLocation).withFormat(JobReportFormat.Report_CSV_20180820);
 
         // Build the request object
         return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
             .withReport(jobReport).withPriority(10).withRoleArn(batchJobConfig.getS3BatchRoleArn()).withClientRequestToken(jobId)
             .withDescription(String.format("Restore batch job %s", jobId)).withConfirmationRequired(false);
+    }
+
+    /**
+     * Generate AWS SDK CreateJobRequest object to tag file versions using S3 Batch operation
+     *
+     * @param manifest the container object containing configuration parameters and content for the manifest.
+     * @param jobId herd generated job id
+     * @param batchJobConfig The batch job configuration parameters
+     * @param tag the S3 object tag
+     *
+     * @return container object which contains the configuration parameters for an S3 Initiate Restore Object job.
+     */
+    public CreateJobRequest generateCreatePutObjectTaggingJobRequest(BatchJobManifestDto manifest, String jobId, final BatchJobConfigDto batchJobConfig,
+        final Tag tag)
+    {
+        // Create object to describe the batch restore operation in S3. The Restore operation initiates restore requests for archived objects on a list of
+        // Amazon S3 objects that you specify.
+        JobOperation jobOperation = new JobOperation().withS3PutObjectTagging(
+            new S3SetObjectTaggingOperation().withTagSet(new S3Tag().withKey(tag.getKey()).withValue(tag.getValue())));
+
+        // Build manifest file s3 ARN
+        String manifestLocationArn = String.format("arn:aws:s3:::%s/%s", manifest.getBucketName(), manifest.getKey());
+
+        // Build JobManifest object, which contains the configuration information for a batch job's manifest.
+        JobManifest jobManifest = new JobManifest().withSpec(new JobManifestSpec().withFormat(manifest.getFormat()).withFields(manifest.getFields()))
+            .withLocation(new JobManifestLocation().withObjectArn(manifestLocationArn).withETag(manifest.getEtag()));
+
+        // If job tasks will fail, report will contain each failure details, report will be stored in the same folder as manifest in job-{id} subfolder
+        String reportBucketArn = String.format("arn:aws:s3:::%s", batchJobConfig.getManifestS3BucketName());
+        String reportLocation = batchJobConfig.getManifestS3Prefix();
+
+        // Build JobReport object
+        JobReport jobReport = new JobReport().withEnabled(true).withReportScope(JobReportScope.FailedTasksOnly).withBucket(reportBucketArn)
+            .withPrefix(reportLocation).withFormat(JobReportFormat.Report_CSV_20180820);
+
+        // Build the request object
+        return new CreateJobRequest().withAccountId(batchJobConfig.getAwsAccountId()).withOperation(jobOperation).withManifest(jobManifest)
+            .withReport(jobReport).withPriority(10).withRoleArn(batchJobConfig.getS3BatchRoleArn()).withClientRequestToken(jobId)
+            .withDescription(String.format("Tagging batch job %s", jobId)).withConfirmationRequired(false);
     }
 
     /**
