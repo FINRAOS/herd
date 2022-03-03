@@ -2,7 +2,7 @@ package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -56,7 +56,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
 
     @Spy
     private AttributeValueListDaoHelper attributeValueListDaoHelper;
-    
+
     @InjectMocks
     private GlobalAttributeDefinitionServiceImpl globalAttributeDefinitionService;
 
@@ -215,7 +215,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
             globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME);
         AttributeValueListEntity attributeValueListEntity = attributeValueListDaoTestHelper.createAttributeValueListEntity("namespace_1", "list_1");
         globalAttributeDefinitionEntity.setAttributeValueList(attributeValueListEntity);
-        
+
         // Mock calls to external methods.
         when(globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
 

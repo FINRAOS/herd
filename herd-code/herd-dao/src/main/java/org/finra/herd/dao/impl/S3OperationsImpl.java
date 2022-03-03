@@ -139,7 +139,7 @@ public class S3OperationsImpl implements S3Operations
     @Override
     public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3 s3Client)
     {
-        s3Client.restoreObject(requestRestore);
+        s3Client.restoreObjectV2(requestRestore);
     }
 
     @Override

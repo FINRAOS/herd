@@ -47,6 +47,7 @@ public interface BusinessObjectDataInitiateRestoreHelperService
      * @param businessObjectDataKey the business object data key
      * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      * @param archiveRetrievalOption the archive retrieval option when restoring an archived object.
+     * @param batchMode the flag used to indicate that related S3 operations should be processed in S3 Batch mode
      *
      * @return the DTO that holds various parameters needed to perform a business object data restore
      */

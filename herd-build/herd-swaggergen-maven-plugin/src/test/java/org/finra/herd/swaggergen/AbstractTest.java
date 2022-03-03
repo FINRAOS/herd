@@ -17,6 +17,7 @@ package org.finra.herd.swaggergen;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -54,12 +55,12 @@ public abstract class AbstractTest
 
     protected String getResourceAsString(String name) throws IOException
     {
-        return replaceLineSeparators(IOUtils.toString(getClass().getResourceAsStream(name)));
+        return replaceLineSeparators(IOUtils.toString(getClass().getResourceAsStream(name), StandardCharsets.UTF_8));
     }
 
     protected String getFileAsString(Path path) throws IOException
     {
-        return replaceLineSeparators(IOUtils.toString(path.toUri()));
+        return replaceLineSeparators(IOUtils.toString(path.toUri(), StandardCharsets.UTF_8));
     }
 
     private String replaceLineSeparators(String content)

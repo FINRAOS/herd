@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,7 +100,7 @@ public class JobDefinitionServiceTestHelper
         try
         {
             return createJobDefinitionCreateRequest(AbstractServiceTest.TEST_ACTIVITI_NAMESPACE_CD, AbstractServiceTest.TEST_ACTIVITI_JOB_NAME,
-                AbstractServiceTest.JOB_DESCRIPTION, IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream()),
+                AbstractServiceTest.JOB_DESCRIPTION, IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream(), StandardCharsets.UTF_8),
                 parameters);
         }
         catch (IOException ex)

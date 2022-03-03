@@ -21,13 +21,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -131,7 +132,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrCluster() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         assertEquals("scaleDownBehavior", expectedEmrClusterDefinition.getScaleDownBehavior());
         assertNotNull(expectedEmrClusterDefinition.getKerberosAttributes());
@@ -162,7 +163,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterAdditionalInfo() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -185,7 +186,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testCreateEmrClusterAmazonBadRequest() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_BAD_REQUEST);
@@ -205,7 +206,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testCreateEmrClusterAmazonObjectNotFound() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_NOT_FOUND);
@@ -225,7 +226,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test(expected = AmazonServiceException.class)
     public void testCreateEmrClusterAmazonOtherException() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION);
@@ -245,7 +246,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterBlankParams() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         List<ScriptDefinition> scriptDefinitions = emrClusterDefinition.getCustomBootstrapActionAll();
@@ -273,7 +274,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDryRunFalseNoOverride() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -303,7 +304,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDryRunTrueNoOverride() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -333,7 +334,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDuplicate() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -363,7 +364,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterInstanceNotDefined() throws Exception
     {
         // Create the test EMR cluster definition entity with missing instance definitions.
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setInstanceDefinitions(null);
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
@@ -497,7 +498,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterMandatoryTagsNull() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request.
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -524,7 +525,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterMultipleBootstrap() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
         ScriptDefinition allScript = emrClusterDefinition.getCustomBootstrapActionAll().get(0);
@@ -558,7 +559,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideAllNull() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -587,7 +588,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceTo0InstanceCountAssertSuccess() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
         emrClusterDefinitionDaoTestHelper
@@ -608,7 +609,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceToNegativeInstanceCountAssertException() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
         emrClusterDefinitionDaoTestHelper
@@ -636,7 +637,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideExistingCoreInstanceToNullAssertSuccess() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
         emrClusterDefinitionDaoTestHelper
@@ -657,7 +658,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideHadoopConfigurations() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -691,7 +692,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideList() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -747,7 +748,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideObject() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -780,7 +781,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideInstanceDefinitionsWithInstanceFleets() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -816,7 +817,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideInstanceFleetsWithInstanceDefinitions() throws Exception
     {
         // Create an EMR cluster definition that uses instance fleets instead of instance definitions.
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         InstanceDefinitions instanceDefinitions = expectedEmrClusterDefinition.getInstanceDefinitions();
         expectedEmrClusterDefinition.setInstanceDefinitions(null);
@@ -859,7 +860,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideScalar() throws Exception
     {
         // Create the namespace entity.
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -941,7 +942,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfiguration() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -961,7 +962,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationInvalidReleaseLabel() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -985,7 +986,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationNoReleaseLabel() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -1009,7 +1010,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSecurityConfigurationReleaseLabelWithPrefix() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -1032,7 +1033,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterServiceRole() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setServiceIamRole(emrClusterDefinition.getEc2NodeIamProfileName());
@@ -1052,7 +1053,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterStartupSteps() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
 
@@ -1102,7 +1103,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterSupportedProduct() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
@@ -1123,7 +1124,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterWithTaskInstances() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         InstanceDefinition taskDef = new InstanceDefinition();
@@ -1155,7 +1156,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterWithInstanceFleets() throws Exception
     {
         // Retrieve the EMR cluster definition.
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
         // Update the EMR cluster definition to use instance fleets instead of instance group definitions.
@@ -1181,7 +1182,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterWithSecurityGroups() throws Exception
     {
         // Retrieve the EMR cluster definition.
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
 
         // Set the EMR cluster definition's security groups.
@@ -1208,7 +1209,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterOverrideSecurityGroups() throws Exception
     {
-        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         expectedEmrClusterDefinition.setMasterSecurityGroup(EMR_MASTER_SECURITY_GROUP + "override");
         expectedEmrClusterDefinition.setSlaveSecurityGroup(EMR_SLAVE_SECURITY_GROUP + "override");
@@ -1247,7 +1248,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterWrongInstanceConfigs() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request.
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1270,7 +1271,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddSteps() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1293,7 +1294,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAllTypes() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1379,7 +1380,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonBadRequest() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1397,7 +1398,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonObjectNotFound() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1415,7 +1416,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonOtherException() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1433,7 +1434,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsHadoopNoMainClass() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1462,7 +1463,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsInvalidCluster() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         emrService.createCluster(request);
@@ -1538,7 +1539,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterById() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
@@ -1585,7 +1586,7 @@ public class EmrServiceTest extends AbstractServiceTest
     @Test
     public void testGetEmrClusterByIdWithFleetInstance() throws Exception
     {
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8);
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
         emrClusterDefinition.setAmiVersion(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
@@ -1622,7 +1623,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdAmazonException() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
             EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).withEmrClusterName("test")
@@ -1640,7 +1641,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdDoesNotExist() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
             EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
@@ -1658,7 +1659,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdDoesNotExistForNamespace() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1672,7 +1673,7 @@ public class EmrServiceTest extends AbstractServiceTest
         NamespaceEntity namespaceEntity_2 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity_2, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto_2 =
             EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE_2).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
@@ -1690,7 +1691,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdWithStepId() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1741,7 +1742,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByName() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1768,7 +1769,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterIdByNameForBlank() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request.
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1782,7 +1783,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrCluster() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -1809,7 +1810,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrClusterAmazonException() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         request.setEmrClusterName(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION);
@@ -1829,7 +1830,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrClusterNoCluster() throws Exception
     {
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream(), StandardCharsets.UTF_8));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
             EmrClusterAlternateKeyDto.builder().withNamespace(NAMESPACE).withEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)

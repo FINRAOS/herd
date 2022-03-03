@@ -29,14 +29,14 @@ public interface BusinessObjectDataInitiateDestroyHelperService
      *
      * @return the business object data information
      */
-    public BusinessObjectData executeInitiateDestroyAfterStep(BusinessObjectDataDestroyDto businessObjectDataDestroyDto);
+    BusinessObjectData executeInitiateDestroyAfterStep(BusinessObjectDataDestroyDto businessObjectDataDestroyDto);
 
     /**
      * Executes S3 specific steps required for initiation of a business object data destroy.
      *
      * @param businessObjectDataDestroyDto the DTO that holds various parameters needed to initiate a business object data destroy
      */
-    public void executeS3SpecificSteps(BusinessObjectDataDestroyDto businessObjectDataDestroyDto);
+    void executeS3SpecificSteps(BusinessObjectDataDestroyDto businessObjectDataDestroyDto);
 
     /**
      * Prepares to initiate a business object data destroy process by validating specified business object data along with other related database entities. The
@@ -45,5 +45,5 @@ public interface BusinessObjectDataInitiateDestroyHelperService
      * @param businessObjectDataDestroyDto the DTO that holds various parameters needed to initiate a business object data destroy
      * @param businessObjectDataKey the business object data key
      */
-    public void prepareToInitiateDestroy(BusinessObjectDataDestroyDto businessObjectDataDestroyDto, BusinessObjectDataKey businessObjectDataKey);
+    void prepareToInitiateDestroy(BusinessObjectDataDestroyDto businessObjectDataDestroyDto, BusinessObjectDataKey businessObjectDataKey);
 }

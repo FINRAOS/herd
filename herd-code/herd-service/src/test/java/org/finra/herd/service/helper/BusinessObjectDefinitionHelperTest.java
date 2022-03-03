@@ -17,7 +17,7 @@ package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -133,7 +133,7 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
 
         // Mock the external calls.
         when(jsonHelper.objectToJson(any()))
-            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
+            .thenThrow(new IllegalStateException(new JsonParseException(null, "Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
 
         // Execute a function for all business object definition entities.
         businessObjectDefinitionHelper
