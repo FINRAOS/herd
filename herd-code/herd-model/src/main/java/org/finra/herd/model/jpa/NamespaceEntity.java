@@ -26,7 +26,6 @@ import javax.persistence.Table;
  */
 @Table(name = NamespaceEntity.TABLE_NAME)
 @Entity
-@Cacheable
 public class NamespaceEntity extends AuditableEntity
 {
     /**
