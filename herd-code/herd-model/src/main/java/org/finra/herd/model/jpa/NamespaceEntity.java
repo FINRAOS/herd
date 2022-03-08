@@ -36,6 +36,9 @@ public class NamespaceEntity extends AuditableEntity
     @Column(name = "name_space_cd")
     private String code;
 
+    @Column(name = "chrg_cd")
+    private String chargeCode;
+
     public String getCode()
     {
         return code;
@@ -44,5 +47,15 @@ public class NamespaceEntity extends AuditableEntity
     public void setCode(String code)
     {
         this.code = code;
+    }
+
+    public String getChargeCode()
+    {
+        return chargeCode;
+    }
+
+    public void setChargeCode(String chargeCode)
+    {
+        this.chargeCode = chargeCode;
     }
 }
