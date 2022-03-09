@@ -42,7 +42,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE, CHARGE_CODE));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE, NO_CHARGE_CODE));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(addWhitespace(NAMESPACE), addWhitespace(CHARGE_CODE)));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase()), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase(), NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase()), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase(), NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -154,7 +154,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -182,7 +182,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -208,7 +208,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -262,7 +262,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -297,7 +297,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -317,7 +317,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -337,7 +337,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));

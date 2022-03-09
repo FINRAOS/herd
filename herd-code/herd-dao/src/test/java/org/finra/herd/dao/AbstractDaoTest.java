@@ -689,6 +689,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
+    public static final String NAMESPACE_S3_KEY_PREFIX = "ut-namespace-1-" + RANDOM_SUFFIX;
+
     public static final String NESTED_AGGREGATION_JSON_STRING = "UT_NestedAggregationJsonString_" + RANDOM_SUFFIX;
 
     public static final String NESTED_AGGREGATION_NAME = "UT_NestedAggregationName_" + RANDOM_SUFFIX;
