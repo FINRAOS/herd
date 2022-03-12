@@ -25,8 +25,6 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.NamespaceDao;
@@ -37,8 +35,6 @@ import org.finra.herd.model.jpa.NamespaceEntity_;
 @Repository
 public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceDaoImpl.class);
-
     @Override
     public NamespaceEntity getNamespaceByKey(NamespaceKey namespaceKey)
     {
@@ -48,13 +44,6 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
     @Override
     public NamespaceEntity getNamespaceByCd(String namespaceCode)
     {
-        StringBuilder stackTraceBuilder = new StringBuilder();
-        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-            stackTraceBuilder.append(ste);
-        }
-
-        LOGGER.info("getNamespaceByCd: {}", stackTraceBuilder);
-
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<NamespaceEntity> criteria = builder.createQuery(NamespaceEntity.class);
@@ -68,6 +57,7 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
         criteria.select(namespaceEntity).where(queryRestriction);
 
         HashMap<String, Object> properties = new HashMap<>();
+        properties.put("org.hibernate.cacheable", true);
 
         return executeSingleResultQuery(criteria, String.format("Found more than one namespace with namespaceCode=\"%s\".", namespaceCode, properties));
     }
