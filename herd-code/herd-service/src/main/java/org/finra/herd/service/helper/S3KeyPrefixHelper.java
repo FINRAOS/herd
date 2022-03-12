@@ -182,7 +182,7 @@ public class S3KeyPrefixHelper
      *
      * @return the string in S3 format
      */
-    private String s3KeyPrefixFormat(String string)
+    public String s3KeyPrefixFormat(String string)
     {
         return string.toLowerCase().replace('_', '-');
     }

@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,7 @@ import org.finra.herd.service.NamespaceService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceHelper;
+import org.finra.herd.service.helper.S3KeyPrefixHelper;
 
 /**
  * The namespace service implementation.
@@ -51,10 +52,13 @@ public class NamespaceServiceImpl implements NamespaceService
     @Autowired
     private NamespaceHelper namespaceHelper;
 
+    @Autowired
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
+
     @Override
     public Namespace createNamespace(NamespaceCreateRequest request)
     {
-        // Perform the validation.
+        // Validation and trim the request.
         validateNamespaceCreateRequest(request);
 
         // Get the namespace key.
@@ -124,6 +128,11 @@ public class NamespaceServiceImpl implements NamespaceService
     private void validateNamespaceCreateRequest(NamespaceCreateRequest request)
     {
         request.setNamespaceCode(alternateKeyHelper.validateStringParameter("namespace", request.getNamespaceCode()));
+
+        if (request.getChargeCode() != null)
+        {
+            request.setChargeCode(request.getChargeCode().trim());
+        }
     }
 
     /**
@@ -138,6 +147,7 @@ public class NamespaceServiceImpl implements NamespaceService
         // Create a new entity.
         NamespaceEntity namespaceEntity = new NamespaceEntity();
         namespaceEntity.setCode(request.getNamespaceCode());
+        namespaceEntity.setChargeCode(request.getChargeCode());
         return namespaceEntity;
     }
 
@@ -153,6 +163,8 @@ public class NamespaceServiceImpl implements NamespaceService
         // Create the namespace information.
         Namespace namespace = new Namespace();
         namespace.setNamespaceCode(namespaceEntity.getCode());
+        namespace.setChargeCode(namespaceEntity.getChargeCode());
+        namespace.setS3KeyPrefix(s3KeyPrefixHelper.s3KeyPrefixFormat(namespaceEntity.getCode()));
         return namespace;
     }
 }
