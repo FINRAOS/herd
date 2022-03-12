@@ -237,7 +237,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         properties.setProperty("hibernate.query.substitutions", "true='Y', false='N', yes='Y', no='N'");
         properties.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.ehcache.EhCacheRegionFactory");
         properties.setProperty("hibernate.cache.use_query_cache", "true");
-        properties.setProperty("hibernate.cache.use_second_level_cache", "false");
+        properties.setProperty("hibernate.cache.use_second_level_cache", "true");
 
         // Set hibernate batch configs
         String hibernateBatchSize = configurationHelper.getProperty(ConfigurationValue.HIBERNATE_BATCH_SIZE);

@@ -23,7 +23,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
@@ -185,31 +184,6 @@ public class BaseJpaDaoImpl implements BaseJpaDao
      */
     protected <T> T executeSingleResultQuery(CriteriaQuery<T> criteria, String message)
     {
-        return executeSingleResultQuery(criteria, message, null);
-    }
-
-    /**
-     * Executes query, validates if result list contains no more than record and returns the query result.
-     *
-     * @param <T> The type of the root entity class
-     * @param criteria the criteria select query to be executed
-     * @param message the exception message to use if the query returns fails
-     * @param hints used to provide additional information to the persistence provider to influence the execution of a query
-     *
-     * @return the query result or null if 0 records were selected
-     */
-    protected <T> T executeSingleResultQuery(CriteriaQuery<T> criteria, String message, Map<String, Object> hints)
-    {
-        TypedQuery<T> query = entityManager.createQuery(criteria);
-
-        if (hints != null)
-        {
-            for (String key : hints.keySet())
-            {
-                query.setHint(key, hints.get(key));
-            }
-        }
-
         List<T> resultList = entityManager.createQuery(criteria).getResultList();
 
         // Validate that the query returned no more than one record.

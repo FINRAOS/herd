@@ -16,7 +16,6 @@
 package org.finra.herd.dao.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -56,10 +55,7 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
 
         criteria.select(namespaceEntity).where(queryRestriction);
 
-        HashMap<String, Object> properties = new HashMap<>();
-        properties.put("org.hibernate.cacheable", true);
-
-        return executeSingleResultQuery(criteria, String.format("Found more than one namespace with namespaceCode=\"%s\".", namespaceCode, properties));
+        return executeSingleResultQuery(criteria, String.format("Found more than one namespace with namespaceCode=\"%s\".", namespaceCode));
     }
 
     @Override
