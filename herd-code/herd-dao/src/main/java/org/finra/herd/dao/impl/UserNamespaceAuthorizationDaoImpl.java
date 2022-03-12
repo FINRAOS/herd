@@ -114,7 +114,7 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
             builder.equal(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)), userId.toUpperCase());
 
         // Order by namespace code.
-        Order orderBy = builder.asc(namespaceEntity.get(NamespaceEntity_.code));
+        Order orderBy = builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.namespaceCode));
 
         // Add all clauses for the query.
         criteria.select(userNamespaceAuthorizationEntity).where(queryRestriction).orderBy(orderBy);
