@@ -15,7 +15,6 @@
 */
 package org.finra.herd.model.jpa;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -26,7 +25,6 @@ import javax.persistence.Table;
  */
 @Table(name = NamespaceEntity.TABLE_NAME)
 @Entity
-@Cacheable
 public class NamespaceEntity extends AuditableEntity
 {
     /**
