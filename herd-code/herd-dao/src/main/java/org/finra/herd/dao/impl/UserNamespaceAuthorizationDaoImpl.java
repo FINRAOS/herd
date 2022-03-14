@@ -105,16 +105,12 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // The criteria root is the user namespace authorization.
         Root<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntity = criteria.from(UserNamespaceAuthorizationEntity.class);
 
-        // Join to the other tables we can filter on.
-        Join<UserNamespaceAuthorizationEntity, NamespaceEntity> namespaceEntity =
-            userNamespaceAuthorizationEntity.join(UserNamespaceAuthorizationEntity_.namespace);
-
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
             builder.equal(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)), userId.toUpperCase());
 
         // Order by namespace code.
-        Order orderBy = builder.asc(namespaceEntity.get(NamespaceEntity_.code));
+        Order orderBy = builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.namespaceCode));
 
         // Add all clauses for the query.
         criteria.select(userNamespaceAuthorizationEntity).where(queryRestriction).orderBy(orderBy);
