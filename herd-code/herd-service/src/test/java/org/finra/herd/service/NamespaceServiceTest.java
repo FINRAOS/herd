@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 
 /**
  * This class tests various functionality within the namespace REST controller.
@@ -356,5 +357,89 @@ public class NamespaceServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateNamespace()
+    {
+        // Create and persist a namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Validate that this namespace exists.
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
+
+        // Update this namespace.
+        Namespace updatedNamespace = namespaceService.updateNamespaces(namespaceKey, new NamespaceUpdateRequest(CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+
+    @Test
+    public void testUpdateNamespaceWithChargeCodePaddedByWhiteSpace()
+    {
+        // Create and persist a namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Validate that this namespace exists.
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
+
+        // Update this namespace.
+        Namespace updatedNamespace = namespaceService.updateNamespaces(namespaceKey, new NamespaceUpdateRequest(addWhitespace(CHARGE_CODE)));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceNoExists()
+    {
+        // Try to Update a non-existing namespace.
+        try
+        {
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(CHARGE_CODE));
+            fail("Should throw an ObjectNotFoundException when namespace doesn't exist.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateNamespaceUpperCaseParameters()
+    {
+        // Create and persist a namespace entity using lower case values.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
+
+        // Validate that this namespace exists.
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toLowerCase());
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
+
+        // Update this namespace.
+        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toUpperCase()), new NamespaceUpdateRequest(CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceLowerCaseParameters()
+    {
+        // Create and persist a namespace entity using upper case values.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
+
+        // Validate that this namespace exists.
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toUpperCase());
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
+
+        // Update this namespace.
+        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toLowerCase()), new NamespaceUpdateRequest(CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 }

@@ -28,6 +28,7 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.NamespaceService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -95,5 +96,17 @@ public class NamespaceRestController
     public NamespaceKeys getNamespaces()
     {
         return namespaceService.getNamespaces();
+    }
+
+    /**
+     * Updates an existing namespace.
+     *
+     * @return the namespace that got updated
+     */
+    @RequestMapping(value = " /namespaces/{namespaceCode}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_NAMESPACES_PUT)
+    public Namespace updateNamespaces(@PathVariable("namespaceCode") String namespaceCode, @RequestBody NamespaceUpdateRequest request)
+    {
+        return namespaceService.updateNamespaces(new NamespaceKey(namespaceCode), request);
     }
 }

@@ -19,6 +19,7 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 
 /**
  * The namespace service.
@@ -58,4 +59,11 @@ public interface NamespaceService
      * @return the namespace keys
      */
     public NamespaceKeys getNamespaces();
+
+    /**
+     * Updates an existing namespace based on the specified name
+     *
+     * @return the namespace that was updated
+     */
+    public Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest);
 }
