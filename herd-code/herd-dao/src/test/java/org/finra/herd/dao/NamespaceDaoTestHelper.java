@@ -45,6 +45,22 @@ public class NamespaceDaoTestHelper
     }
 
     /**
+     * Creates and persists a new namespace entity with an optional charge code.
+     *
+     * @param namespaceCode the namespace code
+     * @param chargeCode the charge code
+     *
+     * @return the newly created namespace entity
+     */
+    public NamespaceEntity createNamespaceEntity(String namespaceCode, String chargeCode)
+    {
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        namespaceEntity.setCode(namespaceCode);
+        namespaceEntity.setChargeCode(chargeCode);
+        return namespaceDao.saveAndRefresh(namespaceEntity);
+    }
+
+    /**
      * Creates and persists a new namespace entity.
      *
      * @return the newly created namespace entity.

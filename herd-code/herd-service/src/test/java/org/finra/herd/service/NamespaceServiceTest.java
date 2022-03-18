@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Namespace;
+import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
 
@@ -35,13 +36,13 @@ import org.finra.herd.model.api.xml.NamespaceKeys;
 public class NamespaceServiceTest extends AbstractServiceTest
 {
     @Test
-    public void testCreateNamespace() throws Exception
+    public void testCreateNamespace()
     {
         // Create a namespace.
-        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
+        Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE, CHARGE_CODE));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -50,8 +51,8 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace instance when namespace code is not specified.
         try
         {
-            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(BLANK_TEXT));
-            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+            namespaceService.createNamespace(new NamespaceCreateRequest(BLANK_TEXT, CHARGE_CODE));
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -60,33 +61,43 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateNamespaceMissingOptionalParameters()
+    {
+        // Create a namespace without charge code
+        Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE, NO_CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
+    }
+
+    @Test
     public void testCreateNamespaceTrimParameters()
     {
         // Create a namespace using input parameters with leading and trailing empty spaces.
-        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addWhitespace(NAMESPACE)));
+        Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(addWhitespace(NAMESPACE), addWhitespace(CHARGE_CODE)));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceUpperCaseParameters()
     {
         // Create a namespace using upper case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE.toUpperCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase(), NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceLowerCaseParameters()
     {
         // Create a namespace using lower case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE.toLowerCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase(), NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -95,8 +106,8 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace instance when namespace contains a forward slash character.
         try
         {
-            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addSlash(NAMESPACE)));
-            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
+            namespaceService.createNamespace(new NamespaceCreateRequest(addSlash(NAMESPACE), CHARGE_CODE));
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -106,8 +117,8 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace instance when namespace contains a backward slash character.
         try
         {
-            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addBackwardSlash(NAMESPACE)));
-            fail("Should throw an IllegalArgumentException when namespace contains a backward slash character.");
+            namespaceService.createNamespace(new NamespaceCreateRequest(addBackwardSlash(NAMESPACE), CHARGE_CODE));
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -116,34 +127,34 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testCreateNamespaceAlreadyExists() throws Exception
+    public void testCreateNamespaceAlreadyExists()
     {
-        // Create and persist a namespace.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        // Create and persist a namespace using upper case.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
 
-        // Try to create a namespace when it already exists.
+        // Try to create a namespace when it already exists. We are passing namespace in lower case, to prove it is case insensitive.
         try
         {
-            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
-            fail("Should throw an AlreadyExistsException when namespace already exists.");
+            namespaceService.createNamespace(new NamespaceCreateRequest(NAMESPACE.toLowerCase(), CHARGE_CODE));
+            fail();
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create namespace \"%s\" because it already exists.", NAMESPACE), e.getMessage());
+            assertEquals(String.format("Unable to create namespace \"%s\" because it already exists.", NAMESPACE.toLowerCase()), e.getMessage());
         }
     }
 
     @Test
-    public void testGetNamespace() throws Exception
+    public void testGetNamespace()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
         // Retrieve the namespace.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
@@ -165,43 +176,43 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
         // Retrieve the namespace using input parameters with leading and trailing empty spaces.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
     public void testGetNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase(), CHARGE_CODE);
 
         // Retrieve the namespace using upper case input parameters.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
     public void testGetNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase(), CHARGE_CODE);
 
         // Retrieve the namespace using lower case input parameters.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), resultNamespace);
     }
 
     @Test
-    public void testGetNamespaceNoExists() throws Exception
+    public void testGetNamespaceNoExists()
     {
         // Try to get a non-existing namespace.
         try
@@ -216,7 +227,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetNamespaces() throws Exception
+    public void testGetNamespaces()
     {
         // Create and persist namespace entities.
         for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
@@ -238,10 +249,10 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testDeleteNamespace() throws Exception
+    public void testDeleteNamespace()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
@@ -251,7 +262,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -276,7 +287,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
@@ -286,7 +297,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE, deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -296,7 +307,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase(), CHARGE_CODE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toLowerCase());
@@ -306,7 +317,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -316,7 +327,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase(), CHARGE_CODE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toUpperCase());
@@ -326,14 +337,14 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), deletedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
     @Test
-    public void testDeleteNamespaceNoExists() throws Exception
+    public void testDeleteNamespaceNoExists()
     {
         // Try to get a non-existing namespace.
         try
