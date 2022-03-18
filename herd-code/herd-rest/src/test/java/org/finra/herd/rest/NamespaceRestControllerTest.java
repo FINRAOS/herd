@@ -132,17 +132,17 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     @Test
     public void testUpdateNamespace()
     {
-        Namespace namespace = new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX);
         NamespaceUpdateRequest request = new NamespaceUpdateRequest(CHARGE_CODE);
+        Namespace namespace = new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX);
 
         // Mock the external calls.
         when(namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), request)).thenReturn(namespace);
 
         // Call the method under test.
-        Namespace updatedNamespace = namespaceRestController.updateNamespaces(NAMESPACE, request);
+        Namespace result = namespaceRestController.updateNamespaces(NAMESPACE, request);
 
         // Validate the returned object.
-        assertEquals(namespace, updatedNamespace);
+        assertEquals(namespace, result);
 
         // Verify the external calls.
         verify(namespaceService).updateNamespaces(new NamespaceKey(NAMESPACE), request);

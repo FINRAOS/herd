@@ -33,7 +33,7 @@ public interface NamespaceService
      *
      * @return the created namespace
      */
-    public Namespace createNamespace(NamespaceCreateRequest namespaceCreateRequest);
+    Namespace createNamespace(NamespaceCreateRequest namespaceCreateRequest);
 
     /**
      * Gets a namespace for the specified key.
@@ -42,7 +42,7 @@ public interface NamespaceService
      *
      * @return the namespace
      */
-    public Namespace getNamespace(NamespaceKey namespaceKey);
+    Namespace getNamespace(NamespaceKey namespaceKey);
 
     /**
      * Deletes a namespace for the specified key.
@@ -51,19 +51,22 @@ public interface NamespaceService
      *
      * @return the namespace that was deleted
      */
-    public Namespace deleteNamespace(NamespaceKey namespaceKey);
+    Namespace deleteNamespace(NamespaceKey namespaceKey);
 
     /**
      * Gets a list of namespace keys for all namespaces defined in the system.
      *
      * @return the namespace keys
      */
-    public NamespaceKeys getNamespaces();
+    NamespaceKeys getNamespaces();
 
     /**
      * Updates an existing namespace based on the specified name
      *
-     * @return the namespace that was updated
+     * @param namespaceKey           the namespace key
+     * @param namespaceUpdateRequest the namespace update request
+     *
+     * @return the updated namespace
      */
-    public Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest);
+    Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest);
 }

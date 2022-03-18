@@ -103,10 +103,10 @@ public class NamespaceRestController
      *
      * @return the namespace that got updated
      */
-    @RequestMapping(value = " /namespaces/{namespaceCode}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/namespaces/{namespaceCode}", method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_NAMESPACES_PUT)
-    public Namespace updateNamespaces(@PathVariable("namespaceCode") String namespaceCode, @RequestBody NamespaceUpdateRequest request)
+    public Namespace updateNamespaces(@PathVariable("namespaceCode") String namespaceCode, @RequestBody NamespaceUpdateRequest namespaceUpdateRequest)
     {
-        return namespaceService.updateNamespaces(new NamespaceKey(namespaceCode), request);
+        return namespaceService.updateNamespaces(new NamespaceKey(namespaceCode), namespaceUpdateRequest);
     }
 }

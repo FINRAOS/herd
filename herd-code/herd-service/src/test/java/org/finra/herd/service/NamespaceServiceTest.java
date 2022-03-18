@@ -363,35 +363,27 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testUpdateNamespace()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
-        // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
-        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
         // Update this namespace.
-        Namespace updatedNamespace = namespaceService.updateNamespaces(namespaceKey, new NamespaceUpdateRequest(CHARGE_CODE));
+        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(CHARGE_CODE_2));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 
-
     @Test
-    public void testUpdateNamespaceWithChargeCodePaddedByWhiteSpace()
+    public void testUpdateNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
 
-        // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
-        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
-
-        // Update this namespace.
-        Namespace updatedNamespace = namespaceService.updateNamespaces(namespaceKey, new NamespaceUpdateRequest(addWhitespace(CHARGE_CODE)));
+        // Update this namespace by passing parameters padded with white space.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(addWhitespace(NAMESPACE)), new NamespaceUpdateRequest(addWhitespace(CHARGE_CODE_2)));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 
     @Test
@@ -413,33 +405,41 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testUpdateNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase());
 
-        // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toLowerCase());
-        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
-
-        // Update this namespace.
-        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toUpperCase()), new NamespaceUpdateRequest(CHARGE_CODE));
+        // Update this namespace by passing all parameters in uppercase.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toUpperCase()), new NamespaceUpdateRequest(CHARGE_CODE_2.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE_2.toUpperCase(), NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 
     @Test
     public void testUpdateNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase());
 
-        // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toUpperCase());
-        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
-
-        // Update this namespace.
-        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toLowerCase()), new NamespaceUpdateRequest(CHARGE_CODE));
+        // Update this namespace by passing all parameters in lowercase.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toLowerCase()), new NamespaceUpdateRequest(CHARGE_CODE_2.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE_2.toLowerCase(), NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceMissingOptionalParameters()
+    {
+        // Create and persist a namespace entity with charge code.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
+
+        // Update this namespace by passing null charge code value.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(NO_CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 }

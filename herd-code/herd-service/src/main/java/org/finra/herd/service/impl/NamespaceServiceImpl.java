@@ -22,10 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.NamespaceService;
@@ -119,22 +121,23 @@ public class NamespaceServiceImpl implements NamespaceService
         return namespaceKeys;
     }
 
+    @NamespacePermission(fields = "#namespaceKey.namespaceCode", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest request)
+    public Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest)
     {
         // Perform validation and trim for namespaceCode.
         namespaceHelper.validateNamespaceKey(namespaceKey);
 
         // Perform validation and trim for chargeCode.
-        validateNamespaceUpdateRequest(request);
+        validateAndTrimNamespaceUpdateRequest(namespaceUpdateRequest);
 
         // Retrieve and ensure that a namespace already exists with the specified key.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
 
         // Update the namespace entity from the request information.
-        namespaceEntity = updateNamespaceEntity(namespaceEntity, request);
+        namespaceEntity.setChargeCode(namespaceUpdateRequest.getChargeCode());
 
-        // Persist the new entity.
+        // Save the entity.
         namespaceEntity = namespaceDao.saveAndRefresh(namespaceEntity);
 
         // Create and return the namespace object from the deleted entity.
@@ -194,28 +197,13 @@ public class NamespaceServiceImpl implements NamespaceService
     /**
      * Validates the namespace update request. This method also trims request parameters.
      *
-     * @param request the request
-     *
-     * @throws IllegalArgumentException if any validation errors were found
+     * @param namespaceUpdateRequest the namespace update request
      */
-    private void validateNamespaceUpdateRequest(NamespaceUpdateRequest request)
+    private void validateAndTrimNamespaceUpdateRequest(NamespaceUpdateRequest namespaceUpdateRequest)
     {
-        if (request.getChargeCode() != null)
+        if (namespaceUpdateRequest.getChargeCode() != null)
         {
-            request.setChargeCode(request.getChargeCode().trim());
+            namespaceUpdateRequest.setChargeCode(namespaceUpdateRequest.getChargeCode().trim());
         }
-    }
-
-    /**
-     * Updates a new namespace entity from the request information.
-     *
-     * @param request the request
-     *
-     * @return the newly created namespace entity
-     */
-    private NamespaceEntity updateNamespaceEntity(NamespaceEntity namespaceEntity, NamespaceUpdateRequest request)
-    {
-        namespaceEntity.setChargeCode(request.getChargeCode());
-        return namespaceEntity;
     }
 }
