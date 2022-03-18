@@ -1084,9 +1084,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected NamespaceService namespaceService;
 
     @Autowired
-    protected NamespaceServiceTestHelper namespaceServiceTestHelper;
-
-    @Autowired
     protected NotificationActionFactory notificationActionFactory;
 
     @Autowired
