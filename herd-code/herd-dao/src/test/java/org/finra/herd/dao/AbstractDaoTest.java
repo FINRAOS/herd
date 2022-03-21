@@ -265,7 +265,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CAPACITY_USAGE_STRATEGY_1 = "use-capacity-reservations-first";
 
-    public static final String CHARGE_CODE = "UT_ChargeCode_" + RANDOM_SUFFIX;
+    public static final String CHARGE_CODE = "UT_ChargeCode_1" + RANDOM_SUFFIX;
+
+    public static final String CHARGE_CODE_2 = "UT_ChargeCode_2" + RANDOM_SUFFIX;
 
     public static final String CODE = "code";
 
