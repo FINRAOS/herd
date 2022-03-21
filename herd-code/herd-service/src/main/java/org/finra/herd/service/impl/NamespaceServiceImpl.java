@@ -140,7 +140,7 @@ public class NamespaceServiceImpl implements NamespaceService
         // Save the entity.
         namespaceEntity = namespaceDao.saveAndRefresh(namespaceEntity);
 
-        // Create and return the namespace object from the deleted entity.
+        // Create and return the namespace object from the updated entity.
         return createNamespaceFromEntity(namespaceEntity);
     }
 
