@@ -22,10 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.NamespaceService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
@@ -118,6 +121,29 @@ public class NamespaceServiceImpl implements NamespaceService
         return namespaceKeys;
     }
 
+    @NamespacePermission(fields = "#namespaceKey.namespaceCode", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest)
+    {
+        // Perform validation and trim for namespaceCode.
+        namespaceHelper.validateNamespaceKey(namespaceKey);
+
+        // Perform validation and trim for chargeCode.
+        validateAndTrimNamespaceUpdateRequest(namespaceUpdateRequest);
+
+        // Retrieve and ensure that a namespace already exists with the specified key.
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
+
+        // Update the namespace entity from the request information.
+        namespaceEntity.setChargeCode(namespaceUpdateRequest.getChargeCode());
+
+        // Save the entity.
+        namespaceEntity = namespaceDao.saveAndRefresh(namespaceEntity);
+
+        // Create and return the namespace object from the updated entity.
+        return createNamespaceFromEntity(namespaceEntity);
+    }
+
     /**
      * Validates the namespace create request. This method also trims request parameters.
      *
@@ -166,5 +192,18 @@ public class NamespaceServiceImpl implements NamespaceService
         namespace.setChargeCode(namespaceEntity.getChargeCode());
         namespace.setS3KeyPrefix(s3KeyPrefixHelper.s3KeyPrefixFormat(namespaceEntity.getCode()));
         return namespace;
+    }
+
+    /**
+     * Validates the namespace update request. This method also trims request parameters.
+     *
+     * @param namespaceUpdateRequest the namespace update request
+     */
+    private void validateAndTrimNamespaceUpdateRequest(NamespaceUpdateRequest namespaceUpdateRequest)
+    {
+        if (namespaceUpdateRequest.getChargeCode() != null)
+        {
+            namespaceUpdateRequest.setChargeCode(namespaceUpdateRequest.getChargeCode().trim());
+        }
     }
 }

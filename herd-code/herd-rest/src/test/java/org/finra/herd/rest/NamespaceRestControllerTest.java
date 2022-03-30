@@ -32,6 +32,7 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 import org.finra.herd.service.NamespaceService;
 
 /**
@@ -125,6 +126,26 @@ public class NamespaceRestControllerTest extends AbstractRestTest
 
         // Verify the external calls.
         verify(namespaceService).getNamespaces();
+        verifyNoMoreInteractions(namespaceService);
+    }
+
+    @Test
+    public void testUpdateNamespace()
+    {
+        NamespaceUpdateRequest request = new NamespaceUpdateRequest(CHARGE_CODE);
+        Namespace namespace = new Namespace(NAMESPACE, CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX);
+
+        // Mock the external calls.
+        when(namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), request)).thenReturn(namespace);
+
+        // Call the method under test.
+        Namespace result = namespaceRestController.updateNamespaces(NAMESPACE, request);
+
+        // Validate the returned object.
+        assertEquals(namespace, result);
+
+        // Verify the external calls.
+        verify(namespaceService).updateNamespaces(new NamespaceKey(NAMESPACE), request);
         verifyNoMoreInteractions(namespaceService);
     }
 }
