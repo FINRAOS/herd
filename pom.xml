@@ -80,7 +80,7 @@
       <google.guava.version>27.0.1-jre</google.guava.version>
       <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
       <plexus.utils.version>3.1.0</plexus.utils.version>
-      <postgresql.driver.version>42.1.4.jre7</postgresql.driver.version>
+      <postgresql.driver.version>42.3.3</postgresql.driver.version>
       <quartz.scheduler.version>2.3.2</quartz.scheduler.version>
       <roaster.version>2.20.4.Final</roaster.version>
       <scala.version>2.11.0</scala.version>
