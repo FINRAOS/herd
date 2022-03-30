@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -85,15 +86,18 @@ public class NamespaceDaoTest extends AbstractDaoTest
         namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2, NAMESPACE_CHARGE_CODE);
         namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2);
 
-        // Retrieve the namespace entities.
-        List<NamespaceEntity> resultNamespaceEntities = namespaceDao.getNamespacesByChargeCode(NAMESPACE_CHARGE_CODE);
+        for (String chargeCode : Arrays.asList(NAMESPACE_CHARGE_CODE, NAMESPACE_CHARGE_CODE.toLowerCase(), NAMESPACE_CHARGE_CODE.toUpperCase()))
+        {
+            // Retrieve the namespace entities.
+            List<NamespaceEntity> resultNamespaceEntities = namespaceDao.getNamespacesByChargeCode(chargeCode);
 
-        // Validate the returned object
-        assertNotNull(resultNamespaceEntities);
-        assertEquals(resultNamespaceEntities.size(), 2);
-        assertEquals(resultNamespaceEntities.get(0).getCode(), NAMESPACE);
-        assertEquals(resultNamespaceEntities.get(0).getChargeCode(), NAMESPACE_CHARGE_CODE);
-        assertEquals(resultNamespaceEntities.get(1).getCode(), NAMESPACE_2);
-        assertEquals(resultNamespaceEntities.get(1).getChargeCode(), NAMESPACE_CHARGE_CODE);
+            // Validate the returned object
+            assertNotNull(resultNamespaceEntities);
+            assertEquals(resultNamespaceEntities.size(), 2);
+            assertEquals(resultNamespaceEntities.get(0).getCode(), NAMESPACE);
+            assertEquals(resultNamespaceEntities.get(0).getChargeCode(), NAMESPACE_CHARGE_CODE);
+            assertEquals(resultNamespaceEntities.get(1).getCode(), NAMESPACE_2);
+            assertEquals(resultNamespaceEntities.get(1).getChargeCode(), NAMESPACE_CHARGE_CODE);
+        }
     }
 }

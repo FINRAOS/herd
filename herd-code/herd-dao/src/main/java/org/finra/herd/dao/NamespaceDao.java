@@ -57,7 +57,7 @@ public interface NamespaceDao extends BaseJpaDao
     /**
      * Gets a list of namespaces by chargeCode.
      *
-     * @param chargeCode the charge code
+     * @param chargeCode the charge code (case-insensitive)
      *
      * @return the list namespace entities for the specified charge code
      */

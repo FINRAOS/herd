@@ -118,13 +118,12 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
         Root<NamespaceEntity> namespaceEntityRoot = criteria.from(NamespaceEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Path<String> namespaceChargeCodeColumn = namespaceEntityRoot.get(NamespaceEntity_.chargeCode);
-        Predicate queryRestriction = namespaceChargeCodeColumn.in(chargeCode);
+        Predicate queryRestriction = builder.equal(builder.upper(namespaceEntityRoot.get(NamespaceEntity_.chargeCode)), chargeCode.toUpperCase());
 
         // Add the select clause.
-        criteria.select(namespaceEntityRoot).where(queryRestriction).
-            orderBy(builder.asc(namespaceEntityRoot.get(NamespaceEntity_.code)));
+        criteria.select(namespaceEntityRoot).where(queryRestriction).orderBy(builder.asc(namespaceEntityRoot.get(NamespaceEntity_.code)));
 
+        // Run the query and return the results.
         return entityManager.createQuery(criteria).getResultList();
     }
 }
