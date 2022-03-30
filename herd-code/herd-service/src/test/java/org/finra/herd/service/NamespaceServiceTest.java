@@ -21,6 +21,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import org.finra.herd.model.AlreadyExistsException;
@@ -29,6 +36,10 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceSearchFilter;
+import org.finra.herd.model.api.xml.NamespaceSearchKey;
+import org.finra.herd.model.api.xml.NamespaceSearchRequest;
+import org.finra.herd.model.api.xml.NamespaceSearchResponse;
 import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 
 /**
@@ -36,6 +47,18 @@ import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
  */
 public class NamespaceServiceTest extends AbstractServiceTest
 {
+    // Constant to hold the charge code field option for the search response.
+    public final static String CHARGE_CODE_FIELD = "chargeCode".toLowerCase();
+
+    // Constant to hold the s3 key prefix field option for the search response.
+    public final static String S3_KEY_PREFIX_FIELD = "s3KeyPrefix".toLowerCase();
+
+    public final static String NO_CHARGE_CODE_FIELD = null;
+
+    public final static String NO_S3_KEY_PREFIX_FIELD = null;
+
+    public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
+
     @Test
     public void testCreateNamespace()
     {
@@ -441,5 +464,246 @@ public class NamespaceServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testSearchNamespaces()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        NamespaceSearchRequest namespaceSearchRequest =
+            new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NAMESPACE_CHARGE_CODE, false)))));
+
+        Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2)));
+
+        // Search the namespaces
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object.
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesChargeCodeNoExists()
+    {
+        // Create and persist database entities required for testing
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        NamespaceSearchRequest namespaceSearchRequest =
+            new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey("I_DO_NOT_EXIST", false)))));
+
+        Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(new ArrayList<>());
+
+        // Search the namespaces
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesNoChargeCode()
+    {
+        // Create and persist database entities required for testing
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        // Case 1: null charge code and false flag
+        NamespaceSearchRequest namespaceSearchRequest =
+            new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NO_CHARGE_CODE, false)))));
+
+        Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2),
+            new Namespace(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX_3),
+            new Namespace(NAMESPACE_4, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_4)));
+
+        // Search the namespaces
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+
+        // Case 2: null charge code and true flag
+        namespaceSearchRequest = new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NO_CHARGE_CODE, true)))));
+
+        expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2),
+            new Namespace(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX_3)));
+
+        // Search the namespaces
+        resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesTrimParameters()
+    {
+        // Create and persist database entities required for testing
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        // Create namespace search request by passing parameters padded with white space
+        NamespaceSearchRequest namespaceSearchRequest = new NamespaceSearchRequest(
+            Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(addWhitespace(NAMESPACE_CHARGE_CODE), false)))));
+
+        Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2)));
+
+        // Search the namespaces
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesMissingOptionalParametersSearchResponseFields()
+    {
+        // Create and persist database entities required for testing
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        NamespaceSearchRequest namespaceSearchRequest =
+            new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NAMESPACE_CHARGE_CODE, false)))));
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays
+            .asList(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), new Namespace(NAMESPACE_2, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2)));
+
+        // Case1: null charge code field
+        Set<String> fields = Sets.newHashSet(NO_CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        // Search namespaces without specifying optional parameters in the response fields except for the s3 key prefix
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+
+        // Case2: null s3 key prefix field
+        fields = Sets.newHashSet(CHARGE_CODE_FIELD, NO_S3_KEY_PREFIX_FIELD);
+
+        // Search namespaces without specifying optional parameters in the response fields except for the charge code
+        resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NO_NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NO_NAMESPACE_S3_KEY_PREFIX)));
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesMissingOptionalParametersFilters()
+    {
+        // Create and persist database entities required for testing
+        createDatabaseEntitiesForNamespaceSearchTesting();
+
+        Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
+
+        // Search the namespaces without specifying an optional namespace search filter
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(new NamespaceSearchRequest(), fields);
+
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(new ArrayList<>());
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+
+        // Search namespaces when an optional namespace search filter is set to null
+        List<NamespaceSearchFilter> namespaceSearchFilters = new ArrayList<>();
+        namespaceSearchFilters.add(null);
+        NamespaceSearchRequest namespaceSearchRequest = new NamespaceSearchRequest(namespaceSearchFilters);
+
+        resultNamespaceSearchResponse = namespaceService.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Validate the returned object
+        assertEquals(expected, resultNamespaceSearchResponse);
+    }
+
+    @Test
+    public void testSearchNamespacesInvalidParameters()
+    {
+        // Try to search namespaces when there are more than one namespace search filter is specified
+        try
+        {
+            namespaceService.searchNamespaces(new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(), new NamespaceSearchFilter())),
+                NO_NAMESPACE_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("At most one namespace search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search namespaces when there are more than one namespace search key is specified
+        try
+        {
+            namespaceService.searchNamespaces(
+                new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(), new NamespaceSearchKey())))),
+                NO_NAMESPACE_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one namespace search key must be specified.", e.getMessage());
+        }
+
+        // Try to search namespaces using a un-supported search response field option
+        try
+        {
+            NamespaceSearchRequest namespaceSearchRequest =
+                new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NAMESPACE_CHARGE_CODE, false)))));
+            namespaceService.searchNamespaces(namespaceSearchRequest, Sets.newHashSet("INVALID_FIELD_OPTION"));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Search response field \"invalid_field_option\" is not supported.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchNamespacesIMissingRequiredParameters()
+    {
+        // Try to search namespaces when namespace search request is not specified
+        try
+        {
+            namespaceService.searchNamespaces(null, NO_NAMESPACE_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace search request must be specified.", e.getMessage());
+        }
+
+        // Try to search namespaces when namespace search key is not specified
+        try
+        {
+            NamespaceSearchRequest namespaceSearchRequest = new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter()));
+            namespaceService.searchNamespaces(namespaceSearchRequest, NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one namespace search key must be specified.", e.getMessage());
+        }
+    }
+
+    /**
+     * Creates database entities required for the namespace search service unit tests.
+     */
+    private void createDatabaseEntitiesForNamespaceSearchTesting()
+    {
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_4, NO_CHARGE_CODE);
     }
 }

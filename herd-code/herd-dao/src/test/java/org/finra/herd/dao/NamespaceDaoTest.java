@@ -42,7 +42,7 @@ public class NamespaceDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetNamespaces()
+    public void testGetNamespaceKeys()
     {
         // Create and persist namespace entities.
         for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
@@ -51,10 +51,49 @@ public class NamespaceDaoTest extends AbstractDaoTest
         }
 
         // Retrieve a list of namespace keys.
-        List<NamespaceKey> resultNamespaceKeys = namespaceDao.getNamespaces();
+        List<NamespaceKey> resultNamespaceKeys = namespaceDao.getNamespaceKeys();
 
         // Validate the returned object.
         assertNotNull(resultNamespaceKeys);
         assertTrue(resultNamespaceKeys.containsAll(namespaceDaoTestHelper.getTestNamespaceKeys()));
+    }
+
+    @Test
+    public void testGetNamespaces()
+    {
+        // Create several namespace entities
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2);
+
+        // Retrieve the namespace entities.
+        List<NamespaceEntity> resultNamespaceEntities = namespaceDao.getNamespaces();
+
+        // Validate the returned object
+        assertNotNull(resultNamespaceEntities);
+        assertEquals(resultNamespaceEntities.size(), 3);
+        assertEquals(resultNamespaceEntities.get(0).getCode(), NAMESPACE);
+        assertEquals(resultNamespaceEntities.get(1).getCode(), NAMESPACE_2);
+        assertEquals(resultNamespaceEntities.get(2).getCode(), NAMESPACE_3);
+    }
+
+    @Test
+    public void testGetNamespaceByChargeCode()
+    {
+        // Create several namespace entities
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2, NAMESPACE_CHARGE_CODE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2);
+
+        // Retrieve the namespace entities.
+        List<NamespaceEntity> resultNamespaceEntities = namespaceDao.getNamespacesByChargeCode(NAMESPACE_CHARGE_CODE);
+
+        // Validate the returned object
+        assertNotNull(resultNamespaceEntities);
+        assertEquals(resultNamespaceEntities.size(), 2);
+        assertEquals(resultNamespaceEntities.get(0).getCode(), NAMESPACE);
+        assertEquals(resultNamespaceEntities.get(0).getChargeCode(), NAMESPACE_CHARGE_CODE);
+        assertEquals(resultNamespaceEntities.get(1).getCode(), NAMESPACE_2);
+        assertEquals(resultNamespaceEntities.get(1).getChargeCode(), NAMESPACE_CHARGE_CODE);
     }
 }

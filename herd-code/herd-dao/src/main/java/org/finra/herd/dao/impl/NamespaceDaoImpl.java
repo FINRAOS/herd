@@ -59,7 +59,7 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
     }
 
     @Override
-    public List<NamespaceKey> getNamespaces()
+    public List<NamespaceKey> getNamespaceKeys()
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -88,5 +88,43 @@ public class NamespaceDaoImpl extends AbstractHerdDao implements NamespaceDao
         }
 
         return namespaceKeys;
+    }
+
+    @Override
+    public List<NamespaceEntity> getNamespaces()
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<NamespaceEntity> criteria = builder.createQuery(NamespaceEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<NamespaceEntity> namespaceEntityRoot = criteria.from(NamespaceEntity.class);
+
+        // Add all clauses to the query.
+        criteria.select(namespaceEntityRoot).orderBy(builder.asc(namespaceEntityRoot.get(NamespaceEntity_.code)));
+
+        // Run the query and return the result.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<NamespaceEntity> getNamespacesByChargeCode(String chargeCode)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<NamespaceEntity> criteria = builder.createQuery(NamespaceEntity.class);
+
+        // The criteria root is the namespace entity.
+        Root<NamespaceEntity> namespaceEntityRoot = criteria.from(NamespaceEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Path<String> namespaceChargeCodeColumn = namespaceEntityRoot.get(NamespaceEntity_.chargeCode);
+        Predicate queryRestriction = namespaceChargeCodeColumn.in(chargeCode);
+
+        // Add the select clause.
+        criteria.select(namespaceEntityRoot).where(queryRestriction).
+            orderBy(builder.asc(namespaceEntityRoot.get(NamespaceEntity_.code)));
+
+        return entityManager.createQuery(criteria).getResultList();
     }
 }

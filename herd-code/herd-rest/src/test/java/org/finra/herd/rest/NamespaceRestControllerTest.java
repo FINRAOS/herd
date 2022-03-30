@@ -21,7 +21,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -32,8 +34,13 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceSearchFilter;
+import org.finra.herd.model.api.xml.NamespaceSearchKey;
+import org.finra.herd.model.api.xml.NamespaceSearchRequest;
+import org.finra.herd.model.api.xml.NamespaceSearchResponse;
 import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 import org.finra.herd.service.NamespaceService;
+import org.finra.herd.service.impl.NamespaceServiceImpl;
 
 /**
  * This class tests various functionality within the namespace REST controller.
@@ -147,5 +154,31 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         // Verify the external calls.
         verify(namespaceService).updateNamespaces(new NamespaceKey(NAMESPACE), request);
         verifyNoMoreInteractions(namespaceService);
+    }
+
+    @Test
+    public void testSearchNamespaces()
+    {
+        NamespaceSearchResponse namespaceSearchResponse = new NamespaceSearchResponse(Arrays
+            .asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+                new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2)));
+
+        NamespaceSearchRequest namespaceSearchRequest =
+            new NamespaceSearchRequest(Arrays.asList(new NamespaceSearchFilter(Arrays.asList(new NamespaceSearchKey(NAMESPACE_CHARGE_CODE, false)))));
+
+        Set<String> fields = Sets.newHashSet(NamespaceServiceImpl.CHARGE_CODE_FIELD, NamespaceServiceImpl.S3_KEY_PREFIX_FIELD);
+
+        when(namespaceService.searchNamespaces(namespaceSearchRequest, fields)).thenReturn(namespaceSearchResponse);
+
+        // Search the namespaces
+        NamespaceSearchResponse resultNamespaceSearchResponse = namespaceRestController.searchNamespaces(namespaceSearchRequest, fields);
+
+        // Verify the external calls
+        verify(namespaceService).searchNamespaces(namespaceSearchRequest, fields);
+        verifyNoMoreInteractions(namespaceService);
+
+        // Validate the returned object.
+        assertEquals(namespaceSearchResponse, resultNamespaceSearchResponse);
+
     }
 }
