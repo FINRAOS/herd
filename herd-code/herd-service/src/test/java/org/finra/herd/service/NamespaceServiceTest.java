@@ -670,7 +670,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchNamespacesIMissingRequiredParameters()
+    public void testSearchNamespacesMissingRequiredParameters()
     {
         // Try to search namespaces when namespace search request is not specified
         try
