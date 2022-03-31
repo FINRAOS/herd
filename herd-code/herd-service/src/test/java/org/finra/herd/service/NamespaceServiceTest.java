@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 
 /**
  * This class tests various functionality within the namespace REST controller.
@@ -356,5 +357,89 @@ public class NamespaceServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateNamespace()
+    {
+        // Create and persist a namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
+
+        // Update this namespace.
+        Namespace updatedNamespace = namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(CHARGE_CODE_2));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceTrimParameters()
+    {
+        // Create and persist a namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
+
+        // Update this namespace by passing parameters padded with white space.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(addWhitespace(NAMESPACE)), new NamespaceUpdateRequest(addWhitespace(CHARGE_CODE_2)));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceNoExists()
+    {
+        // Try to Update a non-existing namespace.
+        try
+        {
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(CHARGE_CODE));
+            fail("Should throw an ObjectNotFoundException when namespace doesn't exist.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateNamespaceUpperCaseParameters()
+    {
+        // Create and persist a namespace entity using lower case values.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase(), CHARGE_CODE.toLowerCase());
+
+        // Update this namespace by passing all parameters in uppercase.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toUpperCase()), new NamespaceUpdateRequest(CHARGE_CODE_2.toUpperCase()));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE.toLowerCase(), CHARGE_CODE_2.toUpperCase(), NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceLowerCaseParameters()
+    {
+        // Create and persist a namespace entity using upper case values.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase(), CHARGE_CODE.toUpperCase());
+
+        // Update this namespace by passing all parameters in lowercase.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE.toLowerCase()), new NamespaceUpdateRequest(CHARGE_CODE_2.toLowerCase()));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE.toUpperCase(), CHARGE_CODE_2.toLowerCase(), NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
+    }
+
+    @Test
+    public void testUpdateNamespaceMissingOptionalParameters()
+    {
+        // Create and persist a namespace entity with charge code.
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE, CHARGE_CODE);
+
+        // Update this namespace by passing null charge code value.
+        Namespace updatedNamespace =
+            namespaceService.updateNamespaces(new NamespaceKey(NAMESPACE), new NamespaceUpdateRequest(NO_CHARGE_CODE));
+
+        // Validate the returned object.
+        assertEquals(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), updatedNamespace);
     }
 }
