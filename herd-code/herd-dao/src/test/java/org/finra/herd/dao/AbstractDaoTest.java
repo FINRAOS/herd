@@ -1056,6 +1056,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
         "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
             "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
 
+    public static final String SCHEMA_CUSTOM_TBL_PROPERTIES = "(\"skip.header.line.count\"=\"1\")";
+
     public static final String SCHEMA_DELIMITER_COMMA = ",";
 
     public static final String SCHEMA_DELIMITER_PIPE = "|";

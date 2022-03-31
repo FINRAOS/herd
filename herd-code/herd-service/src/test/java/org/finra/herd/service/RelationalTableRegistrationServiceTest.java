@@ -382,7 +382,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
                     SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
-                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
 
             businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
         }
@@ -422,7 +423,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
                     FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
                     SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
-                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
 
             businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
 
@@ -546,7 +548,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
                 null, NO_ATTRIBUTE_DEFINITIONS,
                 new Schema(expectedSchema.getColumns().subList(0, expectedSchema.getColumns().size() - 1), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null,
-                    null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
+                    null, null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 
         // Create a business object data key for the initial version of the relation table registration.
         BusinessObjectDataKey businessObjectDataKey =
@@ -637,7 +639,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
                 BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, null,
                 NO_ATTRIBUTE_DEFINITIONS,
                 new Schema(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns(), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null, null,
-                    null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
+                    null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 
         // Create a business object data key for the initial version of the relation table registration.
         BusinessObjectDataKey businessObjectDataKey =

@@ -121,18 +121,21 @@ public class CustomDdlServiceTestHelper
             if (includeSingleLocation)
             {
                 sb.append("STORED AS TEXTFILE\n");
-                sb.append("LOCATION '${table.location}';");
+                sb.append("LOCATION '${table.location}'\n");
             }
             else
             {
-                sb.append("STORED AS TEXTFILE;");
+                sb.append("STORED AS TEXTFILE\n");
             }
+            sb.append("TBLPROPERTIES (\"skip.header.line.count\"=\"1\");");
         }
         else
         {
             sb.append("STORED AS TEXTFILE\n");
-            sb.append("LOCATION '${non-partitioned.table.location}';");
+            sb.append("LOCATION '${non-partitioned.table.location}'\n");
+            sb.append("TBLPROPERTIES (\"skip.header.line.count\"=\"1\");");
         }
+
 
         return sb.toString();
     }

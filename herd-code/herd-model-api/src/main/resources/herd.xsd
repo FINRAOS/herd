@@ -2754,6 +2754,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="customTblProperties" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customTblProperties is used to support Hive "TBLPROPERTIES" statement and tag the Hive table definition with your own
+                  metadata key/value pairs
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="partitionKeyGroup" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The partition key group that this schema's partition or sub-partition key belongs to. This value will be used to identify the

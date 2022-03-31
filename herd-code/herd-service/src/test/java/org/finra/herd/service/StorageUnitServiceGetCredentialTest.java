@@ -350,6 +350,6 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
             .createBusinessObjectFormatEntity(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
                 businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
                 businessObjectDataKey.getBusinessObjectFormatVersion(), null, null, null, true, PARTITION_KEY, null, null, null, null, null, null, null, null,
-                null, null, null);
+                null, null, null, null);
     }
 }
