@@ -1387,6 +1387,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                 FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA);
+
         businessObjectFormatService.createBusinessObjectFormat(request);
 
         // Create a second version of the business object format without a schema.
@@ -3306,6 +3307,45 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .getExpectedBusinessObjectFormatDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, expectedRowFormat,
                 CUSTOM_CLUSTERED_BY_VALUE, null, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
         businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(null, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectFormatDdlNoCustomDdlTblPropertiesNoPartition()
+    {
+        // Prepare test data without custom ddl.
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE,
+            Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), null, null);
+
+        // Retrieve business object format ddl for a non-partitioned table and without specifying custom ddl name.
+        BusinessObjectFormatDdlRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(null);
+        BusinessObjectFormatDdl resultDdl = businessObjectFormatService.generateBusinessObjectFormatDdl(request);
+
+        // Validate the results.
+        String expectedDdl = businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdl(0, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
+            CUSTOM_CLUSTERED_BY_VALUE, CUSTOM_TBL_PROPERTIES, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true);
+        businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(null, expectedDdl, resultDdl);
+    }
+
+    @Test
+    public void testGenerateBusinessObjectFormatDdlTblPropertiesPartition()
+    {
+        // Prepare test data.
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE,
+            AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), null);
+
+        // Retrieve business object format ddl.
+        BusinessObjectFormatDdl resultDdl =
+            businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(null));
+
+        // Validate the results.
+        businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(null,
+            businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length,
+                AbstractServiceTest.FIRST_COLUMN_NAME, AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, CUSTOM_CLUSTERED_BY_VALUE,
+                CUSTOM_TBL_PROPERTIES, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
     }
 
     @Test

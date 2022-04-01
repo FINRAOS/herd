@@ -618,7 +618,7 @@ public class Hive13DdlGenerator extends DdlGenerator
             sb.append(String.format("LOCATION '%s'%s\n", PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, !includeCustomTblProperties ? ";" : ""));
         }
 
-        // TBLPROPERTIES follow immediately after STORED statement or after LOCATION statement
+        // TBLPROPERTIES follow immediately after STORED statement or optional LOCATION statement
         if (includeCustomTblProperties)
         {
             sb.append(String.format("TBLPROPERTIES %s;\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomTblProperties().trim()));
