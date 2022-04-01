@@ -210,6 +210,11 @@ public class NamespaceServiceImpl implements NamespaceService, SearchableService
                 }
             }
         }
+        // The search key is not specified, so select all namespaces registered in the system.
+        else
+        {
+            namespaceEntities.addAll(namespaceDao.getNamespaces());
+        }
 
         // Build the list of namespaces.
         List<Namespace> namespaces = new ArrayList<>();

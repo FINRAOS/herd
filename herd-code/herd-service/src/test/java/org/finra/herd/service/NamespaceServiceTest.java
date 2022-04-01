@@ -578,7 +578,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays
             .asList(new Namespace(NAMESPACE, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX), new Namespace(NAMESPACE_2, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2)));
 
-        // Case1: null charge code field
+        // Case1: only s3 key prefix in the field
         Set<String> fields = Sets.newHashSet(NO_CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
 
         // Search namespaces without specifying optional parameters in the response fields except for the s3 key prefix
@@ -587,7 +587,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Validate the returned object
         assertEquals(expected, resultNamespaceSearchResponse);
 
-        // Case2: null s3 key prefix field
+        // Case2: only charge code in the field
         fields = Sets.newHashSet(CHARGE_CODE_FIELD, NO_S3_KEY_PREFIX_FIELD);
 
         // Search namespaces without specifying optional parameters in the response fields except for the charge code
@@ -601,17 +601,20 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchNamespacesMissingOptionalParametersFilters()
+    public void testSearchNamespacesNoSearchFilters()
     {
         // Create and persist database entities required for testing
         createDatabaseEntitiesForNamespaceSearchTesting();
 
         Set<String> fields = Sets.newHashSet(CHARGE_CODE_FIELD, S3_KEY_PREFIX_FIELD);
 
-        // Search the namespaces without specifying an optional namespace search filter
+        // Search the namespaces without specifying an optional namespace search filters
         NamespaceSearchResponse resultNamespaceSearchResponse = namespaceService.searchNamespaces(new NamespaceSearchRequest(), fields);
 
-        NamespaceSearchResponse expected = new NamespaceSearchResponse(new ArrayList<>());
+        NamespaceSearchResponse expected = new NamespaceSearchResponse(Arrays.asList(new Namespace(NAMESPACE, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX),
+            new Namespace(NAMESPACE_2, NAMESPACE_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_2),
+            new Namespace(NAMESPACE_3, NAMESPACE_CHARGE_CODE_2, NAMESPACE_S3_KEY_PREFIX_3),
+            new Namespace(NAMESPACE_4, NO_CHARGE_CODE, NAMESPACE_S3_KEY_PREFIX_4)));
 
         // Validate the returned object
         assertEquals(expected, resultNamespaceSearchResponse);
