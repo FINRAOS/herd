@@ -607,6 +607,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
 
+    public static final Set<String> NO_NAMESPACE_SEARCH_RESPONSE_FIELDS = new HashSet<>();
+
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
 
     public static final String NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION = null;

@@ -109,7 +109,7 @@ public class UserNamespaceAuthorizationHelper
     {
         Set<NamespaceAuthorization> namespaceAuthorizations = new LinkedHashSet<>();
 
-        List<NamespaceKey> namespaceKeys = namespaceDao.getNamespaces();
+        List<NamespaceKey> namespaceKeys = namespaceDao.getNamespaceKeys();
         for (NamespaceKey namespaceKey : namespaceKeys)
         {
             NamespaceAuthorization namespaceAuthorization = new NamespaceAuthorization();
