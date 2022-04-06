@@ -181,7 +181,7 @@ public class UserNamespaceAuthorizationHelperTest
         namespaceKeys.add(new NamespaceKey(NAMESPACE_CODE));
 
         when(configurationHelper.getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED)).thenReturn(false);
-        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+        when(namespaceDao.getNamespaceKeys()).thenReturn(namespaceKeys);
 
         userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
 
@@ -195,7 +195,7 @@ public class UserNamespaceAuthorizationHelperTest
         assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
 
         verify(configurationHelper).getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED);
-        verify(namespaceDao).getNamespaces();
+        verify(namespaceDao).getNamespaceKeys();
         verifyNoMoreInteractions(userNamespaceAuthorizationDao, wildcardHelper);
     }
 
@@ -214,7 +214,7 @@ public class UserNamespaceAuthorizationHelperTest
 
         when(configurationHelper.getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED)).thenReturn(true);
         when(userDao.getUserByUserId(USER_ID)).thenReturn(userEntity);
-        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+        when(namespaceDao.getNamespaceKeys()).thenReturn(namespaceKeys);
 
         userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
 
@@ -229,7 +229,7 @@ public class UserNamespaceAuthorizationHelperTest
 
         verify(configurationHelper).getBooleanProperty(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED);
         verify(userDao).getUserByUserId(USER_ID);
-        verify(namespaceDao).getNamespaces();
+        verify(namespaceDao).getNamespaceKeys();
         verifyNoMoreInteractions(userNamespaceAuthorizationDao, wildcardHelper);
     }
 
@@ -260,7 +260,7 @@ public class UserNamespaceAuthorizationHelperTest
         List<NamespaceKey> namespaceKeys = new ArrayList<>();
         namespaceKeys.add(new NamespaceKey(NAMESPACE_CODE));
 
-        when(namespaceDao.getNamespaces()).thenReturn(namespaceKeys);
+        when(namespaceDao.getNamespaceKeys()).thenReturn(namespaceKeys);
 
         List<NamespaceAuthorization> namespaceAuthorizations = new ArrayList<>(userNamespaceAuthorizationHelper.getAllNamespaceAuthorizations());
 
@@ -272,7 +272,7 @@ public class UserNamespaceAuthorizationHelperTest
         assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_ATTRIBUTE), is(true));
         assertThat(namespaceAuthorizations.get(0).getNamespacePermissions().contains(NamespacePermissionEnum.WRITE_DESCRIPTIVE_CONTENT), is(true));
 
-        verify(namespaceDao).getNamespaces();
+        verify(namespaceDao).getNamespaceKeys();
         verifyNoMoreInteractions(namespaceDao, userNamespaceAuthorizationDao, wildcardHelper);
     }
 }
