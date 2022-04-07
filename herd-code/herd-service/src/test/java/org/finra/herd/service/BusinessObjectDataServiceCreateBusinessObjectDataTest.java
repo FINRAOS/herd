@@ -1302,8 +1302,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), NO_PARTITION_KEY_GROUP,
                 NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns,
-                partitionColumns);
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // Create business object data registered using three partition values (primary and three sub-partition values).
         List<String> subPartitionValues = Lists.newArrayList(SUB_PARTITION_VALUE_1 + "|", SUB_PARTITION_VALUE_2, SUB_PARTITION_VALUE_3);
@@ -1345,8 +1345,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
             .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(), NO_PARTITION_KEY_GROUP,
                 NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns,
-                partitionColumns);
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // Create business object data registered using three partition values (primary and three sub-partition values).
         List<String> subPartitionValues = Lists.newArrayList(SUB_PARTITION_VALUE_1, SUB_PARTITION_VALUE_2, SUB_PARTITION_VALUE_3);

@@ -134,6 +134,7 @@ public class CustomDdlServiceTestHelper
             sb.append("LOCATION '${non-partitioned.table.location}';");
         }
 
+
         return sb.toString();
     }
 

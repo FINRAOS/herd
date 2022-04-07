@@ -286,9 +286,9 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.SUBPARTITION_VALUES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, AbstractServiceTest.CUSTOM_DDL_NAME, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
-            AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), false, AbstractServiceTest.CUSTOM_DDL_NAME,
+            AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
     }
 
     /**
@@ -297,13 +297,15 @@ public class BusinessObjectDataServiceTestHelper
     public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
-        String schemaCustomClusteredByValue, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
-        boolean replaceUnderscoresWithHyphens, String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
+        String schemaCustomClusteredByValue, String schemaCustomTblProperties, String schemaNullValue, List<SchemaColumn> schemaColumns,
+        List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName, boolean generateStorageFileEntities,
+        boolean allowDuplicateBusinessObjectData)
     {
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFormatFileType, partitionKey, partitionKeyGroupName, partitionColumnPosition,
             partitionValues, subPartitionValues, schemaDelimiter, schemaCollectionItemsDelimiter, schemaMapKeysDelimiter, schemaEscapeCharacter,
-            schemaCustomRowFormat, schemaCustomClusteredByValue, schemaNullValue, schemaColumns, partitionColumns, replaceUnderscoresWithHyphens, customDdlName,
-            AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION, generateStorageFileEntities, allowDuplicateBusinessObjectData, AbstractServiceTest.DATA_VERSION);
+            schemaCustomRowFormat, schemaCustomClusteredByValue, schemaCustomTblProperties, schemaNullValue, schemaColumns, partitionColumns,
+            replaceUnderscoresWithHyphens, customDdlName, AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION, generateStorageFileEntities,
+            allowDuplicateBusinessObjectData, AbstractServiceTest.DATA_VERSION);
     }
 
     /**
@@ -312,9 +314,9 @@ public class BusinessObjectDataServiceTestHelper
     public void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
-        String schemaCustomClusteredByValue, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
-        boolean replaceUnderscoresWithHyphens, String customDdlName, boolean includeSingleLocation, boolean generateStorageFileEntities,
-        boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
+        String schemaCustomClusteredByValue, String schemaCustomTblProperties, String schemaNullValue, List<SchemaColumn> schemaColumns,
+        List<SchemaColumn> partitionColumns, boolean replaceUnderscoresWithHyphens, String customDdlName, boolean includeSingleLocation,
+        boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData, Integer businessObjectVersion)
     {
         // Use default data version
         if (businessObjectVersion == null)
@@ -332,8 +334,8 @@ public class BusinessObjectDataServiceTestHelper
                     businessObjectFormatFileType, AbstractServiceTest.FORMAT_VERSION, AbstractServiceTest.FORMAT_DESCRIPTION,
                     AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                     partitionKey, partitionKeyGroupName, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiter, schemaCollectionItemsDelimiter,
-                    schemaMapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomClusteredByValue, schemaNullValue, schemaColumns,
-                    partitionColumns);
+                    schemaMapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomClusteredByValue, schemaCustomTblProperties,
+                    schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -493,7 +495,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
@@ -535,7 +538,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         if (partitionValue != null)
         {
@@ -590,7 +594,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create an S3 storage entity.
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(AbstractServiceTest.STORAGE_NAME, StoragePlatformEntity.S3, Arrays
@@ -639,7 +644,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
@@ -655,7 +660,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE_2,
@@ -671,7 +676,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE_2, AbstractServiceTest.BDEF_NAME_2, AbstractServiceTest.FORMAT_USAGE_CODE_2,
@@ -687,7 +692,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(AbstractServiceTest.NAMESPACE_2, AbstractServiceTest.BDEF_NAME_2, AbstractServiceTest.FORMAT_USAGE_CODE_2,
@@ -719,7 +724,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+                null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // id = 1
         businessObjectDataDaoTestHelper
@@ -749,7 +754,7 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+            null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // id = 4
         businessObjectDataDaoTestHelper
@@ -779,7 +784,7 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+            null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // id = 7
         businessObjectDataDaoTestHelper
@@ -802,7 +807,7 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+            null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // id = 9
         businessObjectDataDaoTestHelper
@@ -832,7 +837,7 @@ public class BusinessObjectDataServiceTestHelper
             AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE,
-            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+            null, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
         // id = 12
         businessObjectDataDaoTestHelper
@@ -954,8 +959,8 @@ public class BusinessObjectDataServiceTestHelper
                 partitionKey, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
         // Create and persist an S3 storage with the S3 key prefix velocity template attribute.
         storageDaoTestHelper.createStorageEntity(AbstractServiceTest.STORAGE_NAME, StoragePlatformEntity.S3,
@@ -1076,8 +1081,8 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, AbstractServiceTest.SCHEMA_DELIMITER_PIPE,
                 AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
                 AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, AbstractServiceTest.SCHEMA_CUSTOM_ROW_FORMAT,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-                schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
@@ -1327,8 +1332,9 @@ public class BusinessObjectDataServiceTestHelper
     {
         return getExpectedBusinessObjectDataDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
             AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, AbstractServiceTest.CUSTOM_CLUSTERED_BY_VALUE,
-            Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES, AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
+            null, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE,
+            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, AbstractServiceTest.STORAGE_1_AVAILABLE_PARTITION_VALUES,
+            AbstractServiceTest.SUBPARTITION_VALUES, false, true, true);
     }
 
     /**
@@ -1337,10 +1343,10 @@ public class BusinessObjectDataServiceTestHelper
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectDataDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
+        String hiveClusteredByValue, String hiveTblProperties, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
         List<String> subPartitionValues, boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
     {
-        return getExpectedBusinessObjectDataDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveFileFormat,
+        return getExpectedBusinessObjectDataDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveClusteredByValue, hiveTblProperties, hiveFileFormat,
             businessObjectFormatFileType, partitionColumnPosition, partitionValues, subPartitionValues, replaceUnderscoresWithHyphens, isDropStatementIncluded,
             isIfNotExistsOptionIncluded, AbstractServiceTest.NO_INCLUDE_DROP_PARTITIONS, AbstractServiceTest.NO_INCLUDE_SINGLE_LOCATION);
     }
@@ -1353,6 +1359,7 @@ public class BusinessObjectDataServiceTestHelper
      * @param firstColumnDataType the data type of the first schema column
      * @param hiveRowFormat the Hive row format
      * @param hiveClusteredByValue the Hive ClusteredBy value
+     * @param hiveTblProperties
      * @param hiveFileFormat the Hive file format
      * @param businessObjectFormatFileType the business object format file type
      * @param partitionColumnPosition the position of the partition column
@@ -1367,9 +1374,8 @@ public class BusinessObjectDataServiceTestHelper
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectDataDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
-        List<String> subPartitionValues, boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded,
-        boolean isDropPartitionsStatementsIncluded, boolean includeSingleLocation)
+        String hiveClusteredByValue, String hiveTblProperties, String hiveFileFormat, String businessObjectFormatFileType, int partitionColumnPosition, List<String> partitionValues,
+        List<String> subPartitionValues, boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded, boolean isDropPartitionsStatementsIncluded, boolean includeSingleLocation)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -1423,7 +1429,8 @@ public class BusinessObjectDataServiceTestHelper
         }
 
         sb.append("[Row Format]\n");
-        sb.append(String.format("STORED AS [Hive File Format]%s\n", (partitionLevels > 0 && !includeSingleLocation) ? ";" : ""));
+        boolean includeHiveTblProperties = hiveTblProperties != null;
+        sb.append(String.format("STORED AS [Hive File Format]%s\n", (partitionLevels > 0 && !includeSingleLocation) && !includeHiveTblProperties ? ";" : ""));
 
         // Add table location statement.
         if (partitionLevels > 0)
@@ -1433,27 +1440,36 @@ public class BusinessObjectDataServiceTestHelper
                 if (!CollectionUtils.isEmpty(partitionValues))
                 {
                     // Add location statement for this partitioned table based on first partition value.
-                    sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/';\n", getExpectedS3BucketName(partitionValues.get(0))));
+                    sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/'%s\n", getExpectedS3BucketName(partitionValues.get(0)), !includeHiveTblProperties ? ";": ""));
                 }
                 else
                 {
                     // Since, there is no available data, add location statement with table location token for partitioned table.
-                    sb.append("LOCATION '${table.location}';\n");
+                    sb.append(String.format("LOCATION '${table.location}'%s\n",  !includeHiveTblProperties ? ";": ""));
                 }
+            }
+            if (includeHiveTblProperties){
+                sb.append("[Hive TblProperties];\n");
             }
         }
         else if (!CollectionUtils.isEmpty(partitionValues))
         {
             // Add location statement since the table is not partitioned and we have a non-empty list of partition values.
             sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
-                getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
+                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none'%s",
+                getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE),  !includeHiveTblProperties ? ";": "\n"));
+            if (includeHiveTblProperties){
+                sb.append("[Hive TblProperties];");
+            }
         }
         else
         {
             // Add location statement with table location token for non-partitioned table.
             // This scenario covers unit tests for non-partitioned tables with no available data and generating format DDL for non-partitioned tables.
-            sb.append("LOCATION '${non-partitioned.table.location}';");
+            sb.append(String.format("LOCATION '${non-partitioned.table.location}'%s",  !includeHiveTblProperties ? ";": "\n"));
+            if (includeHiveTblProperties){
+                sb.append("[Hive TblProperties];");
+            }
         }
 
         if (partitionLevels > 0)
@@ -1533,7 +1549,8 @@ public class BusinessObjectDataServiceTestHelper
             }
         }
 
-        return replacePartitionsLocation(sb, hiveRowFormat, hiveClusteredByValue, hiveFileFormat, businessObjectFormatFileType, isIfNotExistsOptionIncluded);
+        return replacePartitionsLocation(sb, hiveRowFormat, hiveClusteredByValue, hiveTblProperties, hiveFileFormat, businessObjectFormatFileType,
+            isIfNotExistsOptionIncluded);
     }
 
     /**
@@ -1596,9 +1613,8 @@ public class BusinessObjectDataServiceTestHelper
                     "`='" + partitionValueToAdd + "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
-        String expectedDdl = ddlBuilder.toString();
 
-        return expectedDdl;
+        return ddlBuilder.toString();
     }
 
     /**
@@ -1649,9 +1665,7 @@ public class BusinessObjectDataServiceTestHelper
                     "`=" + partitionValueToAdd + ") LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
-        String expectedDdl = ddlBuilder.toString();
-
-        return expectedDdl;
+        return ddlBuilder.toString();
     }
 
     /**
@@ -1759,9 +1773,7 @@ public class BusinessObjectDataServiceTestHelper
                     AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
-        String expectedDdl = ddlBuilder.toString();
-
-        return expectedDdl;
+        return ddlBuilder.toString();
     }
 
     /**
@@ -1979,7 +1991,7 @@ public class BusinessObjectDataServiceTestHelper
                                 "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s",
                             getExpectedS3BucketName(partitionValue), testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1),
                             testSubPartitionValues.get(2), testSubPartitionValues.get(3)));
-                        String partitionLocation = replacePartitionsLocation(sb, null, null, null, businessObjectFormatFileType, false);
+                        String partitionLocation = replacePartitionsLocation(sb, null, null, null, null, businessObjectFormatFileType, false);
                         partitions.add(new Partition(partitionColumns, partitionLocation));
                     }
                     else
@@ -2005,7 +2017,7 @@ public class BusinessObjectDataServiceTestHelper
                                     (replaceUnderscoresWithHyphens ? "prtn-clmn007" : "prtn_clmn007") + "=%s", getExpectedS3BucketName(partitionValue),
                                 testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
                                 testSubPartitionValues.get(3), binaryString.substring(0, 1), binaryString.substring(1, 2)));
-                            String partitionLocation = replacePartitionsLocation(sb, null, null, null, businessObjectFormatFileType, false);
+                            String partitionLocation = replacePartitionsLocation(sb, null, null, null, null, businessObjectFormatFileType, false);
                             partitions.add(new Partition(partitionColumns, partitionLocation));
 
 
@@ -2022,7 +2034,7 @@ public class BusinessObjectDataServiceTestHelper
                         "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
                         "/data-v[Data Version]/prtn-clmn001=%s", getExpectedS3BucketName(partitionValue), partitionValue)));
 
-                    String partitionLocation = replacePartitionsLocation(sb, null, null, null, businessObjectFormatFileType, false);
+                    String partitionLocation = replacePartitionsLocation(sb, null, null, null, null, businessObjectFormatFileType, false);
                     partitions.add(new Partition(partitionColumns, partitionLocation));
                 }
             }
@@ -2851,12 +2863,13 @@ public class BusinessObjectDataServiceTestHelper
      *
      * @param sb the stringBuilder to replace
      * @param hiveRowFormat the Hive row format
+     * @param hiveTblProperties
      * @param hiveFileFormat the Hive file format
      * @param businessObjectFormatFileType the business object format file type
      *
      * @return the string after replaced
      */
-    private String replacePartitionsLocation(StringBuilder sb, String hiveRowFormat, String hiveClusteredByValue, String hiveFileFormat,
+    private String replacePartitionsLocation(StringBuilder sb, String hiveRowFormat, String hiveClusteredByValue, String hiveTblProperties, String hiveFileFormat,
         String businessObjectFormatFileType, boolean isIfNotExistsOptionIncluded)
     {
         String ddlTemplate = sb.toString().trim();
@@ -2870,6 +2883,7 @@ public class BusinessObjectDataServiceTestHelper
         replacements.put("Format Version", String.valueOf(AbstractServiceTest.FORMAT_VERSION));
         replacements.put("Data Version", String.valueOf(AbstractServiceTest.DATA_VERSION));
         replacements.put("Hive Clustered By Value", hiveClusteredByValue);
+        replacements.put("Hive TblProperties", hiveTblProperties);
         replacements.put("Row Format", hiveRowFormat);
         replacements.put("Hive File Format", hiveFileFormat);
         replacements.put("Format File Type", businessObjectFormatFileType.toLowerCase());

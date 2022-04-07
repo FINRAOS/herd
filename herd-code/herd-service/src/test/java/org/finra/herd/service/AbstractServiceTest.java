@@ -370,6 +370,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String CUSTOM_ROW_FORMAT = "ROW FORMAT " + SCHEMA_CUSTOM_ROW_FORMAT;
 
+    public static final String CUSTOM_TBL_PROPERTIES = "TBLPROPERTIES " + SCHEMA_CUSTOM_TBL_PROPERTIES;
+
     public static final Boolean DELETE_FILES = true;
 
     public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";

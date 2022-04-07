@@ -144,7 +144,7 @@ public class BusinessObjectFormatDaoTestHelper
     {
         return createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
             businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
-            businessObjectFormatPartitionKey, partitionKeyGroupName, attributes, null, null, null, null, null, null, null, null, null);
+            businessObjectFormatPartitionKey, partitionKeyGroupName, attributes, null, null, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -157,7 +157,7 @@ public class BusinessObjectFormatDaoTestHelper
         String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
         String businessObjectFormatPartitionKey, String partitionKeyGroupName, List<Attribute> attributes, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
-        String schemaCustomClusteredBy, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String schemaCustomClusteredBy, String schemaCustomTblProperties, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         // Create a business object definition entity if it does not exist.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
@@ -189,7 +189,7 @@ public class BusinessObjectFormatDaoTestHelper
         return createBusinessObjectFormatEntity(businessObjectDefinitionEntity, businessObjectFormatUsage, fileTypeEntity, businessObjectFormatVersion,
             businessObjectFormatDescription, businessObjectFormatDocumentSchema, businessObjectFormatDocumentSchemaUrl, businessObjectFormatLatestVersion,
             businessObjectFormatPartitionKey, partitionKeyGroupEntity, attributes, schemaDelimiter, schemaCollectionItemsDelimiter, schemaMapKeysDelimiter,
-            schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomClusteredBy, schemaNullValue, schemaColumns, partitionColumns);
+            schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomClusteredBy, schemaCustomTblProperties, schemaNullValue, schemaColumns, partitionColumns);
     }
 
     /**
@@ -202,7 +202,7 @@ public class BusinessObjectFormatDaoTestHelper
         String businessObjectFormatDocumentSchema, String businessObjectFormatDocumentSchemaUrl, Boolean businessObjectFormatLatestVersion,
         String businessObjectFormatPartitionKey, PartitionKeyGroupEntity partitionKeyGroupEntity, List<Attribute> attributes, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String schemaMapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
-        String schemaCustomClusteredBy, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
+        String schemaCustomClusteredBy, String schemaCustomTblProperties, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns)
     {
         BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
 
@@ -240,6 +240,7 @@ public class BusinessObjectFormatDaoTestHelper
             businessObjectFormatEntity.setEscapeCharacter(schemaEscapeCharacter);
             businessObjectFormatEntity.setCustomRowFormat(schemaCustomRowFormat);
             businessObjectFormatEntity.setCustomClusteredBy(schemaCustomClusteredBy);
+            businessObjectFormatEntity.setCustomTblProperties(schemaCustomTblProperties);
             businessObjectFormatEntity.setNullValue(schemaNullValue);
 
             List<SchemaColumnEntity> schemaColumnEntities = new ArrayList<>();

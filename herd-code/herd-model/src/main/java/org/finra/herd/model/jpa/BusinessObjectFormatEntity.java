@@ -124,6 +124,9 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "cstm_clstr_by_tx")
     private String customClusteredBy;
 
+    @Column(name = "cstm_tbl_prpties_tx")
+    private String customTblProperties;
+
     @ManyToOne
     @JoinColumn(name = "prtn_key_group_tx", referencedColumnName = "prtn_key_group_tx")
     private PartitionKeyGroupEntity partitionKeyGroup;
@@ -475,6 +478,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setCustomClusteredBy(String customClusteredBy)
     {
         this.customClusteredBy = customClusteredBy;
+    }
+
+    public String getCustomTblProperties()
+    {
+        return customTblProperties;
+    }
+
+    public void setCustomTblProperties(String customTblProperties)
+    {
+        this.customTblProperties = customTblProperties;
     }
 
     public String getRelationalSchemaName()

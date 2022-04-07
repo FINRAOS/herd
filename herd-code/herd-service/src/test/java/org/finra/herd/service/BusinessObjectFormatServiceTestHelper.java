@@ -248,7 +248,8 @@ public class BusinessObjectFormatServiceTestHelper
                 AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES,
                 AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
                 AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+                AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
     }
 
     /**
@@ -259,8 +260,9 @@ public class BusinessObjectFormatServiceTestHelper
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME,
             AbstractServiceTest.SCHEMA_DELIMITER_PIPE, AbstractServiceTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA,
             AbstractServiceTest.SCHEMA_MAP_KEYS_DELIMITER_HASH, AbstractServiceTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null,
-            AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N,
-            schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), AbstractServiceTest.CUSTOM_DDL_NAME);
+            AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
+            AbstractServiceTest.SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), AbstractServiceTest.CUSTOM_DDL_NAME);
     }
 
     /**
@@ -268,7 +270,7 @@ public class BusinessObjectFormatServiceTestHelper
      */
     public void createDatabaseEntitiesForBusinessObjectFormatDdlTesting(String businessObjectFormatFileType, String partitionKey, String schemaDelimiter,
         String schemaCollectionItemsDelimiter, String mapKeysDelimiter, String schemaEscapeCharacter, String schemaCustomRowFormat,
-        String schemaCustomCusteredByValue, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, String customDdlName)
+        String schemaCustomCusteredByValue, String schemaCustomTblProperties, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns, String customDdlName)
     {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -282,7 +284,7 @@ public class BusinessObjectFormatServiceTestHelper
                     AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA, AbstractServiceTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractServiceTest.LATEST_VERSION_FLAG_SET,
                     partitionKey, AbstractServiceTest.NO_PARTITION_KEY_GROUP, AbstractServiceTest.NO_ATTRIBUTES, schemaDelimiter,
                     schemaCollectionItemsDelimiter, mapKeysDelimiter, schemaEscapeCharacter, schemaCustomRowFormat, schemaCustomCusteredByValue,
-                    schemaNullValue, schemaColumns, partitionColumns);
+                    schemaCustomTblProperties, schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -392,6 +394,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @param firstColumnDataType the data type of the first schema column
      * @param hiveRowFormat the Hive row format
      * @param hiveClusteredByValue the Hive ClusteredBy Value
+     * @param hiveTblProperties
      * @param hiveFileFormat the Hive file format
      * @param businessObjectFormatFileType the business object format file type
      * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
@@ -399,7 +402,7 @@ public class BusinessObjectFormatServiceTestHelper
      * @return the Hive DDL
      */
     public String getExpectedBusinessObjectFormatDdl(int partitionLevels, String firstColumnName, String firstColumnDataType, String hiveRowFormat,
-        String hiveClusteredByValue, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
+        String hiveClusteredByValue, String hiveTblProperties, String hiveFileFormat, String businessObjectFormatFileType, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -449,12 +452,20 @@ public class BusinessObjectFormatServiceTestHelper
 
         sb.append("[Hive Clustered By Value]\n");
         sb.append("[Row Format]\n");
-        sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 ? ";" : ""));
+        sb.append(String.format("STORED AS [Hive File Format]%s\n", partitionLevels > 0 && hiveTblProperties == null ? ";" : ""));
 
         if (partitionLevels == 0)
         {
             // Add a location statement for a non-partitioned table for the business object format dll unit tests.
-            sb.append("LOCATION '${non-partitioned.table.location}';");
+            sb.append(String.format("LOCATION '${non-partitioned.table.location}'%s", hiveTblProperties == null ? ";" : "\n"));
+            if (hiveTblProperties != null)
+            {
+                sb.append("[Hive TblProperties];");
+            }
+        }
+        else if (hiveTblProperties != null)
+        {
+            sb.append("[Hive TblProperties];\n");
         }
 
         String ddlTemplate = sb.toString().trim();
@@ -468,6 +479,7 @@ public class BusinessObjectFormatServiceTestHelper
         replacements.put("Format Version", String.valueOf(AbstractServiceTest.FORMAT_VERSION));
         replacements.put("Data Version", String.valueOf(AbstractServiceTest.DATA_VERSION));
         replacements.put("Hive Clustered By Value", hiveClusteredByValue);
+        replacements.put("Hive TblProperties", hiveTblProperties);
         replacements.put("Row Format", hiveRowFormat);
         replacements.put("Hive File Format", hiveFileFormat);
         replacements.put("Format File Type", businessObjectFormatFileType.toLowerCase());
