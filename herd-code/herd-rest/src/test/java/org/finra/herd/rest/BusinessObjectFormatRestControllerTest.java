@@ -30,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -132,10 +133,10 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         ddl.setBusinessObjectDefinitionName(BDEF_NAME);
         ddl.setCustomDdlName(CUSTOM_DDL_NAME);
         ddl.setNamespace(NAMESPACE);
-        ddl.setDdl(businessObjectFormatServiceTestHelper
-            .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
-                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, null,
-                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true));
+        ddl.setDdl(businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length,
+            AbstractServiceTest.FIRST_COLUMN_NAME, AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT,
+            AbstractServiceTest.SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, AbstractDaoTest.NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
+            Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, true, true));
 
         // Retrieve business object format ddl.
         BusinessObjectFormatDdlRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);

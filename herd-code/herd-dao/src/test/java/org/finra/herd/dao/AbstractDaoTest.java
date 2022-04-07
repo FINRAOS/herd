@@ -1072,6 +1072,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_CUSTOM_TBL_PROPERTIES = "(\"skip.header.line.count\"=\"1\")";
 
+    public static final String NO_SCHEMA_CUSTOM_TBL_PROPERTIES = null;
+
     public static final String SCHEMA_DELIMITER_COMMA = ",";
 
     public static final String SCHEMA_DELIMITER_PIPE = "|";
