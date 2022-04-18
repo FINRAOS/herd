@@ -1258,6 +1258,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectFormatEntity.setEscapeCharacter(schema.getEscapeCharacter());
             businessObjectFormatEntity.setCustomRowFormat(schema.getCustomRowFormat());
             businessObjectFormatEntity.setCustomClusteredBy(schema.getCustomClusteredBy());
+            businessObjectFormatEntity.setCustomTblProperties(schema.getCustomTblProperties());
             businessObjectFormatEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
 
             // Create a schema column entities collection, if needed.
@@ -1360,6 +1361,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setEscapeCharacter(null);
         businessObjectFormatEntity.setCustomRowFormat(null);
         businessObjectFormatEntity.setCustomClusteredBy(null);
+        businessObjectFormatEntity.setCustomTblProperties(null);
         businessObjectFormatEntity.setPartitionKeyGroup(null);
         businessObjectFormatEntity.getSchemaColumns().clear();
     }

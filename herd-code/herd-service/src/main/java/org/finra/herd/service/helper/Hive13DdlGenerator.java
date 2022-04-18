@@ -596,22 +596,32 @@ public class Hive13DdlGenerator extends DdlGenerator
                 escapeSingleQuotes(getDdlCharacterValue(generateDdlRequest.getBusinessObjectFormatEntity().getNullValue()))));
         }
 
-        // If this table is not partitioned or flag is set to include single location, then STORED AS clause will be followed by LOCATION.
+        boolean includeCustomTblProperties = StringUtils.isNotBlank(generateDdlRequest.getBusinessObjectFormatEntity().getCustomTblProperties());
+        // If this table is not partitioned OR flag is set to include single location OR customTableProperties is set, then STORED AS clause will be followed
+        // by LOCATION OR TBLPROPERTIES.
         // Otherwise, the CREATE TABLE is complete.
         sb.append(String.format("STORED AS %s%s\n", getHiveFileFormat(generateDdlRequest.getBusinessObjectFormatEntity()),
-            generateDdlRequest.getPartitioned() && BooleanUtils.isNotTrue(generateDdlRequest.getIncludeSingleLocation()) ? ";" : ""));
+            generateDdlRequest.getPartitioned() && BooleanUtils.isNotTrue(generateDdlRequest.getIncludeSingleLocation()) && !includeCustomTblProperties ? ";" :
+                ""));
 
         // If this is non-partitioned table, add LOCATION statement with non-partitioned table location token.
         // If this table has available data, the token will be replaced with the table location based on the data location.
         if (!generateDdlRequest.getPartitioned())
         {
-            sb.append(String.format("LOCATION '%s';", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
+            sb.append(String.format("LOCATION '%s'%s", NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, !includeCustomTblProperties ? ";" : "\n"));
+
         }
         // Otherwise, if flag is set to include single location, add LOCATION statement with partitioned table location token.
         // If this table has partitions (available data), the token will be replaced with the table location based on the first available partition location.
         else if (BooleanUtils.isTrue(generateDdlRequest.getIncludeSingleLocation()))
         {
-            sb.append(String.format("LOCATION '%s';\n", PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN));
+            sb.append(String.format("LOCATION '%s'%s\n", PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN, !includeCustomTblProperties ? ";" : ""));
+        }
+
+        // TBLPROPERTIES follow immediately after STORED statement or optional LOCATION statement
+        if (includeCustomTblProperties)
+        {
+            sb.append(String.format("TBLPROPERTIES %s;\n", generateDdlRequest.getBusinessObjectFormatEntity().getCustomTblProperties().trim()));
         }
     }
 

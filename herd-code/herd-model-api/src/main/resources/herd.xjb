@@ -144,6 +144,9 @@
       <jaxb:bindings node="//xs:complexType[@name='schema']//xs:element[@name='customClusteredBy']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='schema']//xs:element[@name='customTblProperties']">
+         <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='schemaColumn']//xs:element[@name='type']">
          <annox:annotate target="field">@org.eclipse.persistence.oxm.annotations.XmlCDATA</annox:annotate>
       </jaxb:bindings>
