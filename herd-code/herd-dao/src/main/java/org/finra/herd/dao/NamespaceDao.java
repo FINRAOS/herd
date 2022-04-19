@@ -29,7 +29,7 @@ public interface NamespaceDao extends BaseJpaDao
      *
      * @return the namespace entity for the specified key
      */
-    public NamespaceEntity getNamespaceByKey(NamespaceKey namespaceKey);
+    NamespaceEntity getNamespaceByKey(NamespaceKey namespaceKey);
 
     /**
      * Gets a namespace by it's code.
@@ -38,12 +38,28 @@ public interface NamespaceDao extends BaseJpaDao
      *
      * @return the namespace entity for the specified code
      */
-    public NamespaceEntity getNamespaceByCd(String namespaceCode);
+    NamespaceEntity getNamespaceByCd(String namespaceCode);
 
     /**
      * Gets a list of namespace keys for all namespaces defined in the system.
      *
      * @return the list of namespace keys
      */
-    public List<NamespaceKey> getNamespaces();
+    List<NamespaceKey> getNamespaceKeys();
+
+    /**
+     * Gets a list of all namespaces registered in the system.
+     *
+     * @return the list of namespaces
+     */
+    List<NamespaceEntity> getNamespaces();
+
+    /**
+     * Gets a list of namespaces by chargeCode.
+     *
+     * @param chargeCode the charge code (case-insensitive)
+     *
+     * @return the list namespace entities for the specified charge code
+     */
+    List<NamespaceEntity> getNamespacesByChargeCode(String chargeCode);
 }

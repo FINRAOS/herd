@@ -107,13 +107,13 @@ public class BusinessObjectDataAvailabilityTestHelper
             new BusinessObjectFormatKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.FORMAT_USAGE_CODE,
                 AbstractDaoTest.FORMAT_FILE_TYPE_CODE, AbstractDaoTest.FORMAT_VERSION)) == null)
         {
-            businessObjectFormatDaoTestHelper
-                .createBusinessObjectFormatEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.FORMAT_USAGE_CODE,
-                    AbstractDaoTest.FORMAT_FILE_TYPE_CODE, AbstractDaoTest.FORMAT_VERSION, AbstractDaoTest.FORMAT_DESCRIPTION,
-                    AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractDaoTest.LATEST_VERSION_FLAG_SET, partitionKey,
-                    partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES, AbstractDaoTest.SCHEMA_DELIMITER_PIPE,
-                    AbstractDaoTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractDaoTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                    AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, null, AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME,
+                AbstractDaoTest.FORMAT_USAGE_CODE, AbstractDaoTest.FORMAT_FILE_TYPE_CODE, AbstractDaoTest.FORMAT_VERSION, AbstractDaoTest.FORMAT_DESCRIPTION,
+                AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA, AbstractDaoTest.FORMAT_DOCUMENT_SCHEMA_URL, AbstractDaoTest.LATEST_VERSION_FLAG_SET, partitionKey,
+                partitionKeyGroupName, AbstractDaoTest.NO_ATTRIBUTES, AbstractDaoTest.SCHEMA_DELIMITER_PIPE,
+                AbstractDaoTest.SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, AbstractDaoTest.SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                AbstractDaoTest.SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, null, AbstractDaoTest.NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
+                AbstractDaoTest.SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
         }
 
         // Create storage entities if they do not exist.

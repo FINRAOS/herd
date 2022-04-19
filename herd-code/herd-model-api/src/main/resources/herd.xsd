@@ -290,6 +290,94 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="namespaceSearchRequest" type="namespaceSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for namespace search request. The request accept only a single search filter and a single search key</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="namespaceSearchRequest">
+      <xs:all>
+         <xs:element name="namespaceSearchFilters" type="namespaceSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for a list of namespace search filters. At most one search filter is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="namespaceSearchFilters">
+      <xs:sequence>
+         <xs:element name="namespaceSearchFilter" type="namespaceSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The namespace search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="namespaceSearchFilter">
+      <xs:all>
+         <xs:element name="namespaceSearchKeys" type="namespaceSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A wrapper for a list of namespace search keys. Only a single search key supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="namespaceSearchKeys">
+      <xs:sequence>
+         <xs:element name="namespaceSearchKey" type="namespaceSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The namespace search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="namespaceSearchKey">
+      <xs:all>
+         <xs:element name="chargeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The charge code associated with one or more namespaces</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="mustHaveChargeCode" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if charge code must be set (has a non blank value) for the namespaces that we want to retrieve
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="namespaceSearchResponse" type="namespaceSearchResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for namespace search response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="namespaceSearchResponse">
+      <xs:all>
+         <xs:element name="namespaces" type="namespaces">
+            <xs:annotation>
+               <xs:documentation>An ordered list of namespaces</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="namespaces">
+      <xs:sequence>
+         <xs:element name="namespace" type="namespace" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The namespace</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="namespace" type="namespace"/>
    <xs:complexType name="namespace">
       <xs:all>
@@ -2751,6 +2839,13 @@
          <xs:element name="customClusteredBy" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The customClusteredBy is used to support Hive "CLUSTERED BY" statement
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="customTblProperties" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The customTblProperties is used to support Hive "TBLPROPERTIES" statement and tag the Hive table definition with your own
+                  metadata key/value pairs
                </xs:documentation>
             </xs:annotation>
          </xs:element>

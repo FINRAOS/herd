@@ -15,10 +15,14 @@
 */
 package org.finra.herd.service;
 
+import java.util.Set;
+
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.api.xml.NamespaceSearchRequest;
+import org.finra.herd.model.api.xml.NamespaceSearchResponse;
 import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
 
 /**
@@ -69,4 +73,14 @@ public interface NamespaceService
      * @return the updated namespace
      */
     Namespace updateNamespaces(NamespaceKey namespaceKey, NamespaceUpdateRequest namespaceUpdateRequest);
+
+    /**
+     * Retrieves all namespaces existing in the system per specified search filters and keys.
+     *
+     * @param namespaceSearchRequest namespace search request
+     * @param fields                 the field options for the namespace search response. The valid field options are: chargeCode, s3KeyPrefix
+     *
+     * @return the namespace search response
+     */
+    NamespaceSearchResponse searchNamespaces(NamespaceSearchRequest namespaceSearchRequest, Set<String> fields);
 }
