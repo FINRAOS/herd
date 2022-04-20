@@ -15,6 +15,8 @@
 */
 package org.finra.herd.rest;
 
+import java.util.Set;
+
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.Namespace;
@@ -29,6 +32,8 @@ import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
 import org.finra.herd.model.api.xml.NamespaceUpdateRequest;
+import org.finra.herd.model.api.xml.NamespaceSearchRequest;
+import org.finra.herd.model.api.xml.NamespaceSearchResponse;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.NamespaceService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -108,5 +113,21 @@ public class NamespaceRestController
     public Namespace updateNamespaces(@PathVariable("namespaceCode") String namespaceCode, @RequestBody NamespaceUpdateRequest namespaceUpdateRequest)
     {
         return namespaceService.updateNamespaces(new NamespaceKey(namespaceCode), namespaceUpdateRequest);
+    }
+
+    /**
+     * Retrieves all namespaces existing in the system per specified search filters and keys.
+     *
+     * @param namespaceSearchRequest the namespace search request. The request can only accept a single search filter and a single search key
+     * @param fields                 the field options for the namespace search response. The valid field options are: chargeCode, s3KeyPrefix
+     *
+     * @return the namespace search response
+     */
+    @RequestMapping(value = "/namespaces/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_NAMESPACES_SEARCH_POST)
+    public NamespaceSearchResponse searchNamespaces(@RequestBody NamespaceSearchRequest namespaceSearchRequest,
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields)
+    {
+        return namespaceService.searchNamespaces(namespaceSearchRequest, fields);
     }
 }

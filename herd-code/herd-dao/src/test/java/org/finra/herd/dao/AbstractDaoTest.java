@@ -689,9 +689,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NAMESPACE_3 = "UT_Namespace_3_" + RANDOM_SUFFIX;
 
+    public static final String NAMESPACE_4 = "UT_Namespace_4_" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_CHARGE_CODE = "UT_NamespaceChargeCode_1_" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_CHARGE_CODE_2 = "UT_NamespaceChargeCode_2_" + RANDOM_SUFFIX;
+
     public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
     public static final String NAMESPACE_S3_KEY_PREFIX = "ut-namespace-1-" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_S3_KEY_PREFIX_2 = "ut-namespace-2-" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_S3_KEY_PREFIX_3 = "ut-namespace-3-" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_S3_KEY_PREFIX_4 = "ut-namespace-4-" + RANDOM_SUFFIX;
 
     public static final String NESTED_AGGREGATION_JSON_STRING = "UT_NestedAggregationJsonString_" + RANDOM_SUFFIX;
 
@@ -846,6 +858,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_MESSAGE_VELOCITY_TEMPLATE = null;
 
     public static final String NO_NAMESPACE = null;
+
+    public static final String NO_NAMESPACE_S3_KEY_PREFIX = null;
 
     public static final String NO_PARENT_TAG_CODE = null;
 
@@ -1055,6 +1069,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_CUSTOM_ROW_FORMAT_WITH_SERDE_PROPS =
         "SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'\n" + "WITH SERDEPROPERTIES (\n" + "   \"separatorChar\" = \"\\t\",\n" +
             "   \"quoteChar\"     = \"'\",\n" + "   \"escapeChar\"    = \"\\\\\"\n" + ") ";
+
+    public static final String SCHEMA_CUSTOM_TBL_PROPERTIES = "(\"skip.header.line.count\"=\"1\")";
+
+    public static final String NO_SCHEMA_CUSTOM_TBL_PROPERTIES = null;
 
     public static final String SCHEMA_DELIMITER_COMMA = ",";
 

@@ -393,7 +393,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
         businessObjectFormatCreateRequest.setRelationalSchemaName(relationalTableRegistrationCreateRequest.getRelationalSchemaName());
         businessObjectFormatCreateRequest.setRelationalTableName(relationalTableRegistrationCreateRequest.getRelationalTableName());
 
-        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null, null));
 
         // Log the business object format create request.
         LOGGER.info("Registering relational table... businessObjectFormatCreateRequest={}", jsonHelper.objectToJson(businessObjectFormatCreateRequest));
@@ -517,7 +517,7 @@ public class RelationalTableRegistrationHelperServiceImpl implements RelationalT
             .setBusinessObjectFormatFileType(relationalTableRegistrationDto.getBusinessObjectFormat().getBusinessObjectFormatFileType());
         businessObjectFormatCreateRequest.setPartitionKey(relationalTableRegistrationDto.getBusinessObjectFormat().getPartitionKey());
         businessObjectFormatCreateRequest.setAttributes(relationalTableRegistrationDto.getBusinessObjectFormat().getAttributes());
-        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null));
+        businessObjectFormatCreateRequest.setSchema(new Schema(schemaColumns, null, "", null, null, null, null, null, null, null, null));
         businessObjectFormatCreateRequest.setRelationalSchemaName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalSchemaName());
         businessObjectFormatCreateRequest.setRelationalTableName(relationalTableRegistrationDto.getBusinessObjectFormat().getRelationalTableName());
 

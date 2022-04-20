@@ -44,11 +44,11 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
         // Create and persist database entities required for testing.
         for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
         {
-            businessObjectFormatDaoTestHelper
-                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
-                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                    SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
-                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion,
+                FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES,
+                SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
         }
 
         // Get a list of schema columns from the business object definition matching to the first column name.
@@ -81,11 +81,12 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
         FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE);
 
         // Create and persist database entities required for testing.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
-                SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null,
+                NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
 
         // Update business object definition entity
         businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
