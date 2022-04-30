@@ -20,7 +20,6 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Repository;
 import org.finra.herd.dao.UserNamespaceAuthorizationDao;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
 import org.finra.herd.model.jpa.NamespaceEntity;
-import org.finra.herd.model.jpa.NamespaceEntity_;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity_;
 
@@ -77,13 +75,10 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // The criteria root is the user namespace authorization.
         Root<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntity = criteria.from(UserNamespaceAuthorizationEntity.class);
 
-        // Join to the other tables we can filter on.
-        Join<UserNamespaceAuthorizationEntity, NamespaceEntity> namespaceEntity =
-            userNamespaceAuthorizationEntity.join(UserNamespaceAuthorizationEntity_.namespace);
-
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), userNamespaceAuthorizationKey.getNamespace().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.namespaceCode)),
+            userNamespaceAuthorizationKey.getNamespace().toUpperCase()));
         predicates.add(builder.equal(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)),
             userNamespaceAuthorizationKey.getUserId().toUpperCase()));
 
@@ -129,10 +124,6 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // The criteria root is the user namespace authorization.
         Root<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntity = criteria.from(UserNamespaceAuthorizationEntity.class);
 
-        // Join to the other tables we can filter on.
-        Join<UserNamespaceAuthorizationEntity, NamespaceEntity> namespaceEntity =
-            userNamespaceAuthorizationEntity.join(UserNamespaceAuthorizationEntity_.namespace);
-
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
             builder.like(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)), userIdStartsWith.toUpperCase() + '%');
@@ -140,7 +131,7 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // Add all clauses for the query.
         criteria.select(userNamespaceAuthorizationEntity).where(queryRestriction)
             .orderBy(builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId)),
-                builder.asc(namespaceEntity.get(NamespaceEntity_.code)));
+                builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.namespaceCode)));
 
         // Execute the query and return the result list.
         return entityManager.createQuery(criteria).getResultList();
@@ -156,12 +147,9 @@ public class UserNamespaceAuthorizationDaoImpl extends AbstractHerdDao implement
         // The criteria root is the user namespace authorization.
         Root<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntity = criteria.from(UserNamespaceAuthorizationEntity.class);
 
-        // Join to the other tables we can filter on.
-        Join<UserNamespaceAuthorizationEntity, NamespaceEntity> namespaceEntity =
-            userNamespaceAuthorizationEntity.join(UserNamespaceAuthorizationEntity_.namespace);
-
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), namespace.toUpperCase());
+        Predicate queryRestriction =
+            builder.equal(builder.upper(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.namespaceCode)), namespace.toUpperCase());
 
         // Order by user id.
         Order orderBy = builder.asc(userNamespaceAuthorizationEntity.get(UserNamespaceAuthorizationEntity_.userId));
