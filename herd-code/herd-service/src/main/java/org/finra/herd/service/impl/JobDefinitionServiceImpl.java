@@ -51,6 +51,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.JobDefinitionKeys;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
@@ -208,6 +209,19 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
 
         // Create and return the job definition object from the persisted entity.
         return createJobDefinitionFromEntity(jobDefinitionEntity);
+    }
+
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public JobDefinitionKeys getJobDefinitionKeys(String namespace)
+    {
+        // Validate the namespace.
+        alternateKeyHelper.validateStringParameter("namespace", namespace);
+
+        // Retrieve and return the list of job definition keys.
+        JobDefinitionKeys jobDefinitionKeys = new JobDefinitionKeys();
+        jobDefinitionKeys.getJobDefinitionKeys().addAll(null);
+        return jobDefinitionKeys;
     }
 
     /**
