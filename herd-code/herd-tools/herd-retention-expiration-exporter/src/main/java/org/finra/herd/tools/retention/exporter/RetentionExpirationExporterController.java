@@ -20,11 +20,8 @@ import static org.finra.herd.model.dto.ConfigurationValue.BUSINESS_OBJECT_DATA_S
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,6 +34,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,11 @@ class RetentionExpirationExporterController
             "Business Object Format Version", "Min Primary Partition Value", "Max Primary Partition Value", "Count", "Input Start Registration Date Time",
             "Input End Registration Date Time", "Oldest Registration Date Time", "Latest Registration Date Time", "Business Object Definition Display Name",
             "Business Object Definition URI");
+
+    public static final List<String> BUSINESS_OBJECT_DATA_HEADER = Arrays
+        .asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
+            "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
+            "Sub-Partition Value 4", "Business Object Data Version");
 
     @Autowired
     private RetentionExpirationExporterWebClient retentionExpirationExporterWebClient;
@@ -139,20 +145,15 @@ class RetentionExpirationExporterController
             businessObjectDataSearchResult = retentionExpirationExporterWebClient.searchBusinessObjectData(request, pageNumber, pageSize);
         }
 
-        // Write business object data to the output CSV file.
-        writeToCsvFile(localOutputFile, businessObjectDataList);
-
-        // Create local summary file
-        File localSummaryFile = new File(localOutputFile.getAbsolutePath() + "_summary.csv");
-
         // Extract all unique formats from list of BData
         Map<BusinessObjectFormatKey, RetentionExpirationExporterAggregateStatsDto> aggregateStats = getAggregateStats(businessObjectDataList);
 
         // Create business object definition URI.
         String businessObjectDefinitionUdcUri = getBusinessObjectDefinitionUdcUri(udcServerHost, namespace, businessObjectDefinitionName);
 
-        // Write summary information to the second output file.
-        writeToSummaryFile(localSummaryFile, aggregateStats, startRegistrationDateTime, endRegistrationDateTime, businessObjectDefinitionDisplayName, businessObjectDefinitionUdcUri);
+        // Write all information to an Excel file.
+        writeToExcelFile(localOutputFile, aggregateStats, startRegistrationDateTime, endRegistrationDateTime, businessObjectDefinitionDisplayName,
+            businessObjectDefinitionUdcUri, businessObjectDataList);
     }
 
     /**
@@ -236,7 +237,7 @@ class RetentionExpirationExporterController
     }
 
     /**
-     * Writes business object data to the summary file.
+     * Writes business object data to the excel file.
      *
      * @param localOutputFile                     the file to write
      * @param aggregateStats                      the business object format version aggregate stats
@@ -244,44 +245,120 @@ class RetentionExpirationExporterController
      * @param endRegistrationDateTime             the end registration date time
      * @param businessObjectDefinitionDisplayName the display name of the business object definition
      * @param businessObjectDefinitionUdcUri      the business object definition UDC URI
+     * @param businessObjectDataList              the business object data list
      *
      * @throws IOException if any problems were encountered
      */
-    private void writeToSummaryFile(File localOutputFile, Map<BusinessObjectFormatKey, RetentionExpirationExporterAggregateStatsDto> aggregateStats,
-        DateTime startRegistrationDateTime, DateTime endRegistrationDateTime, String businessObjectDefinitionDisplayName, String businessObjectDefinitionUdcUri)
-        throws IOException
+    private void writeToExcelFile(File localOutputFile, Map<BusinessObjectFormatKey, RetentionExpirationExporterAggregateStatsDto> aggregateStats,
+        DateTime startRegistrationDateTime, DateTime endRegistrationDateTime, String businessObjectDefinitionDisplayName, String businessObjectDefinitionUdcUri,
+        List<BusinessObjectData> businessObjectDataList) throws IOException
     {
-        // Open local output file to write.
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))
+        // Create xssf workbook.
+        XSSFWorkbook workbook = new XSSFWorkbook();
+
+        // Create summary sheet.
+        XSSFSheet summarySheet = workbook.createSheet("Summary");
+
+        // Initialize row number.
+        int summaryRowNum = 0;
+
+        // Write summary headers.
+        XSSFRow summaryHeaders = summarySheet.createRow(summaryRowNum++);
+        int summaryCellIdx = 0;
+        for (String header : SUMMARY_HEADER)
         {
-            // Define all headers for the output file.
-            List<String> headers = SUMMARY_HEADER;
+            Cell cell = summaryHeaders.createCell(summaryCellIdx++);
+            cell.setCellValue(header);
+        }
 
-            // Write csv file headers.
-            writeLine(writer, headers);
+        // Write aggregate stat for each business object format version.
+        for (BusinessObjectFormatKey businessObjectFormatKey : aggregateStats.keySet())
+        {
+            XSSFRow summaryContents = summarySheet.createRow(summaryRowNum++);
+            RetentionExpirationExporterAggregateStatsDto retentionExpirationExporterAggregateStatsDto = aggregateStats.get(businessObjectFormatKey);
+            List<String> aggragateStatsRow = new ArrayList<>(Arrays
+                .asList(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
+                    businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
+                    businessObjectFormatKey.getBusinessObjectFormatVersion().toString(),
+                    retentionExpirationExporterAggregateStatsDto.getMinPrimaryPartitionValue() == null ? "" :
+                        retentionExpirationExporterAggregateStatsDto.getMinPrimaryPartitionValue(),
+                    retentionExpirationExporterAggregateStatsDto.getMaxPrimaryPartitionValue() == null ? "" :
+                        retentionExpirationExporterAggregateStatsDto.getMaxPrimaryPartitionValue(),
+                    retentionExpirationExporterAggregateStatsDto.getCount().toString(),
+                    startRegistrationDateTime == null ? "" : startRegistrationDateTime.toString(),
+                    endRegistrationDateTime == null ? "" : endRegistrationDateTime.toString(),
+                    retentionExpirationExporterAggregateStatsDto.getOldestRegistrationDateTime() == null ? "" :
+                        retentionExpirationExporterAggregateStatsDto.getOldestRegistrationDateTime().toString(),
+                    retentionExpirationExporterAggregateStatsDto.getLatestRegistrationDateTime() == null ? "" :
+                        retentionExpirationExporterAggregateStatsDto.getLatestRegistrationDateTime().toString(), businessObjectDefinitionDisplayName,
+                    businessObjectDefinitionUdcUri));
 
-            // Write aggregate stat for each business object format version.
-            for (BusinessObjectFormatKey businessObjectFormatKey : aggregateStats.keySet())
+            // Write value to each cell.
+            summaryCellIdx = 0;
+            for (String aggragateStatsCell : aggragateStatsRow)
             {
-                RetentionExpirationExporterAggregateStatsDto retentionExpirationExporterAggregateStatsDto = aggregateStats.get(businessObjectFormatKey);
-                List<String> businessObjectDataRecords = new ArrayList<>(Arrays
-                    .asList(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
-                        businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
-                        businessObjectFormatKey.getBusinessObjectFormatVersion().toString(),
-                        retentionExpirationExporterAggregateStatsDto.getMinPrimaryPartitionValue() == null ? "" :
-                            retentionExpirationExporterAggregateStatsDto.getMinPrimaryPartitionValue(),
-                        retentionExpirationExporterAggregateStatsDto.getMaxPrimaryPartitionValue() == null ? "" :
-                            retentionExpirationExporterAggregateStatsDto.getMaxPrimaryPartitionValue(),
-                        retentionExpirationExporterAggregateStatsDto.getCount().toString(),
-                        startRegistrationDateTime == null ? "" : startRegistrationDateTime.toString(),
-                        endRegistrationDateTime == null ? "" : endRegistrationDateTime.toString(),
-                        retentionExpirationExporterAggregateStatsDto.getOldestRegistrationDateTime() == null ? "" :
-                            retentionExpirationExporterAggregateStatsDto.getOldestRegistrationDateTime().toString(),
-                        retentionExpirationExporterAggregateStatsDto.getLatestRegistrationDateTime() == null ? "" :
-                            retentionExpirationExporterAggregateStatsDto.getLatestRegistrationDateTime().toString(), businessObjectDefinitionDisplayName,
-                        businessObjectDefinitionUdcUri));
-                writeLine(writer, businessObjectDataRecords);
+                Cell cell = summaryContents.createCell(summaryCellIdx++);
+                cell.setCellValue(aggragateStatsCell);
             }
+        }
+
+        // Autosize the summary sheet.
+        for (int columnIndex = 0; columnIndex < SUMMARY_HEADER.size(); columnIndex++)
+        {
+            summarySheet.autoSizeColumn(columnIndex);
+        }
+
+        // Create business object data sheet.
+        XSSFSheet detailSheet = workbook.createSheet("Business Object Data");
+
+        // Initialize row number.
+        int businessObjectDataRowNum = 0;
+
+        // Write detailed headers.
+        XSSFRow detailHeaders = detailSheet.createRow(businessObjectDataRowNum++);
+        int detailCellIndex = 0;
+        for (String header : BUSINESS_OBJECT_DATA_HEADER)
+        {
+            Cell cell = detailHeaders.createCell(detailCellIndex++);
+            cell.setCellValue(header);
+        }
+
+        // Write detailed information for each business object data.
+        for (BusinessObjectData businessObjectData : businessObjectDataList)
+        {
+            XSSFRow detailContents = detailSheet.createRow(businessObjectDataRowNum++);
+            int subPartitionsCount = CollectionUtils.size(businessObjectData.getSubPartitionValues());
+            List<String> businessObjectDataRow = Arrays.asList(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+                businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
+                Integer.toString(businessObjectData.getBusinessObjectFormatVersion()), businessObjectData.getPartitionValue(),
+                subPartitionsCount > 0 ? businessObjectData.getSubPartitionValues().get(0) : "",
+                subPartitionsCount > 1 ? businessObjectData.getSubPartitionValues().get(1) : "",
+                subPartitionsCount > 2 ? businessObjectData.getSubPartitionValues().get(2) : "",
+                subPartitionsCount > 3 ? businessObjectData.getSubPartitionValues().get(3) : "", Integer.toString(businessObjectData.getVersion()));
+
+            // Write value to each cell.
+            detailCellIndex = 0;
+            for (String businessObjectDataCell : businessObjectDataRow)
+            {
+                Cell cell = detailContents.createCell(detailCellIndex++);
+                cell.setCellValue(businessObjectDataCell);
+            }
+        }
+
+        // Autosize the business object data sheet.
+        for (int columnIndex = 0; columnIndex < BUSINESS_OBJECT_DATA_HEADER.size(); columnIndex++)
+        {
+            detailSheet.autoSizeColumn(columnIndex);
+        }
+
+        // Write the workbook to local.
+        try (FileOutputStream out = new FileOutputStream(localOutputFile))
+        {
+            workbook.write(out);
+        }
+        finally
+        {
+            workbook.close();
         }
     }
 
@@ -316,77 +393,5 @@ class RetentionExpirationExporterController
         URIBuilder uriBuilder =
             new URIBuilder().setScheme("https").setHost(udcServerHost).setPath(String.format("/data-entities/%s/%s", namespace, businessObjectDefinitionName));
         return String.valueOf(uriBuilder.build().toURL());
-    }
-
-    /**
-     * Applies CSV formatting to a string value.
-     *
-     * @param value the string value to format
-     *
-     * @return the CSV formatted string value
-     */
-    private String applyCsvFormatting(String value)
-    {
-        return value.replace("\"", "\"\"");
-    }
-
-    /**
-     * Write one line in the csv file.
-     *
-     * @param writer file write object
-     * @param values value to write
-     *
-     * @throws IOException if any problems were encountered
-     */
-    private void writeLine(Writer writer, List<String> values) throws IOException
-    {
-        final char customQuote = '"';
-
-        StringBuilder stringBuilder = new StringBuilder();
-        boolean first = true;
-        for (String value : values)
-        {
-            if (!first)
-            {
-                stringBuilder.append(',');
-            }
-            stringBuilder.append(customQuote).append(applyCsvFormatting(value)).append(customQuote);
-            first = false;
-        }
-        stringBuilder.append(System.lineSeparator());
-        writer.append(stringBuilder.toString());
-    }
-
-    /**
-     * Writes business object data to the CSV file.
-     *
-     * @param localOutputFile the file to write
-     * @param businessObjectDataList the list of business object data
-     *
-     * @throws IOException if any problems were encountered
-     */
-    private void writeToCsvFile(File localOutputFile, List<BusinessObjectData> businessObjectDataList) throws IOException
-    {
-        // Create the local output file.
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(localOutputFile), StandardCharsets.UTF_8))
-        {
-            // Write csv file header.
-            writeLine(writer, Arrays.asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
-                "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
-                "Sub-Partition Value 4", "Business Object Data Version"));
-
-            for (BusinessObjectData businessObjectData : businessObjectDataList)
-            {
-                int subPartitionsCount = CollectionUtils.size(businessObjectData.getSubPartitionValues());
-                List<String> businessObjectDataRecords = Arrays.asList(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
-                    businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-                    Integer.toString(businessObjectData.getBusinessObjectFormatVersion()), businessObjectData.getPartitionValue(),
-                    subPartitionsCount > 0 ? businessObjectData.getSubPartitionValues().get(0) : "",
-                    subPartitionsCount > 1 ? businessObjectData.getSubPartitionValues().get(1) : "",
-                    subPartitionsCount > 2 ? businessObjectData.getSubPartitionValues().get(2) : "",
-                    subPartitionsCount > 3 ? businessObjectData.getSubPartitionValues().get(3) : "", Integer.toString(businessObjectData.getVersion()));
-                writeLine(writer, businessObjectDataRecords);
-            }
-        }
     }
 }

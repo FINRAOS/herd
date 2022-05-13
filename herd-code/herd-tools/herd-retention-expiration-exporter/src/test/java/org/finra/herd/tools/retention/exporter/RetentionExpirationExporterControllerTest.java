@@ -20,15 +20,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -107,7 +108,7 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
     @Test
     public void testPerformRetentionExpirationExport() throws Exception
     {
-        File outputFile = new File(LOCAL_OUTPUT_FILE);
+        File outputFile = new File(LOCAL_EXCEL_OUTPUT_FILE);
 
         // Create and initialize the registration server DTO.
         RegServerAccessParamsDto regServerAccessParamsDto =
@@ -123,51 +124,75 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         // Create the expected URI.
         String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
 
-        // Create the expected output file content.
-        String expectedOutputFileContent =
-            ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
-                "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\"," +
-                "\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\"") + System.lineSeparator() + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                    BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue",
-                    "subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", BUSINESS_OBJECT_DATA_VERSION) + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                    BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue", "", "", "", "",
-                    BUSINESS_OBJECT_DATA_VERSION);
+        // Get the output Excel file.
+        XSSFWorkbook workbook = new XSSFWorkbook(outputFile);
 
-        // Validate the output file.
-        String outputFileContent;
-        try (FileInputStream inputStream = new FileInputStream(outputFile))
+        // Get the summary sheet
+        XSSFSheet summarySheet = workbook.getSheetAt(0);
+
+        // Validate summary headers.
+        XSSFRow row = summarySheet.getRow(0);
+        List<String> outputHeaders = new ArrayList<>();
+        for (Cell cell : row)
         {
-            outputFileContent = IOUtils.toString(inputStream, Charset.defaultCharset());
+            outputHeaders.add(cell.getStringCellValue());
         }
-        assertEquals(expectedOutputFileContent, outputFileContent);
+        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADER;
+        assertEquals(expectedOutputHeaders, outputHeaders);
 
-        File outputFileSummary = new File(LOCAL_SUMMARY_OUTPUT_FILE);
-        String expectedOutputFileSummaryContent =
-            ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
-                "\"Business Object Format Version\",\"Min Primary Partition Value\",\"Max Primary Partition Value\"," + "\"Count\"," +
-                "\"Input Start Registration Date Time\"," + "\"Input End Registration Date Time\"," + "\"Oldest Registration Date Time\"," +
-                "\"Latest Registration Date Time\"," + "\"Business Object Definition Display Name\"," + "\"Business Object Definition URI\"") +
-                System.lineSeparator() + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n", NAMESPACE,
-                    BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION,
-                    "primaryPartitionValue", "primaryPartitionValue", 2, "", "", "", "", BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri);
-
-        // Validate the output file.
-        String outputFileSummaryContent;
-        try (FileInputStream inputStream = new FileInputStream(outputFileSummary))
+        // Validate summary contents.
+        row = summarySheet.getRow(1);
+        List<String> outputContents = new ArrayList<>();
+        for (Cell cell : row)
         {
-            outputFileSummaryContent = IOUtils.toString(inputStream, Charset.defaultCharset());
+            outputContents.add(cell.getStringCellValue());
         }
+        List<String> expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "primaryPartitionValue", "2", "", "", "", "", "testBusinessObjectDefinitionDisplayName", expectedUri);
+        assertEquals(expectedOutputContents, outputContents);
 
-        assertEquals(expectedOutputFileSummaryContent, outputFileSummaryContent);
+        // Get business object data sheet
+        XSSFSheet dataSheet = workbook.getSheetAt(1);
+
+        // Validate business object data headers.
+        row = dataSheet.getRow(0);
+        outputHeaders = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputHeaders.add(cell.getStringCellValue());
+        }
+        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADER;
+        assertEquals(expectedOutputHeaders, outputHeaders);
+
+        // Validate business object data contents.
+        row = dataSheet.getRow(1);
+        outputContents = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputContents.add(cell.getStringCellValue());
+        }
+        expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", "5");
+        assertEquals(expectedOutputContents, outputContents);
+
+        row = dataSheet.getRow(2);
+        outputContents = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputContents.add(cell.getStringCellValue());
+        }
+        expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "", "", "", "", "5");
+        assertEquals(expectedOutputContents, outputContents);
     }
 
     @Test
     public void testPerformRetentionExpirationExportWithRegistrationDateTimeRange() throws Exception
     {
-        File outputFile = new File(LOCAL_OUTPUT_FILE);
+        File outputFile = new File(LOCAL_EXCEL_OUTPUT_FILE);
 
         // Create and initialize the registration server DTO.
         RegServerAccessParamsDto regServerAccessParamsDto =
@@ -183,46 +208,70 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         // Create the expected URI.
         String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
 
-        // Create the expected output file content.
-        String expectedOutputFileContent =
-            ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
-                "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\"," +
-                "\"Sub-Partition Value 3\",\"Sub-Partition Value 4\",\"Business Object Data Version\"") + System.lineSeparator() + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                    BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue",
-                    "subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", BUSINESS_OBJECT_DATA_VERSION) + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                    BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, "primaryPartitionValue", "", "", "", "",
-                    BUSINESS_OBJECT_DATA_VERSION);
+        // Get the output Excel file.
+        XSSFWorkbook workbook = new XSSFWorkbook(outputFile);
 
-        // Validate the output file.
-        String outputFileContent;
-        try (FileInputStream inputStream = new FileInputStream(outputFile))
+        // Get summary sheet
+        XSSFSheet summarySheet = workbook.getSheetAt(0);
+
+        // Validate summary headers.
+        XSSFRow row = summarySheet.getRow(0);
+        List<String> outputHeaders = new ArrayList<>();
+        for (Cell cell : row)
         {
-            outputFileContent = IOUtils.toString(inputStream, Charset.defaultCharset());
+            outputHeaders.add(cell.getStringCellValue());
         }
-        assertEquals(expectedOutputFileContent, outputFileContent);
+        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADER;
+        assertEquals(expectedOutputHeaders, outputHeaders);
 
-        File outputFileSummary = new File(LOCAL_SUMMARY_OUTPUT_FILE);
-        String expectedOutputFileSummaryContent =
-            ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
-                "\"Business Object Format Version\",\"Min Primary Partition Value\",\"Max Primary Partition Value\"," + "\"Count\"," +
-                "\"Input Start Registration Date Time\"," + "\"Input End Registration Date Time\"," + "\"Oldest Registration Date Time\"," +
-                "\"Latest Registration Date Time\"," + "\"Business Object Definition Display Name\"," + "\"Business Object Definition URI\"") +
-                System.lineSeparator() + String
-                .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n", NAMESPACE,
-                    BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION,
-                    "primaryPartitionValue", "primaryPartitionValue", 2, START_REGISTRATION_DATE_TIME_2, END_REGISTRATION_DATE_TIME_2, "", "",
-                    BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri);
-
-        // Validate the output file.
-        String outputFileSummaryContent;
-        try (FileInputStream inputStream = new FileInputStream(outputFileSummary))
+        // Validate summary contents.
+        row = summarySheet.getRow(1);
+        List<String> outputContents = new ArrayList<>();
+        for (Cell cell : row)
         {
-            outputFileSummaryContent = IOUtils.toString(inputStream, Charset.defaultCharset());
+            outputContents.add(cell.getStringCellValue());
         }
+        List<String> expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "primaryPartitionValue", "2", START_REGISTRATION_DATE_TIME_2.toString(), END_REGISTRATION_DATE_TIME_2.toString(), "",
+                "", "testBusinessObjectDefinitionDisplayName", expectedUri);
+        assertEquals(expectedOutputContents, outputContents);
 
-        assertEquals(expectedOutputFileSummaryContent, outputFileSummaryContent);
+        // Get business object data sheet
+        XSSFSheet dataSheet = workbook.getSheetAt(1);
+
+        // Validate business object data headers.
+        row = dataSheet.getRow(0);
+        outputHeaders = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputHeaders.add(cell.getStringCellValue());
+        }
+        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADER;
+        assertEquals(expectedOutputHeaders, outputHeaders);
+
+        // Validate business object data contents.
+        row = dataSheet.getRow(1);
+        outputContents = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputContents.add(cell.getStringCellValue());
+        }
+        expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4", "5");
+        assertEquals(expectedOutputContents, outputContents);
+
+        row = dataSheet.getRow(2);
+        outputContents = new ArrayList<>();
+        for (Cell cell : row)
+        {
+            outputContents.add(cell.getStringCellValue());
+        }
+        expectedOutputContents = Arrays
+            .asList("testNamespace", "testBusinessObjectDefinitionName", "testBusinessObjectFormatUsage", "testBusinessObjectFormatFileType", "9",
+                "primaryPartitionValue", "", "", "", "", "5");
+        assertEquals(expectedOutputContents, outputContents);
     }
 
     @Test

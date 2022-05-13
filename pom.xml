@@ -80,6 +80,7 @@
       <google.guava.version>27.0.1-jre</google.guava.version>
       <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
       <plexus.utils.version>3.1.0</plexus.utils.version>
+      <poi.version>5.0.0</poi.version>
       <postgresql.driver.version>42.3.3</postgresql.driver.version>
       <quartz.scheduler.version>2.3.2</quartz.scheduler.version>
       <roaster.version>2.20.4.Final</roaster.version>
@@ -554,6 +555,16 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>${log4j.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>${poi.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
          </dependency>
          <dependency>
             <groupId>org.springframework</groupId>

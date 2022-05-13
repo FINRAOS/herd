@@ -60,7 +60,7 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 
     static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 
-    static final String LOCAL_SUMMARY_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString() + "_summary.csv";
+    static final String LOCAL_EXCEL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString() + ".xlsx";
 
     static final String NAMESPACE = "testNamespace";
 
