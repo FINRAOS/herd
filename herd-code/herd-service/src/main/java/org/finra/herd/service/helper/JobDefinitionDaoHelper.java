@@ -15,12 +15,18 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.JobDefinitionDao;
+import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.JobDefinitionKey;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 /**
  * Helper for data provider related operations which require DAO.
@@ -30,6 +36,9 @@ public class JobDefinitionDaoHelper
 {
     @Autowired
     private JobDefinitionDao jobDefinitionDao;
+
+    @Autowired
+    private NamespaceDao namespaceDao;
 
     /**
      * Retrieve and ensures that a job definition entity exists.
@@ -50,5 +59,28 @@ public class JobDefinitionDaoHelper
         }
 
         return jobDefinitionEntity;
+    }
+
+    /**
+     * Gets a list of keys for all job definition keys defined in the system for the specified namespace.
+     *
+     * @param namespaceCode the namespace code
+     *
+     * @return list of storage policy keys
+     */
+    public List<JobDefinitionKey> getJobDefinitionKeysByNamespaceCode(String namespaceCode)
+    {
+        // Try to retrieve the relative namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespaceCode);
+
+        // If namespace entity exists, retrieve job definition keys by namespace entity.
+        if (namespaceEntity != null)
+        {
+            return jobDefinitionDao.getJobDefinitionKeysByNamespaceEntity(namespaceEntity);
+        }
+        else
+        {
+            return Lists.newArrayList();
+        }
     }
 }

@@ -215,12 +215,12 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     @Override
     public JobDefinitionKeys getJobDefinitionKeys(String namespace)
     {
-        // Validate the namespace.
-        alternateKeyHelper.validateStringParameter("namespace", namespace);
+        // Validate and trim the namespace.
+        String localNamespace = alternateKeyHelper.validateStringParameter("namespace", namespace);
 
         // Retrieve and return the list of job definition keys.
         JobDefinitionKeys jobDefinitionKeys = new JobDefinitionKeys();
-        jobDefinitionKeys.getJobDefinitionKeys().addAll(null);
+        jobDefinitionKeys.getJobDefinitionKeys().addAll(jobDefinitionDaoHelper.getJobDefinitionKeysByNamespaceCode(localNamespace));
         return jobDefinitionKeys;
     }
 
