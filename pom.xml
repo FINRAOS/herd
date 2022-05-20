@@ -996,7 +996,6 @@
                   <groupId>org.apache.hadoop</groupId>
                   <artifactId>hadoop-auth</artifactId>
                </exclusion>
-               <!-- todo if we can exclude hadoop common here?? -->
                <exclusion>
                   <groupId>org.apache.hive</groupId>
                   <artifactId>hive-shims</artifactId>
