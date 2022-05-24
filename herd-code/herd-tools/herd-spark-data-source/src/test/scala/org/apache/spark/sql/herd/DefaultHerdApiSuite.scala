@@ -376,11 +376,12 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     val objectStatusCaptor = ArgumentCaptor.forClass(classOf[String])
     val includeBusinessObjectDataStatusHistoryCaptor = ArgumentCaptor.forClass(classOf[Boolean])
     val includeStorageUnitStatusHistoryCaptor = ArgumentCaptor.forClass(classOf[Boolean])
+    val excludeBusinessObjectDataStorageFiles = ArgumentCaptor.forClass(classOf[Boolean])
 
     when(mockBusinessObjectDataApi.businessObjectDataGetBusinessObjectData(namespaceCaptor.capture(), businessObjectDefinitionCaptor.capture(),
       formatUsageCaptor.capture(), fileTypeCaptor.capture(), partitionKeyCaptor.capture(), partitionValueCaptor.capture(), subPartitionValueCaptor.capture(),
       formatVersionCaptor.capture(), dataVersionCaptor.capture(), objectStatusCaptor.capture(), includeBusinessObjectDataStatusHistoryCaptor.capture(),
-      includeStorageUnitStatusHistoryCaptor.capture())).thenReturn(businessObjectData)
+      includeStorageUnitStatusHistoryCaptor.capture(), excludeBusinessObjectDataStorageFiles.capture())).thenReturn(businessObjectData)
     when(defaultHerdApi.getBusinessObjectDataApi(mockApiClient)).thenReturn(mockBusinessObjectDataApi)
 
     val actualBusinessObjectData = defaultHerdApi.getBusinessObjectData(NAMESPACE, BUSINESS_OBJECT_DEFINITION, FORMAT_USAGE,
@@ -388,7 +389,7 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
 
     verify(defaultHerdApi).getBusinessObjectDataApi(mockApiClient)
     verify(mockBusinessObjectDataApi).businessObjectDataGetBusinessObjectData(any(), any(), any(), any(), any(), any(),
-      any(), any(), any(), any(), any(), any())
+      any(), any(), any(), any(), any(), any(), any())
 
     assertEquals(NAMESPACE, namespaceCaptor.getValue)
     assertEquals(BUSINESS_OBJECT_DEFINITION, businessObjectDefinitionCaptor.getValue)
