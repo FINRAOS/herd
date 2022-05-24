@@ -88,7 +88,7 @@ private[sql] class HerdOrcFileFormat extends OrcFileFormat with Logging {
       override def apply(file: PartitionedFile) = {
         val conf = broadcastedHadoopConf.value.value
 
-        val physicalSchema = OrcFileOperator.readSchema(Seq(file.filePath), Some(conf), false)
+        val physicalSchema = OrcFileOperator.readSchema(Seq(file.filePath), Some(conf))
 
         val partitionValueLiterals = partitionSchema.map(_.dataType).zipWithIndex.map {
           case (dt, i) => Literal(file.partitionValues.get(i, dt), dt)
