@@ -137,7 +137,7 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         {
             outputHeaders.add(cell.getStringCellValue());
         }
-        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADER;
+        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADERS;
         assertEquals(expectedOutputHeaders, outputHeaders);
 
         // Validate summary contents.
@@ -162,7 +162,7 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         {
             outputHeaders.add(cell.getStringCellValue());
         }
-        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADER;
+        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADERS;
         assertEquals(expectedOutputHeaders, outputHeaders);
 
         // Validate business object data contents.
@@ -221,7 +221,7 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         {
             outputHeaders.add(cell.getStringCellValue());
         }
-        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADER;
+        List<String> expectedOutputHeaders = RetentionExpirationExporterController.SUMMARY_HEADERS;
         assertEquals(expectedOutputHeaders, outputHeaders);
 
         // Validate summary contents.
@@ -247,7 +247,7 @@ public class RetentionExpirationExporterControllerTest extends AbstractExporterT
         {
             outputHeaders.add(cell.getStringCellValue());
         }
-        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADER;
+        expectedOutputHeaders = RetentionExpirationExporterController.BUSINESS_OBJECT_DATA_HEADERS;
         assertEquals(expectedOutputHeaders, outputHeaders);
 
         // Validate business object data contents.

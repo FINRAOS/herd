@@ -61,13 +61,13 @@ class RetentionExpirationExporterController
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationExporterController.class);
 
-    public static final List<String> SUMMARY_HEADER = Arrays
+    public static final List<String> SUMMARY_HEADERS = Arrays
         .asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
             "Business Object Format Version", "Min Primary Partition Value", "Max Primary Partition Value", "Count", "Input Start Registration Date Time",
             "Input End Registration Date Time", "Oldest Registration Date Time", "Latest Registration Date Time", "Business Object Definition Display Name",
             "Business Object Definition URI");
 
-    public static final List<String> BUSINESS_OBJECT_DATA_HEADER = Arrays
+    public static final List<String> BUSINESS_OBJECT_DATA_HEADERS = Arrays
         .asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
             "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
             "Sub-Partition Value 4", "Business Object Data Version");
@@ -265,7 +265,7 @@ class RetentionExpirationExporterController
         // Write summary headers.
         XSSFRow summaryHeaders = summarySheet.createRow(summaryRowNum++);
         int summaryCellIdx = 0;
-        for (String header : SUMMARY_HEADER)
+        for (String header : SUMMARY_HEADERS)
         {
             Cell cell = summaryHeaders.createCell(summaryCellIdx++);
             cell.setCellValue(header);
@@ -303,7 +303,7 @@ class RetentionExpirationExporterController
         }
 
         // Autosize the summary sheet.
-        for (int columnIndex = 0; columnIndex < SUMMARY_HEADER.size(); columnIndex++)
+        for (int columnIndex = 0; columnIndex < SUMMARY_HEADERS.size(); columnIndex++)
         {
             summarySheet.autoSizeColumn(columnIndex);
         }
@@ -317,7 +317,7 @@ class RetentionExpirationExporterController
         // Write detailed headers.
         XSSFRow detailHeaders = detailSheet.createRow(businessObjectDataRowNum++);
         int detailCellIndex = 0;
-        for (String header : BUSINESS_OBJECT_DATA_HEADER)
+        for (String header : BUSINESS_OBJECT_DATA_HEADERS)
         {
             Cell cell = detailHeaders.createCell(detailCellIndex++);
             cell.setCellValue(header);
@@ -346,7 +346,7 @@ class RetentionExpirationExporterController
         }
 
         // Autosize the business object data sheet.
-        for (int columnIndex = 0; columnIndex < BUSINESS_OBJECT_DATA_HEADER.size(); columnIndex++)
+        for (int columnIndex = 0; columnIndex < BUSINESS_OBJECT_DATA_HEADERS.size(); columnIndex++)
         {
             detailSheet.autoSizeColumn(columnIndex);
         }
