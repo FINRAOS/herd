@@ -192,10 +192,10 @@ class RetentionExpirationExporterController
                         createdOnXmlGregorianCalendar, createdOnXmlGregorianCalendar);
                 aggregateStats.put(businessObjectFormatKey, retentionExpirationExporterAggregateStatsDto);
             }
-            // If XXX exists, update the aggregate stats.
+            // If business object format key exists, update the aggregate stats.
             else
             {
-                // Get retention expiration exporter aggrate stats dto.
+                // Get retention expiration exporter aggregate stats dto.
                 RetentionExpirationExporterAggregateStatsDto retentionExpirationExporterAggregateStatsDto = aggregateStats.get(businessObjectFormatKey);
 
                 // Update min primary partition value.
