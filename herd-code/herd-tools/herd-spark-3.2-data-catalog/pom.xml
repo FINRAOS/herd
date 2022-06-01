@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-tools</artifactId>
+      <version>${revision}</version>
+   </parent>
+
+   <name>herd spark 3.2 data catalog</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
+   <artifactId>herd-spark-3.2-data-catalog</artifactId>
+   <version>0.131.0-SNAPSHOT</version>
+
+   <!-- build the data source for spark version 3.2.1 -->
+   <properties>
+      <spark.version>3.2.1</spark.version>
+      <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
+      <herd.sdk.version>0.169.0</herd.sdk.version>
+      <aws.java.sdk.kms.version>1.11.7</aws.java.sdk.kms.version>
+      <slf4j.version>1.7.21</slf4j.version>
+      <scalactic.version>3.0.8</scalactic.version>
+      <pegdown.version>1.1.0</pegdown.version>
+      <maven.site.plugin.version>3.3</maven.site.plugin.version>
+      <maven.surefire.plugin.version>2.7</maven.surefire.plugin.version>
+      <scala.maven.plugin.version>3.2.1</scala.maven.plugin.version>
+      <scalatest.maven.plugin.version>1.0</scalatest.maven.plugin.version>
+      <scala.version>2.12.10</scala.version>
+      <scala.tools.version>2.12</scala.tools.version>
+      <scalatest.version>3.0.8</scalatest.version>
+      <apache.spark.jackson.version>2.13.0</apache.spark.jackson.version>
+   </properties>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-sdk</artifactId>
+         <version>${herd.sdk.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.apache.logging.log4j</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.fasterxml.jackson.core</groupId>
+               <artifactId>*</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-annotations</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.module</groupId>
+         <artifactId>jackson-module-scala_${scala.tools.version}</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>${scala.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-kms</artifactId>
+         <version>${aws.java.sdk.kms.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>${slf4j.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
+         <exclusions>
+            <exclusion>
+               <groupId>org.bouncycastle</groupId>
+               <artifactId>bcprov-jdk15on</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.bouncycastle</groupId>
+         <artifactId>bcprov-jdk15on</artifactId>
+         <version>${bcprov-jdk15on.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-core_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <!-- Spark bits, scoped for uber jar creation (provided) -->
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-sql_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-hive_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-yarn_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-mllib_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-unsafe_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-tags_${scala.tools.version}</artifactId>
+         <version>${spark.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.finra.herd</groupId>
+         <artifactId>herd-spark-3.2-data-source</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scalactic</groupId>
+         <artifactId>scalactic_${scala.tools.version}</artifactId>
+         <version>${scalactic.version}</version>
+         <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>com.fasterxml.jackson.dataformat</groupId>
+         <artifactId>jackson-dataformat-xml</artifactId>
+         <version>${apache.spark.jackson.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.scalatest</groupId>
+         <artifactId>scalatest_${scala.tools.version}</artifactId>
+         <version>${scalatest.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.pegdown</groupId>
+         <artifactId>pegdown</artifactId>
+         <version>${pegdown.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.mockito</groupId>
+         <artifactId>mockito-core</artifactId>
+         <scope>test</scope>
+      </dependency>
+
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>${maven.site.plugin.version}</version>
+            <configuration>
+            </configuration>
+         </plugin>
+
+         <!-- disable surefire -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven.surefire.plugin.version}</version>
+            <configuration>
+               <skipTests>true</skipTests>
+            </configuration>
+         </plugin>
+
+         <!-- Copy all the source code from the module herd-spark-data-catalog -->
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>copy-source-code</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <outputDirectory>./src</outputDirectory>
+                     <overwrite>true</overwrite>
+                     <resources>
+                        <resource>
+                           <directory>../herd-spark-data-catalog/src/</directory>
+                        </resource>
+                     </resources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- Use mvn package for felicity to generate scaladocs. The spark pom has an extended example of this plugin -->
+         <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>${scala.maven.plugin.version}</version>
+            <executions>
+               <execution>
+                  <id>Scaladoc</id>
+                  <goals>
+                     <goal>doc</goal>
+                     <goal>doc-jar</goal>
+                  </goals>
+                  <phase>prepare-package</phase>
+                  <configuration>
+                     <args>
+                        <arg>-no-link-warnings</arg>
+                     </args>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>Compile</id>
+                  <goals>
+                     <goal>compile</goal>
+                     <goal>testCompile</goal>
+                  </goals>
+                  <configuration>
+                     <args>
+                        <arg>-dependencyfile</arg>
+                        <arg>${project.build.directory}/.scala_dependencies</arg>
+                     </args>
+                  </configuration>
+               </execution>
+            </executions>
+            <configuration>
+               <excludes>
+                  <exclude>**/*TEST*.scala</exclude>
+               </excludes>
+               <jvmArgs>
+                  <jvmArg>-Xms512m</jvmArg>
+                  <jvmArg>-Xmx1500m</jvmArg>
+               </jvmArgs>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest-maven-plugin</artifactId>
+            <version>${scalatest.maven.plugin.version}</version>
+            <configuration>
+               <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+               <junitxml>.</junitxml>
+               <filereports>WDF TestSuite.txt</filereports>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>test</id>
+                  <goals>
+                     <goal>test</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.scoverage</groupId>
+            <artifactId>scoverage-maven-plugin</artifactId>
+            <version>${scoverage.plugin.version}</version>
+            <configuration>
+               <scalaVersion>${scala.version}</scalaVersion>
+               <aggregate>true</aggregate>
+               <!-- other parameters -->
+            </configuration>
+            <executions>
+               <execution>
+                  <id>coverage</id>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>integration-report</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.scalastyle</groupId>
+            <artifactId>scalastyle-maven-plugin</artifactId>
+            <version>${scalastyle.version}</version>
+            <configuration>
+               <verbose>false</verbose>
+               <failOnViolation>true</failOnViolation>
+               <includeTestSourceDirectory>true</includeTestSourceDirectory>
+               <failOnWarning>false</failOnWarning>
+               <sourceDirectory>${project.basedir}/src/main/scala</sourceDirectory>
+               <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
+               <configLocation>scalastyle-config.xml</configLocation>
+               <outputFile>${project.basedir}/target/scalastyle-output.xml</outputFile>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>check-style-scala</id>
+                  <!-- bind to the packaging phase -->
+                  <phase>package</phase>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven.shade.plugin.version}</version>
+            <configuration>
+               <finalName>${project.artifactId}-${project.version}_${scala.tools.version}-assembly</finalName>
+               <filters>
+                  <filter>
+                     <artifact>*</artifact>
+                     <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                     </excludes>
+                  </filter>
+               </filters>
+               <artifactSet>
+                  <excludes>
+                     <exclude>org.apache.logging.log4j:log4j-slf4j-impl</exclude>
+                  </excludes>
+               </artifactSet>
+               <relocations>
+                  <relocation>
+                     <pattern>com.fasterxml.jackson</pattern>
+                     <shadedPattern>org.finra.herd.spark.com.fasterxml.jackson</shadedPattern>
+                     <includes>
+                        <include>com.fasterxml.jackson.**</include>
+                     </includes>
+                  </relocation>
+               </relocations>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                     <shadedArtifactAttached>true</shadedArtifactAttached>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+</project>
