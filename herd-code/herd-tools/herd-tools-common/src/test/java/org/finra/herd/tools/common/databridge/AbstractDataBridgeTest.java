@@ -128,6 +128,8 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
     protected static final List<String> LOCAL_FILES =
         Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");
 
+    protected static final String LOCAL_EXCEL_FILE = "foo.dat.xlsx";
+
     protected static final String LOCAL_FILE = "foo.dat";
 
     protected static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");

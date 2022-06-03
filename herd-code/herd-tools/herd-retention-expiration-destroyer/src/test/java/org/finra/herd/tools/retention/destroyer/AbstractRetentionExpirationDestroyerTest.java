@@ -39,11 +39,7 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
 {
     static final Integer BUSINESS_OBJECT_DATA_VERSION = 5;
 
-    static final String BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME = "testBusinessObjectDefinitionDisplayName";
-
     static final String BUSINESS_OBJECT_DEFINITION_NAME = "testBusinessObjectDefinitionName";
-
-    static final String BUSINESS_OBJECT_DEFINITION_URI = "testBusinessObjectDefinitionUri";
 
     static final String BUSINESS_OBJECT_FORMAT_FILE_TYPE = "testBusinessObjectFormatFileType";
 
@@ -55,6 +51,8 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
 
     static final String LOCAL_INPUT_FILE = Paths.get(LOCAL_TEMP_PATH_INPUT.toString(), LOCAL_FILE).toString();
 
+    static final String LOCAL_EXCEL_INPUT_FILE = Paths.get(LOCAL_TEMP_PATH_INPUT.toString(), LOCAL_FILE).toString() + ".xlsx";
+
     static final String NAMESPACE = "testNamespace";
 
     static final List<String> NO_SUB_PARTITION_VALUES = new ArrayList<>();
@@ -62,8 +60,6 @@ public abstract class AbstractRetentionExpirationDestroyerTest extends AbstractD
     static final String PRIMARY_PARTITION_VALUE = "primaryPartitionValue";
 
     static final List<String> SUB_PARTITION_VALUES = Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
-
-    static final String UDC_SERVICE_HOSTNAME = "testUdcHostname";
 
     private static Logger logger = LoggerFactory.getLogger(AbstractRetentionExpirationDestroyerTest.class);
 
