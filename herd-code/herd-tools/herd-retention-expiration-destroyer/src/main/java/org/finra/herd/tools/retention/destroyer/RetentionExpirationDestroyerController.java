@@ -150,6 +150,7 @@ public class RetentionExpirationDestroyerController
      *
      * @return the list of business object data keys
      * @throws IOException if any problems were encountered
+     * @throws InvalidFormatException if the input format is invalid
      */
     protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputExcelFile) throws IOException, InvalidFormatException
     {
