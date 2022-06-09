@@ -16,20 +16,21 @@
 package org.finra.herd.tools.retention.destroyer;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.opencsv.CSVReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import org.finra.herd.sdk.model.BusinessObjectDataKey;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +42,11 @@ import org.finra.herd.model.dto.RegServerAccessParamsDto;
 @Component
 public class RetentionExpirationDestroyerController
 {
-    private static final String[] CSV_FILE_HEADER_COLUMNS =
-        {"Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type", "Business Object Format Version",
-            "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3", "Sub-Partition Value 4",
-            "Business Object Data Version", "Business Object Definition Display Name", "Business Object Definition URI"};
+    private static final List<String> BUSINESS_OBJECT_DATA_HEADERS = Arrays
+        .asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
+            "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
+            "Sub-Partition Value 4", "Business Object Data Version");
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RetentionExpirationDestroyerController.class);
 
@@ -65,7 +67,7 @@ public class RetentionExpirationDestroyerController
     public void performRetentionExpirationDestruction(File localInputFile, RegServerAccessParamsDto regServerAccessParamsDto, Boolean batchMode)
         throws Exception
     {
-        // Read business object data keys from the input CSV file.
+        // Read business object data keys from the input Excel file.
         List<BusinessObjectDataKey> businessObjectDataKeys = getBusinessObjectDataKeys(localInputFile);
 
         // Initialize the web client.
@@ -83,19 +85,19 @@ public class RetentionExpirationDestroyerController
     }
 
     /**
-     * Extracts business object data key from a CSV file line. This method also validates the format of the line.
+     * Extracts business object data key from a Excel file line. This method also validates the format of the line.
      *
      * @param line         the input line
      * @param lineNumber   the input line number
-     * @param inputCsvFile the input CSV file
+     * @param inputExcelFile the input Excel file
      * @return the business object data key
      */
-    protected BusinessObjectDataKey getBusinessObjectDataKey(String[] line, int lineNumber, File inputCsvFile)
+    protected BusinessObjectDataKey getBusinessObjectDataKey(List<String> line, int lineNumber, File inputExcelFile)
     {
-        if (line.length != CSV_FILE_HEADER_COLUMNS.length)
+        if (line.size() != BUSINESS_OBJECT_DATA_HEADERS.size())
         {
             throw new IllegalArgumentException(
-                String.format("Line number %d of input file \"%s\" does not match the expected format.", lineNumber, inputCsvFile.toString()));
+                String.format("Line number %d of input file \"%s\" does not match the expected format.", lineNumber, inputExcelFile.toString()));
         }
 
         Integer businessObjectFormatVersion;
@@ -103,29 +105,29 @@ public class RetentionExpirationDestroyerController
 
         try
         {
-            businessObjectFormatVersion = Integer.valueOf(line[4]);
+            businessObjectFormatVersion = Integer.valueOf(line.get(4));
         }
         catch (NumberFormatException e)
         {
             throw new IllegalArgumentException(
                 String.format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
-                    lineNumber, inputCsvFile.toString()), e);
+                    lineNumber, inputExcelFile.toString()), e);
         }
 
         try
         {
-            businessObjectDataVersion = Integer.valueOf(line[10]);
+            businessObjectDataVersion = Integer.valueOf(line.get(10));
         }
         catch (NumberFormatException e)
         {
             throw new IllegalArgumentException(
                 String.format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.",
-                    lineNumber, inputCsvFile.toString()), e);
+                    lineNumber, inputExcelFile.toString()), e);
         }
 
         // Build a list of optional sub-partition values.
         List<String> subPartitionValues = new ArrayList<>();
-        for (String subPartitionValue : Arrays.asList(line[6], line[7], line[8], line[9]))
+        for (String subPartitionValue : Arrays.asList(line.get(6), line.get(7), line.get(8), line.get(9)))
         {
             if (StringUtils.isNotBlank(subPartitionValue))
             {
@@ -137,37 +139,55 @@ public class RetentionExpirationDestroyerController
             }
         }
 
-        return buildBusinessObjectDataKey(line[0], line[1], line[2], line[3], businessObjectFormatVersion, line[5], subPartitionValues,
+        return buildBusinessObjectDataKey(line.get(0), line.get(1), line.get(2), line.get(3), businessObjectFormatVersion, line.get(5), subPartitionValues,
             businessObjectDataVersion);
     }
 
     /**
-     * Get business object data keys from the input CSV tile. This method also validates the input file format.
+     * Get business object data keys from the input Excel tile. This method also validates the input file format.
      *
-     * @param inputCsvFile the input CSV file
+     * @param inputExcelFile the input excel file
+     *
      * @return the list of business object data keys
      * @throws IOException if any problems were encountered
+     * @throws InvalidFormatException if the input format is invalid
      */
-    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputCsvFile) throws IOException
+    protected List<BusinessObjectDataKey> getBusinessObjectDataKeys(File inputExcelFile) throws IOException, InvalidFormatException
     {
         List<BusinessObjectDataKey> businessObjectDataKeyList = new ArrayList<>();
 
-        // Read the input CSV file and populate business object data key list.
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(new FileInputStream(inputCsvFile), StandardCharsets.UTF_8)))
+        // Read the input Excel file and populate business object data key list.
+        try (XSSFWorkbook workbook = new XSSFWorkbook(inputExcelFile))
         {
-            String[] line;
+            // Get business object data sheet
+            XSSFSheet dataSheet = workbook.getSheetAt(1);
 
-            // Validate required header of the CSV input file.
-            if ((line = csvReader.readNext()) == null || !Arrays.equals(line, CSV_FILE_HEADER_COLUMNS))
+            // Get the business object data headers.
+            XSSFRow row = dataSheet.getRow(0);
+            List<String> dataHeaders = new ArrayList<>();
+            for (Cell cell : row)
             {
-                throw new IllegalArgumentException(String.format("Input file \"%s\" does not contain the expected CSV file header.", inputCsvFile.toString()));
+                dataHeaders.add(cell.getStringCellValue());
             }
 
-            // Process the input CSV file line by line.
-            int lineCount = 2;
-            while ((line = csvReader.readNext()) != null)
+            // Validate required header of the Excel input file.
+            if ((CollectionUtils.isEmpty(dataHeaders) || !CollectionUtils.isEqualCollection(dataHeaders, BUSINESS_OBJECT_DATA_HEADERS)))
             {
-                businessObjectDataKeyList.add(getBusinessObjectDataKey(line, lineCount++, inputCsvFile));
+                throw new IllegalArgumentException(
+                    String.format("Input file \"%s\" does not contain the expected Excel file header.", inputExcelFile.toString()));
+            }
+
+            // Process the input Excel file line by line.
+            int totalLines = dataSheet.getLastRowNum() - dataSheet.getFirstRowNum() + 1;
+            for (int lineCount = 1; lineCount < totalLines; lineCount++)
+            {
+                List<String> line = new ArrayList<>();
+                row = dataSheet.getRow(lineCount);
+                for (Cell cell : row)
+                {
+                    line.add(cell.getStringCellValue());
+                }
+                businessObjectDataKeyList.add(getBusinessObjectDataKey(line, lineCount, inputExcelFile));
             }
         }
 

@@ -19,12 +19,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.FileNotFoundException;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.springframework.context.ApplicationContext;
+import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
 
 import org.finra.herd.model.api.xml.BuildInformation;
 import org.finra.herd.tools.common.ToolsCommonConstants;
@@ -82,8 +81,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         String[] arguments =
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString()};
 
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
     }
 
     @Test
@@ -94,8 +93,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
 
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
     }
 
     @Test
@@ -106,8 +105,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-T", WEB_SERVICE_HTTPS_ACCESS_TOKEN_URL, "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
 
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
     }
 
     @Test
@@ -129,8 +128,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
         String[] arguments =
             {"-i", LOCAL_INPUT_FILE, "-H", WEB_SERVICE_HOSTNAME, "-P", WEB_SERVICE_HTTPS_PORT.toString(), "-s", "true", "-u", WEB_SERVICE_HTTPS_USERNAME,
                 "-E", "true", "-C", "true", "-d", "true"};
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
         environmentVariables.clear("HERD_PASSWORD");
     }
 
@@ -143,8 +142,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", WEB_SERVICE_HTTPS_PASSWORD, "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, arguments, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
 
         environmentVariables.set("HERD_PASSWORD", WEB_SERVICE_HTTPS_PASSWORD);
         // ENV Password being used
@@ -152,8 +151,8 @@ public class RetentionExpirationDestroyerAppTest extends AbstractRetentionExpira
             {"--localInputFile", LOCAL_INPUT_FILE, "--regServerHost", WEB_SERVICE_HOSTNAME, "--regServerPort", WEB_SERVICE_HTTPS_PORT.toString(), "--ssl",
                 "true", "--username", WEB_SERVICE_HTTPS_USERNAME, "--password", "", "-E", "true", "--trustSelfSignedCertificate", "true",
                 "--disableHostnameVerification", "true"};
-        // We are expecting this to fail with an FileNotFoundException.
-        runApplicationAndCheckReturnValue(exporterApp, argumentsUsingEnvPassword, new FileNotFoundException());
+        // We are expecting this to fail with an InvalidOperationException.
+        runApplicationAndCheckReturnValue(exporterApp, arguments, new InvalidOperationException("Invalid Operation"));
         environmentVariables.clear("HERD_PASSWORD");
     }
 
