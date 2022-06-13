@@ -1570,6 +1570,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       dataVersionToUse,
       ObjectStatus.VALID.toString,
       false,
+      false,
       false)
 
     retrievedObject.getStorageUnits.asScala.flatMap(getFilePaths).head

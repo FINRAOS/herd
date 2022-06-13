@@ -756,8 +756,8 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   def toComplexHerdType(column: StructField): String = {
 
-      val typeString = if (column.metadata.contains(HIVE_TYPE_STRING)) {
-        column.metadata.getString(HIVE_TYPE_STRING)
+      val typeString = if (column.metadata.contains("HIVE_TYPE_STRING")) {
+        column.metadata.getString("HIVE_TYPE_STRING")
       } else {
         column.dataType.catalogString
       }

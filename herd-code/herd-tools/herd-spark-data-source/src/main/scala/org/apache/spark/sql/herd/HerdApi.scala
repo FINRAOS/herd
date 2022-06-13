@@ -527,6 +527,7 @@ class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retr
         dataVersion,
         ObjectStatus.VALID.toString,
         false,
+        false,
         false
       )
     }

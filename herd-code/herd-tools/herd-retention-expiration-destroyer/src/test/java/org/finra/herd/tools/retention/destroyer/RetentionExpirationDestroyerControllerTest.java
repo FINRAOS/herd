@@ -16,13 +16,19 @@
 package org.finra.herd.tools.retention.destroyer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.finra.herd.sdk.model.BusinessObjectDataKey;
+
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,6 +40,12 @@ import static org.junit.Assert.*;
 
 public class RetentionExpirationDestroyerControllerTest extends AbstractRetentionExpirationDestroyerTest
 {
+
+    private static final List<String> BUSINESS_OBJECT_DATA_HEADERS = Arrays
+        .asList("Namespace", "Business Object Definition Name", "Business Object Format Usage", "Business Object Format File Type",
+            "Business Object Format Version", "Primary Partition Value", "Sub-Partition Value 1", "Sub-Partition Value 2", "Sub-Partition Value 3",
+            "Sub-Partition Value 4", "Business Object Data Version");
+
     @Before
     @Override
     public void setup() throws Exception
@@ -51,102 +63,121 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
         // Try to get business object data key when business object data version is not a valid integer.
         try
         {
-            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+            List<String> line = Arrays.asList(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
                 BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1),
-                SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3), INVALID_INTEGER_VALUE, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME,
-                BUSINESS_OBJECT_DEFINITION_URI};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+                SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3), INVALID_INTEGER_VALUE);
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_EXCEL_FILE));
             fail();
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String
                 .format("Line number %d of input file \"%s\" does not match the expected format. Business object data version must be an integer.", LINE_NUMBER,
-                    LOCAL_FILE), e.getMessage());
+                    LOCAL_EXCEL_FILE), e.getMessage());
         }
     }
 
     @Test
-    public void testGetBusinessObjectDataKeyInvalidBusinessObjectFormatVersion()
+    public void testGetBusinessObjectDataKeyInvalidBusinessObjectFormatVersion() throws IOException
     {
         // Try to get business object data key when business object format version is not a valid integer.
         try
         {
-            String[] line = {NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, INVALID_INTEGER_VALUE,
-                PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
-                BUSINESS_OBJECT_DATA_VERSION.toString(), BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, BUSINESS_OBJECT_DEFINITION_URI};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+            List<String> line = Arrays
+                .asList(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, INVALID_INTEGER_VALUE,
+                    PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
+                    BUSINESS_OBJECT_DATA_VERSION.toString());
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_EXCEL_INPUT_FILE));
             fail();
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String
                 .format("Line number %d of input file \"%s\" does not match the expected format. Business object format version must be an integer.",
-                    LINE_NUMBER, LOCAL_FILE), e.getMessage());
+                    LINE_NUMBER, LOCAL_EXCEL_INPUT_FILE), e.getMessage());
         }
     }
 
     @Test
-    public void testGetBusinessObjectDataKeyInvalidCsvLineFormat()
+    public void testGetBusinessObjectDataKeyInvalidExcelLineFormat()
     {
         // Try to get business object data key when line does not have the expected number of columns.
         try
         {
-            String[] line = {};
-            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_FILE));
+            List<String> line = new ArrayList<>();
+            retentionExpirationDestroyerController.getBusinessObjectDataKey(line, LINE_NUMBER, new File(LOCAL_EXCEL_FILE));
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Line number %d of input file \"%s\" does not match the expected format.", LINE_NUMBER, LOCAL_FILE), e.getMessage());
+            assertEquals(String.format("Line number %d of input file \"%s\" does not match the expected format.", LINE_NUMBER, LOCAL_EXCEL_FILE), e.getMessage());
         }
     }
 
     @Test
     public void testGetBusinessObjectDataKeys() throws Exception
     {
-        // Create a local input CSV file.
-        File inputCsvFile = createLocalInputCsvFile();
+        // Create a local input Excel file.
+        File inputExcelFile = createLocalInputExcelFile();
 
         // Get and validate a list of business object data keys.
-        List<BusinessObjectDataKey> result = retentionExpirationDestroyerController.getBusinessObjectDataKeys(inputCsvFile);
+        List<BusinessObjectDataKey> result = retentionExpirationDestroyerController.getBusinessObjectDataKeys(inputExcelFile);
 
         // Validate the results.
-        assertEquals(Arrays.asList(
-                retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
-                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
-            retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
-                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, NO_SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
-            retentionExpirationDestroyerController.buildBusinessObjectDataKey(NAMESPACE + ",\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"",
-                BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"", BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"", Arrays
-                .asList(SUB_PARTITION_VALUES.get(0) + ",\"", SUB_PARTITION_VALUES.get(1) + ",\"", SUB_PARTITION_VALUES.get(2) + ",\"",
-                    SUB_PARTITION_VALUES.get(3) + ",\""), BUSINESS_OBJECT_DATA_VERSION)), result);
+        assertEquals(Arrays.asList(retentionExpirationDestroyerController
+                .buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+                    BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
+            retentionExpirationDestroyerController
+                .buildBusinessObjectDataKey(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+                    BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, NO_SUB_PARTITION_VALUES, BUSINESS_OBJECT_DATA_VERSION),
+            retentionExpirationDestroyerController
+                .buildBusinessObjectDataKey(NAMESPACE + ",\"\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"",
+                    BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"", BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"\"", Arrays
+                        .asList(SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"", SUB_PARTITION_VALUES.get(2) + ",\"\"",
+                            SUB_PARTITION_VALUES.get(3) + ",\"\""), BUSINESS_OBJECT_DATA_VERSION)), result);
     }
 
     @Test
-    public void testGetBusinessObjectDataKeysMissingCsvHeader() throws IOException
+    public void testGetBusinessObjectDataKeysMissingExcelHeader() throws IOException
     {
-        // Create an input CSV file without a header.
-        File inputCsvFile = new File(LOCAL_INPUT_FILE);
-        FileUtils.writeStringToFile(inputCsvFile, STRING_VALUE, StandardCharsets.UTF_8);
+        // Create an input Excel file without a header.
+        File inputExcelFile = new File(LOCAL_EXCEL_INPUT_FILE);
 
-        // Try to get business object data keys when CSV file does not have an expected header.
+        // Create xssf workbook.
+        XSSFWorkbook workbook = new XSSFWorkbook();
+
+        // Create a blank summary sheet (No need to test summary).
+        workbook.createSheet("Summary");
+
+        // Create business object data sheet.
+        XSSFSheet dataSheet = workbook.createSheet("Business Object Data");
+
+        // Initialize row number.
+        int businessObjectDataRowNum = 0;
+
+        // Create a blank header.
+        dataSheet.createRow(businessObjectDataRowNum++);
+
+        workbook.write(new FileOutputStream(inputExcelFile));
+        workbook.close();
+
+        // Try to get business object data keys when Excel file does not have an expected header.
         try
         {
-            retentionExpirationDestroyerController.getBusinessObjectDataKeys(inputCsvFile);
+            retentionExpirationDestroyerController.getBusinessObjectDataKeys(inputExcelFile);
             fail();
         }
-        catch (IllegalArgumentException e)
+        catch (IllegalArgumentException | InvalidFormatException e)
         {
-            assertEquals(String.format("Input file \"%s\" does not contain the expected CSV file header.", inputCsvFile.toString()), e.getMessage());
+            assertEquals(String.format("Input file \"%s\" does not contain the expected Excel file header.", inputExcelFile.toString()), e.getMessage());
         }
     }
 
     @Test
     public void testPerformRetentionExpirationDestruction() throws Exception
     {
-        // Create a local input CSV file.
-        File inputCsvFile = createLocalInputCsvFile();
+        // Create a local input Excel file.
+        File inputExcelFileFile = createLocalInputExcelFile();
 
         // Create and initialize the registration server DTO.
         RegServerAccessParamsDto regServerAccessParamsDto =
@@ -155,53 +186,90 @@ public class RetentionExpirationDestroyerControllerTest extends AbstractRetentio
                 .withDisableHostnameVerification(true).build();
 
         // Perform the retention expiration destruction.
-        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputCsvFile, regServerAccessParamsDto, false);
+        retentionExpirationDestroyerController.performRetentionExpirationDestruction(inputExcelFileFile, regServerAccessParamsDto, false);
     }
 
     /**
-     * Creates a local SCV file with a header and two business object data entries.
+     * Creates a local Excel file with a header and two business object data entries.
      *
      * @return the local input file
      * @throws IOException if any problems were encountered
      */
-    private File createLocalInputCsvFile() throws IOException
+    private File createLocalInputExcelFile() throws IOException
     {
-        // Create an input CSV file.
-        File inputCsvFile = new File(LOCAL_INPUT_FILE);
+        // Create an input Excel file.
+        File outPutExcelFile = new File(LOCAL_EXCEL_INPUT_FILE);
 
-        // Create business object definition URI.
-        String expectedUri = String.format("https://%s/data-entities/%s/%s", UDC_SERVICE_HOSTNAME, NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME);
+        // Create xssf workbook.
+        XSSFWorkbook workbook = new XSSFWorkbook();
 
-        // Build the input file content.
-        String stringBuilder = ("\"Namespace\",\"Business Object Definition Name\",\"Business Object Format Usage\",\"Business Object Format File Type\"," +
-            "\"Business Object Format Version\",\"Primary Partition Value\",\"Sub-Partition Value 1\",\"Sub-Partition Value 2\",\"Sub-Partition Value 3\"," +
-            "\"Sub-Partition Value 4\",\"Business Object Data Version\",\"Business Object Definition Display Name\",\"Business Object Definition URI\"") +
-            System.lineSeparator() + String
-            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE,
-                SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1), SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3),
-                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri) + String
-            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME,
-                BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE, BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE, "", "", "", "",
-                BUSINESS_OBJECT_DATA_VERSION, BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri) + String
-            .format("\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%s\"%n", NAMESPACE + ",\"\"",
-                BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"", BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"",
-                BUSINESS_OBJECT_FORMAT_VERSION, PRIMARY_PARTITION_VALUE + ",\"\"", SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"",
-                SUB_PARTITION_VALUES.get(2) + ",\"\"", SUB_PARTITION_VALUES.get(3) + ",\"\"", BUSINESS_OBJECT_DATA_VERSION,
-                BUSINESS_OBJECT_DEFINITION_DISPLAY_NAME, expectedUri);
+        // Create a blank summary sheet (No need to test summary).
+        workbook.createSheet("Summary");
 
-        // Add a CSV header.
+        // Create business object data sheet.
+        XSSFSheet dataSheet = workbook.createSheet("Business Object Data");
 
-        // Add business object data with sub-partitions.
+        // Initialize row number.
+        int businessObjectDataRowNum = 0;
 
-        // Add a business object data without sub-partitions.
+        // Write detailed headers.
+        XSSFRow dataHeaders = dataSheet.createRow(businessObjectDataRowNum++);
+        int dataCellIndex = 0;
+        for (String header : BUSINESS_OBJECT_DATA_HEADERS)
+        {
+            Cell cell = dataHeaders.createCell(dataCellIndex++);
+            cell.setCellValue(header);
+        }
 
-        // Add a business object data that uses CSV file separator and quote characters in its alternate key values.
+        // Write detailed information for each business object data for each line.
+        List<String> businessObjectDataRow = Arrays
+            .asList(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+                BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE, SUB_PARTITION_VALUES.get(0), SUB_PARTITION_VALUES.get(1),
+                SUB_PARTITION_VALUES.get(2), SUB_PARTITION_VALUES.get(3), BUSINESS_OBJECT_DATA_VERSION.toString());
+        XSSFRow dataContents = dataSheet.createRow(businessObjectDataRowNum++);
+        // Write value to each cell.
+        dataCellIndex = 0;
+        for (String businessObjectDataCell : businessObjectDataRow)
+        {
+            Cell cell = dataContents.createCell(dataCellIndex++);
+            cell.setCellValue(businessObjectDataCell);
+        }
 
-        // Write to the input CSV file.
-        FileUtils.writeStringToFile(inputCsvFile, stringBuilder, StandardCharsets.UTF_8);
+        businessObjectDataRow = Arrays.asList(NAMESPACE, BUSINESS_OBJECT_DEFINITION_NAME, BUSINESS_OBJECT_FORMAT_USAGE, BUSINESS_OBJECT_FORMAT_FILE_TYPE,
+            BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE, "", "", "", "", BUSINESS_OBJECT_DATA_VERSION.toString());
+        dataContents = dataSheet.createRow(businessObjectDataRowNum++);
+        // Write value to each cell.
+        dataCellIndex = 0;
+        for (String businessObjectDataCell : businessObjectDataRow)
+        {
+            Cell cell = dataContents.createCell(dataCellIndex++);
+            cell.setCellValue(businessObjectDataCell);
+        }
 
-        return inputCsvFile;
+        businessObjectDataRow = Arrays.asList(NAMESPACE + ",\"\"", BUSINESS_OBJECT_DEFINITION_NAME + ",\"\"", BUSINESS_OBJECT_FORMAT_USAGE + ",\"\"",
+            BUSINESS_OBJECT_FORMAT_FILE_TYPE + ",\"\"", BUSINESS_OBJECT_FORMAT_VERSION.toString(), PRIMARY_PARTITION_VALUE + ",\"\"",
+            SUB_PARTITION_VALUES.get(0) + ",\"\"", SUB_PARTITION_VALUES.get(1) + ",\"\"", SUB_PARTITION_VALUES.get(2) + ",\"\"",
+            SUB_PARTITION_VALUES.get(3) + ",\"\"", BUSINESS_OBJECT_DATA_VERSION.toString());
+        dataContents = dataSheet.createRow(businessObjectDataRowNum++);
+        // Write value to each cell.
+        dataCellIndex = 0;
+        for (String businessObjectDataCell : businessObjectDataRow)
+        {
+            Cell cell = dataContents.createCell(dataCellIndex++);
+            cell.setCellValue(businessObjectDataCell);
+        }
+
+        // Autosize the business object data sheet.
+        for (int columnIndex = 0; columnIndex < BUSINESS_OBJECT_DATA_HEADERS.size(); columnIndex++)
+        {
+            dataSheet.autoSizeColumn(columnIndex);
+        }
+
+        // Write the workbook to input Excel file.
+        workbook.write(new FileOutputStream(outPutExcelFile));
+        workbook.close();
+
+        return outPutExcelFile;
     }
 
     @Test
