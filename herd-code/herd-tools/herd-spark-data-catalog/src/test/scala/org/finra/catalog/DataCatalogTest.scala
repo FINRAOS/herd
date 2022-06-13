@@ -561,7 +561,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
       objectName + "</businessObjectDefinitionName><businessObjectFormatUsage>" + formatUsage + "</businessObjectFormatUsage><businessObjectFormatFileType>" +
       formatType + "</businessObjectFormatFileType><businessObjectFormatVersion>" + formatVersion + "</businessObjectFormatVersion><partitionKey>" +
       partitionKey + "</partitionKey><partitionValue>" + partitonValue + "</partitionValue><version>" +
-      formatVersion + "</version><latestVersion/><status/><retentionExpirationDate/></BusinessObjectData>"
+      formatVersion + "</version><latestVersion/><status/><retentionExpirationDate/><createdByUserId/><createdOn/></BusinessObjectData>"
 
     assertEquals(expectedDataXML, businessObjectDataXML)
   }

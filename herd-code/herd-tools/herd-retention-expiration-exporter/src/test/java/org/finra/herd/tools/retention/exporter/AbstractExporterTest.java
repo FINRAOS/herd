@@ -50,17 +50,33 @@ public abstract class AbstractExporterTest extends AbstractDataBridgeTest
 
     static final Integer BUSINESS_OBJECT_FORMAT_VERSION = 9;
 
+    static final Integer BUSINESS_OBJECT_FORMAT_VERSION_2 = 2;
+
     static final DateTime END_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
+
+    static final DateTime END_REGISTRATION_DATE_TIME_2 = new DateTime(3);
 
     static final String END_REGISTRATION_DATE_TIME_AS_TEXT = "2016-03-29T10:34:11";
 
     static final String LOCAL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString();
 
+    static final String LOCAL_EXCEL_OUTPUT_FILE = Paths.get(LOCAL_TEMP_PATH_OUTPUT.toString(), LOCAL_FILE).toString() + ".xlsx";
+
     static final String NAMESPACE = "testNamespace";
+
+    static final String NAMESPACE_2 = "testNamespace2";
 
     static final DateTime NO_REGISTRATION_DATE_TIME = null;
 
+    static final String PRIMARY_PARTITION_VALUE = "primaryPartitionValue1";
+
+    static final String PRIMARY_PARTITION_VALUE_2 = "primaryPartitionValue2";
+
     static final DateTime START_REGISTRATION_DATE_TIME = new DateTime(getRandomDate());
+
+    static final DateTime START_REGISTRATION_DATE_TIME_2 = new DateTime(1);
+
+    static final DateTime START_REGISTRATION_DATE_TIME_3 = new DateTime(2);
 
     static final String START_REGISTRATION_DATE_TIME_AS_TEXT = "2016-03-29T22:34:11";
 

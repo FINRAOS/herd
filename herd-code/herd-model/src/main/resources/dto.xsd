@@ -501,6 +501,16 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:complexType name="retentionExpirationExporterAggregateStatsDto">
+      <xs:sequence>
+         <xs:element name="minPrimaryPartitionValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="maxPrimaryPartitionValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="count" type="xs:int" minOccurs="0"/>
+         <xs:element name="oldestRegistrationDateTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="latestRegistrationDateTime" type="xs:dateTime" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:complexType name="runtimeException">
       <xs:annotation>
          <xs:appinfo>
