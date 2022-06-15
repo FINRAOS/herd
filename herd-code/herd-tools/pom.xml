@@ -55,6 +55,8 @@
             <module>herd-spark-2.2-data-source</module>
             <module>herd-spark-3.0-data-source</module>
             <module>herd-spark-3.0-data-catalog</module>
+            <module>herd-spark-3.2-data-source</module>
+            <module>herd-spark-3.2-data-catalog</module>
          </modules>
       </profile>
       <profile>
