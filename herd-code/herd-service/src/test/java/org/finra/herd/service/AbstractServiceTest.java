@@ -412,6 +412,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String EMR_STEP_SCRIPT_LOCATION = "UT_EMR_Step_Script_Location_" + RANDOM_SUFFIX;
 
+    public static final Boolean ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION = true;
+
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
     public static final DateTime END_TIME = getRandomDateTime();
@@ -570,6 +572,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
     public static final Boolean NO_DRY_RUN = false;
+
+    public static final Boolean NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION = false;
 
     public static final XMLGregorianCalendar NO_END_REGISTRATION_DATE = null;
 

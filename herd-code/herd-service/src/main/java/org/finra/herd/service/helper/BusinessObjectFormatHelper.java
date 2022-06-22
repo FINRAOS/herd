@@ -133,6 +133,10 @@ public class BusinessObjectFormatHelper
             attributeDefinition.setPublishForFilter(attributeDefinitionEntity.getPublishForFilter());
         }
 
+        // Add in the business object format flag that enables business object data published attributes change event notification.
+        businessObjectFormat.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+            businessObjectFormatEntity.isEnableBusinessObjectDataPublishedAttributesChangeEventNotification());
+
         // Only add schema information if this format has any schema columns defined.
         if (!businessObjectFormatEntity.getSchemaColumns().isEmpty())
         {
