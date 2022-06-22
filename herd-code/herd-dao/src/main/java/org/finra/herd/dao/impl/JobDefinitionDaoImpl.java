@@ -23,14 +23,17 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.JobDefinitionDao;
+import org.finra.herd.model.api.xml.JobDefinitionKey;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.jpa.JobDefinitionEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
@@ -151,5 +154,38 @@ public class JobDefinitionDaoImpl extends AbstractHerdDao implements JobDefiniti
 
         // Execute the query and return the result list.
         return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<JobDefinitionKey> getJobDefinitionKeysByNamespaceEntity(NamespaceEntity namespaceEntity)
+    {
+        // Create criteria builder and a top-level query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the job definition.
+        Root<JobDefinitionEntity> jobDefinitionEntityRoot = criteria.from(JobDefinitionEntity.class);
+
+        // Get the Storage Policy name column.
+        Path<String> jobDefinitionNamePath = jobDefinitionEntityRoot.get(JobDefinitionEntity_.name);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate = builder.equal(jobDefinitionEntityRoot.get(JobDefinitionEntity_.namespace), namespaceEntity);
+
+        // Add all clauses for the query.
+        criteria.select(jobDefinitionNamePath).where(predicate).orderBy(builder.asc(jobDefinitionNamePath));
+
+        // Execute the query.
+        List<String> jobDefinitionNames = entityManager.createQuery(criteria).getResultList();
+
+        // Build a list of job definition keys.
+        List<JobDefinitionKey> jobDefinitionKeys = Lists.newArrayList();
+        for (String jobDefinitionName : jobDefinitionNames)
+        {
+            jobDefinitionKeys.add(new JobDefinitionKey(namespaceEntity.getCode(), jobDefinitionName));
+        }
+
+        // Return the list of keys.
+        return jobDefinitionKeys;
     }
 }

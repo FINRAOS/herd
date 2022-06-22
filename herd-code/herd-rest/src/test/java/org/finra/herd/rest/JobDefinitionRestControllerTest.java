@@ -20,6 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.EndEvent;
 import org.activiti.bpmn.model.Process;
@@ -33,6 +35,8 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.JobDefinitionKey;
+import org.finra.herd.model.api.xml.JobDefinitionKeys;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
 import org.finra.herd.service.JobDefinitionService;
 
@@ -108,6 +112,26 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
         verifyNoMoreInteractions(jobDefinitionService);
         // Validate the returned object.
         assertEquals(jobDefinition, resultJobDefinition);
+    }
+
+    @Test
+    public void testGetJobDefinitionKeys()
+    {
+        // Create an job definition keys.
+        JobDefinitionKeys jobDefinitionKeys = new JobDefinitionKeys(Arrays.asList(new JobDefinitionKey(NAMESPACE, JOB_NAME)));
+
+        // Mock the external calls.
+        when(jobDefinitionService.getJobDefinitionKeys(NAMESPACE)).thenReturn(jobDefinitionKeys);
+
+        // Call the method under test.
+        JobDefinitionKeys result = jobDefinitionRestController.getJobDefinitionKeys(NAMESPACE);
+
+        // Validate the results.
+        assertEquals(jobDefinitionKeys, result);
+
+        // Verify the external calls.
+        verify(jobDefinitionService).getJobDefinitionKeys(NAMESPACE);
+        verifyNoMoreInteractions(jobDefinitionService);
     }
 
     private String getActivitiJobXml(String namespace, String jobName)

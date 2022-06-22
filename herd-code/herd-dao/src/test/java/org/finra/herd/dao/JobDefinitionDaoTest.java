@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
+import org.finra.herd.model.api.xml.JobDefinitionKey;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 
@@ -204,5 +206,26 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
 
         // Try to retrieve job definitions by specifying a non-existing job name.
         assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, "I_DO_NOT_EXIST").isEmpty());
+    }
+
+    @Test
+    public void testGetJobDefinitionKeysByNamespaceEntity()
+    {
+        // Create two namespace entities.
+        List<NamespaceEntity> namespaceEntities =
+            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE_2));
+
+        // Create two job definitions for the first namespace with job definition names sorted in descending order.
+        for (String jobDefinitionName : Lists.newArrayList(JOB_NAME_3, JOB_NAME_2))
+        {
+            jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, jobDefinitionName, JOB_DESCRIPTION, ACTIVITI_ID);
+        }
+
+        // Retrieve a list of job definition keys. This also validates the sorting order.
+        assertEquals(Lists.newArrayList(new JobDefinitionKey(JOB_NAMESPACE, JOB_NAME_2), new JobDefinitionKey(JOB_NAMESPACE, JOB_NAME_3)),
+            jobDefinitionDao.getJobDefinitionKeysByNamespaceEntity(namespaceEntities.get(0)));
+
+        // Confirm that no job definition keys get selected when passing wrong namespace entity.
+        assertTrue(jobDefinitionDao.getJobDefinitionKeysByNamespaceEntity(namespaceEntities.get(1)).isEmpty());
     }
 }
