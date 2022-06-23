@@ -151,13 +151,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat =
             businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat(businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectFormat.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION);
 
         // Validate the returned object.
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -178,7 +179,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
 
         // Check if we now have only one latest format version - our first version is not marked as latest anymore.
         // Please note that we do not have to validate if the first format version is not marked as "latest" now, since having more that one
@@ -216,7 +218,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                expectedSchema, resultBusinessObjectFormat);
+                expectedSchema, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
 
         // Check if we now have only one latest format version - our first version is not marked as latest anymore.
         // Please note that we do not have to validate if the first format version is not marked as "latest" now, since having more that one
@@ -360,7 +362,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
-                resultBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -742,7 +744,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                newFormatVersionSchema, resultBusinessObjectFormat);
+                newFormatVersionSchema, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -801,7 +803,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                expectedSchema, resultBusinessObjectFormat);
+                expectedSchema, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
 
         // Create a third version of the business object format with a schema that is identical to the initial version schema,
         // except that we now pass empty string values for all the row format parameters.
@@ -822,7 +824,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 THIRD_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                expectedSchema, resultBusinessObjectFormat);
+                expectedSchema, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -986,7 +988,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -1421,7 +1424,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 SECOND_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA,
-                resultBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
 
         // Create a second version of the business object format with a schema.
         request = businessObjectFormatServiceTestHelper
@@ -1435,7 +1438,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(resultBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 THIRD_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -1692,7 +1696,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toLowerCase(), FORMAT_DESCRIPTION.toLowerCase(),
                 FORMAT_DOCUMENT_SCHEMA.toLowerCase(), FORMAT_DOCUMENT_SCHEMA_URL.toLowerCase(),
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase())),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -1713,7 +1718,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -1810,7 +1816,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(),
                 Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, NO_PUBLISH_ATTRIBUTE, NO_PUBLISH_FOR_FILTER)), NO_SCHEMA,
-                resultBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -1837,7 +1843,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, expectedBusinessObjectFormatVersion++,
                     LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                     businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                    expectedSchema, businessObjectFormat);
+                    expectedSchema, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
         }
     }
 
@@ -1937,7 +1943,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -1963,7 +1970,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2002,7 +2010,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2077,7 +2086,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2104,7 +2114,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2154,7 +2165,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2204,7 +2216,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION), FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2227,7 +2239,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY, FORMAT_DESCRIPTION, "", "", Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
 
@@ -2253,7 +2265,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 PARTITION_KEY, FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1)),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2276,7 +2288,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2308,7 +2321,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toUpperCase(), FORMAT_DESCRIPTION.toUpperCase(),
                 FORMAT_DOCUMENT_SCHEMA.toUpperCase(), FORMAT_DOCUMENT_SCHEMA_URL.toUpperCase(),
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase())),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema, businessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), expectedSchema,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -2330,7 +2344,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), deletedBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -2382,7 +2397,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
 
         // Try to perform a delete using invalid namespace code.
         try
@@ -2477,7 +2493,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(latestVersionBusinessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -2574,7 +2590,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toUpperCase(),
                 FORMAT_DESCRIPTION.toUpperCase(), FORMAT_DOCUMENT_SCHEMA.toUpperCase(), FORMAT_DOCUMENT_SCHEMA_URL.toUpperCase(), NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -2600,7 +2617,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION)));
@@ -2674,7 +2692,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, false, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -2702,7 +2721,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -2732,7 +2752,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toLowerCase(),
                 FORMAT_DESCRIPTION.toLowerCase(), FORMAT_DOCUMENT_SCHEMA.toLowerCase(), FORMAT_DOCUMENT_SCHEMA_URL.toLowerCase(), NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -3594,7 +3615,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), resultBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -3613,7 +3635,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
 
         // Try to perform a get using invalid namespace code.
         try
@@ -3704,7 +3727,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toUpperCase(),
                 FORMAT_DESCRIPTION.toUpperCase(), FORMAT_DOCUMENT_SCHEMA.toUpperCase(), FORMAT_DOCUMENT_SCHEMA_URL.toUpperCase(), NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -3728,7 +3751,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -3788,7 +3812,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                resultBusinessObjectFormat);
     }
 
     @Test
@@ -3810,7 +3835,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toLowerCase(),
                 FORMAT_DESCRIPTION.toLowerCase(), FORMAT_DOCUMENT_SCHEMA.toLowerCase(), FORMAT_DOCUMENT_SCHEMA_URL.toLowerCase(), NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -4102,7 +4127,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema2(), updatedBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema2(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4185,7 +4211,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, true,
                 PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema2(), updatedBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema2(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4214,7 +4241,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), NO_ATTRIBUTE_DEFINITIONS, businessObjectFormatServiceTestHelper.getTestSchema2(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
 
         // Try to perform an update using invalid namespace code.
         try
@@ -4336,7 +4363,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toUpperCase(),
                 FORMAT_DESCRIPTION_2.toLowerCase(), FORMAT_DOCUMENT_SCHEMA_2.toLowerCase(), FORMAT_DOCUMENT_SCHEMA_URL.toLowerCase(),
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toLowerCase())), null, expectedSchema,
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4373,7 +4400,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatServiceTestHelper
                 .validateBusinessObjectFormat(originalBusinessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                     INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, blankText, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)), NO_ATTRIBUTE_DEFINITIONS, testSchema2, resultBusinessObjectFormat);
+                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_4_MIXED_CASE, blankText)), NO_ATTRIBUTE_DEFINITIONS, testSchema2,
+                    NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
         }
     }
 
@@ -4470,7 +4498,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4497,7 +4526,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), NO_ATTRIBUTE_DEFINITIONS, businessObjectFormatServiceTestHelper.getTestSchema2(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4524,7 +4553,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), NO_ATTRIBUTE_DEFINITIONS, businessObjectFormatServiceTestHelper.getTestSchema2(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4551,7 +4580,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), NO_ATTRIBUTE_DEFINITIONS, businessObjectFormatServiceTestHelper.getTestSchema2(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4575,7 +4604,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
 
         // Perform another update also without specifying both business object format attributes and schema.
         request = businessObjectFormatServiceTestHelper
@@ -4588,7 +4618,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_3, FORMAT_DOCUMENT_SCHEMA_3, FORMAT_DOCUMENT_SCHEMA_URL,
-                NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA, resultBusinessObjectFormat);
+                NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA,
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -4610,7 +4641,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, FORMAT_DOCUMENT_SCHEMA_URL,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), NO_SCHEMA,
-                resultBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, resultBusinessObjectFormat);
     }
 
     @Test
@@ -4637,7 +4668,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES,
-                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, deletedBusinessObjectFormat);
+                NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao
@@ -4670,7 +4702,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, addWhitespace(FORMAT_DESCRIPTION_2), FORMAT_DOCUMENT_SCHEMA,
                 FORMAT_DOCUMENT_SCHEMA_URL, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema2(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -4705,7 +4737,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toLowerCase(),
                 FORMAT_DESCRIPTION_2.toUpperCase(), FORMAT_DOCUMENT_SCHEMA_2.toUpperCase(), FORMAT_DOCUMENT_SCHEMA_URL.toUpperCase(),
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toUpperCase())), null, expectedSchema,
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     private void assertExceptionThrown(Runnable runnable, Class<? extends Exception> expectedExeceptionType, String expectedMessage)
@@ -5035,7 +5067,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, attributes,
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -5126,7 +5158,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(businessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION_2, FORMAT_DOCUMENT_SCHEMA_2, FORMAT_DOCUMENT_SCHEMA_URL, newAttributes,
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema2(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5190,7 +5222,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, LATEST_VERSION_FLAG_SET, PARTITION_KEY,
                 FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, attributes,
                 businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                businessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormat);
     }
 
     @Test
@@ -5212,7 +5244,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
                 attributes, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
-                updatedBusinessObjectFormat);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5236,8 +5268,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                attributes, attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
-
+                attributes, attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5329,7 +5361,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5357,7 +5390,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
@@ -5384,7 +5418,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                attributes, validateAttributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
 
         // upper case and lower case
         attributeDefinitions = new ArrayList<>();
@@ -5510,7 +5545,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL,
-                attributes, attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(), updatedBusinessObjectFormat);
+                attributes, attributeDefinitions, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, updatedBusinessObjectFormat);
     }
 
     @Test
