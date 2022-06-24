@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-alter table bus_objct_frmt add column enbl_bus_objct_data_pblsh_atrbts_chg_event_ntfcn_fl char(1);
+alter table bus_objct_frmt add column enbl_bus_objct_data_pblsh_atrbts_chg_event_ntfcn_fl char(1) NOT NULL default 'N';
 
 alter table bus_objct_frmt add constraint bus_objct_frmt_ck4 check (enbl_bus_objct_data_pblsh_atrbts_chg_event_ntfcn_fl in ('Y', 'N'));
 
