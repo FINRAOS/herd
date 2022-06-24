@@ -84,7 +84,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0, true, PARTITION_KEY, FORMAT_DESCRIPTION,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormatServiceTestHelper.getTestSchema(),
                 NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
                 NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, NO_FORMAT_RELATIONAL_SCHEMA_NAME,
                 NO_FORMAT_RELATIONAL_TABLE_NAME);
@@ -104,10 +105,12 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     {
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
-                FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
-                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
-                NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME, FORMAT_RELATIONAL_TABLE_NAME);
+                FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
+                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME,
+                FORMAT_RELATIONAL_TABLE_NAME);
 
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
@@ -178,10 +181,12 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     {
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, true, PARTITION_KEY,
-                FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
-                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
-                NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME, FORMAT_RELATIONAL_TABLE_NAME);
+                FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormatServiceTestHelper.getTestSchema(),
+                NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
+                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME,
+                FORMAT_RELATIONAL_TABLE_NAME);
 
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
@@ -245,9 +250,10 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormat businessObjectFormat =
             new BusinessObjectFormat(ID, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 1, true, PARTITION_KEY, FORMAT_DESCRIPTION_2,
                 NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema2(), NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN,
-                NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET, NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE,
-                NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME, FORMAT_RELATIONAL_TABLE_NAME);
+                NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION, businessObjectFormatServiceTestHelper.getTestSchema2(),
+                NO_BUSINESS_OBJECT_FORMAT_PARENTS, NO_BUSINESS_OBJECT_FORMAT_CHILDREN, NO_BUSINESS_OBJECT_FORMAT_EXTERNAL_INTERFACES, NO_RECORD_FLAG_SET,
+                NO_RETENTION_PERIOD_IN_DAYS, NO_RETENTION_TYPE, NO_ALLOW_NON_BACKWARDS_COMPATIBLE_CHANGES_SET, FORMAT_RELATIONAL_SCHEMA_NAME,
+                FORMAT_RELATIONAL_TABLE_NAME);
 
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
@@ -301,7 +307,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
-        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions);
+        BusinessObjectFormatAttributeDefinitionsUpdateRequest request = new BusinessObjectFormatAttributeDefinitionsUpdateRequest(attributeDefinitions,
+            NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION);
 
         when(businessObjectFormatService.updateBusinessObjectFormatAttributeDefinitions(businessObjectFormatKey, request)).thenReturn(businessObjectFormat);
 
