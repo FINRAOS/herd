@@ -2417,6 +2417,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="enableBusinessObjectDataPublishedAttributesChangeEventNotification" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, enables Business Object Data Published Attributes Change Event Notification for all business object data registered
+                  under this business object format version
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="schema" type="schema" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
@@ -2539,6 +2546,13 @@
             <xs:annotation>
                <xs:documentation>A list of attribute definitions that specify attributes which are required to be specified when registering Business Object
                   Data against this format. Providing a list with no elements will remove all existing attributes for the business object format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="enableBusinessObjectDataPublishedAttributesChangeEventNotification" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, enables Business Object Data Published Attributes Change Event Notification for all business object data registered
+                  under this business object format version
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -2672,6 +2686,13 @@
                   when registering Business Object Data against this format. This list will define which metadata must be specified, but additional metadata can
                   still be registered which is not specified in this list. The metadata (attributes) will allow applications to store custom data with
                   registered data for use by consumers of the data
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="enableBusinessObjectDataPublishedAttributesChangeEventNotification" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>If true, enables Business Object Data Published Attributes Change Event Notification for all business object data registered
+                  under this business object format version
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -5867,6 +5888,32 @@
          <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The user ID under whose authorization context the workflow runs</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="jobDefinitionKeys" type="jobDefinitionKeys"/>
+   <xs:complexType name="jobDefinitionKeys">
+      <xs:sequence>
+         <xs:element name="jobDefinitionKey" type="jobDefinitionKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a job definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jobDefinitionKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the job definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

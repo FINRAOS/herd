@@ -315,6 +315,8 @@ public class SecurityFunctions
 
     public static final String FN_JOBS_SIGNAL_POST = "FN_JOBS_SIGNAL_POST";
 
+    public static final String FN_JOB_DEFINITIONS_ALL_GET = "FN_JOB_DEFINITIONS_ALL_GET";
+
     public static final String FN_JOB_DEFINITIONS_GET = "FN_JOB_DEFINITIONS_GET";
 
     public static final String FN_JOB_DEFINITIONS_POST = "FN_JOB_DEFINITIONS_POST";

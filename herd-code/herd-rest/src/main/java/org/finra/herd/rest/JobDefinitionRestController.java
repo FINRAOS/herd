@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.JobDefinitionKeys;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.JobDefinitionService;
@@ -90,5 +91,20 @@ public class JobDefinitionRestController extends HerdBaseController
     public JobDefinition getJobDefinition(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName) throws Exception
     {
         return jobDefinitionService.getJobDefinition(namespace, jobName);
+    }
+
+    /**
+     * Gets a list of keys for all job definitions defined in the system for the specified namespace.
+     * <p>Requires READ permission on namespace</p>
+     *
+     * @param namespace the namespace of the job definition
+     *
+     * @return the job definition keys
+     */
+    @RequestMapping(value = "/jobDefinitions/namespaces/{namespace}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_JOB_DEFINITIONS_ALL_GET)
+    public JobDefinitionKeys getJobDefinitionKeys(@PathVariable("namespace") String namespace)
+    {
+        return jobDefinitionService.getJobDefinitionKeys(namespace);
     }
 }

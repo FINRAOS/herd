@@ -18,7 +18,9 @@ package org.finra.herd.dao;
 import java.util.Collection;
 import java.util.List;
 
+import org.finra.herd.model.api.xml.JobDefinitionKey;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 
 public interface JobDefinitionDao extends BaseJpaDao
 {
@@ -60,4 +62,13 @@ public interface JobDefinitionDao extends BaseJpaDao
      * @return the list of job definition entities
      */
     public List<JobDefinitionEntity> getJobDefinitionsByFilter(Collection<String> namespaces, String jobName);
+
+    /**
+     * Gets a list of job definition keys by namespace entity.
+     *
+     * @param namespaceEntity the namespace entity
+     *
+     * @return the list of job definition entities
+     */
+    public List<JobDefinitionKey> getJobDefinitionKeysByNamespaceEntity(NamespaceEntity namespaceEntity);
 }

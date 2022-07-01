@@ -136,6 +136,10 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @OrderBy("name")
     private Collection<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitions;
 
+    @Column(name = "enbl_bus_objct_data_pblsh_atrbts_chg_event_ntfcn_fl")
+    @Type(type = "yes_no")
+    private Boolean enableBusinessObjectDataPublishedAttributesChangeEventNotification;
+
     @JsonManagedReference(value = "businessObjectFormat-schemaColumns")
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("position")
@@ -358,6 +362,17 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setAttributeDefinitions(Collection<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitions)
     {
         this.attributeDefinitions = attributeDefinitions;
+    }
+
+    public Boolean isEnableBusinessObjectDataPublishedAttributesChangeEventNotification()
+    {
+        return enableBusinessObjectDataPublishedAttributesChangeEventNotification;
+    }
+
+    public void setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+        Boolean enableBusinessObjectDataPublishedAttributesChangeEventNotification)
+    {
+        this.enableBusinessObjectDataPublishedAttributesChangeEventNotification = enableBusinessObjectDataPublishedAttributesChangeEventNotification;
     }
 
     public Collection<SchemaColumnEntity> getSchemaColumns()
