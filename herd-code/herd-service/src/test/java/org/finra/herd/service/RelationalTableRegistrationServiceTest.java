@@ -141,6 +141,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributes(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
+        expectedBusinessObjectFormat.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+            NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION);
         expectedBusinessObjectFormat.setRelationalSchemaName(relationalSchemaName);
         expectedBusinessObjectFormat.setRelationalTableName(relationalTableName);
         expectedBusinessObjectFormat.setSchema(expectedSchema);
@@ -254,6 +256,8 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         expectedBusinessObjectFormat.setBusinessObjectFormatExternalInterfaces(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributes(new ArrayList<>());
         expectedBusinessObjectFormat.setAttributeDefinitions(new ArrayList<>());
+        expectedBusinessObjectFormat.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+            NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION);
         expectedBusinessObjectFormat.setSchema(expectedSchema);
         expectedBusinessObjectFormat.setAllowNonBackwardsCompatibleChanges(true);
         expectedBusinessObjectFormat.setRelationalTableName(relationalTableName);
@@ -378,12 +382,12 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Create and persist database entities required for testing.
         for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
         {
-            BusinessObjectFormatEntity businessObjectFormatEntity =
-                businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
-                    formatVersion, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null,
-                    NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                    SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
-                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                    SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
 
             businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
         }
@@ -419,12 +423,12 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         // Create and persist database entities required for testing.
         for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
         {
-            BusinessObjectFormatEntity businessObjectFormatEntity =
-                businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
-                    formatVersion, FORMAT_DESCRIPTION, FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null,
-                    NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-                    SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
-                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
+                    FORMAT_DOCUMENT_SCHEMA, FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                    SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT,
+                    SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                    schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
 
             businessObjectFormatKeyList.add(businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity));
 
@@ -546,7 +550,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
                 BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, NO_FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
-                null, NO_ATTRIBUTE_DEFINITIONS,
+                null, NO_ATTRIBUTE_DEFINITIONS, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
                 new Schema(expectedSchema.getColumns().subList(0, expectedSchema.getColumns().size() - 1), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null,
                     null, null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 
@@ -637,7 +641,7 @@ public class RelationalTableRegistrationServiceTest extends AbstractServiceTest
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.RELATIONAL_TABLE_FILE_TYPE,
                 BusinessObjectDataServiceImpl.NO_PARTITIONING_PARTITION_KEY, DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, null,
-                NO_ATTRIBUTE_DEFINITIONS,
+                NO_ATTRIBUTE_DEFINITIONS, NO_ENABLE_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_EVENT_NOTIFICATION,
                 new Schema(relationalTableRegistrationServiceTestHelper.getExpectedSchemaColumns(), NO_PARTITION_COLUMNS, EMPTY_STRING, null, null, null, null,
                     null, null, null, NO_PARTITION_KEY_GROUP), relationalSchemaName, relationalTableName));
 

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -727,13 +728,14 @@ public class BusinessObjectFormatServiceTestHelper
      * @param expectedAttributes the expected attributes
      * @param expectedAttributeDefinitions the list of expected attribute definitions
      * @param expectedSchema the expected business object format schema
+     * @param expectedEnableBusinessObjectDataPublishedAttributesChangeEventNotification the expected enable business object data published attributes change event notification
      * @param actualBusinessObjectFormat the BusinessObjectFormat object instance to be validated
      */
     public void validateBusinessObjectFormat(Long expectedBusinessObjectFormatId, String expectedNamespaceCode, String expectedBusinessObjectDefinitionName,
         String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType, Integer expectedBusinessObjectFormatVersion,
         Boolean expectedIsLatestVersion, String expectedPartitionKey, String expectedDescription, String expectedDocumentSchema,
         String expectedDocumentSchemaUrl, List<Attribute> expectedAttributes, List<AttributeDefinition> expectedAttributeDefinitions, Schema expectedSchema,
-        BusinessObjectFormat actualBusinessObjectFormat)
+        Boolean expectedEnableBusinessObjectDataPublishedAttributesChangeEventNotification, BusinessObjectFormat actualBusinessObjectFormat)
     {
         assertNotNull(actualBusinessObjectFormat);
 
@@ -751,6 +753,8 @@ public class BusinessObjectFormatServiceTestHelper
         assertEquals(expectedPartitionKey, actualBusinessObjectFormat.getPartitionKey());
         assertEquals(expectedDocumentSchema, actualBusinessObjectFormat.getDocumentSchema());
         assertEquals(expectedDocumentSchemaUrl, actualBusinessObjectFormat.getDocumentSchemaUrl());
+        assertEquals(expectedEnableBusinessObjectDataPublishedAttributesChangeEventNotification,
+            BooleanUtils.isTrue(actualBusinessObjectFormat.isEnableBusinessObjectDataPublishedAttributesChangeEventNotification()));
         AbstractServiceTest.assertEqualsIgnoreNullOrEmpty("description", expectedDescription, actualBusinessObjectFormat.getDescription());
 
         // Ignoring the order, check if the actual list of attributes matches the expected list.

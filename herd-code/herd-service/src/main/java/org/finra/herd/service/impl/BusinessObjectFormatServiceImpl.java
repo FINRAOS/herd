@@ -544,8 +544,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
         // Update the business object format attributes
         updateBusinessObjectFormatAttributeDefinitionsHelper(businessObjectFormatEntity, attributeDefinitions);
+
+        // Set flag that enables business object data published attributes change event notification.
+        businessObjectFormatEntity.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+            BooleanUtils.isTrue(businessObjectFormatAttributeDefinitionsUpdateRequest.isEnableBusinessObjectDataPublishedAttributesChangeEventNotification()));
 
         // Persist and refresh the entity.
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
@@ -1186,13 +1191,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             }
         }
 
-
+        // Set attribute definitions.
         businessObjectFormatEntity.setAttributeDefinitions(createAttributeDefinitionEntities(request.getAttributeDefinitions(), businessObjectFormatEntity));
+
+        // Set flag that enables business object data published attributes change event notification.
+        businessObjectFormatEntity.setEnableBusinessObjectDataPublishedAttributesChangeEventNotification(
+            BooleanUtils.isTrue(request.isEnableBusinessObjectDataPublishedAttributesChangeEventNotification()));
 
         // Add optional schema information.
         populateBusinessObjectFormatSchema(businessObjectFormatEntity, request.getSchema());
 
-        //set the parents
+        // Set the parents.
         businessObjectFormatEntity.setBusinessObjectFormatParents(businessObjectFormatEntityParents);
 
         // Persist and return the new entity.

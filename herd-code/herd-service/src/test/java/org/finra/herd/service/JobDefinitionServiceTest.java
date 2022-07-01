@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +44,8 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.JobDefinitionKey;
+import org.finra.herd.model.api.xml.JobDefinitionKeys;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
@@ -440,6 +443,55 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     {
         // Retrieve a job definition that doesn't exist.
         jobDefinitionService.getJobDefinition(INVALID_NAME, INVALID_NAME);
+    }
+
+    @Test
+    public void testGetJobDefinitionKeys()
+    {
+        // Create job definition keys.
+        JobDefinitionKey jobDefinitionKey = new JobDefinitionKey(JOB_NAMESPACE, JOB_NAME);
+        JobDefinitionKey jobDefinitionKey2 = new JobDefinitionKey(JOB_NAMESPACE, JOB_NAME_2);
+
+        // Create and persist job definition entities.
+        jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+        jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2);
+
+        // Create a list of expected job definition keys.
+        JobDefinitionKeys expectedJobDefinitionKeys = new JobDefinitionKeys(Arrays.asList(jobDefinitionKey, jobDefinitionKey2));
+
+        // Retrieve the job definition keys using input parameter.
+        assertEquals(expectedJobDefinitionKeys, jobDefinitionService.getJobDefinitionKeys(JOB_NAMESPACE));
+
+        // Retrieve the job definition keys using input parameter with leading and trailing empty spaces.
+        assertEquals(expectedJobDefinitionKeys, jobDefinitionService.getJobDefinitionKeys(" " + JOB_NAMESPACE + "   "));
+
+        // Retrieve the job definition keys using input parameter in lower case.
+        assertEquals(expectedJobDefinitionKeys, jobDefinitionService.getJobDefinitionKeys(JOB_NAMESPACE.toLowerCase()));
+
+        // Retrieve the job definition using input parameter in upper case.
+        assertEquals(expectedJobDefinitionKeys, jobDefinitionService.getJobDefinitionKeys(JOB_NAMESPACE.toUpperCase()));
+    }
+
+    @Test
+    public void testGetJobDefinitionKeysMissingRequiredParameters()
+    {
+        // Try to perform a get without specifying a namespace.
+        try
+        {
+            jobDefinitionService.getJobDefinitionKeys(BLANK_TEXT);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetJobDefinitionKeysNamespaceNoExists()
+    {
+        // Try to get all storage policies for a non-existing namespace.
+        assertEquals(new JobDefinitionKeys(new ArrayList<>()), jobDefinitionService.getJobDefinitionKeys(I_DO_NOT_EXIST));
     }
 
     @Test
