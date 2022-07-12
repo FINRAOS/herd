@@ -242,6 +242,10 @@ private class BaseHerdApi(testCase: String, partitions: Map[(String, String), St
     data
 
   }
+
+  override def refreshApiClient(accessToken: String): Unit = {
+    // no op
+  }
 }
 
 class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
@@ -316,7 +320,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
     .add("COL3", MapType(StringType, StringType))
 
   private def getDataFrame(api: HerdApi, parameters: Map[String, String]): DataFrame = {
-    val source = new DefaultSource((_, _, _) => api)
+    val source = new DefaultSource((_, _, _, _) => api)
     val relation = source.createRelation(spark.sqlContext, parameters)
 
     spark.sqlContext.baseRelationToDataFrame(relation)
@@ -324,7 +328,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
 
   private def writeDataFrame(api: HerdApi, parameters: Map[String, String],
                              df: DataFrame, mode: SaveMode = SaveMode.Append): DataFrame = {
-    val source = new DefaultSource((_, _, _) => api)
+    val source = new DefaultSource((_, _, _, _) => api)
     val relation = source.createRelation(spark.sqlContext, mode, parameters, df)
 
     spark.sqlContext.baseRelationToDataFrame(relation)
@@ -581,7 +585,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "") -> "businessObjectData1.json"
     )
     val api = new BaseHerdApi("test-case-6", parts)
-    val source = new DefaultSource((_, _, _) => api)
+    val source = new DefaultSource((_, _, _, _) => api)
 
     val s1 = new SchemaColumn
     s1.setType("map<double,array<bigint>>")
@@ -601,7 +605,7 @@ class DefaultSourceSuite extends FunSuite with BeforeAndAfterAll with Matchers {
       ("2017-01-01", "") -> "businessObjectData1.json"
     )
     val api = new BaseHerdApi("test-case-6", parts)
-    val source = new DefaultSource((_, _, _) => api)
+    val source = new DefaultSource((_, _, _, _) => api)
 
     val s = new StructField("mapCol", MapType(DoubleType, ArrayType(LongType, true), true), true)
     assertEquals("map<double,array<bigint>>", source.toComplexHerdType(s).toString)

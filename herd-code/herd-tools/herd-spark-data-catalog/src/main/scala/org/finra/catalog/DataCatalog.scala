@@ -98,6 +98,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   // for contacting DM service
   var username = ""
   var password = ""
+  var accessTokenUrl = ""
 
   val usage = "PRC"
   val fileFormat = "UNKNOWN"
@@ -164,7 +165,8 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
            credName: String,
            credAGS: String,
            credSDLC: String,
-           credComponent: String
+           credComponent: String,
+           accessTokenUrl: String
           ) {
     // core constructor
     this(spark, host)
@@ -177,7 +179,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     this.username = credName
     this.password = getPassword(spark, credName, credAGS, credSDLC, credComponent)
 
-    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password)
+    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, accessTokenUrl)
   }
 
   /**
@@ -188,13 +190,14 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param password password for DM
    * @param host     DM host https://host.name.com:port
    */
-  def this(spark: SparkSession, host: String, username: String, password: String) {
+  def this(spark: SparkSession, host: String, username: String, password: String, accessTokenUrl: String = "") {
     this(spark, host)
 
     this.username = username
     this.password = password
+    this.accessTokenUrl = accessTokenUrl
 
-    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password)
+    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, accessTokenUrl)
   }
 
   /**
