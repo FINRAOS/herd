@@ -29,12 +29,13 @@
 
    <!-- groupId and version are inherited from the parent and can be overridden where if needed. -->
    <artifactId>herd-spark-2.2-data-source</artifactId>
-   <version>0.121.0-SNAPSHOT</version>
+   <version>0.132.0-SNAPSHOT</version>
 
    <!-- build the data source for spark version 2.2.0 -->
    <properties>
       <spark.version>2.2.0</spark.version>
       <herd.sdk.version>0.169.0</herd.sdk.version>
+      <rest.assured.version>2.9.0</rest.assured.version>
       <commons.text.version>1.8</commons.text.version>
    </properties>
 
@@ -137,6 +138,12 @@
          <groupId>org.bouncycastle</groupId>
          <artifactId>bcprov-jdk15on</artifactId>
          <version>${bcprov-jdk15on.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.jayway.restassured</groupId>
+         <artifactId>rest-assured</artifactId>
+         <version>${rest.assured.version}</version>
+         <scope>compile</scope>
       </dependency>
 
       <!-- Test -->
