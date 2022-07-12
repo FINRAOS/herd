@@ -154,6 +154,15 @@ public interface S3Dao
     Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
+     * Checks is there are no S3 objects matching the S3 key prefix in the given S3 bucket.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 location to check.
+     *
+     * @return true if there are no S3 objects matching specified S3 bucket and S3 key prefix, otherwise false
+     */
+    boolean isS3KeyPrefixEmpty(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+
+    /**
      * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name).
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to get
