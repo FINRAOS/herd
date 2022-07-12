@@ -190,7 +190,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param password password for DM
    * @param host     DM host https://host.name.com:port
    */
-  def this(spark: SparkSession, host: String, username: String, password: String, accessTokenUrl: String = "") {
+  def this(spark: SparkSession, host: String, username: String, password: String, accessTokenUrl: String) {
     this(spark, host)
 
     this.username = username

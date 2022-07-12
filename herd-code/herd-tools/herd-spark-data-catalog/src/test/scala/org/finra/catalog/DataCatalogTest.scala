@@ -136,9 +136,6 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     var dataCatalog = new DataCatalog(spark, "test.com", "username", "pwd", "accessTokenUrl")
     assertEquals(accessToken.accessToken, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
 
-    dataCatalog = new DataCatalog(spark, "test.com", "username", "password")
-    assertEquals(null, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
-
     dataCatalog = new DataCatalog(spark, "test.com", "username", "password", " ")
     assertEquals(null, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
   }
