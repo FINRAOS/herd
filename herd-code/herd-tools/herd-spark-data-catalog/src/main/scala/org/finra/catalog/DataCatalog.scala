@@ -166,7 +166,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
            credAGS: String,
            credSDLC: String,
            credComponent: String,
-           accessTokenUrl: String
+           accessTokenUrl: String = ""
           ) {
     // core constructor
     this(spark, host)
