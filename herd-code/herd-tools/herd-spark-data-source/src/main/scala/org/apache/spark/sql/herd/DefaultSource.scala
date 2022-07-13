@@ -807,7 +807,7 @@ object DefaultSource {
   def defaultApiClientFactory(url: String, username: Option[String], password: Option[String], accessTokenUrl: Option[String]): HerdApi = {
     val apiClient = new ApiClient()
     apiClient.setBasePath(url)
-    if(accessTokenUrl.get != null && accessTokenUrl.get.trim.nonEmpty) {
+    if(accessTokenUrl.isDefined && accessTokenUrl.get.trim.nonEmpty) {
       apiClient.setAccessToken(OAuthTokenProvider.getAccessToken(username.get, password.get, accessTokenUrl.get))
     } else {
       username.foreach(apiClient.setUsername)
