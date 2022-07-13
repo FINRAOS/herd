@@ -25,6 +25,8 @@ import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -38,6 +40,7 @@ import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -68,6 +71,8 @@ import org.finra.herd.service.helper.StorageUnitDaoHelper;
 @Service
 public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements BusinessObjectDataInitiateDestroyHelperService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataInitiateDestroyHelperServiceImpl.class);
+
     /**
      * List of storage unit statuses that are supported by business object data destroy feature.
      */
@@ -98,6 +103,9 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
 
     @Autowired
     private S3Dao s3Dao;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -190,6 +198,11 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.DISABLED, reason);
         businessObjectDataDestroyDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
 
+        // Log file count and total file size success.
+        LOGGER.info("Successfully initialized destruction of business object data. businessObjectDataKey={} totalFileCount={} totalFileSizeBytes={}",
+            jsonHelper.objectToJson(businessObjectDataKey), businessObjectDataDestroyDto.getTotalFileCount(),
+            businessObjectDataDestroyDto.getTotalFileSizeBytes());
+
         // Create business object data from the entity and return it.
         return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
     }
@@ -210,6 +223,18 @@ public class BusinessObjectDataInitiateDestroyHelperServiceImpl implements Busin
 
         // Get all S3 objects matching the S3 key prefix from the S3 bucket.
         List<S3VersionSummary> s3VersionSummaries = s3Dao.listVersions(s3FileTransferRequestParamsDto);
+
+        // Get file stats for all S3 versions that belong to this business object data S3 key prefix (selected for destruction).
+        // Please note that some of the versions might be already tagged during previous attempts to destroy this business object data, but we still want
+        // to include all of them, since we will be logging those file stats only once right at the end of the successful processing.
+        if (CollectionUtils.isNotEmpty(s3VersionSummaries))
+        {
+            businessObjectDataDestroyDto.setTotalFileCount(CollectionUtils.size(s3VersionSummaries));
+            for (S3VersionSummary s3VersionSummary : s3VersionSummaries)
+            {
+                businessObjectDataDestroyDto.setTotalFileSizeBytes(businessObjectDataDestroyDto.getTotalFileSizeBytes() + s3VersionSummary.getSize());
+            }
+        }
 
         // Check if the operation needs to be executed in batch mode.
         if (businessObjectDataDestroyDto instanceof BusinessObjectDataBatchDestroyDto)

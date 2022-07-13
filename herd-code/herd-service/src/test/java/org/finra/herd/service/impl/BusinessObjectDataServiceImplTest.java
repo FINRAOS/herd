@@ -191,10 +191,10 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         List<BusinessObjectDataDestroyDto> businessObjectDataDestroyDtoStates = Arrays.asList(
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLING, StorageUnitStatusEntity.ENABLED, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS),
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS, TOTAL_FILE_COUNT_0, TOTAL_FILE_SIZE_BYTES_0),
             new BusinessObjectDataDestroyDto(businessObjectDataKey, STORAGE_NAME, BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.DISABLED, StorageUnitStatusEntity.DISABLING, S3_ENDPOINT, S3_BUCKET_NAME, S3_KEY_PREFIX, S3_OBJECT_TAG_KEY,
-                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS));
+                S3_OBJECT_TAG_VALUE, s3ObjectTaggerRoleParamsDto, BDATA_FINAL_DESTROY_DELAY_IN_DAYS, TOTAL_FILE_COUNT_0, TOTAL_FILE_SIZE_BYTES_0));
 
         // Create a business object data.
         BusinessObjectData businessObjectData = new BusinessObjectData();
