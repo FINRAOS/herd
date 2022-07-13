@@ -1619,6 +1619,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       "url" -> baseRestUrl,
       "username" -> username,
       "password" -> password,
+      "accessTokenUrl" -> accessTokenUrl,
       "namespace" -> namespace,
       "businessObjectName" -> objName,
       "businessObjectFormatUsage" -> usage,
@@ -1763,6 +1764,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
+      .option("accessTokenUrl", accessTokenUrl)
       .option("namespace", namespace)
       .option("businessObjectName", objName)
       .option("partitionKey", partitionKey)
@@ -1805,6 +1807,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
+      .option("accessTokenUrl", accessTokenUrl)
       .option("namespace", baseHerdOptions.namespace)
       .option("businessObjectName", baseHerdOptions.objectName)
       .option("businessObjectFormatUsage", baseHerdOptions.usage)
