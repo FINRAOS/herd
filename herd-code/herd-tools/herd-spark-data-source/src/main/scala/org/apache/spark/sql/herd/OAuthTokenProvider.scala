@@ -39,7 +39,6 @@ object OAuthTokenProvider extends Retry {
    */
   @throws[ApiException]
   def getAccessToken(username: String, password: String, accessTokenUrl: String): String = {
-    log.info(String.format("Getting Access Token from accessTokenUrl: %s for user: %s ", username, accessTokenUrl))
     if (!accessTokenCache.containsKey(username) || accessTokenCache.get(username).getExpiresIn.isBefore(DateTime.now)) {
       refreshOauthToken(username, password, accessTokenUrl)
     }
@@ -48,6 +47,7 @@ object OAuthTokenProvider extends Retry {
 
   @throws[ApiException]
   private def refreshOauthToken(username: String, password: String, accessTokenUrl: String): Unit = {
+    log.info(String.format("Getting Access Token from accessTokenUrl: %s for user: %s ", username, accessTokenUrl))
     val response = RestAssured.`given`.auth.preemptive.basic(username, password).formParam("grant_type", "client_credentials").when.post(accessTokenUrl)
     if (response.statusCode != HttpStatus.SC_OK) {
       throw new ApiException(s"Failed to retrieve OAuth access token from accessTokenUrl:$accessTokenUrl, errorCode=${response.getStatusCode}, " +
