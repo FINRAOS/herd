@@ -825,6 +825,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
 
+    public static final int TOTAL_FILE_COUNT_0 = 0;
+
+    public static final long TOTAL_FILE_SIZE_BYTES_0 = 0;
+
     public static final Long TOTAL_RECORDS_ON_PAGE = getRandomLong();
 
     public static final Long TOTAL_RECORD_COUNT = getRandomLong();

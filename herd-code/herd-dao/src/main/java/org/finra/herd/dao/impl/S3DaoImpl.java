@@ -472,6 +472,48 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
+    public boolean isS3KeyPrefixEmpty(final S3FileTransferRequestParamsDto params)
+    {
+        LOGGER.info("Checking if S3 key prefix is empty... s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", params.getS3KeyPrefix(), params.getS3BucketName());
+
+        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
+
+        AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
+
+        boolean s3KeyPrefixEmpty;
+
+        try
+        {
+            // Get S3 objects matching specified S3 key prefix. Please note that we do not check if object listing is truncated, since the first
+            // returned non-empty listing already means that this S3 key prefix is not empty and there is no need to list all matching S3 objects.
+            ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(params.getS3BucketName()).withPrefix(params.getS3KeyPrefix());
+            ObjectListing objectListing = s3Operations.listObjects(listObjectsRequest, s3Client);
+            s3KeyPrefixEmpty = CollectionUtils.isEmpty(objectListing.getObjectSummaries());
+        }
+        catch (AmazonS3Exception amazonS3Exception)
+        {
+            if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(amazonS3Exception.getErrorCode()))
+            {
+                throw new IllegalArgumentException("The specified bucket '" + params.getS3BucketName() + "' does not exist.", amazonS3Exception);
+            }
+            throw new IllegalStateException("Error accessing S3", amazonS3Exception);
+        }
+        catch (AmazonClientException e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+                    e.getMessage()), e);
+        }
+        finally
+        {
+            // Shutdown the AmazonS3Client instance to release resources.
+            s3Client.shutdown();
+        }
+
+        return s3KeyPrefixEmpty;
+    }
+
+    @Override
     public List<S3ObjectSummary> listDirectory(final S3FileTransferRequestParamsDto params)
     {
         // By default, we do not ignore 0 byte objects that represent S3 directories.
@@ -481,6 +523,8 @@ public class S3DaoImpl implements S3Dao
     @Override
     public List<S3ObjectSummary> listDirectory(final S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
     {
+        LOGGER.info("Listing S3 objects matching S3 key prefix... s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", params.getS3KeyPrefix(), params.getS3BucketName());
+
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
 
         AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);
@@ -534,6 +578,8 @@ public class S3DaoImpl implements S3Dao
     @Override
     public List<S3VersionSummary> listVersions(final S3FileTransferRequestParamsDto params)
     {
+        LOGGER.info("Listing S3 versions matching S3 key prefix... s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", params.getS3KeyPrefix(), params.getS3BucketName());
+
         Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 versions from root directory is not allowed.");
 
         AmazonS3Client s3Client = awsS3ClientFactory.getAmazonS3Client(params);

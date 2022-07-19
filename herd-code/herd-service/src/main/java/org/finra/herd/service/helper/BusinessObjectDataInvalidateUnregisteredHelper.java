@@ -258,27 +258,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     }
 
     /**
-     * Returns a list of S3 object keys associated with the given format, data key, and storage. The keys are found by matching the prefix. The result may be
-     * empty if there are not matching keys found.
-     *
-     * @param businessObjectFormatEntity {@link BusinessObjectFormatEntity}
-     * @param businessObjectDataKey {@link BusinessObjectDataKey}
-     * @param storageEntity {@link StorageEntity}
-     *
-     * @return list of S3 object keys
-     */
-    private List<String> getS3ObjectKeys(BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataKey businessObjectDataKey,
-        StorageEntity storageEntity)
-    {
-        String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
-
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + '/');
-
-        return storageFileHelper.getFilePathsFromS3ObjectSummaries(s3Dao.listDirectory(s3FileTransferRequestParamsDto));
-    }
-
-    /**
      * Returns a list of data keys that are not registered in herd, but exist in S3, for data versions after the latest data in the given request's format and
      * storage. Incrementally searches S3 for data versions until no results are found.
      *
@@ -292,37 +271,41 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     private List<BusinessObjectDataKey> getUnregisteredBusinessObjectDataKeys(BusinessObjectDataInvalidateUnregisteredRequest request,
         StorageEntity storageEntity, BusinessObjectFormatEntity businessObjectFormatEntity, Integer latestRegisteredBusinessObjectDataVersion)
     {
-        // The result will be accumulated here
+        // The result will be accumulated here.
         List<BusinessObjectDataKey> unregisteredBusinessObjectDataKeys = new ArrayList<>();
 
-        // Version offset from the latest version
+        // Version offset from the latest version.
         int businessObjectDataVersionOffset = 1;
 
-        // Loop until no results are found in S3
+        // Loop until no results are found in S3.
         while (true)
         {
-            // Get data key with incremented version
+            // Get business object data key for the incremented version.
             BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKey(request);
             businessObjectDataKey.setBusinessObjectDataVersion(latestRegisteredBusinessObjectDataVersion + businessObjectDataVersionOffset);
 
-            // Find S3 object keys which match the prefix
-            List<String> matchingS3ObjectKeys = getS3ObjectKeys(businessObjectFormatEntity, businessObjectDataKey, storageEntity);
+            // Build S3 key prefix for this business object data version in the relative storage.
+            String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
 
-            /*
-             * If there are no matching keys, it means there are no objects registered for this version in S3.
-             * If there are no matches, it means that this version is not out-of-sync with herd.
-             */
-            if (matchingS3ObjectKeys.isEmpty())
+            // Create DTO with parameters required to access this S3 key prefix in the relative S3 bucket.
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + '/');
+
+            // Check if there are any S3 keys matching this S3 key prefix in S3. If there are no S3 keys matching S3 key prefix for this business object data
+            // version, it means that there are no objects for this business object data version in S3. Otherwise, it means that this business object data
+            // version in S3 is out-of-sync with herd and needs to be registered and invalidated.
+            if (s3Dao.isS3KeyPrefixEmpty(s3FileTransferRequestParamsDto))
             {
                 break;
             }
 
-            // Add this data to result set
+            // Add this data to result set.
             unregisteredBusinessObjectDataKeys.add(businessObjectDataKey);
 
-            // The next iteration of loop should check a higher version
+            // The next iteration of loop should check a higher version.
             businessObjectDataVersionOffset++;
         }
+
         return unregisteredBusinessObjectDataKeys;
     }
 
