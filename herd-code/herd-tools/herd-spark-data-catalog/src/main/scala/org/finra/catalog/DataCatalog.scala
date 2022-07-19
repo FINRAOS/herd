@@ -98,6 +98,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
   // for contacting DM service
   var username = ""
   var password = ""
+  var accessTokenUrl = ""
 
   val usage = "PRC"
   val fileFormat = "UNKNOWN"
@@ -157,14 +158,15 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
    * @param credAGS  AGS for credential lookup
    * @param credSDLC SDLC for credential lookup
    * @param credComponent Component for credential lookup
-    *
+   * @param accessTokenUrl accessTokenUrl to get OAuth token
    */
   def this(spark: SparkSession,
            host: String,
            credName: String,
            credAGS: String,
            credSDLC: String,
-           credComponent: String
+           credComponent: String,
+           accessTokenUrl: String = ""
           ) {
     // core constructor
     this(spark, host)
@@ -177,7 +179,26 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
     this.username = credName
     this.password = getPassword(spark, credName, credAGS, credSDLC, credComponent)
 
-    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password)
+    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, accessTokenUrl)
+  }
+
+  /**
+   * Auxiliary constructor using username/password
+   *
+   * @param spark    spark session
+   * @param username username for DM
+   * @param password password for DM
+   * @param accessTokenUrl accessTokenUrl to get OAuth token
+   * @param host     DM host https://host.name.com:port
+   */
+  def this(spark: SparkSession, host: String, username: String, password: String, accessTokenUrl: String) {
+    this(spark, host)
+
+    this.username = username
+    this.password = password
+    this.accessTokenUrl = accessTokenUrl
+
+    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, accessTokenUrl)
   }
 
   /**
@@ -193,8 +214,9 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     this.username = username
     this.password = password
+    this.accessTokenUrl = ""
 
-    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password)
+    herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, "")
   }
 
   /**
@@ -1616,6 +1638,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       "url" -> baseRestUrl,
       "username" -> username,
       "password" -> password,
+      "accessTokenUrl" -> accessTokenUrl,
       "namespace" -> namespace,
       "businessObjectName" -> objName,
       "businessObjectFormatUsage" -> usage,
@@ -1760,6 +1783,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
+      .option("accessTokenUrl", accessTokenUrl)
       .option("namespace", namespace)
       .option("businessObjectName", objName)
       .option("partitionKey", partitionKey)
@@ -1802,6 +1826,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
       .option("url", baseRestUrl)
       .option("username", username)
       .option("password", password)
+      .option("accessTokenUrl", accessTokenUrl)
       .option("namespace", baseHerdOptions.namespace)
       .option("businessObjectName", baseHerdOptions.objectName)
       .option("businessObjectFormatUsage", baseHerdOptions.usage)

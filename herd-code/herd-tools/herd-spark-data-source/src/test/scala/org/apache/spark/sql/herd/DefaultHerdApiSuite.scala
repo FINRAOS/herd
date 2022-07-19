@@ -33,6 +33,7 @@ import org.scalatest.mock.MockitoSugar
 
 import org.finra.herd.sdk.api._
 import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
+import org.finra.herd.sdk.invoker.auth.OAuth
 import org.finra.herd.sdk.model._
 
 /** unit tests for DefaultHerdApi */
@@ -975,6 +976,13 @@ class DefaultHerdApiSuite extends FunSuite with MockitoSugar with BeforeAndAfter
     verify(defaultHerdApi).getNamespaceApi(mockApiClient)
     verify(mockNamespaceApi).namespaceGetNamespaces
     assertEquals(actualResult, namespaceKeys)
+  }
+
+  test("Test HerdAPi.refreshToken") {
+    defaultHerdApi.apiClient = new ApiClient()
+    assertEquals(null, (defaultHerdApi.apiClient.getAuthentication("oauthAuth")).asInstanceOf[OAuth].getAccessToken)
+    defaultHerdApi.refreshApiClient("abc")
+    assertEquals("abc", (defaultHerdApi.apiClient.getAuthentication("oauthAuth")).asInstanceOf[OAuth].getAccessToken)
   }
 
 }

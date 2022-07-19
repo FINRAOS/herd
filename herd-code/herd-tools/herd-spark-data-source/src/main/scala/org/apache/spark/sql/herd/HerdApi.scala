@@ -19,10 +19,9 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.herd.PartitionFilter._
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
 
 import org.finra.herd.sdk.api._
-import org.finra.herd.sdk.invoker.{ApiClient, ApiException}
+import org.finra.herd.sdk.invoker.{ApiClient}
 import org.finra.herd.sdk.model.{PartitionValueFilter, _}
 
 /** A subset of business object data statuses used by the custom data source */
@@ -36,6 +35,12 @@ object ObjectStatus extends Enumeration {
 
 /** List all Herd APIs used by the custom data source */
 trait HerdApi {
+
+  /**
+   * Refresh apiClient using the provided accessToken
+   * @param accessToken access token
+   */
+  def refreshApiClient(accessToken: String): Unit
 
   /** Retrieve the business object definition by the namespace and business object values.
    *
@@ -300,44 +305,12 @@ trait HerdApi {
   def getAllNamespaces: NamespaceKeys
 }
 
-/** A simple Interface that knows how to retry an action in case of error/failure */
-trait Retry {
-
-  val log: Logger
-
-  private val MAX_TRIES = 3
-
-  private val WAIT = 100
-
-  def withRetry[T](block: => T): T = {
-    var tries = 0
-
-    def runRecursively[S](block: => S): S = {
-      Try(block) match {
-        case Success(result) => result
-        case Failure(ex: ApiException) =>
-          if (ex.getCode >= 400 && ex.getCode < 500) {
-            log.error(s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
-            throw new ApiException(ex.getCode, s"Encountered fatal error from Herd, will not retry. Status code: ${ex.getCode}, error message: ${ex.toString}")
-          }
-          else if (tries < MAX_TRIES) {
-            log.error(s"Herd returned an error, will retry ${MAX_TRIES - tries} times. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
-            tries += 1
-            Thread.sleep(WAIT * tries)
-            runRecursively(block)
-          } else {
-            log.error(s"Retried $MAX_TRIES times - aborting. Status code: ${ex.getCode}, error message: ${ex.toString}", ex)
-            throw new ApiException(ex.getCode, s"Retried 3 times. Aborting. Status code: ${ex.getCode}, error message: ${ex.toString}")
-          }
-      }
-    }
-
-    runRecursively(block)
-  }
-}
-
-class DefaultHerdApi(private val apiClient: ApiClient) extends HerdApi with Retry {
+class DefaultHerdApi(var apiClient: ApiClient) extends HerdApi with Retry {
   override val log: Logger = Logger.getLogger(classOf[DefaultHerdApi])
+
+  def refreshApiClient(accessToken: String): Unit = {
+    apiClient.setAccessToken(accessToken)
+  }
 
   def getBusinessObjectDefinitionApi(apiClient: ApiClient) : BusinessObjectDefinitionApi = {
     new BusinessObjectDefinitionApi(apiClient)

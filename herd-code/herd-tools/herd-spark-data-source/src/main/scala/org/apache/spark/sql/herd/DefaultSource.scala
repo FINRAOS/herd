@@ -83,7 +83,7 @@ import org.finra.herd.sdk.model._
     * }}}
     *
   */
-class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) => HerdApi)
+class DefaultSource(apiClientFactory: (String, Option[String], Option[String], Option[String]) => HerdApi)
     extends RelationProvider
     with CreatableRelationProvider
     with DataSourceRegister
@@ -91,7 +91,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
   def this() = this(DefaultSource.defaultApiClientFactory)
 
-  def getApiConfig(parameters: Map[String, String], sparkSession: SparkSession): (String, Option[String], Option[String]) = {
+  def getApiConfig(parameters: Map[String, String], sparkSession: SparkSession): (String, Option[String], Option[String], Option[String]) = {
     val url = parameters.get("url")
       .orElse(sparkSession.conf.getOption("spark.herd.url"))
       .getOrElse(sys.error("Must specify either `url` option or `spark.herd.url` in config"))
@@ -102,9 +102,10 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       .orElse(sparkSession.conf.getOption("spark.herd.username"))
     val pwd = parameters.get("password")
       .orElse(sparkSession.conf.getOption("spark.herd.password"))
-
+    val accessTokenUrl = parameters.get("accessTokenUrl")
+      .orElse(sparkSession.conf.getOption("spark.herd.accessTokenUrl"))
     if (user.isDefined && pwd.isDefined) {
-      (url, user, pwd)
+      (url, user, pwd, accessTokenUrl)
     } else {
       val credName = parameters.get("credName")
         .orElse(sparkSession.conf.getOption("spark.herd.credential.name"))
@@ -147,7 +148,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
       val kms: AWSKMSClient = new AWSKMSClient(provider, clientConf).withRegion(Regions.US_EAST_1)
       val credPwd = new JCredStash("credential-store", ddb, kms, new CredStashBouncyCastleCrypto).getSecret(prefixedCredName, context)
 
-      (url, credName, Option(credPwd))
+      (url, credName, Option(credPwd), accessTokenUrl)
     }
   }
 
@@ -327,9 +328,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val params = HerdOptions(parameters)(sparkSession)
 
-    val (url, username, password) = getApiConfig(parameters, sparkSession)
+    val (url, username, password, accessTokenUrl) = getApiConfig(parameters, sparkSession)
 
-    val api = apiClientFactory(url, username, password)
+    val api = apiClientFactory(url, username, password, accessTokenUrl)
 
     val (formatUsage, formatFileType, formatVersion) = getFormatUsageAndFileType(api, params)
 
@@ -403,7 +404,7 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val fileIndex = new HerdFileIndex(
       sparkSession,
-      () => localApiClientFactory(url, username, password),
+      () => localApiClientFactory(url, username, password, accessTokenUrl),
       allData,
       params.namespace,
       params.businessObjectName,
@@ -456,9 +457,9 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
     val params = HerdOptions(parameters)(sparkSession)
 
-    val (url, username, password) = getApiConfig(parameters, sparkSession)
+    val (url, username, password, accessTokenUrl) = getApiConfig(parameters, sparkSession)
 
-    val api = apiClientFactory(url, username, password)
+    val api = apiClientFactory(url, username, password, accessTokenUrl)
 
     registerIfRequired(api, params)
 
@@ -803,11 +804,15 @@ class DefaultSource(apiClientFactory: (String, Option[String], Option[String]) =
 
 object DefaultSource {
 
-  def defaultApiClientFactory(url: String, username: Option[String], password: Option[String]): HerdApi = {
+  def defaultApiClientFactory(url: String, username: Option[String], password: Option[String], accessTokenUrl: Option[String]): HerdApi = {
     val apiClient = new ApiClient()
     apiClient.setBasePath(url)
-    username.foreach(apiClient.setUsername)
-    password.foreach(apiClient.setPassword)
+    if(accessTokenUrl.isDefined && accessTokenUrl.get.trim.nonEmpty) {
+      apiClient.setAccessToken(OAuthTokenProvider.getAccessToken(username.get, password.get, accessTokenUrl.get))
+    } else {
+      username.foreach(apiClient.setUsername)
+      password.foreach(apiClient.setPassword)
+    }
 
     new DefaultHerdApi(apiClient)
   }

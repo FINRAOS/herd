@@ -16,12 +16,14 @@
 package org.finra.catalog
 
 import java.util
+import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.herd.{HerdApi, ObjectStatus}
+import org.apache.spark.sql.herd.{AccessToken, HerdApi, OAuthTokenProvider, ObjectStatus}
 import org.apache.spark.sql.types._
+import org.joda.time.DateTime
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -30,6 +32,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
 
+import org.finra.herd.sdk.invoker.auth.OAuth
 import org.finra.herd.sdk.model
 import org.finra.herd.sdk.model._
 
@@ -54,6 +57,8 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
   var mockHerdApiWrapper : HerdApiWrapper = null
   var mockHerdApi : HerdApi = null
   var dataCatalog : DataCatalog = null
+  var oAuthTokenProvider = OAuthTokenProvider
+  var accessTokenCache = new ConcurrentHashMap[String, AccessToken]()
 
   // set up
   override def beforeEach(): Unit = {
@@ -66,8 +71,9 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     mockHerdApi = mock[HerdApi]
     // Inject the herd api mock
     dataCatalog.herdApiWrapper = mockHerdApiWrapper
-  }
 
+    oAuthTokenProvider.accessTokenCache = accessTokenCache
+  }
 
   test("getPassword should return correct password from credStash when component is not null") {
     val dataCatalog = new DataCatalog(spark, "test.com")
@@ -107,6 +113,7 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
 
     when(mockCredStash.getSecret(stringCaptor.capture, mapCaptor.capture)).thenReturn("testPassword")
     val secret = dataCatalog.getPassword(spark, "testUser", "ags", "dev", null)
+
     // Verify the secret
     assertEquals("testPassword", secret)
 
@@ -118,6 +125,22 @@ class DataCatalogTest extends FunSuite with MockitoSugar with BeforeAndAfterEach
     assertEquals(2, context.size)
     assertEquals("ags", context.get("AGS"))
     assertEquals("dev", context.get("SDLC"))
+  }
+
+  test("oauth is being used when accessTokenUrl is not empty") {
+    val accessToken = new AccessToken
+    accessToken.accessToken = "token"
+    accessToken.expiresIn = DateTime.now.plusSeconds(10)
+    accessTokenCache.put("username", accessToken)
+
+    var dataCatalog = new DataCatalog(spark, "test.com", "username", "pwd", "accessTokenUrl")
+    assertEquals(accessToken.accessToken, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
+
+    dataCatalog = new DataCatalog(spark, "test.com", "username", "password")
+    assertEquals(null, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
+
+    dataCatalog = new DataCatalog(spark, "test.com", "username", "password", " ")
+    assertEquals(null, dataCatalog.herdApiWrapper.getApiClient().getAuthentication("oauthAuth").asInstanceOf[OAuth].getAccessToken)
   }
 
   test("dmAllObjectsInNamespace should return the business object definition keys in List format") {
