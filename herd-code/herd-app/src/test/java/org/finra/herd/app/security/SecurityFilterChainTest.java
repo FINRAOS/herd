@@ -64,6 +64,7 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
         // Execute filters with security disabled
         requestHeaders.put("userId", expectedUserId);
+        requestHeaders.put("shortUserId", expectedUserId);
         Authentication authentication2 = executeAuthenticationFilters(true, requestHeaders);
         assertAuthenticatedUserId(expectedUserId, null, null, authentication2);
     }
@@ -82,11 +83,13 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
         HashMap<String, Object> requestHeaders = new HashMap<>();
         requestHeaders.put("userId", expectedUserId1);
+        requestHeaders.put("shortUserId", expectedUserId1);
 
         Authentication authentication1 = executeAuthenticationFilters(true, requestHeaders);
         assertAuthenticatedUserId(expectedUserId1, null, null, authentication1);
 
         requestHeaders.put("userId", expectedUserId2);
+        requestHeaders.put("shortUserId", expectedUserId2);
 
         Authentication authentication2 = executeAuthenticationFilters(true, requestHeaders);
         assertAuthenticatedUserId(expectedUserId2, null, null, authentication2);
@@ -109,6 +112,7 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
         HashMap<String, Object> requestHeaders = new HashMap<>();
         requestHeaders.put("userId", expectedUserId);
+        requestHeaders.put("shortUserId", expectedUserId);
         requestHeaders.put("sessionInitTime", dateFormat.format(expectedSessionInitTime1));
 
         Authentication authentication1 = executeAuthenticationFilters(true, requestHeaders);
@@ -133,6 +137,7 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
         HashMap<String, Object> requestHeaders = new HashMap<>();
         requestHeaders.put("userId", expectedUserId);
+        requestHeaders.put("shortUserId", expectedUserId);
         requestHeaders.put("firstName", firstName1);
 
         Authentication authentication1 = executeAuthenticationFilters(true, requestHeaders);
