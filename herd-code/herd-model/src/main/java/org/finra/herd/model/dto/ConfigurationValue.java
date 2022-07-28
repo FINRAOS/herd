@@ -577,6 +577,16 @@ public enum ConfigurationValue
     SECURITY_HTTP_HEADER_NAMES("security.http.header.names", null),
 
     /**
+     * The user domain to override from.
+     */
+    SECURITY_USER_DOMAIN_OVERRIDE_FROM("security.user.domain.override.from", null),
+
+    /**
+     * The new user domain to override to.
+     */
+    SECURITY_USER_DOMAIN_OVERRIDE_TO("security.user.domain.override.to", null),
+
+    /**
      * Regex used to match role from a header value.
      */
     SECURITY_HTTP_HEADER_ROLE_REGEX("security.http.header.role.regex", null),

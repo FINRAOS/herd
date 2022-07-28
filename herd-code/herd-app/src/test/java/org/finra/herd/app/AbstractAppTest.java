@@ -78,7 +78,7 @@ public abstract class AbstractAppTest extends AbstractRestTest
         SecurityContextHolder.clearContext();
     }
 
-    protected MockHttpServletRequest getRequestWithHeaders(String userId, String firstName, String lastName, String email, String memberOf,
+    protected MockHttpServletRequest getRequestWithHeaders(String userId, String shortUserId, String firstName, String lastName, String email, String memberOf,
         String sessionInitTime)
     {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -86,6 +86,10 @@ public abstract class AbstractAppTest extends AbstractRestTest
         if (StringUtils.isNotBlank(userId))
         {
             request.addHeader("userId", userId);
+        }
+        if (StringUtils.isNotBlank(shortUserId))
+        {
+            request.addHeader("shortUserId", shortUserId);
         }
         if (StringUtils.isNotBlank(firstName))
         {
@@ -114,8 +118,8 @@ public abstract class AbstractAppTest extends AbstractRestTest
     protected Map<String, Object> getDefaultSecurityEnvironmentVariables()
     {
         Map<String, Object> defaultEnvironmentVariables = new HashMap<>();
-        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
-            "|lastNameHeader=lastName|emailHeader=email|rolesHeader=roles|sessionInitTimeHeader=sessionInitTime");
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|shortUseridHeader=shortUserId|" +
+            "firstNameHeader=firstName|lastNameHeader=lastName|emailHeader=email|rolesHeader=roles|sessionInitTimeHeader=sessionInitTime");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX.getKey(), "(?<role>.+?)(,|$)");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX_GROUP.getKey(), "role");
         defaultEnvironmentVariables.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "true");
@@ -125,8 +129,8 @@ public abstract class AbstractAppTest extends AbstractRestTest
     protected Map<String, Object> getDefaultSecurityEnvironmentVariablesWithMultiHeaderRoles()
     {
         Map<String, Object> defaultEnvironmentVariables = new HashMap<>();
-        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
-            "|lastNameHeader=lastName|emailHeader=email|sessionInitTimeHeader=sessionInitTime|useridSuffixHeader=useridSuffix");
+        defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|shortUseridHeader=shortUserId" +
+            "|firstNameHeader=firstName|lastNameHeader=lastName|emailHeader=email|sessionInitTimeHeader=sessionInitTime|useridSuffixHeader=useridSuffix");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAME_ROLE_REGEX.getKey(), "priv(.+)");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_VALUE.getKey(), "valid");
         defaultEnvironmentVariables.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "true");
