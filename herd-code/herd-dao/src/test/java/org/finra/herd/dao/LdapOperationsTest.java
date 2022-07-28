@@ -50,7 +50,7 @@ public class LdapOperationsTest extends AbstractDaoTest
         LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
 
         // Create an LDAP query.
-        LdapQuery ldapQuery = query().where((String) ConfigurationValue.LDAP_ATTRIBUTE_USER_ID.getDefaultValue()).is(USER_ID);
+        LdapQuery ldapQuery = query().where((String) ConfigurationValue.LDAP_ATTRIBUTE_USER_SHORT_ID.getDefaultValue()).is(USER_ID);
 
         // Create a subject matter expert contact details mapper.
         SubjectMatterExpertDaoImpl.SubjectMatterExpertContactDetailsMapper subjectMatterExpertContactDetailsMapper =
