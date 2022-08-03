@@ -604,7 +604,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String LDAP_ATTRIBUTE_USER_FULL_NAME = "UT_LdapAttributeUserFullName_" + RANDOM_SUFFIX;
 
-    public static final String LDAP_ATTRIBUTE_USER_ID = "UT_LdapAttributeUserId_" + RANDOM_SUFFIX;
+    public static final String LDAP_ATTRIBUTE_USER_SHORT_ID = "UT_LdapAttributeUserId";
 
     public static final String LDAP_ATTRIBUTE_USER_JOB_TITLE = "UT_LdapAttributeUserJobTitle_" + RANDOM_SUFFIX;
 

@@ -761,9 +761,9 @@ public enum ConfigurationValue
     LDAP_USER_CREDENTIAL_NAME("ldap.user.credential.name", ""),
 
     /**
-     * The LDAP attribute id for user's fully qualified username.
+     * The LDAP attribute id for user's short username (user id without domain).
      */
-    LDAP_ATTRIBUTE_USER_ID("ldap.attribute.user.id", "userPrincipalName"),
+    LDAP_ATTRIBUTE_USER_SHORT_ID("ldap.attribute.user.short.id", "sAMAccountName"),
 
     /**
      * The LDAP attribute id for user's full name.
