@@ -33,6 +33,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
+import org.finra.herd.model.dto.AttributeDto;
+import org.finra.herd.model.dto.BusinessObjectDataPublishedAttributesChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
@@ -62,6 +64,14 @@ public class MessageNotificationEventServiceImpl implements MessageNotificationE
 
     @Autowired
     private NotificationMessageInMemoryQueue notificationMessageInMemoryQueue;
+
+    @Override
+    public List<NotificationMessage> processBusinessObjectDataPublishedAttributesChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
+        List<AttributeDto> oldPublishedBusinessObjectAttributes)
+    {
+        return processNotificationMessages(notificationMessageManager.buildNotificationMessages(
+            new BusinessObjectDataPublishedAttributesChangeNotificationEvent(businessObjectDataKey, oldPublishedBusinessObjectAttributes)));
+    }
 
     @Override
     public List<NotificationMessage> processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,

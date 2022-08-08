@@ -56,8 +56,10 @@ import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
+import org.finra.herd.model.dto.AttributeDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -795,6 +797,41 @@ public class BusinessObjectDataDaoHelper
 
         // Return the partition values.
         return partitionValues;
+    }
+
+    /**
+     * Gets published business object data attributes.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the list of published business object data attributes
+     */
+    public List<AttributeDto> getPublishedBusinessObjectDataAttributes(BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        List<AttributeDto> publishedBusinessObjectDataAttributes = new ArrayList<>();
+
+        // Load all attribute definitions for this business object data in a map for easy access.
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+
+        if (!attributeDefinitionEntityMap.isEmpty())
+        {
+            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
+            {
+                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
+                {
+                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
+                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
+                    {
+                        publishedBusinessObjectDataAttributes.add(new AttributeDto(attributeEntity.getName(), attributeEntity.getValue()));
+                    }
+                }
+            }
+        }
+
+        return publishedBusinessObjectDataAttributes;
     }
 
     /**

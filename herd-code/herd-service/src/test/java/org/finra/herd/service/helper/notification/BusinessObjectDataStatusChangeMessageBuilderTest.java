@@ -46,6 +46,7 @@ import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.dto.BusinessObjectDataPublishedAttributesChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
@@ -688,7 +689,9 @@ public class BusinessObjectDataStatusChangeMessageBuilderTest extends AbstractNo
     public void testGetEventTypeMessageDefinitionKeyMapOnAbstractNotificationMessageBuilder()
     {
         Map<Class<?>, ConfigurationValue> map = businessObjectDataStatusChangeMessageBuilder.getEventTypeMessageDefinitionKeyMap();
-        assertEquals(5, map.size());
+        assertEquals(6, map.size());
+        assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_MESSAGE_DEFINITIONS,
+            map.get(BusinessObjectDataPublishedAttributesChangeNotificationEvent.class));
         assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS,
             map.get(BusinessObjectDataStatusChangeNotificationEvent.class));
         assertEquals(ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DEFINITION_DESCRIPTION_SUGGESTION_CHANGE_MESSAGE_DEFINITIONS,

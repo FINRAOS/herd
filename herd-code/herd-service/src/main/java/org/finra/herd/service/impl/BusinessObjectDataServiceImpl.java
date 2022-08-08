@@ -70,6 +70,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.dto.AttributeDto;
 import org.finra.herd.model.dto.BusinessObjectDataBatchDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
@@ -89,6 +90,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.helper.AttributeDaoHelper;
 import org.finra.herd.service.helper.AttributeHelper;
@@ -194,6 +196,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private DdlGeneratorFactory ddlGeneratorFactory;
+
+    @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
 
     @Autowired
     private NotificationEventService notificationEventService;
@@ -635,6 +640,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * <p/>
      * This implementation keeps the current transaction context.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = {NamespacePermissionEnum.WRITE, NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
     public BusinessObjectData updateBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey,
@@ -658,11 +664,28 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         attributeDaoHelper.validateAttributesAgainstBusinessObjectDataAttributeDefinitions(attributes,
             businessObjectDataEntity.getBusinessObjectFormat().getAttributeDefinitions());
 
+        // If business object data published attributes change event notification is required,
+        // then get all publishable attributes from this business object data before the update.
+        boolean sendBusinessObjectDataAttributesChangeNotification = businessObjectFormatDaoHelper
+            .isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectDataEntity.getBusinessObjectFormat());
+        List<AttributeDto> oldPublishedBusinessObjectDataAttributes = null;
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            oldPublishedBusinessObjectDataAttributes = businessObjectDataDaoHelper.getPublishedBusinessObjectDataAttributes(businessObjectDataEntity);
+        }
+
         // Update the attributes.
         attributeDaoHelper.updateBusinessObjectDataAttributes(businessObjectDataEntity, attributes);
 
         // Persist and refresh the entity.
         businessObjectDataEntity = businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+        // Send business object data published attributes change event notification.
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            messageNotificationEventService.processBusinessObjectDataPublishedAttributesChangeNotificationEvent(
+                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), oldPublishedBusinessObjectDataAttributes);
+        }
 
         // Create and return the business object data object from the persisted entity.
         return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);

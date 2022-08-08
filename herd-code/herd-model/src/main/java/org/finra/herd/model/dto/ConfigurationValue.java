@@ -631,6 +631,14 @@ public enum ConfigurationValue
      * NotificationMessageDefinitions} to use when generating notification messages for a business object data status change event. There is no default value
      * which will cause no messages to be sent.
      */
+    HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_MESSAGE_DEFINITIONS(
+        "herd.notification.business.object.data.published.attributes.change.message.definitions", null),
+
+    /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a business object data status change event. There is no default value
+     * which will cause no messages to be sent.
+     */
     HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS("herd.notification.business.object.data.status.change.message.definitions", null),
 
     /**
