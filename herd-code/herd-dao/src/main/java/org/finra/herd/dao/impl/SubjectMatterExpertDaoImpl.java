@@ -94,8 +94,12 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         // Create an LDAP template.
         LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
 
+        // Remove domain from the userId, if present.
+        int indexOfDomain = subjectMatterExpertKey.getUserId().lastIndexOf('@');
+        String shortUserId = indexOfDomain == -1 ? subjectMatterExpertKey.getUserId() : subjectMatterExpertKey.getUserId().substring(0, indexOfDomain);
+
         // Create an LDAP query.
-        LdapQuery ldapQuery = query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId());
+        LdapQuery ldapQuery = query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_SHORT_ID)).is(shortUserId);
 
         // Create a subject matter expert contact details mapper.
         SubjectMatterExpertContactDetailsMapper subjectMatterExpertContactDetailsMapper =
