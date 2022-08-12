@@ -270,7 +270,6 @@ public class BusinessObjectDataPublishedAttributeChangeMessageBuilderTest extend
         expectedNewBusinessObjectDataAttributes.remove(ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3);
 
         // Validate the notification message.
-        // assertEquals(1, result);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(7, CollectionUtils.size(result.get(0).getMessageHeaders()));
         String uuid = result.get(0).getMessageHeaders().get(4).getValue();
