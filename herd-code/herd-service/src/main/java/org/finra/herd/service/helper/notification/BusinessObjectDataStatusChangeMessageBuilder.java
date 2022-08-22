@@ -91,6 +91,9 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
         Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
         Map<String, String> businessObjectDataAttributesWithJson = new LinkedHashMap<>();
         Map<String, String> businessObjectDataAttributesWithXml = new LinkedHashMap<>();
+        // Get notification header key for filter attribute value
+        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
+
         if (!attributeDefinitionEntityMap.isEmpty())
         {
             for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
@@ -109,15 +112,11 @@ public class BusinessObjectDataStatusChangeMessageBuilder extends AbstractNotifi
 
                     if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublishForFilter()))
                     {
-
-                        // Get notification header key for filter attribute value
-                        String filterAttributeKey = configurationHelper.getRequiredProperty(ConfigurationValue.MESSAGE_HEADER_KEY_FILTER_ATTRIBUTE_VALUE);
                         if (velocityContextMap.containsKey(filterAttributeKey))
                         {
                             throw new IllegalStateException(String.format("Multiple attributes are marked as publishForFilter for business object format {%s}.",
                                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
                         }
-
                         addStringPropertyToContext(velocityContextMap, filterAttributeKey, attributeEntity.getValue());
                     }
                 }
