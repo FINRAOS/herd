@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.dto.BusinessObjectDataPublishedAttributesChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
@@ -39,6 +40,9 @@ import org.finra.herd.model.dto.UserNamespaceAuthorizationChangeNotificationEven
 @Component
 public class NotificationMessageManager
 {
+    @Autowired
+    private BusinessObjectDataPublishedAttributesChangeMessageBuilder businessObjectDataPublishedAttributesChangeMessageBuilder;
+
     @Autowired
     private BusinessObjectDataStatusChangeMessageBuilder businessObjectDataStatusChangeMessageBuilder;
 
@@ -63,6 +67,8 @@ public class NotificationMessageManager
     public void populateEventTypeNotificationMessageBuilderMap()
     {
         // Build the event type to notification message builders
+        eventTypeNotificationMessageBuilderMap
+            .put(BusinessObjectDataPublishedAttributesChangeNotificationEvent.class, businessObjectDataPublishedAttributesChangeMessageBuilder);
         eventTypeNotificationMessageBuilderMap.put(BusinessObjectDataStatusChangeNotificationEvent.class, businessObjectDataStatusChangeMessageBuilder);
         eventTypeNotificationMessageBuilderMap
             .put(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class, businessObjectDefinitionDescriptionSuggestionChangeMessageBuilder);

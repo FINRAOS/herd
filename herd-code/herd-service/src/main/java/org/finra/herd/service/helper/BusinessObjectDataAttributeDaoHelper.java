@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectDataAttribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
@@ -93,5 +94,44 @@ public class BusinessObjectDataAttributeDaoHelper
         }
 
         return businessObjectDataAttributeEntityMap;
+    }
+
+    /**
+     * Creates the business object data attribute from the persisted entity.
+     *
+     * @param businessObjectDataAttributeEntity the business object data attribute entity
+     *
+     * @return the business object data attribute
+     */
+    public BusinessObjectDataAttribute createBusinessObjectDataAttributeFromEntity(BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity)
+    {
+        // Create the business object data attribute.
+        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute();
+
+        businessObjectDataAttribute.setId(businessObjectDataAttributeEntity.getId());
+        businessObjectDataAttribute.setBusinessObjectDataAttributeKey(getBusinessObjectDataAttributeKey(businessObjectDataAttributeEntity));
+        businessObjectDataAttribute.setBusinessObjectDataAttributeValue(businessObjectDataAttributeEntity.getValue());
+
+        return businessObjectDataAttribute;
+    }
+
+    /**
+     * Creates and returns a business object data attribute key from a specified business object data attribute entity.
+     *
+     * @param businessObjectDataAttributeEntity the business object data attribute entity
+     *
+     * @return the newly created business object data attribute key
+     */
+    public BusinessObjectDataAttributeKey getBusinessObjectDataAttributeKey(BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity)
+    {
+        return new BusinessObjectDataAttributeKey(
+            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode(),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectDefinition().getName(),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getUsage(),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getFileType().getCode(),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectFormatVersion(),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getPartitionValue(),
+            businessObjectDataHelper.getSubPartitionValues(businessObjectDataAttributeEntity.getBusinessObjectData()),
+            businessObjectDataAttributeEntity.getBusinessObjectData().getVersion(), businessObjectDataAttributeEntity.getName());
     }
 }

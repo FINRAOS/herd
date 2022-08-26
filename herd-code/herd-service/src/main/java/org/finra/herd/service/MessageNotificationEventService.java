@@ -23,11 +23,23 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptionSuggestion;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey;
+import org.finra.herd.model.dto.AttributeDto;
 import org.finra.herd.model.dto.NotificationMessage;
 import org.finra.herd.model.jpa.NamespaceEntity;
 
 public interface MessageNotificationEventService
 {
+    /**
+     * Handles notifications for the business object data published attributes changes.
+     *
+     * @param businessObjectDataKey                the business object data key
+     * @param oldPublishedBusinessObjectAttributes the list of published business object attributes before the update
+     *
+     * @return the list of notification messages that got queued for publishing
+     */
+    List<NotificationMessage> processBusinessObjectDataPublishedAttributesChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
+        List<AttributeDto> oldPublishedBusinessObjectAttributes);
+
     /**
      * Handles notifications for the business object data status changes.
      *
