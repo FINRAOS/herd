@@ -49,6 +49,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataParentsUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetentionInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.AttributeDto;
 import org.finra.herd.model.dto.BusinessObjectDataDestroyDto;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.S3ObjectTaggerRoleParamsDto;
@@ -62,6 +63,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.BusinessObjectDataInitiateDestroyHelperService;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AttributeDaoHelper;
@@ -150,6 +152,9 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
 
     @Mock
     private NotificationEventService notificationEventService;
+
+    @Mock
+    MessageNotificationEventService messageNotificationEventService;
 
     @Mock
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -297,6 +302,7 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
 
         // Mock the external calls.
         when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity)).thenReturn(false);
         when(businessObjectDataDao.saveAndRefresh(businessObjectDataEntity)).thenReturn(businessObjectDataEntity);
         when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
 
@@ -310,8 +316,78 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
         verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
         verify(attributeDaoHelper).validateAttributesAgainstBusinessObjectDataAttributeDefinitions(attributes, attributeDefinitionEntities);
         verify(attributeDaoHelper).updateBusinessObjectDataAttributes(businessObjectDataEntity, attributes);
+        verify(businessObjectFormatDaoHelper).isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity);
         verify(businessObjectDataDao).saveAndRefresh(businessObjectDataEntity);
         verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataEntity);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(businessObjectData, result);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataAttributesWithBusinessObjectDataAttributesChangeNotification()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a list of attributes.
+        List<Attribute> attributes = Collections.singletonList(new Attribute(ATTRIBUTE_NAME, ATTRIBUTE_VALUE));
+
+        // Create a business object data attributes update request.
+        BusinessObjectDataAttributesUpdateRequest businessObjectDataAttributesUpdateRequest = new BusinessObjectDataAttributesUpdateRequest(attributes);
+
+        // Create a list of attribute definitions.
+        List<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntities =
+            Collections.singletonList(new BusinessObjectDataAttributeDefinitionEntity());
+
+        // Create a business object format definition.
+        BusinessObjectFormatEntity businessObjectFormatEntity = new BusinessObjectFormatEntity();
+        businessObjectFormatEntity.setAttributeDefinitions(attributeDefinitionEntities);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+
+        // Create a business object data.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setId(ID);
+
+        boolean sendBusinessObjectDataAttributesChangeNotification = true;
+
+        // Create a list of old published business object data attributes.
+        List<AttributeDto> oldPublishedBusinessObjectDataAttributes =
+            Arrays.asList(new AttributeDto(ATTRIBUTE_NAME_2, ATTRIBUTE_VALUE_2), new AttributeDto(ATTRIBUTE_NAME_3, ATTRIBUTE_VALUE_3));
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(businessObjectFormatDaoHelper.isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity)).thenReturn(true);
+        when(businessObjectDataDaoHelper.getPublishedBusinessObjectDataAttributes(businessObjectDataEntity))
+            .thenReturn(oldPublishedBusinessObjectDataAttributes);
+        when(businessObjectDataDao.saveAndRefresh(businessObjectDataEntity)).thenReturn(businessObjectDataEntity);
+        when(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)).thenReturn(businessObjectDataKey);
+        when(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity)).thenReturn(businessObjectData);
+
+        // Call the method under test.
+        BusinessObjectData result =
+            businessObjectDataServiceImpl.updateBusinessObjectDataAttributes(businessObjectDataKey, businessObjectDataAttributesUpdateRequest);
+
+        // Verify the external calls.
+        verify(businessObjectDataHelper).validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        verify(attributeHelper).validateAttributes(attributes);
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(attributeDaoHelper).validateAttributesAgainstBusinessObjectDataAttributeDefinitions(attributes, attributeDefinitionEntities);
+        verify(businessObjectDataDaoHelper).getPublishedBusinessObjectDataAttributes(businessObjectDataEntity);
+        verify(attributeDaoHelper).updateBusinessObjectDataAttributes(businessObjectDataEntity, attributes);
+        verify(businessObjectFormatDaoHelper).isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity);
+        verify(businessObjectDataDao).saveAndRefresh(businessObjectDataEntity);
+        verify(businessObjectDataHelper).createBusinessObjectDataFromEntity(businessObjectDataEntity);
+        verify(businessObjectDataHelper).getBusinessObjectDataKey(businessObjectDataEntity);
+        verify(messageNotificationEventService)
+            .processBusinessObjectDataPublishedAttributesChangeNotificationEvent(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity),
+                oldPublishedBusinessObjectDataAttributes);
         verifyNoMoreInteractionsHelper();
 
         // Validate the results.
@@ -785,10 +861,10 @@ public class BusinessObjectDataServiceImplTest extends AbstractServiceTest
      */
     private void verifyNoMoreInteractionsHelper()
     {
-        verifyNoMoreInteractions(attributeDaoHelper, attributeHelper, businessObjectDataDao, businessObjectDataDaoHelper, businessObjectDataHelper,
+        verifyNoMoreInteractions(attributeDaoHelper, attributeHelper, businessObjectDataDao,
             businessObjectDataInitiateDestroyHelperService, businessObjectDataInitiateRestoreHelperService, businessObjectDataInvalidateUnregisteredHelper,
             businessObjectDataRetryStoragePolicyTransitionHelper, businessObjectDataSearchHelper, businessObjectDataStatusDaoHelper,
-            businessObjectDefinitionDaoHelper, businessObjectDefinitionHelper, businessObjectFormatDaoHelper, businessObjectFormatHelper, configurationHelper,
+            businessObjectDefinitionDaoHelper, businessObjectDefinitionHelper, businessObjectFormatHelper, configurationHelper,
             customDdlDaoHelper, ddlGeneratorFactory, jsonHelper, notificationEventService, s3KeyPrefixHelper, s3Service, storageDaoHelper, storageHelper,
             storageUnitDao, storageUnitHelper);
     }

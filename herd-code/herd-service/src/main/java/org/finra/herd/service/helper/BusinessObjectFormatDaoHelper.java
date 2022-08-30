@@ -20,10 +20,12 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
@@ -32,6 +34,7 @@ import org.finra.herd.dao.RetentionTypeDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatExternalInterfaceEntity;
@@ -209,5 +212,43 @@ public class BusinessObjectFormatDaoHelper
         }
 
         return recordRetentionTypeEntity;
+    }
+
+    /**
+     * Checks if business object data published attributes change event notification feature is enabled for this business object format and it contains at least
+     * one publishable attribute definition.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     *
+     * @return true if business object data published attributes change event notification feature is enabled for this business object format and it contains at
+     * least one publishable attribute definition, otherwise false
+     */
+    public boolean isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(BusinessObjectFormatEntity businessObjectFormatEntity)
+    {
+        return BooleanUtils.isTrue(businessObjectFormatEntity.isEnableBusinessObjectDataPublishedAttributesChangeEventNotification()) &&
+            checkBusinessObjectFormatContainsPublishableAttributeDefinitions(businessObjectFormatEntity);
+    }
+
+    /**
+     * Checks if business object format contains at least one publishable attribute definition.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     *
+     * @return true when business object format has at least one attribute definition with publish flag set to true, otherwise false
+     */
+    public boolean checkBusinessObjectFormatContainsPublishableAttributeDefinitions(BusinessObjectFormatEntity businessObjectFormatEntity)
+    {
+        if (!CollectionUtils.isEmpty(businessObjectFormatEntity.getAttributeDefinitions()))
+        {
+            for (BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity : businessObjectFormatEntity.getAttributeDefinitions())
+            {
+                if (BooleanUtils.isTrue(businessObjectDataAttributeDefinitionEntity.getPublish()))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

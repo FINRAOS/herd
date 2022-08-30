@@ -60,6 +60,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
     private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
     public static final String HTTP_HEADER_USER_ID = "useridHeader";
+    public static final String HTTP_HEADER_SHORT_USER_ID = "shortUseridHeader";
     public static final String HTTP_HEADER_USER_ID_SUFFIX = "useridSuffixHeader";
     public static final String HTTP_HEADER_FIRST_NAME = "firstNameHeader";
     public static final String HTTP_HEADER_LAST_NAME = "lastNameHeader";
@@ -137,7 +138,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         ApplicationUser applicationUser = createNewApplicationUser();
         try
         {
-            buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
+            buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_SHORT_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
             buildFirstName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_FIRST_NAME));
             buildLastName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_LAST_NAME));
             buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
@@ -177,17 +178,39 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
      * @param applicationUser the application user.
      * @param httpHeaders the HTTP headers.
      * @param userIdHeaderName the header name for the user Id.
+     * @param shortUserIdHeaderName the header name for the short user Id without Domain.
      * @param userIdSuffixHeaderName  the header name for the user Id suffix
      */
-    protected void buildUserId(ApplicationUser applicationUser, Map<String, String> httpHeaders, String userIdHeaderName, String userIdSuffixHeaderName)
+    protected void buildUserId(ApplicationUser applicationUser, Map<String, String> httpHeaders, String userIdHeaderName, String shortUserIdHeaderName,
+        String userIdSuffixHeaderName)
     {
-        String userId = getHeaderValueString(userIdHeaderName, httpHeaders);
-        if (userId == null)
+        // Get short userId.
+        String shortUserId = getHeaderValueString(shortUserIdHeaderName, httpHeaders);
+        if (shortUserId == null)
         {
-            throw new IllegalArgumentException("userId is required. No value for userId was found in the header " + userIdHeaderName);
+            throw new IllegalArgumentException("short userId is required. No value for short userId was found in the header " + shortUserIdHeaderName);
         }
 
-        // append the user id suffix if suffix value is configured in the environment
+        // Get long userId with domain.
+        String longUserId = getHeaderValueString(userIdHeaderName, httpHeaders);
+        if (longUserId == null)
+        {
+            throw new IllegalArgumentException("long userId is required. No value for long userId was found in the header " + userIdHeaderName);
+        }
+
+        // Build the new userId using short userId and the domain from the long userId.
+        String userDomain = longUserId.contains("@") ? longUserId.substring(longUserId.lastIndexOf("@")) : "";
+        String userId = shortUserId + userDomain;
+
+        // Override user domain value if override domain feature is configured in the environment.
+        String userDomainOverrideFrom = getProperty(ConfigurationValue.SECURITY_USER_DOMAIN_OVERRIDE_FROM);
+        String userDomainOverrideTo = getProperty(ConfigurationValue.SECURITY_USER_DOMAIN_OVERRIDE_TO);
+        if (StringUtils.isNotBlank(userDomainOverrideFrom) && StringUtils.isNotBlank(userDomainOverrideTo))
+        {
+            userId = userId.replace(userDomainOverrideFrom, userDomainOverrideTo);
+        }
+
+        // Append the user id suffix if suffix value is configured in the environment.
         String userIdSuffixHeader = getHeaderValueString(userIdSuffixHeaderName, httpHeaders);
         if (!StringUtils.isEmpty(userIdSuffixHeader))
         {

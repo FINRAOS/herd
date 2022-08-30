@@ -125,7 +125,7 @@ public class TrustedUserAuthenticationFilterTest extends AbstractAppTest
 
         // Create HttpHeader user in session.
         MockHttpServletRequest request =
-            getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+            getRequestWithHeaders("testUser", "testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
         // Invalidate user session if exists.
         invalidateApplicationUser(request);
 

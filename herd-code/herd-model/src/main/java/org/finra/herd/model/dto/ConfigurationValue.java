@@ -577,6 +577,16 @@ public enum ConfigurationValue
     SECURITY_HTTP_HEADER_NAMES("security.http.header.names", null),
 
     /**
+     * The user domain to override from.
+     */
+    SECURITY_USER_DOMAIN_OVERRIDE_FROM("security.user.domain.override.from", null),
+
+    /**
+     * The new user domain to override to.
+     */
+    SECURITY_USER_DOMAIN_OVERRIDE_TO("security.user.domain.override.to", null),
+
+    /**
      * Regex used to match role from a header value.
      */
     SECURITY_HTTP_HEADER_ROLE_REGEX("security.http.header.role.regex", null),
@@ -615,6 +625,14 @@ public enum ConfigurationValue
      * AWS SQS queue name where herd events are posted to.
      */
     HERD_NOTIFICATION_SQS_INCOMING_QUEUE_NAME("herd.notification.sqs.incoming.queue.name", null),
+
+    /**
+     * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
+     * NotificationMessageDefinitions} to use when generating notification messages for a business object data status change event. There is no default value
+     * which will cause no messages to be sent.
+     */
+    HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_MESSAGE_DEFINITIONS(
+        "herd.notification.business.object.data.published.attributes.change.message.definitions", null),
 
     /**
      * Contains a list of notification message definitions as defined in {@link org.finra.herd.model.api.xml.NotificationMessageDefinitions
@@ -751,9 +769,9 @@ public enum ConfigurationValue
     LDAP_USER_CREDENTIAL_NAME("ldap.user.credential.name", ""),
 
     /**
-     * The LDAP attribute id for user's fully qualified username.
+     * The LDAP attribute id for user's short username (user id without domain).
      */
-    LDAP_ATTRIBUTE_USER_ID("ldap.attribute.user.id", "userPrincipalName"),
+    LDAP_ATTRIBUTE_USER_SHORT_ID("ldap.attribute.user.short.id", "sAMAccountName"),
 
     /**
      * The LDAP attribute id for user's full name.

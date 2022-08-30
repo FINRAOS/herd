@@ -604,7 +604,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String LDAP_ATTRIBUTE_USER_FULL_NAME = "UT_LdapAttributeUserFullName_" + RANDOM_SUFFIX;
 
-    public static final String LDAP_ATTRIBUTE_USER_ID = "UT_LdapAttributeUserId_" + RANDOM_SUFFIX;
+    public static final String LDAP_ATTRIBUTE_USER_SHORT_ID = "UT_LdapAttributeUserId";
 
     public static final String LDAP_ATTRIBUTE_USER_JOB_TITLE = "UT_LdapAttributeUserJobTitle_" + RANDOM_SUFFIX;
 
@@ -860,6 +860,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_NAMESPACE = null;
 
     public static final String NO_NAMESPACE_S3_KEY_PREFIX = null;
+
+    public static final Map<String, String> NO_NEW_BUSINESS_OBJECT_DATA_ATTRIBUTES = null;
+
+    public static final Map<String, String> NO_OLD_BUSINESS_OBJECT_DATA_ATTRIBUTES = null;
 
     public static final String NO_PARENT_TAG_CODE = null;
 
@@ -1411,13 +1415,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String USER_FULL_NAME = "UT_User_Full_Name_" + RANDOM_SUFFIX;
 
-    public static final String USER_ID = "UT_User_Id_1_" + RANDOM_SUFFIX;
+    public static final String USER_ID = "UT_User_Id_1@" + RANDOM_SUFFIX;
 
-    public static final String USER_ID_2 = "UT_User_Id_2_" + RANDOM_SUFFIX;
+    public static final String SHORT_USER_ID = "UT_User_Id_1";
 
-    public static final String USER_ID_3 = "UT_User_Id_3_" + RANDOM_SUFFIX;
+    public static final String USER_ID_2 = "UT_User_Id_2@" + RANDOM_SUFFIX;
 
-    public static final String USER_ID_4 = "UT_User_Id_4_" + RANDOM_SUFFIX;
+    public static final String SHORT_USER_ID_2 = "UT_User_Id_2";
+
+    public static final String USER_ID_3 = "UT_User_Id_3@" + RANDOM_SUFFIX;
+
+    public static final String SHORT_USER_ID_3 = "UT_User_Id_3";
+
+    public static final String USER_ID_4 = "UT_User_Id_4@" + RANDOM_SUFFIX;
+
+    public static final String SHORT_USER_ID_4 = "UT_User_Id_4";
 
     public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
 

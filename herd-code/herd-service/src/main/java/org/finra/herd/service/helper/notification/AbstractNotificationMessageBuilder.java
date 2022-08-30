@@ -34,6 +34,7 @@ import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.dto.BusinessObjectDataPublishedAttributesChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
@@ -73,6 +74,8 @@ public abstract class AbstractNotificationMessageBuilder
     static
     {
         // Build the event type to message definition key map
+        eventTypeMessageDefinitionKeyMap.put(BusinessObjectDataPublishedAttributesChangeNotificationEvent.class,
+            ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_MESSAGE_DEFINITIONS);
         eventTypeMessageDefinitionKeyMap.put(BusinessObjectDataStatusChangeNotificationEvent.class,
             ConfigurationValue.HERD_NOTIFICATION_BUSINESS_OBJECT_DATA_STATUS_CHANGE_MESSAGE_DEFINITIONS);
         eventTypeMessageDefinitionKeyMap.put(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class,
