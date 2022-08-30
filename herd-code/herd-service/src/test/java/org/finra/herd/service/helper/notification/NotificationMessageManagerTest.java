@@ -33,6 +33,7 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.NotificationMessageDefinition;
 import org.finra.herd.model.api.xml.NotificationMessageDefinitions;
+import org.finra.herd.model.dto.BusinessObjectDataPublishedAttributesChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDataStatusChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent;
 import org.finra.herd.model.dto.BusinessObjectFormatVersionChangeNotificationEvent;
@@ -57,6 +58,9 @@ public class NotificationMessageManagerTest extends AbstractServiceTest
     private NotificationMessageManager notificationMessageManager;
 
     @Autowired
+    private BusinessObjectDataPublishedAttributesChangeMessageBuilder businessObjectDataPublishedAttributesChangeMessageBuilder;
+
+    @Autowired
     private BusinessObjectDataStatusChangeMessageBuilder businessObjectDataStatusChangeMessageBuilder;
 
     @Autowired
@@ -76,7 +80,8 @@ public class NotificationMessageManagerTest extends AbstractServiceTest
     {
         Map<Class<?>, NotificationMessageBuilder> map = notificationMessageManager.getEventTypeNotificationMessageBuilderMap();
         assertNotNull(map);
-        assertEquals(5, map.size());
+        assertEquals(6, map.size());
+        assertEquals(businessObjectDataPublishedAttributesChangeMessageBuilder, map.get(BusinessObjectDataPublishedAttributesChangeNotificationEvent.class));
         assertEquals(businessObjectDataStatusChangeMessageBuilder, map.get(BusinessObjectDataStatusChangeNotificationEvent.class));
         assertEquals(businessObjectDefinitionDescriptionSuggestionChangeMessageBuilder,
             map.get(BusinessObjectDefinitionDescriptionSuggestionChangeNotificationEvent.class));

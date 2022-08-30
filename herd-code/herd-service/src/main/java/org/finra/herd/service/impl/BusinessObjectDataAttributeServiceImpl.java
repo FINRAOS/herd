@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishNotificationMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKey;
@@ -36,10 +38,12 @@ import org.finra.herd.model.api.xml.BusinessObjectDataAttributeUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.dto.AttributeDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.BusinessObjectDataAttributeService;
+import org.finra.herd.service.MessageNotificationEventService;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -78,11 +82,15 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
 
+    @Autowired
+    private MessageNotificationEventService messageNotificationEventService;
+
     /**
      * {@inheritDoc}
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#request.businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
         NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
@@ -146,14 +154,32 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
         }
 
+        // If business object data published attributes change event notification is required,
+        // then get all publishable attributes from this business object data before the update.
+        boolean sendBusinessObjectDataAttributesChangeNotification =
+            businessObjectFormatDaoHelper.isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity);
+        List<AttributeDto> oldPublishedBusinessObjectDataAttributes = null;
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            oldPublishedBusinessObjectDataAttributes = businessObjectDataDaoHelper.getPublishedBusinessObjectDataAttributes(businessObjectDataEntity);
+        }
+
         // Create a business object data attribute entity from the request information.
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = createBusinessObjectDataAttributeEntity(businessObjectDataEntity, request);
 
         // Persist the new entity.
         businessObjectDataAttributeEntity = businessObjectDataAttributeDao.saveAndRefresh(businessObjectDataAttributeEntity);
 
+        // Send business object data published attributes change event notification.
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            messageNotificationEventService.processBusinessObjectDataPublishedAttributesChangeNotificationEvent(
+                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataAttributeEntity.getBusinessObjectData()),
+                oldPublishedBusinessObjectDataAttributes);
+        }
+
         // Create and return the business object data attribute object from the persisted entity.
-        return createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
+        return businessObjectDataAttributeDaoHelper.createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
     }
 
     /**
@@ -186,7 +212,7 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
             businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(businessObjectDataAttributeKey);
 
         // Create and return the business object data attribute object from the persisted entity.
-        return createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
+        return businessObjectDataAttributeDaoHelper.createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
     }
 
     /**
@@ -194,6 +220,7 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
         NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
@@ -238,14 +265,33 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
             businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(businessObjectDataAttributeKey);
 
+        // If business object data published attributes change event notification is required,
+        // then get all publishable attributes from this business object data before the update.
+        boolean sendBusinessObjectDataAttributesChangeNotification =
+            businessObjectFormatDaoHelper.isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity);
+        List<AttributeDto> oldPublishedBusinessObjectDataAttributes = null;
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            oldPublishedBusinessObjectDataAttributes =
+                businessObjectDataDaoHelper.getPublishedBusinessObjectDataAttributes(businessObjectDataAttributeEntity.getBusinessObjectData());
+        }
+
         // Update the entity with the new values.
         businessObjectDataAttributeEntity.setValue(request.getBusinessObjectDataAttributeValue());
 
         // Persist the entity.
         businessObjectDataAttributeEntity = businessObjectDataAttributeDao.saveAndRefresh(businessObjectDataAttributeEntity);
 
+        // Send business object data published attributes change event notification.
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            messageNotificationEventService.processBusinessObjectDataPublishedAttributesChangeNotificationEvent(
+                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataAttributeEntity.getBusinessObjectData()),
+                oldPublishedBusinessObjectDataAttributes);
+        }
+
         // Create and return the business object data attribute object from the persisted entity.
-        return createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
+        return businessObjectDataAttributeDaoHelper.createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
     }
 
     /**
@@ -253,6 +299,7 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
      * <p/>
      * This implementation starts a new transaction.
      */
+    @PublishNotificationMessages
     @NamespacePermission(fields = "#businessObjectDataAttributeKey.namespace", permissions = {NamespacePermissionEnum.WRITE,
         NamespacePermissionEnum.WRITE_ATTRIBUTE})
     @Override
@@ -293,13 +340,32 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
             businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(businessObjectDataAttributeKey);
 
+        // If business object data published attributes change event notification is required,
+        // then get all publishable attributes from this business object data before the update.
+        boolean sendBusinessObjectDataAttributesChangeNotification =
+            businessObjectFormatDaoHelper.isBusinessObjectDataPublishedAttributesChangeEventNotificationRequired(businessObjectFormatEntity);
+        List<AttributeDto> oldPublishedBusinessObjectDataAttributes = null;
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            oldPublishedBusinessObjectDataAttributes =
+                businessObjectDataDaoHelper.getPublishedBusinessObjectDataAttributes(businessObjectDataAttributeEntity.getBusinessObjectData());
+        }
+
         // Delete the business object data attribute.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
         businessObjectDataEntity.getAttributes().remove(businessObjectDataAttributeEntity);
         businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
 
+        // Send business object data published attributes change event notification.
+        if (sendBusinessObjectDataAttributesChangeNotification)
+        {
+            messageNotificationEventService.processBusinessObjectDataPublishedAttributesChangeNotificationEvent(
+                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataAttributeEntity.getBusinessObjectData()),
+                oldPublishedBusinessObjectDataAttributes);
+        }
+
         // Create and return the business object data attribute object from the deleted entity.
-        return createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
+        return businessObjectDataAttributeDaoHelper.createBusinessObjectDataAttributeFromEntity(businessObjectDataAttributeEntity);
     }
 
     /**
@@ -334,7 +400,8 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
         BusinessObjectDataAttributeKeys businessObjectDataAttributeKeys = new BusinessObjectDataAttributeKeys();
         for (BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity : businessObjectDataEntity.getAttributes())
         {
-            businessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().add(getBusinessObjectDataAttributeKey(businessObjectDataAttributeEntity));
+            businessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys()
+                .add(businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeKey(businessObjectDataAttributeEntity));
         }
 
         return businessObjectDataAttributeKeys;
@@ -359,44 +426,5 @@ public class BusinessObjectDataAttributeServiceImpl implements BusinessObjectDat
         businessObjectDataAttributeEntity.setValue(request.getBusinessObjectDataAttributeValue());
 
         return businessObjectDataAttributeEntity;
-    }
-
-    /**
-     * Creates the business object data attribute from the persisted entity.
-     *
-     * @param businessObjectDataAttributeEntity the business object data attribute entity
-     *
-     * @return the business object data attribute
-     */
-    private BusinessObjectDataAttribute createBusinessObjectDataAttributeFromEntity(BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity)
-    {
-        // Create the business object data attribute.
-        BusinessObjectDataAttribute businessObjectDataAttribute = new BusinessObjectDataAttribute();
-
-        businessObjectDataAttribute.setId(businessObjectDataAttributeEntity.getId());
-        businessObjectDataAttribute.setBusinessObjectDataAttributeKey(getBusinessObjectDataAttributeKey(businessObjectDataAttributeEntity));
-        businessObjectDataAttribute.setBusinessObjectDataAttributeValue(businessObjectDataAttributeEntity.getValue());
-
-        return businessObjectDataAttribute;
-    }
-
-    /**
-     * Creates and returns a business object data attribute key from a specified business object data attribute entity.
-     *
-     * @param businessObjectDataAttributeEntity the business object data attribute entity
-     *
-     * @return the newly created business object data attribute key
-     */
-    private BusinessObjectDataAttributeKey getBusinessObjectDataAttributeKey(BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity)
-    {
-        return new BusinessObjectDataAttributeKey(
-            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode(),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectDefinition().getName(),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getUsage(),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getFileType().getCode(),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getBusinessObjectFormat().getBusinessObjectFormatVersion(),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getPartitionValue(),
-            businessObjectDataHelper.getSubPartitionValues(businessObjectDataAttributeEntity.getBusinessObjectData()),
-            businessObjectDataAttributeEntity.getBusinessObjectData().getVersion(), businessObjectDataAttributeEntity.getName());
     }
 }

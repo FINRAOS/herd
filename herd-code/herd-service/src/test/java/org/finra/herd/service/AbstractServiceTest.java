@@ -90,6 +90,7 @@ import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHel
 import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
@@ -189,6 +190,107 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String BUSINESS_OBJECT_DATA_KEY_AS_STRING_2 = "UT_BusinessObjectDataKeyAsString_2_" + RANDOM_SUFFIX;
 
     public static final Integer BUSINESS_OBJECT_DATA_MAX_VERSION = 1;
+
+    public static final String BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON =
+        "{\n" +
+            "  \"eventDate\" : \"$current_time\",\n" +
+            "  \"businessObjectDataKey\" : {\n" +
+            "    \"namespace\" : \"$businessObjectDataKey.namespace\",\n" +
+            "    \"businessObjectDefinitionName\" : \"$businessObjectDataKey.businessObjectDefinitionName\",\n" +
+            "    \"businessObjectFormatUsage\" : \"$businessObjectDataKey.businessObjectFormatUsage\",\n" +
+            "    \"businessObjectFormatFileType\" : \"$businessObjectDataKey.businessObjectFormatFileType\",\n" +
+            "    \"businessObjectFormatVersion\" : $businessObjectDataKey.businessObjectFormatVersion,\n" +
+            "    \"partitionValue\" : \"$businessObjectDataKey.partitionValue\",\n" +
+            "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))    \"subPartitionValues\" : [ " +
+            "\"$businessObjectDataKey.subPartitionValues.get(0)\"" +
+            "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues.subList(1, $businessObjectDataKey.subPartitionValues.size())), \"$subPartitionValue\"" +
+            "#end\n" +
+            " ],\n" +
+            "#end\n" +
+            "    \"businessObjectDataVersion\" : $businessObjectDataKey.businessObjectDataVersion\n" +
+            "  },\n" +
+            "#if($CollectionUtils.isNotEmpty($newBusinessObjectDataAttributes.keySet()))\n" +
+            "  \"newBusinessObjectDataAttributes\" : {\n" +
+            "#set ($keys = $Collections.list($Collections.enumeration($newBusinessObjectDataAttributes.keySet())))\n" +
+            "    \"$keys.get(0)\" : \"$!newBusinessObjectDataAttributes.get($keys.get(0))\"" +
+            "#foreach($key in $keys.subList(1, $keys.size()))\n" +
+            ",\n    \"$key\" : \"$!newBusinessObjectDataAttributes.get($key)\"" +
+            "#end\n" +
+            "\n  }\n" +
+            "#end\n" +
+            "#if($CollectionUtils.isNotEmpty($oldBusinessObjectDataAttributesWithJson.keySet())),\n" +
+            "  \"oldBusinessObjectDataAttributes\" : {\n" +
+            "#set ($keys = $Collections.list($Collections.enumeration($oldBusinessObjectDataAttributesWithJson.keySet())))\n" +
+            "    \"$keys.get(0)\" : \"$!oldBusinessObjectDataAttributesWithJson.get($keys.get(0))\"" +
+            "#foreach($key in $keys.subList(1, $keys.size()))\n" +
+            ",\n    \"$key\" : \"$!oldBusinessObjectDataAttributesWithJson.get($key)\"" +
+            "#end\n" +
+            "\n  }\n" +
+            "#end\n" +
+            "}\n";
+
+    public static final String BUSINESS_OBJECT_DATA_PUBLISHED_ATTRIBUTES_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_XML = "<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n" +
+        "<datamgt:TestApplicationEvent xmlns:datamgt=\"http://testDomain/testApplication/testApplication-event\">\n" +
+        "   <header>\n" +
+        "      <producer>\n" +
+        "         <name>testDomain/testApplication</name>\n" +
+        "         <environment>$herd_environment</environment>\n" +
+        "      </producer>\n" +
+        "      <creation>\n" +
+        "         <datetime>$current_time</datetime>\n" +
+        "      </creation>\n" +
+        "      <correlation-id>BusinessObjectData_$businessObjectDataId</correlation-id>\n" +
+        "      <context-message-type>testDomain/testApplication/BusinessObjectDataPublishedAttributesChanged</context-message-type>\n" +
+        "      <system-message-type>NoError</system-message-type>\n" +
+        "      <xsd>http://testDomain/testApplication/testApplication-event.xsd</xsd>\n" +
+        "      <event-id>\n" +
+        "         <system-name>testDomain/testApplication</system-name>\n" +
+        "         <system-unique-id>$uuid</system-unique-id>\n" +
+        "      </event-id>\n" +
+        "   </header>\n" +
+        "   <payload>\n" +
+        "      <eventDate>$current_time</eventDate>\n" +
+        "      <datamgtEvent>\n" +
+        "         <businessObjectDataPublishedAttributesChanged>\n" +
+        "            <businessObjectDataKey>\n" +
+        "               <namespace>$businessObjectDataKey.namespace</namespace>\n" +
+        "               <businessObjectDefinitionName>$businessObjectDataKey.businessObjectDefinitionName</businessObjectDefinitionName>\n" +
+        "               <businessObjectFormatUsage>$businessObjectDataKey.businessObjectFormatUsage</businessObjectFormatUsage>\n" +
+        "               <businessObjectFormatFileType>$businessObjectDataKey.businessObjectFormatFileType</businessObjectFormatFileType>\n" +
+        "               <businessObjectFormatVersion>$businessObjectDataKey.businessObjectFormatVersion</businessObjectFormatVersion>\n" +
+        "               <partitionValue>$businessObjectDataKey.partitionValue</partitionValue>\n" +
+        "#if($CollectionUtils.isNotEmpty($businessObjectDataKey.subPartitionValues))               <subPartitionValues>\n" +
+        "#foreach ($subPartitionValue in $businessObjectDataKey.subPartitionValues)                  <partitionValue>$subPartitionValue</partitionValue>\n" +
+        "#end" +
+        "               </subPartitionValues>\n" +
+        "#end" +
+        "               <businessObjectDataVersion>$businessObjectDataKey.businessObjectDataVersion</businessObjectDataVersion>\n" +
+        "            </businessObjectDataKey>\n" +
+        "#if($CollectionUtils.isNotEmpty($newBusinessObjectDataAttributes.keySet()))" +
+        "            <newBusinessObjectDataAttributes>\n" +
+        "#foreach($attributeName in $newBusinessObjectDataAttributes.keySet())" +
+        "                <newBusinessObjectDataAttribute name=\"$attributeName\">" +
+        "$!newBusinessObjectDataAttributes.get($attributeName)</newBusinessObjectDataAttribute>\n" +
+        "#end" +
+        "            </newBusinessObjectDataAttributes>\n" +
+        "#end" +
+        "#if($CollectionUtils.isNotEmpty($oldBusinessObjectDataAttributes.keySet()))" +
+        "            <oldBusinessObjectDataAttributes>\n" +
+        "#foreach($attributeName in $oldBusinessObjectDataAttributes.keySet())" +
+        "                <oldBusinessObjectDataAttribute name=\"$attributeName\">" +
+        "$!oldBusinessObjectDataAttributes.get($attributeName)</oldBusinessObjectDataAttribute>\n" +
+        "#end" +
+        "            </oldBusinessObjectDataAttributes>\n" +
+        "#end" +
+        "         </businessObjectDataPublishedAttributesChanged>\n" +
+        "      </datamgtEvent>\n" +
+        "   </payload>\n" +
+        "   <soa-audit>\n" +
+        "      <triggered-date-time>$current_time</triggered-date-time>\n" +
+        "      <triggered-by-username>$username</triggered-by-username>\n" +
+        "      <transmission-id>$uuid</transmission-id>\n" +
+        "   </soa-audit>\n" +
+        "</datamgt:TestApplicationEvent>";
 
     public static final String BUSINESS_OBJECT_DATA_STATUS_CHANGE_NOTIFICATION_MESSAGE_VELOCITY_TEMPLATE_JSON = "{\n" +
         "  \"eventDate\" : \"$current_time\",\n" +
@@ -995,6 +1097,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectFormatExternalInterfaceDescriptiveInformationHelper businessObjectFormatExternalInterfaceDescriptiveInformationHelper;
+
+    @Autowired
+    protected BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     protected BusinessObjectFormatHelper businessObjectFormatHelper;

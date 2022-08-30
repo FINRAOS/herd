@@ -861,6 +861,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_NAMESPACE_S3_KEY_PREFIX = null;
 
+    public static final Map<String, String> NO_NEW_BUSINESS_OBJECT_DATA_ATTRIBUTES = null;
+
+    public static final Map<String, String> NO_OLD_BUSINESS_OBJECT_DATA_ATTRIBUTES = null;
+
     public static final String NO_PARENT_TAG_CODE = null;
 
     public static final List<SchemaColumn> NO_PARTITION_COLUMNS = null;
