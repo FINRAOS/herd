@@ -626,6 +626,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Long LONG_VALUE_2 = (long) (Math.random() * Long.MAX_VALUE);
+
     public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
 
     public static final String MATCH_COLUMN = "column";
