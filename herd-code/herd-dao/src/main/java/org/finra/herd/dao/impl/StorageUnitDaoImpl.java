@@ -603,7 +603,7 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         }
 
         // Get the columns.
-        Path<Integer> storageUnitIdColumn = storageUnitEntityRoot.get(StorageUnitEntity_.id);
+        Path<Long> storageUnitIdColumn = storageUnitEntityRoot.get(StorageUnitEntity_.id);
         Path<String> businessObjectFormatUsageColumn = businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage);
         Path<Integer> businessObjectFormatVersionColumn = businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion);
         Path<String> primaryPartitionValueColumn = businessObjectDataEntityJoin.get(BusinessObjectDataEntity_.partitionValue);

@@ -173,7 +173,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
         try
         {
             // Create database entities required for testing.
-            Map<Integer, Integer> expectedStorageFileCounts = new HashMap<>();
+            Map<Long, Integer> expectedStorageFileCounts = new HashMap<>();
             for (int i = 0; i < LOCAL_FILES.size(); i++)
             {
                 StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -187,14 +187,14 @@ public class StorageFileDaoTest extends AbstractDaoTest
             }
 
             // Retrieve storage file paths by created above storage unit ids along with one non-exiting storage unit id.
-            List<Integer> storageUnitIds = new ArrayList<>();
+            List<Long> storageUnitIds = new ArrayList<>();
             storageUnitIds.addAll(expectedStorageFileCounts.keySet());
-            storageUnitIds.add(-1);
-            MultiValuedMap<Integer, String> results = storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitIds);
+            storageUnitIds.add(-1l);
+            MultiValuedMap<Long, String> results = storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitIds);
 
             // Validate the results.
             assertEquals(expectedStorageFileCounts.keySet(), results.keySet());
-            for (Integer storageUnitId : results.keySet())
+            for (Long storageUnitId : results.keySet())
             {
                 assertEquals(Long.valueOf(expectedStorageFileCounts.get(storageUnitId)), Long.valueOf(CollectionUtils.size(results.get(storageUnitId))));
             }

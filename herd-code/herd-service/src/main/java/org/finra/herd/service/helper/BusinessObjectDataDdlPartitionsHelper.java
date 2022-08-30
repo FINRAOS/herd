@@ -391,7 +391,7 @@ public class BusinessObjectDataDdlPartitionsHelper
     {
         // If flag is not set to suppress scan for unregistered sub-partitions, retrieve all storage
         // file paths for the relative storage units loaded in a multi-valued map for easy access.
-        MultiValuedMap<Integer, String> storageUnitIdToStorageFilePathsMap =
+        MultiValuedMap<Long, String> storageUnitIdToStorageFilePathsMap =
             BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions) ? new ArrayListValuedHashMap<>() :
                 storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitHelper.getStorageUnitIds(storageUnitAvailabilityDtos));
 

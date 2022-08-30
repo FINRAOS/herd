@@ -634,7 +634,7 @@
 
    <xs:complexType name="storageUnitAvailabilityDto">
       <xs:sequence>
-         <xs:element name="storageUnitId" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageUnitId" type="xs:long" minOccurs="0"/>
          <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="storageUnitDirectoryPath" type="xs:string" minOccurs="0"/>
