@@ -138,7 +138,8 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         ApplicationUser applicationUser = createNewApplicationUser();
         try
         {
-            buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_SHORT_USER_ID), headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
+            buildUserId(applicationUser, headerMap, headerNames.get(HTTP_HEADER_USER_ID), headerNames.get(HTTP_HEADER_SHORT_USER_ID),
+                headerNames.get(HTTP_HEADER_USER_ID_SUFFIX));
             buildFirstName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_FIRST_NAME));
             buildLastName(applicationUser, headerMap, headerNames.get(HTTP_HEADER_LAST_NAME));
             buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
