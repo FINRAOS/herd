@@ -195,12 +195,12 @@ public class StorageUnitHelperTest extends AbstractServiceTest
     {
         // Create a storage unit availability DTOs.
         StorageUnitAvailabilityDto storageUnitAvailabilityDto1 = new StorageUnitAvailabilityDto();
-        storageUnitAvailabilityDto1.setStorageUnitId(INTEGER_VALUE);
+        storageUnitAvailabilityDto1.setStorageUnitId(LONG_VALUE);
         StorageUnitAvailabilityDto storageUnitAvailabilityDto2 = new StorageUnitAvailabilityDto();
-        storageUnitAvailabilityDto2.setStorageUnitId(INTEGER_VALUE_2);
+        storageUnitAvailabilityDto2.setStorageUnitId(LONG_VALUE_2);
 
         // Get a list of storage unit ids.
-        List<Integer> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitAvailabilityDto1, storageUnitAvailabilityDto2));
+        List<Long> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitAvailabilityDto1, storageUnitAvailabilityDto2));
 
         // Validate the returned object.
         assertEquals(Arrays.asList(INTEGER_VALUE, INTEGER_VALUE_2), result);
