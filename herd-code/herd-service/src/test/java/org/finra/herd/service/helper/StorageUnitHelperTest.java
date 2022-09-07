@@ -203,7 +203,7 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         List<Long> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitAvailabilityDto1, storageUnitAvailabilityDto2));
 
         // Validate the returned object.
-        assertEquals(Arrays.asList(INTEGER_VALUE, INTEGER_VALUE_2), result);
+        assertEquals(Arrays.asList(LONG_VALUE, LONG_VALUE_2), result);
 
         // Get a list of storage unit ids when the list of entities is empty.
         result = storageUnitHelper.getStorageUnitIds(new ArrayList<>());
