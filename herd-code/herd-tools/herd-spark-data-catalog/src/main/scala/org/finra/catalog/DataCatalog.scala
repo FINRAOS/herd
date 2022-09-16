@@ -178,6 +178,7 @@ class DataCatalog(val spark: SparkSession, host: String) extends Serializable {
 
     this.username = credName
     this.password = getPassword(spark, credName, credAGS, credSDLC, credComponent)
+    this.accessTokenUrl = accessTokenUrl
 
     herdApiWrapper = new HerdApiWrapper(ds, baseRestUrl, username, password, accessTokenUrl)
   }

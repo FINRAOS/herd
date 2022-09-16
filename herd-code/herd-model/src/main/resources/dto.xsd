@@ -19,6 +19,13 @@
            xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
            jaxb:version="2.0">
 
+   <xs:complexType name="attributeDto">
+      <xs:all>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="value" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
    <xs:complexType name="awsParamsDto">
       <xs:sequence>
          <xs:element name="awsAccessKeyId" type="xs:string" minOccurs="0"/>
@@ -627,7 +634,7 @@
 
    <xs:complexType name="storageUnitAvailabilityDto">
       <xs:sequence>
-         <xs:element name="storageUnitId" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageUnitId" type="xs:long" minOccurs="0"/>
          <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="storageUnitDirectoryPath" type="xs:string" minOccurs="0"/>
@@ -741,6 +748,17 @@
             <jaxb:class ref="org.finra.herd.model.api.xml.UserNamespaceAuthorizationKey"/>
          </xs:appinfo>
       </xs:annotation>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataPublishedAttributesChangeNotificationEvent">
+      <xs:complexContent>
+         <xs:extension base="notificationEvent">
+            <xs:sequence>
+               <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0"/>
+               <xs:element name="oldPublishedBusinessObjectAttributes" type="attributeDto" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
    </xs:complexType>
 
    <xs:complexType name="businessObjectDataStatusChangeNotificationEvent">

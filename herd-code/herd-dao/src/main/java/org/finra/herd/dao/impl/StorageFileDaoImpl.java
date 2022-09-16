@@ -112,10 +112,10 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
     }
 
     @Override
-    public MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnitIds(List<Integer> storageUnitIds)
+    public MultiValuedMap<Long, String> getStorageFilePathsByStorageUnitIds(List<Long> storageUnitIds)
     {
         // Create a map that can hold a collection of values against each key.
-        MultiValuedMap<Integer, String> result = new ArrayListValuedHashMap<>();
+        MultiValuedMap<Long, String> result = new ArrayListValuedHashMap<>();
 
         // Retrieve the chunk size configured in the system to use when listing storage unit ids in the "in" clause.
         Integer inClauseChunkSize = configurationHelper.getProperty(ConfigurationValue.STORAGE_FILE_PATHS_QUERY_IN_CLAUSE_CHUNK_SIZE, Integer.class);
@@ -131,7 +131,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         Root<StorageFileEntity> storageFileEntity = criteria.from(StorageFileEntity.class);
 
         // Get the columns.
-        Path<Integer> storageUnitIdColumn = storageFileEntity.get(StorageFileEntity_.storageUnitId);
+        Path<Long> storageUnitIdColumn = storageFileEntity.get(StorageFileEntity_.storageUnitId);
         Path<String> storageFilePathColumn = storageFileEntity.get(StorageFileEntity_.path);
 
         // Add the select clause.
@@ -154,7 +154,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
         for (int i = 0; i < listSize; i += inClauseChunkSize)
         {
             // Get a sub-list for the current chunk of data.
-            List<Integer> storageUnitIdsSubList = storageUnitIds.subList(i, (listSize > (i + inClauseChunkSize) ? (i + inClauseChunkSize) : listSize));
+            List<Long> storageUnitIdsSubList = storageUnitIds.subList(i, (listSize > (i + inClauseChunkSize) ? (i + inClauseChunkSize) : listSize));
 
             // Add the where clause for the sub list.
             criteria.where(getPredicateForInClause(builder, storageUnitIdColumn, storageUnitIdsSubList));
@@ -170,7 +170,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
                 for (Tuple tuple : tuples)
                 {
                     // Extract the tuple values.
-                    Integer storageUnitId = tuple.get(storageUnitIdColumn);
+                    Long storageUnitId = tuple.get(storageUnitIdColumn);
                     String storageFilePath = tuple.get(storageFilePathColumn);
 
                     // Update the result map.
@@ -251,7 +251,7 @@ public class StorageFileDaoImpl extends AbstractHerdDao implements StorageFileDa
                     preparedStatement.setLong(3, storageFileEntity.getRowCount());
                 }
 
-                preparedStatement.setInt(4, storageFileEntity.getStorageUnit().getId());
+                preparedStatement.setLong(4, storageFileEntity.getStorageUnit().getId());
                 preparedStatement.addBatch();
 
                 LOGGER.debug("Preparing to execute statement: " + preparedStatement.toString());
