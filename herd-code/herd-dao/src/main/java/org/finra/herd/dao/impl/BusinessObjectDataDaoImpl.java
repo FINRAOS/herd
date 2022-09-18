@@ -786,7 +786,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             return 0;
         }
 
-
         // If latest valid version filter is specified, ignore business object format and business object data versions when counting search results.
         // In order to do that, we group by all elements of business object data alternate key, except for the versions.  Please note that we need to apply
         // upper() call on business object format usage, since it is not a dictionary value (does not have the relative lookup table).
@@ -861,9 +860,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             return Collections.emptyList();
         }
 
-        // Build an order by clause. Please note that DECS order on business object format and business object data versions along with applying upper() call
-        // on business object format are required  for the logic that processes (when the relative search filter is specified) the search query results
-        // to filters in latest valid versions.
+        // Build an order by clause. Please note that descending order on business object format and business object data versions along with applying upper()
+        // call on business object format are required  for the logic that processes (when the relative search filter is specified) the search query results
+        // to filters in the latest valid versions.
         List<Order> orderBy = new ArrayList<>();
         orderBy.add(builder.asc(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage))));
         orderBy.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileTypeCode)));

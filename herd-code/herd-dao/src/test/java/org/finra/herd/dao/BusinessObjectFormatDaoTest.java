@@ -36,6 +36,7 @@ import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
 public class BusinessObjectFormatDaoTest extends AbstractDaoTest
@@ -246,17 +247,26 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
         List<SchemaColumn> regularColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
 
         // Create a business object format with schema that has one more partition columns than supported by business object data registration.
-        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(),
-            NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL, LATEST_VERSION_FLAG_SET, partitionColumns.get(0).getName(),
+                NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, regularColumns, partitionColumns);
 
-        // Create one more namespace.
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
+        // Get business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectFormatEntity.getBusinessObjectDefinition();
 
-        // Create one more file type.
-        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE_2);
+        // Get file type entity.
+        FileTypeEntity fileTypeEntity = businessObjectFormatEntity.getFileType();
+
+        // Create one more business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity2 =
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(NAMESPACE_2, BDEF_NAME_2),
+                DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        // Create one more file type entity.
+        FileTypeEntity fileTypeEntity2 = fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE_2);
 
         // Create a list of partition keys from the list of partition columns up to the maximum
         // number of partition levels supported by business object data registration.
@@ -268,80 +278,78 @@ public class BusinessObjectFormatDaoTest extends AbstractDaoTest
 
         // Get business object format record count by passing all parameters including
         // the maximum number of partition keys supported by business object data registration.
-        assertEquals(Long.valueOf(1L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKeys));
+        assertEquals(Long.valueOf(1L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION, partitionKeys));
 
         // Get business object format record count when passing only required parameters.
-        assertEquals(Long.valueOf(1L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, null));
+        assertEquals(Long.valueOf(1L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, NO_FORMAT_USAGE_CODE, null, NO_FORMAT_VERSION,
+                null));
 
         // Get business object format record count when passing all string parameters in upper case.
-        assertEquals(Long.valueOf(1L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, Arrays
-                    .asList(partitionColumns.get(0).getName().toUpperCase(), partitionColumns.get(1).getName().toUpperCase(),
-                        partitionColumns.get(2).getName().toUpperCase(), partitionColumns.get(3).getName().toUpperCase(),
-                        partitionColumns.get(4).getName().toUpperCase())));
+        assertEquals(Long.valueOf(1L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE.toUpperCase(), fileTypeEntity,
+                FORMAT_VERSION, Arrays.asList(partitionColumns.get(0).getName().toUpperCase(), partitionColumns.get(1).getName().toUpperCase(),
+                    partitionColumns.get(2).getName().toUpperCase(), partitionColumns.get(3).getName().toUpperCase(),
+                    partitionColumns.get(4).getName().toUpperCase())));
 
         // Get business object format record count when passing all string parameters in lower case.
-        assertEquals(Long.valueOf(1L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, Arrays
-                    .asList(partitionColumns.get(0).getName().toLowerCase(), partitionColumns.get(1).getName().toLowerCase(),
-                        partitionColumns.get(2).getName().toLowerCase(), partitionColumns.get(3).getName().toLowerCase(),
-                        partitionColumns.get(4).getName().toLowerCase())));
+        assertEquals(Long.valueOf(1L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE.toLowerCase(), fileTypeEntity,
+                FORMAT_VERSION, Arrays.asList(partitionColumns.get(0).getName().toLowerCase(), partitionColumns.get(1).getName().toLowerCase(),
+                    partitionColumns.get(2).getName().toLowerCase(), partitionColumns.get(3).getName().toLowerCase(),
+                    partitionColumns.get(4).getName().toLowerCase())));
 
         // Get business object format record count when passing partition keys in reverse order.
-        assertEquals(Long.valueOf(1L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(partitionColumns.get(4).getName(), partitionColumns.get(3).getName(), partitionColumns.get(2).getName(),
+        assertEquals(Long.valueOf(1L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION, Arrays.asList(partitionColumns.get(4).getName(), partitionColumns.get(3).getName(), partitionColumns.get(2).getName(),
                     partitionColumns.get(1).getName(), partitionColumns.get(0).getName())));
 
-        // Get business object format record count when passing a non-existing namespace.
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKeys));
-
-        // Get business object format record count when passing a non-existing file type.
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, partitionKeys));
-
         // Get business object format record count when passing an invalid value for each of the parameters individually.
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKeys));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, INVALID_VALUE, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKeys));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, INVALID_VALUE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKeys));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION, partitionKeys));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, partitionKeys));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(INVALID_VALUE, partitionColumns.get(1).getName(), partitionColumns.get(2).getName(), partitionColumns.get(3).getName(),
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity2, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION, partitionKeys));
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, INVALID_VALUE, fileTypeEntity, FORMAT_VERSION,
+                partitionKeys));
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity2,
+                FORMAT_VERSION, partitionKeys));
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION_2, partitionKeys));
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION,
+                Arrays.asList(INVALID_VALUE, partitionColumns.get(1).getName(), partitionColumns.get(2).getName(), partitionColumns.get(3).getName(),
                     partitionColumns.get(4).getName())));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(partitionColumns.get(0).getName(), INVALID_VALUE, partitionColumns.get(2).getName(), partitionColumns.get(3).getName(),
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION,
+                Arrays.asList(partitionColumns.get(0).getName(), INVALID_VALUE, partitionColumns.get(2).getName(), partitionColumns.get(3).getName(),
                     partitionColumns.get(4).getName())));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), INVALID_VALUE, partitionColumns.get(3).getName(),
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION,
+                Arrays.asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), INVALID_VALUE, partitionColumns.get(3).getName(),
                     partitionColumns.get(4).getName())));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), partitionColumns.get(2).getName(), INVALID_VALUE,
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION,
+                Arrays.asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), partitionColumns.get(2).getName(), INVALID_VALUE,
                     partitionColumns.get(4).getName())));
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays
-                .asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), partitionColumns.get(2).getName(),
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION, Arrays.asList(partitionColumns.get(0).getName(), partitionColumns.get(1).getName(), partitionColumns.get(2).getName(),
                     partitionColumns.get(3).getName(), INVALID_VALUE)));
 
         // Get business object format record count when passing partition key matching partition column
         // at partition level which is greater than supported by business object data registration.
-        assertEquals(Long.valueOf(0L), businessObjectFormatDao
-            .getBusinessObjectFormatCountByPartitionKeys(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                Collections.singletonList(partitionColumns.get(BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1).getName())));
+        assertEquals(Long.valueOf(0L),
+            businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity,
+                FORMAT_VERSION, Collections.singletonList(partitionColumns.get(BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1).getName())));
     }
 
     @Test

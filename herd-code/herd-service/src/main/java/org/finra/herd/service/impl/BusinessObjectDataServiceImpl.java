@@ -33,7 +33,9 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
+import org.finra.herd.dao.FileTypeDao;
 import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -174,6 +176,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
 
     @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
@@ -196,6 +201,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private DdlGeneratorFactory ddlGeneratorFactory;
+
+    @Autowired
+    private FileTypeDao fileTypeDao;
 
     @Autowired
     private MessageNotificationEventService messageNotificationEventService;
@@ -500,14 +508,38 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectDataSearchKey businessObjectDataSearchKey =
             businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys().get(0);
 
+        // Namespace and business object definition name are required parameters,
+        // so fetch the relative business object definition entity to optimize other queries.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(
+            new BusinessObjectDefinitionKey(businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()));
+
+        // If specified business object definition does not exist, then return an empty result list.
+        if (businessObjectDefinitionEntity == null)
+        {
+            return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), 0L, 0L, 0L, (long) maxResultsPerPage,
+                new BusinessObjectDataSearchResult(new ArrayList<>()));
+        }
+
+        // If file type is specified, fetch the relative file type entity to optimize other queries.
+        FileTypeEntity fileTypeEntity = null;
+        if (StringUtils.isNotBlank(businessObjectDataSearchKey.getBusinessObjectFormatFileType()))
+        {
+            fileTypeEntity = fileTypeDao.getFileTypeByCode(businessObjectDataSearchKey.getBusinessObjectFormatFileType());
+
+            // If specified file type does not exist, then return an empty result list.
+            if (fileTypeEntity == null)
+            {
+                return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), 0L, 0L, 0L, (long) maxResultsPerPage,
+                    new BusinessObjectDataSearchResult(new ArrayList<>()));
+            }
+        }
+
         // Validate partition keys in partition value filters.
         if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
         {
             // Get a count of business object formats that match the business object data search key parameters without the list of partition keys.
-            Long businessObjectFormatRecordCount =
-                businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDataSearchKey.getNamespace(),
-                    businessObjectDataSearchKey.getBusinessObjectDefinitionName(), businessObjectDataSearchKey.getBusinessObjectFormatUsage(),
-                    businessObjectDataSearchKey.getBusinessObjectFormatFileType(), businessObjectDataSearchKey.getBusinessObjectFormatVersion(), null);
+            Long businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity,
+                businessObjectDataSearchKey.getBusinessObjectFormatUsage(), fileTypeEntity, businessObjectDataSearchKey.getBusinessObjectFormatVersion(), null);
 
             // If business object format record count is zero, we return an empty result list.
             if (businessObjectFormatRecordCount == 0)
@@ -525,11 +557,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             }
 
             // Get a count of business object formats that match the business object data search key parameters and the list of partition keys.
-            businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDataSearchKey.getNamespace(),
-                businessObjectDataSearchKey.getBusinessObjectDefinitionName(), businessObjectDataSearchKey.getBusinessObjectFormatUsage(),
-                businessObjectDataSearchKey.getBusinessObjectFormatFileType(), businessObjectDataSearchKey.getBusinessObjectFormatVersion(), partitionKeys);
+            businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity,
+                businessObjectDataSearchKey.getBusinessObjectFormatUsage(), fileTypeEntity, businessObjectDataSearchKey.getBusinessObjectFormatVersion(),
+                partitionKeys);
 
-            // Fail if business object formats found that contain specified partition keys in their schema.
+            // Fail if no business object formats exist that contain specified partition keys in their schema.
             Assert.isTrue(businessObjectFormatRecordCount > 0,
                 String.format("There are no registered business object formats with \"%s\" namespace, \"%s\" business object definition name",
                     businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()) +
@@ -542,7 +574,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                     String.format(" that have schema with partition columns matching \"%s\" partition key(s).", String.join(", ", partitionKeys)));
         }
 
-        // Get the total record count up to to the maximum allowed record count that is configured in the system plus one more record.
+        // Get the total record count up to the maximum allowed record count that is configured in the system plus one more record.
         Integer totalRecordCount =
             businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, businessObjectDataSearchMaxResultCount + 1);
 
