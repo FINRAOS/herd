@@ -25,6 +25,8 @@ import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -121,6 +123,8 @@ import org.finra.herd.service.helper.StorageUnitHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceImpl.class);
+
     /**
      * The partition key value for business object data without partitioning.
      */
@@ -534,14 +538,18 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             }
         }
 
+        // Declare a map to store partition levels for partition keys that we can optimize the main query for.
+        // Please note partition level values in the database schema use 1-based numbering.
+        Map<String, Integer> partitionKeyToPartitionLevelMap = new HashMap<>();
+
         // Validate partition keys in partition value filters.
         if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
         {
             // Get a count of business object formats that match the business object data search key parameters without the list of partition keys.
-            Long businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity,
-                businessObjectDataSearchKey.getBusinessObjectFormatUsage(), fileTypeEntity, businessObjectDataSearchKey.getBusinessObjectFormatVersion(), null);
+            Long businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountBySearchKeyElements(businessObjectDefinitionEntity,
+                businessObjectDataSearchKey.getBusinessObjectFormatUsage(), fileTypeEntity, businessObjectDataSearchKey.getBusinessObjectFormatVersion());
 
-            // If business object format record count is zero, we return an empty result list.
+            // If no business object formats match business object data search key parameters even without partition keys, then return an empty result list.
             if (businessObjectFormatRecordCount == 0)
             {
                 return new BusinessObjectDataSearchResultPagingInfoDto(pageNum.longValue(), pageSize.longValue(), 0L, 0L, 0L, (long) maxResultsPerPage,
@@ -556,13 +564,13 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 partitionKeys.add(partitionValueFilter.getPartitionKey());
             }
 
-            // Get a count of business object formats that match the business object data search key parameters and the list of partition keys.
-            businessObjectFormatRecordCount = businessObjectFormatDao.getBusinessObjectFormatCountByPartitionKeys(businessObjectDefinitionEntity,
+            // Get business object formats that match the business object data search key parameters and the list of partition keys.
+            List<List<Integer>> partitionLevels = businessObjectFormatDao.getPartitionLevelsBySearchKeyElementsAndPartitionKeys(businessObjectDefinitionEntity,
                 businessObjectDataSearchKey.getBusinessObjectFormatUsage(), fileTypeEntity, businessObjectDataSearchKey.getBusinessObjectFormatVersion(),
                 partitionKeys);
 
             // Fail if no business object formats exist that contain specified partition keys in their schema.
-            Assert.isTrue(businessObjectFormatRecordCount > 0,
+            Assert.isTrue(CollectionUtils.isNotEmpty(partitionLevels) && CollectionUtils.isNotEmpty(partitionLevels.get(0)),
                 String.format("There are no registered business object formats with \"%s\" namespace, \"%s\" business object definition name",
                     businessObjectDataSearchKey.getNamespace(), businessObjectDataSearchKey.getBusinessObjectDefinitionName()) +
                     (StringUtils.isNotBlank(businessObjectDataSearchKey.getBusinessObjectFormatUsage()) ?
@@ -572,11 +580,31 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                     (businessObjectDataSearchKey.getBusinessObjectFormatVersion() != null ?
                         String.format(", \"%d\" business object format version", businessObjectDataSearchKey.getBusinessObjectFormatVersion()) : "") +
                     String.format(" that have schema with partition columns matching \"%s\" partition key(s).", String.join(", ", partitionKeys)));
+
+            // Check if we can optimize the main query's where clause that restricts results on partition values for the relative partition key.
+            // If all business object formats that match the business object data search key parameters contain full set of partition keys and those
+            // partition keys have the same partition levels across all target business object formats, we will use those "discovered" partition levels
+            // in the main query to avoid joint on schema column table to match the relative partition keys.
+
+            // First we check if adding partition keys did not reduce the set of business object formats that match the business object data search key
+            // parameters. If the set got smaller, it means that not all target business object formats contain full set of partition keys and optimization
+            // is not possible, thus we would still have to search on partition key names in the main query.
+            if (CollectionUtils.size(partitionLevels.get(0)) == businessObjectFormatRecordCount)
+            {
+                // The method below process each partition key one by one. If partition key has the same partition level across all target business object
+                // formats, it will be added to the map to be passed to the main query logic to optimize the partition value filter where clause statement.
+                partitionKeyToPartitionLevelMap = businessObjectFormatHelper.getPartitionKeyToPartitionLevelMapping(partitionKeys, partitionLevels);
+
+                // Log partition level mapping content.
+                LOGGER.info("businessObjectDataSearchKey=\"{}\" partitionKeys=\"{}\" partitionLevels={}", businessObjectDataSearchKey, partitionKeys,
+                    partitionKeyToPartitionLevelMap);
+            }
         }
 
         // Get the total record count up to the maximum allowed record count that is configured in the system plus one more record.
         Integer totalRecordCount =
-            businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, businessObjectDataSearchMaxResultCount + 1);
+            businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap,
+                businessObjectDataSearchMaxResultCount + 1);
 
         // Validate the total record count.
         if (totalRecordCount > businessObjectDataSearchMaxResultCount)
@@ -602,7 +630,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Otherwise, is latest valid filter is not enabled, execute the search without any special filtering on our side.
         else if (BooleanUtils.isNotTrue(businessObjectDataSearchKey.isFilterOnLatestValidVersion()))
         {
-            businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, pageNum, pageSize);
+            businessObjectDataList =
+                businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, pageNum, pageSize);
         }
         // Execute search with filtering on the latest valid version for each set of partition values.
         // Please note that VALID status filtering is already done in the main search query.
@@ -621,7 +650,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             while (keepProcessing)
             {
                 List<BusinessObjectData> rawSearchBusinessObjectDataList =
-                    businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, ++rawSearchPageNum, rawSearchPageSize);
+                    businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, ++rawSearchPageNum,
+                        rawSearchPageSize);
 
                 // Process the list of business object data search results to select the latest versions.
                 for (BusinessObjectData businessObjectData : rawSearchBusinessObjectDataList)

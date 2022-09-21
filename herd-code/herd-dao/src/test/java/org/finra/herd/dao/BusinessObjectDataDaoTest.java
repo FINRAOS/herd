@@ -664,9 +664,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
 
         // The expected record count is 2.
-        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+        assertEquals(1L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 3));
     }
 
     @Test
@@ -701,9 +704,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
 
         // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
-        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+        assertEquals(1L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 3));
 
         // Set all optional fields in the search key to null.
         businessObjectDataSearchKey.setBusinessObjectFormatUsage(null);
@@ -711,9 +717,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(null);
 
         // Execute the count query without optional parameters. The expected record count now is 5.
-        assertEquals(4L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 4));
-        assertEquals(5L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 5));
-        assertEquals(5L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 6));
+        assertEquals(4L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 4));
+        assertEquals(5L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 5));
+        assertEquals(5L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 6));
     }
 
     @Test
@@ -733,26 +742,34 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
 
         // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
-        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+        assertEquals(1L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 3));
 
         // Execute the count query using non-existing/invalid parameter values.
         assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
         assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
         assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
         assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
         assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, NO_PARTITION_VALUE_FILTERS,
-                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION), 2));
+                NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
     }
 
     @Test
@@ -772,14 +789,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION);
 
         // Execute the count query by passing business object data search key parameters, except for filters. The expected record count is 2.
-        assertEquals(1L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 1));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
-        assertEquals(2L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 3));
+        assertEquals(1L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
+        assertEquals(2L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 3));
 
         // Execute the same query, but with retention expiration filter.
         // We expect 0 record count, since no retention information is configured for the business object format.
         businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
-        assertEquals(0L, (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, 2));
+        assertEquals(0L,
+            (long) businessObjectDataDao.getBusinessObjectDataLimitedCountBySearchKey(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2));
     }
 
     @Test
@@ -1226,7 +1247,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
         for (BusinessObjectData data : result)
@@ -1264,7 +1287,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         RegistrationDateRangeFilter registrationDateRangeFilter = new RegistrationDateRangeFilter();
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(registrationDateRangeFilter);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
         for (BusinessObjectData data : result)
@@ -1294,7 +1319,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
         // Test getting the first page
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 1, 1);
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1, 1);
 
         assertTrue(result.size() == 1);
 
@@ -1307,7 +1332,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         }
 
         // Test getting the second page
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 2, 1);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 2, 1);
 
         assertTrue(result.size() == 1);
 
@@ -1320,12 +1345,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         }
 
         // Test getting a larger page than there are results remaining
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 1, 3);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 1, 3);
 
         assertTrue(result.size() == 2);
 
         // Test getting a page that does not exist
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, 3, 1);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, 3, 1);
 
         assertTrue(result.size() == 0);
     }
@@ -1348,7 +1373,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setNamespace(NAMESPACE);
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1381,22 +1408,27 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME_2);
         businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
 
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
 
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
 
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(null);
 
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
     }
 
@@ -1430,13 +1462,13 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Execute the search query without optional parameters.
         assertEquals(5, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
     }
 
     @Test
@@ -1454,29 +1486,29 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Execute the search query using non-existing/invalid parameter values.
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(I_DO_NOT_EXIST, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, I_DO_NOT_EXIST, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
     }
 
     @Test
@@ -1500,10 +1532,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setNamespace(NAMESPACE);
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
-
-        result.get(0).getSubPartitionValues().containsAll(subpartitionList);
+        assertTrue(result.get(0).getSubPartitionValues().containsAll(subpartitionList));
     }
 
     @Test
@@ -1547,7 +1580,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1589,7 +1624,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1631,7 +1668,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1673,7 +1712,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVerion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
     }
 
@@ -1766,7 +1807,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -1806,35 +1849,41 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = BusinessObjectDataDaoTestHelper
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1)));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date is less then createdOn and end date is null.
         start = BusinessObjectDataDaoTestHelper
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), -1)));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, null));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date is null and end date is greater then createdOn.
         end = BusinessObjectDataDaoTestHelper
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1)));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date is greater then createdOn and end date is null.
         start = BusinessObjectDataDaoTestHelper
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1)));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, null));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
 
         // Start date is null and end date is less then createdOn.
         end = BusinessObjectDataDaoTestHelper
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(HerdDateUtils.addDays(businessObjectDataEntity.getCreatedOn(), -1)));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
 
         // Start date is equal to createdOn and end date is equal to createdOn.
@@ -1843,7 +1892,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             .resetToMidnight(HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.truncate(businessObjectDataEntity.getCreatedOn(), Calendar.DATE)));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
     }
 
@@ -1873,7 +1923,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addHours(businessObjectDataEntity.getCreatedOn(), 1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date-time is a day less than createdOn and end date-time is a minute greater than createdOn.
@@ -1881,7 +1933,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addMinutes(businessObjectDataEntity.getCreatedOn(), 1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date-time is a day less than createdOn and end date-time is a millisecond greater than createdOn.
@@ -1889,21 +1942,24 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addMilliseconds(businessObjectDataEntity.getCreatedOn(), 1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date-time is null and end date-time is an hour greater than createdOn.
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addHours(businessObjectDataEntity.getCreatedOn(), 1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.singletonList(businessObjectDataEntity), result);
 
         // Start date-time is null and end date-time is an hour less than createdOn.
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addHours(businessObjectDataEntity.getCreatedOn(), -1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(null, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.emptyList(), result);
 
         // Start date-time is a day less than createdOn and end date-time is a minute less than createdOn.
@@ -1911,13 +1967,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addMinutes(businessObjectDataEntity.getCreatedOn(), -1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.emptyList(), result);
 
         // Start date-time is a minute greater than createdOn and end date-time is null.
         start = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addMinutes(businessObjectDataEntity.getCreatedOn(), 1));
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, null));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.emptyList(), result);
 
         // Start date-time is equal to createdOn and end date-time is equal to createdOn.
@@ -1925,7 +1983,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataEntity.getCreatedOn());
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.emptyList(), result);
 
         // Start date-time is greater than createdOn and end date-time is greater than createdOn
@@ -1933,7 +1992,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         end = HerdDateUtils.getXMLGregorianCalendarValue(DateUtils.addDays(businessObjectDataEntity.getCreatedOn(), 1));
 
         businessObjectDataSearchKey.setRegistrationDateRangeFilter(new RegistrationDateRangeFilter(start, end));
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         verifyBusinessObjectDataSearchResults(Collections.emptyList(), result);
     }
 
@@ -1987,7 +2047,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -2036,7 +2098,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -2081,7 +2145,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
         Set<String> expectedAttributeNames = new HashSet<>(Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
         for (BusinessObjectData data : result)
@@ -2120,7 +2186,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -2165,7 +2233,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(1, result.size());
 
         for (BusinessObjectData data : result)
@@ -2237,7 +2307,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(2, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
@@ -2246,7 +2316,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(4, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
@@ -2257,7 +2327,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(4, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(22).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(23).getId()), Long.valueOf(result.get(1).getId()));
@@ -2268,7 +2338,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(4, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(20).getId()), Long.valueOf(result.get(1).getId()));
@@ -2279,7 +2349,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(16, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(20).getId()), Long.valueOf(result.get(1).getId()));
@@ -2302,7 +2372,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         result = businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
         assertEquals(24, CollectionUtils.size(result));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(19).getId()), Long.valueOf(result.get(0).getId()));
         assertEquals(Long.valueOf(businessObjectDataEntities.get(18).getId()), Long.valueOf(result.get(1).getId()));
@@ -2333,43 +2403,43 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying invalid (but existing) business object definition name.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying non-existing business object definition name.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, I_DO_NOT_EXIST, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying invalid business object format usage.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying invalid (but existing) file type.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE_3, INITIAL_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying non-existing file type.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, I_DO_NOT_EXIST, INITIAL_FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
 
         // Try to search for latest business object data by specifying invalid format version.
         assertEquals(0, CollectionUtils.size(businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, FILTER_ON_LATEST_VALID_VERSION,
-                NO_FILTER_ON_RETENTION_EXPIRATION), DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
+                NO_FILTER_ON_RETENTION_EXPIRATION), NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE)));
     }
 
     @Test
@@ -2392,14 +2462,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION);
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that latest valid business object data is selected as expected.
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
         assertEquals(INITIAL_DATA_VERSION.longValue(), result.get(0).getVersion());
@@ -2430,7 +2503,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION);
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
@@ -2438,7 +2513,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that latest valid business object data is selected from the initial business object format version.
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
         assertEquals(INITIAL_DATA_VERSION.longValue(), result.get(0).getVersion());
@@ -2468,7 +2544,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION);
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(3, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
@@ -2476,7 +2554,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that latest valid business object data is selected from the initial business object format version.
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(1, CollectionUtils.size(result));
         assertEquals(INITIAL_FORMAT_VERSION.longValue(), result.get(0).getBusinessObjectFormatVersion());
         assertEquals(INITIAL_DATA_VERSION.longValue(), result.get(0).getVersion());
@@ -2500,14 +2579,17 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             new BusinessObjectDataSearchKey(BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE, NO_FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
                 NO_PARTITION_VALUE_FILTERS, NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION,
                 NO_FILTER_ON_RETENTION_EXPIRATION);
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, CollectionUtils.size(result));
 
         // Update the business object data search key to enable the latest valid filter.
         businessObjectDataSearchKey.setFilterOnLatestValidVersion(true);
 
         // Validate that we get an empty list back when trying to select latest valid business object data.
-        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(0, CollectionUtils.size(result));
     }
 
@@ -2620,14 +2702,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Execute the same search query, but with retention expiration filter.
         // We expect no results, since no retention information is configured for the business object format.
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
     }
 
     @Test
@@ -2649,7 +2731,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Get retention type entity for PARTITION_VALUE.
         RetentionTypeEntity retentionTypeEntity = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.PARTITION_VALUE);
@@ -2664,7 +2746,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Configure retention information for the business object format, so the test
         // business object data partition value is the same as retention expiration date.
@@ -2675,7 +2757,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Configure retention information for the business object format, so the test business object date is expired per retention configuration.
         businessObjectDataEntity.getBusinessObjectFormat().setRetentionPeriodInDays(RETENTION_PERIOD_DAYS - 1);
@@ -2685,7 +2767,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
     }
 
     @Test
@@ -2702,7 +2784,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, NO_FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Get retention type entity for BDATA_RETENTION_DATE.
         RetentionTypeEntity retentionTypeEntity = retentionTypeDao.getRetentionTypeByCode(RetentionTypeEntity.BDATA_RETENTION_DATE);
@@ -2716,7 +2798,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Create retention expiration date values required for testing.
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -2732,7 +2814,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(0, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
 
         // Update business object data to have retention expiration date in the past.
         businessObjectDataEntities.get(0).setRetentionExpiration(oneDayAgo);
@@ -2743,7 +2825,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         assertEquals(2, businessObjectDataDao.searchBusinessObjectData(
             new BusinessObjectDataSearchKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NO_PARTITION_VALUE_FILTERS,
                 NO_REGISTRATION_DATE_RANGE_FILTER, NO_ATTRIBUTE_VALUE_FILTERS, NO_FILTER_ON_LATEST_VALID_VERSION, FILTER_ON_RETENTION_EXPIRATION),
-            DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
+            NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE).size());
     }
 
     @Test
@@ -2797,7 +2879,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
         businessObjectDataSearchKey.setFilterOnRetentionExpiration(true);
 
-        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+        List<BusinessObjectData> result =
+            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
         assertEquals(2, result.size());
     }
 

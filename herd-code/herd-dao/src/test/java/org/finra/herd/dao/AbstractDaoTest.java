@@ -875,6 +875,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_PARTITION_KEY_GROUP = null;
 
+    public static final Map<String, Integer> NO_PARTITION_KEY_TO_LEVEL_MAPPINGS = new HashMap<>();
+
     public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
 
     public static final String NO_PASSWORD = null;
