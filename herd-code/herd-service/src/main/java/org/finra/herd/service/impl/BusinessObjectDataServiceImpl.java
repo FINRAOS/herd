@@ -598,7 +598,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
             // Log partition key to partition level mapping along with the search key itself.
             LOGGER.info("businessObjectDataSearchKey={} businessObjectFormatWithoutPartitionKeysRecordCount={} " +
-                    "businessObjectFormatWithPartitionKeysRecordCount={} partitionKeys={} partitionLevels={}", businessObjectDataSearchKey,
+                    "businessObjectFormatWithPartitionKeysRecordCount={} partitionKeys={} partitionKeyToPartitionLevelMap={}", businessObjectDataSearchKey,
                 businessObjectFormatRecordCount, CollectionUtils.size(partitionLevels.get(0)), partitionKeys, partitionKeyToPartitionLevelMap);
         }
 

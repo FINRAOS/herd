@@ -1014,9 +1014,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         // Log optimized and unoptimized partition keys.
-        LOGGER.info("partitionKeys={} partitionKeysCount={} optimizedPartitionKeys={} optimizedPartitionKeysCount={} unoptimizedPartitionKeys={} " +
-                "unoptimizedPartitionKeysCount={}", partitionKeys, CollectionUtils.size(partitionKeys), optimizedPartitionKeys,
-            CollectionUtils.size(optimizedPartitionKeys), unoptimizedPartitionKeys, CollectionUtils.size(unoptimizedPartitionKeys));
+        LOGGER.info("partitionKeys={} partitionKeysCount={} optimizedPartitionKeys={} optimizedPartitionKeysCount={} " +
+                "unoptimizedPartitionKeys={} unoptimizedPartitionKeysCount={} partitionKeyToPartitionLevelMap={}", partitionKeys,
+            CollectionUtils.size(partitionKeys), optimizedPartitionKeys, CollectionUtils.size(optimizedPartitionKeys), unoptimizedPartitionKeys,
+            CollectionUtils.size(unoptimizedPartitionKeys), partitionKeyToPartitionLevelMap);
 
         return predicate;
     }

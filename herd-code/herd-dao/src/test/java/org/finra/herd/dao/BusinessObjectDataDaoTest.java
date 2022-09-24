@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1580,18 +1581,30 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result =
-            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
-                DEFAULT_PAGE_SIZE);
-        assertEquals(1, result.size());
+        // Create a partition key to partition level mapping for this test.
+        Map<String, Integer> testPartitionKeyToPartitionLevelMap = new HashMap<>();
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY, 1);
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + 1, 2);
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + 2, 3);
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + 3, 4);
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + 4, 5);
 
-        for (BusinessObjectData data : result)
+        // Call the main method with and without partition key to partition level map.
+        for (Map<String, Integer> partitionKeyToPartitionLevelMap : Arrays.asList(NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, testPartitionKeyToPartitionLevelMap))
         {
-            assertEquals(NAMESPACE, data.getNamespace());
-            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
-            assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
-            assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
-            assertTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            List<BusinessObjectData> result =
+                businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                    DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+
+            for (BusinessObjectData data : result)
+            {
+                assertEquals(NAMESPACE, data.getNamespace());
+                assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
+                assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
+                assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
+                assertEquals(FORMAT_VERSION, Integer.valueOf(data.getBusinessObjectFormatVersion()));
+            }
         }
     }
 
@@ -1624,18 +1637,47 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result =
-            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
-                DEFAULT_PAGE_SIZE);
-        assertEquals(1, result.size());
+        // Create a partition key to partition level mapping for this test.
+        Map<String, Integer> testPartitionKeyToPartitionLevelMap = new HashMap<>();
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY, 1);
 
-        for (BusinessObjectData data : result)
+        // Call the main method with and without partition key to partition level map.
+        List<BusinessObjectData> result;
+        for (Map<String, Integer> partitionKeyToPartitionLevelMap : Arrays.asList(NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, testPartitionKeyToPartitionLevelMap))
         {
-            assertEquals(namespace, data.getNamespace());
-            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
-            assertEquals(usage, data.getBusinessObjectFormatUsage());
-            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
-            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+            assertEquals(namespace, result.get(0).getNamespace());
+            assertEquals(bDefName, result.get(0).getBusinessObjectDefinitionName());
+            assertEquals(usage, result.get(0).getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, result.get(0).getBusinessObjectFormatFileType());
+            assertEquals(formatVersion, result.get(0).getBusinessObjectFormatVersion());
+        }
+
+        // Specify wrong partition level for the primary partition key and confirm that we get no results back.
+        // This happens due to optimization logic changing main query not to use partition column name.
+        for (int partitionLevel : Arrays.asList(2, 3, 4, 5))
+        {
+            testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY, partitionLevel);
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(0, result.size());
+        }
+
+        // Specify partition level value that is outside the allowed partition level range and confirm that we do get results
+        // back since optimization is not happening for partition levels that are not supported by data registration.
+        for (int partitionLevel : Arrays.asList(0, 6))
+        {
+            testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY, partitionLevel);
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+            assertEquals(namespace, result.get(0).getNamespace());
+            assertEquals(bDefName, result.get(0).getBusinessObjectDefinitionName());
+            assertEquals(usage, result.get(0).getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, result.get(0).getBusinessObjectFormatFileType());
+            assertEquals(formatVersion, result.get(0).getBusinessObjectFormatVersion());
         }
     }
 
@@ -1668,18 +1710,47 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result =
-            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
-                DEFAULT_PAGE_SIZE);
-        assertEquals(1, result.size());
+        // Create a partition key to partition level mapping for this test.
+        Map<String, Integer> testPartitionKeyToPartitionLevelMap = new HashMap<>();
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + "1", 2);
 
-        for (BusinessObjectData data : result)
+        // Call the main method with and without partition key to partition level map.
+        List<BusinessObjectData> result;
+        for (Map<String, Integer> partitionKeyToPartitionLevelMap : Arrays.asList(NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, testPartitionKeyToPartitionLevelMap))
         {
-            assertEquals(namespace, data.getNamespace());
-            assertEquals(bDefName, data.getBusinessObjectDefinitionName());
-            assertEquals(usage, data.getBusinessObjectFormatUsage());
-            assertEquals(fileTypeCode, data.getBusinessObjectFormatFileType());
-            assertTrue(formatVersion == data.getBusinessObjectFormatVersion());
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                    DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+            assertEquals(namespace, result.get(0).getNamespace());
+            assertEquals(bDefName, result.get(0).getBusinessObjectDefinitionName());
+            assertEquals(usage, result.get(0).getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, result.get(0).getBusinessObjectFormatFileType());
+            assertEquals(formatVersion, result.get(0).getBusinessObjectFormatVersion());
+        }
+
+        // Specify wrong partition level for the sub-partition and confirm that now we get no results back.
+        // This happens due to optimization logic changing main query not to use partition column name.
+        for (int partitionLevel : Arrays.asList(1, 3, 4, 5))
+        {
+            testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + "1", partitionLevel);
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(0, result.size());
+        }
+
+        // Specify partition level value that is outside the allowed partition level range and confirm that we do get results
+        // back since optimization is not happening for partition levels that are not supported by data registration.
+        for (int partitionLevel : Arrays.asList(0, 6))
+        {
+            testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + "1", partitionLevel);
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+            assertEquals(namespace, result.get(0).getNamespace());
+            assertEquals(bDefName, result.get(0).getBusinessObjectDefinitionName());
+            assertEquals(usage, result.get(0).getBusinessObjectFormatUsage());
+            assertEquals(fileTypeCode, result.get(0).getBusinessObjectFormatFileType());
+            assertEquals(formatVersion, result.get(0).getBusinessObjectFormatVersion());
         }
     }
 
@@ -1691,7 +1762,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
         String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
-        int formatVerion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
 
         BusinessObjectDataSearchKey businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
 
@@ -1710,11 +1781,42 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectDefinitionName(bDefName);
         businessObjectDataSearchKey.setBusinessObjectFormatUsage(usage);
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
-        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVerion);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
         List<BusinessObjectData> result =
             businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
                 DEFAULT_PAGE_SIZE);
+        assertEquals(0, result.size());
+
+        // Try to use all partition levels supported by data registration for this non-existing column name in the partition key to partition level map.
+        // We expect no results for all values except for the primary partition level, since it matches the partition value in the filter.
+        // The result returning for non-existing column are OK, since optimization logic removes column name matching from the main query.
+        Map<String, Integer> testPartitionKeyToPartitionLevelMap = new HashMap<>();
+        for (int partitionLevel : Arrays.asList(1, 2, 3, 4, 5))
+        {
+            testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + "6", partitionLevel);
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            if (partitionLevel == 1)
+            {
+                assertEquals(1, result.size());
+                assertEquals(namespace, result.get(0).getNamespace());
+                assertEquals(bDefName, result.get(0).getBusinessObjectDefinitionName());
+                assertEquals(usage, result.get(0).getBusinessObjectFormatUsage());
+                assertEquals(fileTypeCode, result.get(0).getBusinessObjectFormatFileType());
+                assertEquals(formatVersion, result.get(0).getBusinessObjectFormatVersion());
+            }
+            else
+            {
+                assertEquals(0, result.size());
+            }
+        }
+
+        // Make one more call, this time by passing correct primary partition key and level in the map that matches the partition value in the filter.
+        // We still expect no results, since optimization would not be used due to partition key from the filter not matching the one in the map.
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY, 1);
+        result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, testPartitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
         assertEquals(0, result.size());
     }
 
@@ -1807,18 +1909,23 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         businessObjectDataSearchKey.setBusinessObjectFormatFileType(fileTypeCode);
         businessObjectDataSearchKey.setBusinessObjectFormatVersion(formatVersion);
 
-        List<BusinessObjectData> result =
-            businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
-                DEFAULT_PAGE_SIZE);
-        assertEquals(1, result.size());
+        // Create a partition key to partition level mapping for this test.
+        Map<String, Integer> testPartitionKeyToPartitionLevelMap = new HashMap<>();
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY.toLowerCase(), 1);
+        testPartitionKeyToPartitionLevelMap.put(PARTITION_KEY + "1", 2);
 
-        for (BusinessObjectData data : result)
+        // Call the main method with and without partition key to partition level map.
+        List<BusinessObjectData> result;
+        for (Map<String, Integer> partitionKeyToPartitionLevelMap : Arrays.asList(NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, testPartitionKeyToPartitionLevelMap))
         {
-            assertEquals(NAMESPACE, data.getNamespace());
-            assertEquals(BDEF_NAME, data.getBusinessObjectDefinitionName());
-            assertEquals(FORMAT_USAGE_CODE, data.getBusinessObjectFormatUsage());
-            assertEquals(FORMAT_FILE_TYPE_CODE, data.getBusinessObjectFormatFileType());
-            assertTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            result = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, partitionKeyToPartitionLevelMap, DEFAULT_PAGE_NUMBER,
+                DEFAULT_PAGE_SIZE);
+            assertEquals(1, result.size());
+            assertEquals(NAMESPACE, result.get(0).getNamespace());
+            assertEquals(BDEF_NAME, result.get(0).getBusinessObjectDefinitionName());
+            assertEquals(FORMAT_USAGE_CODE, result.get(0).getBusinessObjectFormatUsage());
+            assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
+            assertEquals(FORMAT_VERSION, Integer.valueOf(result.get(0).getBusinessObjectFormatVersion()));
         }
     }
 
