@@ -44,6 +44,8 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -94,6 +96,8 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataDaoImpl.class);
+
     @Autowired
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
@@ -907,10 +911,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Map<String, Integer> partitionKeyToPartitionLevelMap, Root<BusinessObjectDataEntity> businessObjectDataEntity,
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicate)
     {
+        // Create lists to track optimized and unoptimized partition keys.
+        List<String> partitionKeys = new ArrayList<>();
+        List<String> optimizedPartitionKeys = new ArrayList<>();
+        List<String> unoptimizedPartitionKeys = new ArrayList<>();
+
         for (PartitionValueFilter partitionValueFilter : partitionValueFilters)
         {
             // Get partition key. That value is not empty, since search key already passed validation.
             String partitionKey = partitionValueFilter.getPartitionKey();
+
+            // Add this partition key to the main list of partition keys.
+            partitionKeys.add(partitionKey);
 
             // Get a list of partition values from the filter.
             List<String> partitionValues = partitionValueFilter.getPartitionValues();
@@ -929,6 +941,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 {
                     predicate =
                         builder.and(predicate, businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)).in(partitionValues));
+
+                    // Add this partition key to the list of optimized partition keys.
+                    optimizedPartitionKeys.add(partitionKey);
                 }
                 else if (partitionValueFilter.getPartitionValueRange() != null)
                 {
@@ -940,6 +955,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                         builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)),
                             startPartitionValue),
                         builder.lessThanOrEqualTo(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)), endPartitionValue));
+
+                    // Add this partition key to the list of optimized partition keys.
+                    optimizedPartitionKeys.add(partitionKey);
                 }
             }
             // Otherwise, we go with the original (non-optimized) logic that requires a joint on schema column table.
@@ -963,6 +981,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                             businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)),
                         builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
                             businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+
+                    // Add this partition key to the list of unoptimized partition keys.
+                    unoptimizedPartitionKeys.add(partitionKey);
                 }
                 else if (partitionValueFilter.getPartitionValueRange() != null)
                 {
@@ -985,9 +1006,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                         builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
                             builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
                             builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
+
+                    // Add this partition key to the list of unoptimized partition keys.
+                    unoptimizedPartitionKeys.add(partitionKey);
                 }
             }
         }
+
+        // Log optimized and unoptimized partition keys.
+        LOGGER.info("partitionKeys={} partitionKeysCount={} optimizedPartitionKeys={} optimizedPartitionKeysCount={} unoptimizedPartitionKeys={} " +
+                "unoptimizedPartitionKeysCount={}", partitionKeys, CollectionUtils.size(partitionKeys), optimizedPartitionKeys,
+            CollectionUtils.size(optimizedPartitionKeys), unoptimizedPartitionKeys, CollectionUtils.size(unoptimizedPartitionKeys));
 
         return predicate;
     }

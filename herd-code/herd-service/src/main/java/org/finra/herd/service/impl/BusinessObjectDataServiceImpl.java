@@ -594,11 +594,12 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 // The method below process each partition key one by one. If partition key has the same partition level across all target business object
                 // formats, it will be added to the map to be passed to the main query logic to optimize the partition value filter where clause statement.
                 partitionKeyToPartitionLevelMap = businessObjectFormatHelper.getPartitionKeyToPartitionLevelMapping(partitionKeys, partitionLevels);
-
-                // Log partition level mapping content.
-                LOGGER.info("businessObjectDataSearchKey=\"{}\" partitionKeys=\"{}\" partitionLevels={}", businessObjectDataSearchKey, partitionKeys,
-                    partitionKeyToPartitionLevelMap);
             }
+
+            // Log partition key to partition level mapping along with the search key itself.
+            LOGGER.info("businessObjectDataSearchKey={} businessObjectFormatWithoutPartitionKeysRecordCount={} " +
+                    "businessObjectFormatWithPartitionKeysRecordCount={} partitionKeys={} partitionLevels={}", businessObjectDataSearchKey,
+                businessObjectFormatRecordCount, CollectionUtils.size(partitionLevels.get(0)), partitionKeys, partitionKeyToPartitionLevelMap);
         }
 
         // Get the total record count up to the maximum allowed record count that is configured in the system plus one more record.
