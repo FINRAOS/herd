@@ -18,10 +18,10 @@ package org.finra.herd.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -232,7 +232,10 @@ public class BusinessObjectFormatDaoTestHelper
             }
         }
 
-        if (schemaColumns != null && !schemaColumns.isEmpty())
+        List<SchemaColumnEntity> schemaColumnEntities = new ArrayList<>();
+        businessObjectFormatEntity.setSchemaColumns(schemaColumnEntities);
+
+        if (CollectionUtils.isNotEmpty(schemaColumns))
         {
             businessObjectFormatEntity.setDelimiter(schemaDelimiter);
             businessObjectFormatEntity.setCollectionItemsDelimiter(schemaCollectionItemsDelimiter);
@@ -242,9 +245,6 @@ public class BusinessObjectFormatDaoTestHelper
             businessObjectFormatEntity.setCustomClusteredBy(schemaCustomClusteredBy);
             businessObjectFormatEntity.setCustomTblProperties(schemaCustomTblProperties);
             businessObjectFormatEntity.setNullValue(schemaNullValue);
-
-            List<SchemaColumnEntity> schemaColumnEntities = new ArrayList<>();
-            businessObjectFormatEntity.setSchemaColumns(schemaColumnEntities);
 
             int columnPosition = 1;
             for (SchemaColumn schemaColumn : schemaColumns)
@@ -262,36 +262,40 @@ public class BusinessObjectFormatDaoTestHelper
                 schemaColumnEntity.setDefaultValue(schemaColumn.getDefaultValue());
                 columnPosition++;
             }
+        }
 
-            if (partitionColumns != null && !partitionColumns.isEmpty())
+        if (CollectionUtils.isNotEmpty(partitionColumns))
+        {
+            int partitionLevel = 1;
+            for (SchemaColumn schemaColumn : partitionColumns)
             {
-                int partitionLevel = 1;
-                for (SchemaColumn schemaColumn : partitionColumns)
+                // Check if this partition column belongs to the list of regular schema columns.
+                int schemaColumnIndex = -1;
+                if (CollectionUtils.isNotEmpty(schemaColumns))
                 {
-                    // Check if this partition column belongs to the list of regular schema columns.
-                    int schemaColumnIndex = schemaColumns.indexOf(schemaColumn);
-                    if (schemaColumnIndex >= 0)
-                    {
-                        // Retrieve the relative column entity and set its partition level.
-                        schemaColumnEntities.get(schemaColumnIndex).setPartitionLevel(partitionLevel);
-                    }
-                    else
-                    {
-                        // Add this partition column as a new schema column entity.
-                        SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
-                        schemaColumnEntities.add(schemaColumnEntity);
-                        schemaColumnEntity.setBusinessObjectFormat(businessObjectFormatEntity);
-                        schemaColumnEntity.setPosition(null);
-                        schemaColumnEntity.setPartitionLevel(partitionLevel);
-                        schemaColumnEntity.setName(schemaColumn.getName());
-                        schemaColumnEntity.setType(schemaColumn.getType());
-                        schemaColumnEntity.setSize(schemaColumn.getSize());
-                        schemaColumnEntity.setDescription(schemaColumn.getDescription());
-                        schemaColumnEntity.setRequired(schemaColumn.isRequired());
-                        schemaColumnEntity.setDefaultValue(schemaColumn.getDefaultValue());
-                    }
-                    partitionLevel++;
+                    schemaColumnIndex = schemaColumns.indexOf(schemaColumn);
                 }
+                if (schemaColumnIndex >= 0)
+                {
+                    // Retrieve the relative column entity and set its partition level.
+                    schemaColumnEntities.get(schemaColumnIndex).setPartitionLevel(partitionLevel);
+                }
+                else
+                {
+                    // Add this partition column as a new schema column entity.
+                    SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+                    schemaColumnEntities.add(schemaColumnEntity);
+                    schemaColumnEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                    schemaColumnEntity.setPosition(null);
+                    schemaColumnEntity.setPartitionLevel(partitionLevel);
+                    schemaColumnEntity.setName(schemaColumn.getName());
+                    schemaColumnEntity.setType(schemaColumn.getType());
+                    schemaColumnEntity.setSize(schemaColumn.getSize());
+                    schemaColumnEntity.setDescription(schemaColumn.getDescription());
+                    schemaColumnEntity.setRequired(schemaColumn.isRequired());
+                    schemaColumnEntity.setDefaultValue(schemaColumn.getDefaultValue());
+                }
+                partitionLevel++;
             }
         }
 
@@ -398,6 +402,31 @@ public class BusinessObjectFormatDaoTestHelper
             AbstractDaoTest.FORMAT_FILE_TYPE_CODE, AbstractDaoTest.SECOND_FORMAT_VERSION));
 
         return keys;
+    }
+
+    /**
+     * Returns a list of schema columns created per list of schema column names.
+     *
+     * @param schemaColumnNames the list of column schema names, may be null or empty
+     *
+     * @return the list of schema columns
+     */
+    public List<SchemaColumn> getSchemaColumns(List<String> schemaColumnNames)
+    {
+        List<SchemaColumn> schemaColumns = null;
+
+        if (CollectionUtils.isNotEmpty(schemaColumnNames))
+        {
+            schemaColumns = new ArrayList<>();
+            for (String schemaColumnName : schemaColumnNames)
+            {
+                schemaColumns.add(
+                    new SchemaColumn(schemaColumnName, AbstractDaoTest.COLUMN_DATA_TYPE, AbstractDaoTest.COLUMN_SIZE, AbstractDaoTest.COLUMN_REQUIRED,
+                        AbstractDaoTest.COLUMN_DEFAULT_VALUE, AbstractDaoTest.COLUMN_DESCRIPTION));
+            }
+        }
+
+        return schemaColumns;
     }
 
     /**

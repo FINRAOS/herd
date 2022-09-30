@@ -711,10 +711,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean NO_INCLUDE_TAG_HIERARCHY = false;
 
-    public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
-
-    public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
-
     public static final Set<String> NO_NAMESPACE_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
@@ -722,10 +718,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String NO_OLD_BUSINESS_OBJECT_FORMAT_VERSION = null;
 
     public static final TagKey NO_PARENT_TAG_KEY = null;
-
-    public static final List<String> NO_PARTITION_VALUES = null;
-
-    public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final boolean NO_PERFORM_FULL_SEARCH_INDEX_VALIDATION = Boolean.FALSE;
 

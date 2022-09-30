@@ -21,6 +21,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
 public interface BusinessObjectFormatDao extends BaseJpaDao
@@ -44,19 +45,17 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
     Long getBusinessObjectFormatCountByPartitionKeyGroup(PartitionKeyGroupEntity partitionKeyGroupEntity);
 
     /**
-     * Retrieves business object format record count per specified parameters including an optional list of partition keys.
+     * Retrieves business object format record count per specified parameters.
      *
-     * @param namespace the namespace
-     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectDefinitionEntity the business object definition entity
      * @param businessObjectFormatUsage the usage of the business object format, maybe null
-     * @param businessObjectFormatFileType the file type of the business object format, maybe null
+     * @param fileTypeEntity the file type entity, maybe null
      * @param businessObjectFormatVersion the version of the business object format, maybe null
-     * @param partitionKeys the list of partition keys, maybe null or empty
      *
      * @return the record count of business object formats
      */
-    Long getBusinessObjectFormatCountByPartitionKeys(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, Integer businessObjectFormatVersion, List<String> partitionKeys);
+    Long getBusinessObjectFormatCountBySearchKeyElements(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
+        FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion);
 
     /**
      * Gets a list of ids for business object formats registered under the specified business object definition. The list of business object format ids returned
@@ -110,4 +109,19 @@ public interface BusinessObjectFormatDao extends BaseJpaDao
      */
     List<BusinessObjectFormatEntity> getLatestVersionBusinessObjectFormatsByBusinessObjectDefinition(
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
+
+    /**
+     * Retrieves a list of partition levels for partition columns across all business object formats that match the specified parameters.  Please note that
+     * results are not going to include partition levels that are not supported by business object data registration.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the usage of the business object format, case-insensitive, maybe null
+     * @param fileTypeEntity the file type entity, maybe null
+     * @param businessObjectFormatVersion the version of the business object format, maybe null
+     * @param partitionKeys the list of partition column names, not empty
+     *
+     * @return the partition levels for specified partition keys across all matching business object formats
+     */
+    List<List<Integer>> getPartitionLevelsBySearchKeyElementsAndPartitionKeys(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<String> partitionKeys);
 }
