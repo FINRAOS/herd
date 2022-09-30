@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.impl.AbstractHerdDao;
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -52,6 +53,26 @@ public class BusinessObjectDataDaoTestHelper
 
     @Autowired
     private BusinessObjectFormatDaoTestHelper businessObjectFormatDaoTestHelper;
+
+    /**
+     * Removes time portion of a given {@link XMLGregorianCalendar} instance.
+     *
+     * @param xmlGregorianCalendar the given {@link XMLGregorianCalendar} instant, not null
+     * @return a new {@link XMLGregorianCalendar} instance with the time portion removed
+     */
+    public static XMLGregorianCalendar resetToMidnight(final XMLGregorianCalendar xmlGregorianCalendar) throws DatatypeConfigurationException
+    {
+        XMLGregorianCalendar gregorianCalendarResetToMidnight =
+            DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendar.toGregorianCalendar());
+
+        // reset time fields
+        gregorianCalendarResetToMidnight.setHour(0);
+        gregorianCalendarResetToMidnight.setMinute(0);
+        gregorianCalendarResetToMidnight.setSecond(0);
+        gregorianCalendarResetToMidnight.setMillisecond(0);
+
+        return gregorianCalendarResetToMidnight;
+    }
 
     /**
      * Resets business object data entity "created on" field value back by the specified number of days.
@@ -316,23 +337,38 @@ public class BusinessObjectDataDaoTestHelper
     }
 
     /**
-     * Removes time portion of a given {@link XMLGregorianCalendar} instance.
+     * Create a list of business object data search results per specified list of business object data entities.
      *
-     * @param xmlGregorianCalendar the given {@link XMLGregorianCalendar} instant, not null
-     * @return a new {@link XMLGregorianCalendar} instance with the time portion removed
+     * @param businessObjectDataEntities the list of business object data entities
+     *
+     * @return the list of business object data search results per specified list of business object data entities
      */
-    public static XMLGregorianCalendar resetToMidnight(final XMLGregorianCalendar xmlGregorianCalendar) throws DatatypeConfigurationException
+    public List<BusinessObjectData> getExpectedSearchResults(List<BusinessObjectDataEntity> businessObjectDataEntities)
     {
-        XMLGregorianCalendar gregorianCalendarResetToMidnight =
-            DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendar.toGregorianCalendar());
+        List<BusinessObjectData> searchResults = new ArrayList<>();
 
-        // reset time fields
-        gregorianCalendarResetToMidnight.setHour(0);
-        gregorianCalendarResetToMidnight.setMinute(0);
-        gregorianCalendarResetToMidnight.setSecond(0);
-        gregorianCalendarResetToMidnight.setMillisecond(0);
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
+        {
+            // Create a business object data information that is expected to be returned by the search endpoint for this business object data entity.
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            businessObjectData.setId(businessObjectDataEntity.getId());
+            businessObjectData.setNamespace(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectData.setBusinessObjectDefinitionName(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
+            businessObjectData.setBusinessObjectFormatUsage(businessObjectDataEntity.getBusinessObjectFormat().getUsage());
+            businessObjectData.setBusinessObjectFormatFileType(businessObjectDataEntity.getBusinessObjectFormat().getFileTypeCode());
+            businessObjectData.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionKey(businessObjectDataEntity.getBusinessObjectFormat().getPartitionKey());
+            businessObjectData.setPartitionValue(businessObjectDataEntity.getPartitionValue());
+            businessObjectData.setSubPartitionValues(getSubPartitionValues(businessObjectDataEntity));
+            businessObjectData.setVersion(businessObjectDataEntity.getVersion());
+            businessObjectData.setLatestVersion(businessObjectDataEntity.getLatestVersion());
+            businessObjectData.setStatus(businessObjectDataEntity.getStatusCode());
 
-        return gregorianCalendarResetToMidnight;
+            // Add business object data information to the list.
+            searchResults.add(businessObjectData);
+        }
+
+        return searchResults;
     }
 
     /**
@@ -361,5 +397,37 @@ public class BusinessObjectDataDaoTestHelper
         businessObjectDataEntity.getHistoricalStatuses().add(businessObjectDataStatusHistoryEntity);
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
         return businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+    }
+
+    /**
+     * Gets the sub-partition values for the specified business object data entity.
+     *
+     * @param businessObjectDataEntity the business object data entity.
+     *
+     * @return the list of sub-partition values.
+     */
+    private List<String> getSubPartitionValues(BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        List<String> subPartitionValues = new ArrayList<>();
+
+        List<String> rawSubPartitionValues = new ArrayList<>();
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue2());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue3());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue4());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue5());
+
+        for (String rawSubPartitionValue : rawSubPartitionValues)
+        {
+            if (rawSubPartitionValue != null)
+            {
+                subPartitionValues.add(rawSubPartitionValue);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return subPartitionValues;
     }
 }

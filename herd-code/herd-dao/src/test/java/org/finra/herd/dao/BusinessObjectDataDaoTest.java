@@ -37,6 +37,7 @@ import java.util.Set;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -47,7 +48,9 @@ import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
@@ -84,8 +87,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
      * The default page size for the business object data search
      */
     private static final Integer DEFAULT_PAGE_SIZE = 1_000;
-
-    // BusinessObjectData
 
     @Test
     public void testGetBusinessObjectDataByAltKey()
@@ -1927,6 +1928,427 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             assertEquals(FORMAT_FILE_TYPE_CODE, result.get(0).getBusinessObjectFormatFileType());
             assertEquals(FORMAT_VERSION, Integer.valueOf(result.get(0).getBusinessObjectFormatVersion()));
         }
+    }
+
+    @Test
+    public void testBusinessObjectDataSearchWithPartitionValueAndRangeFiltersUnoptimized()
+    {
+        // Define a set of partition columns to be used across multiple formats. Where all columns are not illegible for optimization.
+        List<List<String>> partitionKeys = new ArrayList<>();
+
+        // FORMAT_USAGE_CODE
+        // * all partition columns are present and do not change partition levels
+        partitionKeys.add(Arrays.asList("Col1", "Col2", "Col3", "Col4", "Col5"));
+        partitionKeys.add(Arrays.asList("Col1", "Col2", "Col3", "Col4", "Col5"));
+        partitionKeys.add(Arrays.asList("Col1", "Col2", "Col3", "Col4", "Col5"));
+        partitionKeys.add(Arrays.asList("Col1", "Col2", "Col3", "Col4", "Col5"));
+
+        // FORMAT_USAGE_CODE_2
+        // * all partition columns are still present but not at their original positions
+        partitionKeys.add(Arrays.asList("Col5", "Col1", "Col2", "Col3", "Col4"));
+        partitionKeys.add(Arrays.asList("Col4", "Col5", "Col1", "Col2", "Col3"));
+        partitionKeys.add(Arrays.asList("Col3", "Col4", "Col5", "Col1", "Col2"));
+        partitionKeys.add(Arrays.asList("Col2", "Col3", "Col4", "Col5", "Col1"));
+
+        // FORMAT_USAGE_CODE_3
+        // * no original partition columns are present
+        partitionKeys.add(Arrays.asList("ColA", "ColB", "ColC", "ColD", "ColE"));
+        partitionKeys.add(Arrays.asList("ColA", "ColB", "ColC", "ColD", "ColE"));
+        partitionKeys.add(Arrays.asList("ColA", "ColB", "ColC", "ColD", "ColE"));
+        partitionKeys.add(Arrays.asList("ColA", "ColB", "ColC", "ColD", "ColE"));
+
+        // Declare a set of partition values to be used to register business object data with the same set of partition values for all test formats.
+        List<String> universalPartitionValues = Arrays.asList("Val1", "Val2", "Val3", "Val4", "Val5");
+
+        // Declare a set of partition values to be used to register business object data with distinct sets of partition values for all test formats.
+        List<List<String>> distinctPartitionValues = Lists.newArrayList();
+
+        distinctPartitionValues.add(Arrays.asList("D10", "D20", "D30", "D40", "D50")); // 0
+        distinctPartitionValues.add(Arrays.asList("D11", "D21", "D31", "D41", "D51")); // 1
+        distinctPartitionValues.add(Arrays.asList("D12", "D22", "D32", "D42", "D52")); // 2
+        distinctPartitionValues.add(Arrays.asList("D13", "D23", "D33", "D43", "D53")); // 3
+
+        distinctPartitionValues.add(Arrays.asList("D14", "D24", "D34", "D44", "D54")); // 4
+        distinctPartitionValues.add(Arrays.asList("D15", "D25", "D35", "D45", "D55")); // 5
+        distinctPartitionValues.add(Arrays.asList("D16", "D26", "D36", "D46", "D56")); // 6
+        distinctPartitionValues.add(Arrays.asList("D17", "D27", "D37", "D47", "D57")); // 7
+
+        distinctPartitionValues.add(Arrays.asList("D18", "D28", "D38", "D48", "D58")); // 8
+        distinctPartitionValues.add(Arrays.asList("D19", "D29", "D39", "D49", "D59")); // 9
+        distinctPartitionValues.add(Arrays.asList("D1A", "D2A", "D3A", "D4A", "D5A"));
+        distinctPartitionValues.add(Arrays.asList("D1B", "D2B", "D3B", "D4B", "D5B"));
+
+        // Track business object format getting created.
+        List<BusinessObjectFormatEntity> businessObjectFormatEntities = new ArrayList<>();
+
+        // Create business object formats using multiple usage, file type, and version values for the list of partition keys declared above.
+        for (String businessObjectFormatUsage : Arrays.asList(FORMAT_USAGE_CODE, FORMAT_USAGE_CODE_2, FORMAT_USAGE_CODE_3))
+        {
+            for (String fileType : Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2))
+            {
+                for (Integer businessObjectFormatVersion : Arrays.asList(SECOND_FORMAT_VERSION, INITIAL_FORMAT_VERSION))
+                {
+                    // Create business object format.
+                    BusinessObjectFormatEntity businessObjectFormatEntity =
+                        businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, businessObjectFormatUsage, fileType,
+                            businessObjectFormatVersion, FORMAT_DESCRIPTION, NO_FORMAT_DOCUMENT_SCHEMA, NO_FORMAT_DOCUMENT_SCHEMA_URL,
+                            Objects.equals(businessObjectFormatVersion, SECOND_FORMAT_VERSION) ? LATEST_VERSION_FLAG_SET : NO_LATEST_VERSION_FLAG_SET,
+                            partitionKeys.get(businessObjectFormatEntities.size()).get(0), NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                            SCHEMA_COLLECTION_ITEMS_DELIMITER_COMMA, SCHEMA_MAP_KEYS_DELIMITER_HASH, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                            SCHEMA_CUSTOM_ROW_FORMAT, SCHEMA_CUSTOM_CLUSTERED_BY_VALUE, NO_SCHEMA_CUSTOM_TBL_PROPERTIES, SCHEMA_NULL_VALUE_BACKSLASH_N,
+                            NO_COLUMNS, businessObjectFormatDaoTestHelper.getSchemaColumns(partitionKeys.get(businessObjectFormatEntities.size())));
+
+                    // Add created business object format to the list.
+                    businessObjectFormatEntities.add(businessObjectFormatEntity);
+                }
+            }
+        }
+
+        // Create business object data status entity.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // For each format created above, register business object data that has constant set of partition values across all formats
+        // and business object data that has distinct set of partition values for each format.
+        List<BusinessObjectDataEntity> universalBusinessObjectDataEntities = new ArrayList<>();
+        List<BusinessObjectDataEntity> distinctBusinessObjectDataEntities = new ArrayList<>();
+        List<BusinessObjectDataEntity> allBusinessObjectDataEntities = new ArrayList<>();
+        for (BusinessObjectFormatEntity businessObjectFormatEntity : businessObjectFormatEntities)
+        {
+            BusinessObjectDataEntity universalBusinessObjectDataEntity =
+                businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, universalPartitionValues.get(0),
+                    universalPartitionValues.subList(1, universalPartitionValues.size()), INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET,
+                    businessObjectDataStatusEntity);
+            universalBusinessObjectDataEntities.add(universalBusinessObjectDataEntity);
+            allBusinessObjectDataEntities.add(universalBusinessObjectDataEntity);
+
+            BusinessObjectDataEntity distinctBusinessObjectDataEntity =
+                businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity,
+                    distinctPartitionValues.get(distinctBusinessObjectDataEntities.size()).get(0),
+                    distinctPartitionValues.get(distinctBusinessObjectDataEntities.size()).subList(1, universalPartitionValues.size()), INITIAL_DATA_VERSION,
+                    LATEST_VERSION_FLAG_SET, businessObjectDataStatusEntity);
+            distinctBusinessObjectDataEntities.add(distinctBusinessObjectDataEntity);
+            allBusinessObjectDataEntities.add(distinctBusinessObjectDataEntity);
+        }
+
+        // Create business object data search request without a list of business object data search keys.
+        BusinessObjectDataSearchRequest businessObjectDataSearchRequest =
+            new BusinessObjectDataSearchRequest(Collections.singletonList(new BusinessObjectDataSearchFilter(null)));
+
+        // Declare variables to be reused in the test calls below.
+        BusinessObjectDataSearchKey businessObjectDataSearchKey;
+        List<PartitionValueFilter> partitionValueFilters;
+        List<BusinessObjectData> results;
+
+        // Test business object data search with only required parameters and without any search key filters.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setPartitionValueFilters(NO_PARTITION_VALUE_FILTERS);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results.
+        // We expect result set to contain all business object data entities registered for this business object definition.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(allBusinessObjectDataEntities), results);
+
+        // Test business object data search with all parameters and with partition value filters for all partition keys using universal values.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        businessObjectDataSearchKey.setBusinessObjectFormatVersion(SECOND_FORMAT_VERSION);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col1", Lists.newArrayList("Val1"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col2", Lists.newArrayList("Val2"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col3", Lists.newArrayList("Val3"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col4", Lists.newArrayList("Val4"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col5", Lists.newArrayList("Val5"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain only the first universal business object data from the list.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 1)), results);
+
+        // Test business object data search with only required parameters and with partition value filters for all partition keys using universal values.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col1", Lists.newArrayList("Val1"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col2", Lists.newArrayList("Val2"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col3", Lists.newArrayList("Val3"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col4", Lists.newArrayList("Val4"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col5", Lists.newArrayList("Val5"), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain universal business object data that matches partition keys from
+        // the first business object format. No data expected to be grabbed for formats with moved or missing partition keys due to use of partition values
+        // that match exact original column positions.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(
+            Arrays.asList(universalBusinessObjectDataEntities.get(0), universalBusinessObjectDataEntities.get(1), universalBusinessObjectDataEntities.get(2),
+                universalBusinessObjectDataEntities.get(3))), results);
+
+        // Test business object data search with only required parameters and with partition value filters for all partition keys using universal values.
+        // For this test, we want to capture results for formats with moved partition keys, so for those columns we pass partition
+        // values that match all their locations.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col1", universalPartitionValues, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col2", universalPartitionValues, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col3", universalPartitionValues, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col4", universalPartitionValues, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(new PartitionValueFilter("Col5", universalPartitionValues, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain universal business object data that matches partition keys from
+        // the first business object format along with data for formats with moved partition keys. Only data for formats without the original partition keys
+        // expected to be missing in the search results.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 8)), results);
+
+        // Test business object data search with only required parameters and with partition value filters for all partition keys using ranges with
+        // universal values. For this test, we want to capture results for formats with moved partition keys, so for those columns we pass partition
+        // values that match all their locations.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col1", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col2", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col3", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col4", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col5", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain universal business object data that matches partition keys from
+        // the first business object format along with data for formats with moved partition keys. Only data for formats without the original partition keys
+        // expected to be missing in the search results.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 8)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 1 using
+        // distinct partition values to cover a subset distinct business object data.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col1", NO_PARTITION_VALUES, new PartitionValueRange("D11", "D13"), NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain a specific subset of distinct business object data.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(distinctBusinessObjectDataEntities.subList(1, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 1 using
+        // relative universal partition value.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col1", NO_PARTITION_VALUES, new PartitionValueRange("Val1", "Val1"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain
+        // a subset of universal business object data where column number 1 has value number 1.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 2 using
+        // distinct values to cover a subset distinct business object data.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col2", NO_PARTITION_VALUES, new PartitionValueRange("D20", "D22"), NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain a specific subset of distinct business object data.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(distinctBusinessObjectDataEntities.subList(0, 3)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 2 using
+        // relative universal partition value.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col2", NO_PARTITION_VALUES, new PartitionValueRange("Val2", "Val2"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain
+        // a subset of universal business object data where column number 2 has value number 2.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 3 using
+        // distinct values to cover a subset distinct business object data.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col3", NO_PARTITION_VALUES, new PartitionValueRange("D32", "D33"), NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain a specific subset of distinct business object data.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(distinctBusinessObjectDataEntities.subList(2, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 3 using
+        // relative universal partition value.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col3", NO_PARTITION_VALUES, new PartitionValueRange("Val3", "Val3"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain
+        // a subset of universal business object data where column number 3 has value number 3.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 4 using
+        // distinct values to cover a subset distinct business object data.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col4", NO_PARTITION_VALUES, new PartitionValueRange("D41", "D41"), NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain a specific subset of distinct business object data.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(distinctBusinessObjectDataEntities.subList(1, 2)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 4 using
+        // relative universal partition value.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col4", NO_PARTITION_VALUES, new PartitionValueRange("Val4", "Val4"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain
+        // a subset of universal business object data where column number 4 has value number 4.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 5 using
+        // distinct values to cover a subset distinct business object data.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(new PartitionValueFilter("Col5", NO_PARTITION_VALUES, new PartitionValueRange("D50", "D53"), NO_LATEST_BEFORE_PARTITION_VALUE,
+            NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain a specific subset of distinct business object data.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(distinctBusinessObjectDataEntities.subList(0, 4)), results);
+
+        // Test business object data search with only required parameters and with partition value filter with a range for partition key number 5 using
+        // relative universal partition value.
+        businessObjectDataSearchKey = new BusinessObjectDataSearchKey();
+        businessObjectDataSearchKey.setNamespace(NAMESPACE);
+        businessObjectDataSearchKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(
+            new PartitionValueFilter("Col5", NO_PARTITION_VALUES, new PartitionValueRange("Val5", "Val5"), NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE));
+        businessObjectDataSearchKey.setPartitionValueFilters(partitionValueFilters);
+        businessObjectDataSearchRequest.getBusinessObjectDataSearchFilters().get(0)
+            .setBusinessObjectDataSearchKeys(Collections.singletonList(businessObjectDataSearchKey));
+
+        // Execute the search and validate the results. We expect result set to contain
+        // a subset of universal business object data where column number 4 has value number 4.
+        results = businessObjectDataDao.searchBusinessObjectData(businessObjectDataSearchKey, NO_PARTITION_KEY_TO_LEVEL_MAPPINGS, DEFAULT_PAGE_NUMBER,
+            DEFAULT_PAGE_SIZE);
+        assertEquals(businessObjectDataDaoTestHelper.getExpectedSearchResults(universalBusinessObjectDataEntities.subList(0, 4)), results);
     }
 
     @Test
