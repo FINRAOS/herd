@@ -197,24 +197,28 @@ public interface BusinessObjectDataDao extends BaseJpaDao
     List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
 
     /**
-     * Retrieves business object data record count up to to the specified record limit as per business object data search key.
+     * Retrieves business object data record count up to the specified record limit as per business object data search key.
      *
      * @param businessObjectDataSearchKey the business object data search key
+     * @param partitionKeyToPartitionLevelMap the partition key to partition level mapping, not null
      * @param recordCountLimit the business object data record count limit
      *
-     * @return the record count of business object data up to to the specified limit
+     * @return the record count of business object data up to the specified limit
      */
-    Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer recordCountLimit);
+    Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        Map<String, Integer> partitionKeyToPartitionLevelMap, Integer recordCountLimit);
 
     /**
      * Retrieves a list of business object data per specified business object data search key.
      *
      * @param businessObjectDataSearchKey the business object data search key
+     * @param partitionKeyToPartitionLevelMap the partition key to partition level mapping, not null
      * @param pageNum if pageNum parameter is specified, results contain the appropriate page specified. Page numbers are one-based - that is the first page
      * number is one
      * @param pageSize if pageSize parameter is specified, results contain that number of business object data (unless it is the end of the result set)
      *
      * @return the list of business object data
      */
-    List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize);
+    List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        Map<String, Integer> partitionKeyToPartitionLevelMap, Integer pageNum, Integer pageSize);
 }

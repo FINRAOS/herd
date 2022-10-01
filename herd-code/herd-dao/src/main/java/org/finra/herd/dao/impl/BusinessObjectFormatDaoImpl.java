@@ -27,6 +27,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -118,8 +119,8 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
     }
 
     @Override
-    public Long getBusinessObjectFormatCountByPartitionKeys(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, Integer businessObjectFormatVersion, List<String> partitionKeys)
+    public Long getBusinessObjectFormatCountBySearchKeyElements(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage,
+        FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -131,39 +132,12 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
         // Create path.
         Expression<Long> businessObjectFormatRecordCount = builder.count(businessObjectFormatEntityRoot);
 
-        // Namespace is a required parameter, so fetch the relative entity to optimize the main query.
-        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
-
-        // If specified namespace does not exist, then return a zero record count.
-        if (namespaceEntity == null)
-        {
-            return 0L;
-        }
-
-        // If file type is specified, fetch the relative entity to optimize the main query.
-        FileTypeEntity fileTypeEntity = null;
-        if (StringUtils.isNotBlank(businessObjectFormatFileType))
-        {
-            fileTypeEntity = fileTypeDao.getFileTypeByCode(businessObjectFormatFileType);
-
-            // If specified file type does not exist, then return a zero record count.
-            if (fileTypeEntity == null)
-            {
-                return 0L;
-            }
-        }
-
-        // Join to the other tables we can filter on.
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-            businessObjectFormatEntityRoot.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-
         // Create main query restrictions based on the specified parameters.
         List<Predicate> predicates = new ArrayList<>();
 
-        // Create restriction on namespace code and business object definition name.
-        predicates.add(builder.equal(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace), namespaceEntity));
+        // Create restriction on business object definition.
         predicates.add(
-            builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)), businessObjectDefinitionName.toUpperCase()));
+            builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId()));
 
         // If specified, create restriction on business object format usage.
         if (!StringUtils.isEmpty(businessObjectFormatUsage))
@@ -181,29 +155,12 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
         // If specified, create restriction on business object format version.
         if (businessObjectFormatVersion != null)
         {
-            predicates
-                .add(builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
-        }
-
-        // If specified, create restriction on partition keys.
-        if (CollectionUtils.isNotEmpty(partitionKeys))
-        {
-            for (String partitionKey : partitionKeys)
-            {
-                // Add restriction on partition key (partition column).
-                // Partition key must identify a partition column that is at partition level that could be explicitly registered.
-                // Partition level uses one-based numbering.
-                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaColumnEntityJoin =
-                    businessObjectFormatEntityRoot.join(BusinessObjectFormatEntity_.schemaColumns);
-                predicates.add(builder.equal(builder.upper(schemaColumnEntityJoin.get(SchemaColumnEntity_.name)), partitionKey.toUpperCase()));
-                predicates.add(builder.isNotNull(schemaColumnEntityJoin.get(SchemaColumnEntity_.partitionLevel)));
-                predicates
-                    .add(builder.lessThan(schemaColumnEntityJoin.get(SchemaColumnEntity_.partitionLevel), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
-            }
+            predicates.add(
+                builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
         }
 
         // Add all clauses for the query.
-        criteria.select(businessObjectFormatRecordCount).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).distinct(true);
+        criteria.select(businessObjectFormatRecordCount).where(builder.and(predicates.toArray(new Predicate[0])));
 
         // Execute the query and return the result.
         return entityManager.createQuery(criteria).getSingleResult();
@@ -394,5 +351,105 @@ public class BusinessObjectFormatDaoImpl extends AbstractHerdDao implements Busi
 
         // Execute the query and return the results.
         return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<List<Integer>> getPartitionLevelsBySearchKeyElementsAndPartitionKeys(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        String businessObjectFormatUsage, FileTypeEntity fileTypeEntity, Integer businessObjectFormatVersion, List<String> partitionKeys)
+    {
+        // Create an object to contain the result set.
+        List<List<Integer>> partitionLevels = new ArrayList<>();
+
+        // The list of partitions key is not supposed to be empty, so if it is, we exit with result set containing an empty list.
+        if (CollectionUtils.isEmpty(partitionKeys))
+        {
+            return partitionLevels;
+        }
+
+        // Create criteria builder and tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+
+        // The criteria root is the business object format.
+        Root<BusinessObjectFormatEntity> businessObjectFormatEntityRoot = criteria.from(BusinessObjectFormatEntity.class);
+
+        // Join to other tables we can filter on.
+        List<Join<BusinessObjectFormatEntity, SchemaColumnEntity>> schemaColumnEntityJoins = new ArrayList<>();
+        for (int index = 0; index < partitionKeys.size(); index++)
+        {
+            schemaColumnEntityJoins.add(businessObjectFormatEntityRoot.join(BusinessObjectFormatEntity_.schemaColumns));
+        }
+
+        // Get the columns.
+        List<Path<Integer>> partitionLevelColumns = new ArrayList<>();
+        for (int index = 0; index < partitionKeys.size(); index++)
+        {
+            partitionLevelColumns.add(schemaColumnEntityJoins.get(index).get(SchemaColumnEntity_.partitionLevel));
+        }
+
+        // Create main query restrictions based on the specified parameters.
+        List<Predicate> predicates = new ArrayList<>();
+
+        // Create restriction on business object definition.
+        predicates.add(
+            builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectDefinitionId), businessObjectDefinitionEntity.getId()));
+
+        // If specified, create restriction on business object format usage.
+        if (!StringUtils.isEmpty(businessObjectFormatUsage))
+        {
+            predicates.add(
+                builder.equal(builder.upper(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.usage)), businessObjectFormatUsage.toUpperCase()));
+        }
+
+        // If specified, create restriction on business object format file type.
+        if (fileTypeEntity != null)
+        {
+            predicates.add(builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.fileTypeCode), fileTypeEntity.getCode()));
+        }
+
+        // If specified, create restriction on business object format version.
+        if (businessObjectFormatVersion != null)
+        {
+            predicates.add(
+                builder.equal(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatVersion));
+        }
+
+        // Create restriction on partition key columns. Partition column name must identify a partition column that is at partition level supported
+        // by business object data registration. Please note partition level values in the database schema use 1-based numbering.
+        for (int index = 0; index < partitionKeys.size(); index++)
+        {
+            predicates.add(
+                builder.equal(builder.upper(schemaColumnEntityJoins.get(index).get(SchemaColumnEntity_.name)), partitionKeys.get(index).toUpperCase()));
+            predicates.add(
+                builder.lessThan(schemaColumnEntityJoins.get(index).get(SchemaColumnEntity_.partitionLevel), BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
+        }
+
+        // Add the select clause.
+        criteria.multiselect(partitionLevelColumns.toArray(new Selection<?>[0]));
+
+        // Add the where clause.
+        criteria.where(builder.and(predicates.toArray(new Predicate[0])));
+
+        // Add the order by clause.
+        criteria.orderBy(builder.asc(businessObjectFormatEntityRoot.get(BusinessObjectFormatEntity_.id)));
+
+        // Run the query to get a list of tuples back.
+        List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
+
+        // Populate the result set.
+        for (int index = 0; index < partitionKeys.size(); index++)
+        {
+            partitionLevels.add(new ArrayList<>());
+        }
+        for (Tuple tuple : tuples)
+        {
+            for (int index = 0; index < partitionKeys.size(); index++)
+            {
+                partitionLevels.get(index).add(tuple.get(partitionLevelColumns.get(index)));
+            }
+        }
+
+        // Return the results.
+        return partitionLevels;
     }
 }

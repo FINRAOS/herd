@@ -65,7 +65,7 @@ public class StorageFileEntity extends AuditableEntity
     private StorageUnitEntity storageUnit;
 
     @Column(name = "strge_unit_id", insertable = false, updatable = false)
-    private Integer storageUnitId;
+    private Long storageUnitId;
 
     public Long getId()
     {
@@ -117,12 +117,12 @@ public class StorageFileEntity extends AuditableEntity
         this.storageUnit = storageUnit;
     }
 
-    public Integer getStorageUnitId()
+    public Long getStorageUnitId()
     {
         return storageUnitId;
     }
 
-    public void setStorageUnitId(Integer storageUnitId)
+    public void setStorageUnitId(Long storageUnitId)
     {
         this.storageUnitId = storageUnitId;
     }

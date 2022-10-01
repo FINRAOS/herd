@@ -56,9 +56,12 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
+import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
+import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.MessageHeaderDefinition;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.RegistrationDateRangeFilter;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
@@ -626,6 +629,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Long LONG_VALUE = (long) (Math.random() * Long.MAX_VALUE);
 
+    public static final Long LONG_VALUE_2 = (long) (Math.random() * Long.MAX_VALUE);
+
     public static final String MARKER = "UT_Marker_" + RANDOM_SUFFIX;
 
     public static final String MATCH_COLUMN = "column";
@@ -839,6 +844,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_JOB_NAMESPACE = null;
 
+    public static final LatestAfterPartitionValue NO_LATEST_AFTER_PARTITION_VALUE = null;
+
+    public static final LatestBeforePartitionValue NO_LATEST_BEFORE_PARTITION_VALUE = null;
+
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
 
     public static final String NO_LOWER_BOUND_PARTITION_VALUE = null;
@@ -873,7 +882,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_PARTITION_KEY_GROUP = null;
 
+    public static final Map<String, Integer> NO_PARTITION_KEY_TO_LEVEL_MAPPINGS = new HashMap<>();
+
+    public static final List<String> NO_PARTITION_VALUES = null;
+
     public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
+
+    public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final String NO_PASSWORD = null;
 

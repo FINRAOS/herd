@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -333,6 +334,35 @@ public class BusinessObjectFormatHelper
         return new BusinessObjectFormatKey(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
             businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
             businessObjectDataKey.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * Returns partition key to partition level mapping. Please note that this method expects the list of partition keys not to be empty and main list of
+     * partition levels contain a list of levels for each partition key. Those second (inner) lists can be empty. The relative mapping for partition key is only
+     * added to result map if its partition level values are the same. Please note partition level values in the database schema use 1-based numbering.
+     *
+     * @param partitionKeys the list of partition keys, not empty
+     * @param partitionLevels the list of partition level lists with the main list not empty and having one inner list for each partition key
+     *
+     * @return the partition key to partition level mapping
+     */
+    public Map<String, Integer> getPartitionKeyToPartitionLevelMapping(List<String> partitionKeys, List<List<Integer>> partitionLevels)
+    {
+        // Declare a map to store partition levels for partition keys.
+        Map<String, Integer> partitionKeyToPartitionLevel = new HashMap<>();
+
+        // Process each partition key in the list. The list is expected to contain at least one partition key.
+        for (int index = 0; index < partitionKeys.size(); index++)
+        {
+            // If partition key has the same partition level across all target business object formats, we add that key to the result map.
+            HashSet<Integer> uniquePartitionLevels = new HashSet<>(partitionLevels.get(index));
+            if (uniquePartitionLevels.size() == 1)
+            {
+                partitionKeyToPartitionLevel.put(partitionKeys.get(index), uniquePartitionLevels.iterator().next());
+            }
+        }
+
+        return partitionKeyToPartitionLevel;
     }
 
     /**
