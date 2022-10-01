@@ -44,6 +44,8 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -94,6 +96,8 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataDaoImpl.class);
+
     @Autowired
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
@@ -658,6 +662,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param businessObjectDataEntityRoot the root business object data entity
      * @param businessObjectFormatEntityJoin the join with the business object format table
      * @param businessObjectDataSearchKey the business object data search key
+     * @param partitionKeyToPartitionLevelMap the partition key to partition level mapping, not null
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param fileTypeEntity the file type entity
      *
@@ -665,7 +670,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      */
     private Predicate getQueryPredicateBySearchKey(CriteriaBuilder builder, Root<BusinessObjectDataEntity> businessObjectDataEntityRoot,
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin, BusinessObjectDataSearchKey businessObjectDataSearchKey,
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity)
+        Map<String, Integer> partitionKeyToPartitionLevelMap, BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity)
     {
         // Create restriction on business object definition.
         Predicate predicate =
@@ -695,8 +700,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // If specified, add restrictions per partition value filters.
         if (CollectionUtils.isNotEmpty(businessObjectDataSearchKey.getPartitionValueFilters()))
         {
-            predicate = addPartitionValueFiltersToPredicate(businessObjectDataSearchKey.getPartitionValueFilters(), businessObjectDataEntityRoot,
-                businessObjectFormatEntityJoin, builder, predicate);
+            predicate = addPartitionValueFiltersToPredicate(businessObjectDataSearchKey.getPartitionValueFilters(), partitionKeyToPartitionLevelMap,
+                businessObjectDataEntityRoot, businessObjectFormatEntityJoin, builder, predicate);
         }
 
         // If specified, add restrictions per attribute value filters.
@@ -735,7 +740,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer recordCountLimit)
+    public Integer getBusinessObjectDataLimitedCountBySearchKey(BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        Map<String, Integer> partitionKeyToPartitionLevelMap, Integer recordCountLimit)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -778,14 +784,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         try
         {
             criteria.where(getQueryPredicateBySearchKey(builder, businessObjectDataEntityRoot, businessObjectFormatEntityJoin, businessObjectDataSearchKey,
-                businessObjectDefinitionEntity, fileTypeEntity));
+                partitionKeyToPartitionLevelMap, businessObjectDefinitionEntity, fileTypeEntity));
         }
         catch (IllegalArgumentException ex)
         {
             // This exception means that there are no records found for the query, thus return 0 record count.
             return 0;
         }
-
 
         // If latest valid version filter is specified, ignore business object format and business object data versions when counting search results.
         // In order to do that, we group by all elements of business object data alternate key, except for the versions.  Please note that we need to apply
@@ -812,7 +817,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     @Override
-    public List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey, Integer pageNum, Integer pageSize)
+    public List<BusinessObjectData> searchBusinessObjectData(BusinessObjectDataSearchKey businessObjectDataSearchKey,
+        Map<String, Integer> partitionKeyToPartitionLevelMap, Integer pageNum, Integer pageSize)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -853,7 +859,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         try
         {
             predicate = getQueryPredicateBySearchKey(builder, businessObjectDataEntityRoot, businessObjectFormatEntityJoin, businessObjectDataSearchKey,
-                businessObjectDefinitionEntity, fileTypeEntity);
+                partitionKeyToPartitionLevelMap, businessObjectDefinitionEntity, fileTypeEntity);
         }
         catch (IllegalArgumentException ex)
         {
@@ -861,9 +867,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             return Collections.emptyList();
         }
 
-        // Build an order by clause. Please note that DECS order on business object format and business object data versions along with applying upper() call
-        // on business object format are required  for the logic that processes (when the relative search filter is specified) the search query results
-        // to filters in latest valid versions.
+        // Build an order by clause. Please note that descending order on business object format and business object data versions along with applying upper()
+        // call on business object format are required  for the logic that processes (when the relative search filter is specified) the search query results
+        // to filters in the latest valid versions.
         List<Order> orderBy = new ArrayList<>();
         orderBy.add(builder.asc(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage))));
         orderBy.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.fileTypeCode)));
@@ -893,6 +899,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * Adds partition value filters to the query predicate.
      *
      * @param partitionValueFilters the list of partition value filters, not empty
+     * @param partitionKeyToPartitionLevelMap the partition key to partition level mapping, not null
      * @param businessObjectDataEntity the business object data entity
      * @param businessObjectFormatEntity the business object format entity
      * @param builder the builder
@@ -901,55 +908,116 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @return the updated query predicate
      */
     private Predicate addPartitionValueFiltersToPredicate(List<PartitionValueFilter> partitionValueFilters,
-        Root<BusinessObjectDataEntity> businessObjectDataEntity, Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity,
-        CriteriaBuilder builder, Predicate predicate)
+        Map<String, Integer> partitionKeyToPartitionLevelMap, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicate)
     {
+        // Create lists to track optimized and unoptimized partition keys.
+        List<String> partitionKeys = new ArrayList<>();
+        List<String> optimizedPartitionKeys = new ArrayList<>();
+        List<String> unoptimizedPartitionKeys = new ArrayList<>();
+
         for (PartitionValueFilter partitionValueFilter : partitionValueFilters)
         {
-            Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
+            // Get partition key. That value is not empty, since search key already passed validation.
+            String partitionKey = partitionValueFilter.getPartitionKey();
 
+            // Add this partition key to the main list of partition keys.
+            partitionKeys.add(partitionKey);
+
+            // Get a list of partition values from the filter.
             List<String> partitionValues = partitionValueFilter.getPartitionValues();
 
-            predicate = builder
-                .and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionValueFilter.getPartitionKey().toUpperCase()));
-            predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+            // Check if we can optimize the where clause for this partition key.  If partition key has the same partition level across all
+            // target business object formats, then it should be added ot the map, and we don't need to join on schema column table here.
 
-            if (partitionValues != null && !partitionValues.isEmpty())
+            // Try to get partition level for this partition key. If map contains no key, the get method will return null.
+            // Please note partition level values in the database schema use 1-based numbering.
+            Integer partitionLevel = partitionKeyToPartitionLevelMap.get(partitionKey);
+
+            // If partition key has partition level specified in the map, we will use
+            if (partitionLevel != null && partitionLevel > 0 && partitionLevel < BUSINESS_OBJECT_DATA_PARTITIONS.size() + 1)
             {
-                predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
-                    businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
-                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
-                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
-                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
-                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+                if (CollectionUtils.isNotEmpty(partitionValues))
+                {
+                    predicate =
+                        builder.and(predicate, businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)).in(partitionValues));
+
+                    // Add this partition key to the list of optimized partition keys.
+                    optimizedPartitionKeys.add(partitionKey);
+                }
+                else if (partitionValueFilter.getPartitionValueRange() != null)
+                {
+                    PartitionValueRange partitionRange = partitionValueFilter.getPartitionValueRange();
+                    String startPartitionValue = partitionRange.getStartPartitionValue();
+                    String endPartitionValue = partitionRange.getEndPartitionValue();
+
+                    predicate = builder.and(predicate,
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)),
+                            startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_PARTITIONS.get(partitionLevel - 1)), endPartitionValue));
+
+                    // Add this partition key to the list of optimized partition keys.
+                    optimizedPartitionKeys.add(partitionKey);
+                }
             }
-            else if (partitionValueFilter.getPartitionValueRange() != null)
+            // Otherwise, we go with the original (non-optimized) logic that requires a joint on schema column table.
+            else
             {
-                PartitionValueRange partitionRange = partitionValueFilter.getPartitionValueRange();
-                String startPartitionValue = partitionRange.getStartPartitionValue();
-                String endPartitionValue = partitionRange.getEndPartitionValue();
+                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
 
-                predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
-                    builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
-                    builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
-                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
-                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
-                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
-                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
-                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
-                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)), builder
-                    .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
-                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
-                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
+                predicate = builder.and(predicate,
+                    builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionValueFilter.getPartitionKey().toUpperCase()));
+                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+
+                if (CollectionUtils.isNotEmpty(partitionValues))
+                {
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+
+                    // Add this partition key to the list of unoptimized partition keys.
+                    unoptimizedPartitionKeys.add(partitionKey);
+                }
+                else if (partitionValueFilter.getPartitionValueRange() != null)
+                {
+                    PartitionValueRange partitionRange = partitionValueFilter.getPartitionValueRange();
+                    String startPartitionValue = partitionRange.getStartPartitionValue();
+                    String endPartitionValue = partitionRange.getEndPartitionValue();
+
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)),
+                        builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
+
+                    // Add this partition key to the list of unoptimized partition keys.
+                    unoptimizedPartitionKeys.add(partitionKey);
+                }
             }
         }
+
+        // Log optimized and unoptimized partition keys.
+        LOGGER.info("partitionKeys={} partitionKeysCount={} optimizedPartitionKeys={} optimizedPartitionKeysCount={} " +
+                "unoptimizedPartitionKeys={} unoptimizedPartitionKeysCount={} partitionKeyToPartitionLevelMap={}", partitionKeys,
+            CollectionUtils.size(partitionKeys), optimizedPartitionKeys, CollectionUtils.size(optimizedPartitionKeys), unoptimizedPartitionKeys,
+            CollectionUtils.size(unoptimizedPartitionKeys), partitionKeyToPartitionLevelMap);
 
         return predicate;
     }

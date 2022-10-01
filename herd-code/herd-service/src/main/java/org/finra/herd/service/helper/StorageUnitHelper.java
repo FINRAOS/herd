@@ -274,9 +274,9 @@ public class StorageUnitHelper
      *
      * @return the list of storage unit ids
      */
-    public List<Integer> getStorageUnitIds(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos)
+    public List<Long> getStorageUnitIds(List<StorageUnitAvailabilityDto> storageUnitAvailabilityDtos)
     {
-        List<Integer> storageUnitIds = new ArrayList<>(storageUnitAvailabilityDtos.size());
+        List<Long> storageUnitIds = new ArrayList<>(storageUnitAvailabilityDtos.size());
 
         for (StorageUnitAvailabilityDto storageUnitAvailabilityDto : storageUnitAvailabilityDtos)
         {

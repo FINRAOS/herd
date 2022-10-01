@@ -51,7 +51,7 @@ public interface StorageFileDao extends BaseJpaDao
      *
      * @return the map of storage unit ids to their corresponding storage file paths.
      */
-    MultiValuedMap<Integer, String> getStorageFilePathsByStorageUnitIds(List<Integer> storageUnitIds);
+    MultiValuedMap<Long, String> getStorageFilePathsByStorageUnitIds(List<Long> storageUnitIds);
 
     /**
      * Saves a list of storage file entities.
